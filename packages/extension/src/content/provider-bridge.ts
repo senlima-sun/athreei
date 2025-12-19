@@ -5,8 +5,8 @@
 import type {
   AiiiToolType,
   AiiiToolArgs,
-  AiiiActionBeforeDetail,
-  AiiiActionAfterDetail,
+  AiiiActionBeforeEvent,
+  AiiiActionAfterEvent,
 } from "@athreei/shared"
 import {
   dispatchReady,
@@ -58,19 +58,20 @@ export class ProviderBridge {
     const startTime = performance.now()
 
     // Dispatch before event (cancelable)
-    const beforeDetail: AiiiActionBeforeDetail = {
+    const beforeDetail: AiiiActionBeforeEvent = {
       requestId,
       tool,
       args,
       timestamp: Date.now(),
       origin: this.origin,
+      cancellable: true,
     }
 
     const { allowed, detail: modifiedDetail } =
       dispatchActionBefore(beforeDetail)
 
     if (!allowed) {
-      const afterDetail: AiiiActionAfterDetail = {
+      const afterDetail: AiiiActionAfterEvent = {
         requestId,
         tool,
         success: false,
@@ -99,7 +100,7 @@ export class ProviderBridge {
     }
 
     // Dispatch after event
-    const afterDetail: AiiiActionAfterDetail = {
+    const afterDetail: AiiiActionAfterEvent = {
       requestId,
       tool,
       success,

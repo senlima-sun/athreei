@@ -4,6 +4,7 @@
  */
 
 import { initBridge, getBridge } from "./provider-bridge"
+import { initWebsiteBridge, getWebsiteBridge } from "./website-bridge"
 import { executeClick } from "./actions/click"
 import { executeType } from "./actions/type"
 import { executeNavigate } from "./actions/navigate"
@@ -19,18 +20,38 @@ import type {
 
 const VERSION = "0.1.0"
 
-// Initialize bridge on content script load
+// Initialize bridges on content script load
 initBridge(VERSION)
+initWebsiteBridge(window.location.origin)
 
 /**
  * Execute a browser action by tool type
+ * Checks for custom tools first, then falls back to built-in tools
  */
 export async function executeAction(
-  tool: AiiiToolType,
-  args: AiiiToolArgs
+  tool: AiiiToolType | string,
+  args: AiiiToolArgs | Record<string, unknown>
 ): Promise<{ success: boolean; result?: unknown; error?: string }> {
   const bridge = getBridge()
+  const websiteBridge = getWebsiteBridge()
 
+  // Check if this is a custom tool registered by the website
+  if (websiteBridge.isCustomTool(tool)) {
+    try {
+      const result = await websiteBridge.executeCustomTool(
+        tool,
+        args as Record<string, unknown>
+      )
+      return { success: true, result }
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      }
+    }
+  }
+
+  // Handle built-in tools
   switch (tool) {
     case "click":
       return bridge.executeAction(tool, args as AiiiClickArgs, executeClick)
@@ -99,4 +120,6 @@ export async function executeAction(
 
 // Export for external use
 export { getBridge, initBridge } from "./provider-bridge"
+export { getWebsiteBridge, initWebsiteBridge } from "./website-bridge"
+export { getRegistry, resetRegistry } from "./registry"
 export * from "./events"

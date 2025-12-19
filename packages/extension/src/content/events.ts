@@ -3,26 +3,26 @@
  */
 
 import type {
-  AiiiEventType,
-  AiiiReadyDetail,
-  AiiiActionBeforeDetail,
-  AiiiActionAfterDetail,
+  AiiiEventMap,
+  AiiiReadyEvent,
+  AiiiActionBeforeEvent,
+  AiiiActionAfterEvent,
+  AiiiRequestEvent,
+  AiiiResponseEvent,
+  AiiiRegisterEvent,
+  AiiiPermissionEvent,
 } from "@athreei/shared"
 
-type AiiiEventDetailMap = {
-  "aiii:ready": AiiiReadyDetail
-  "aiii:action:before": AiiiActionBeforeDetail
-  "aiii:action:after": AiiiActionAfterDetail
-}
+type AiiiEventType = keyof AiiiEventMap
 
 /**
  * Creates a custom event for aiii communication
  */
 export function createAiiiEvent<T extends AiiiEventType>(
   type: T,
-  detail: AiiiEventDetailMap[T],
+  detail: AiiiEventMap[T],
   options?: { cancelable?: boolean }
-): CustomEvent<AiiiEventDetailMap[T]> {
+): CustomEvent<AiiiEventMap[T]> {
   return new CustomEvent(type, {
     detail,
     bubbles: true,
@@ -35,7 +35,7 @@ export function createAiiiEvent<T extends AiiiEventType>(
  */
 export function dispatchAiiiEvent<T extends AiiiEventType>(
   type: T,
-  detail: AiiiEventDetailMap[T],
+  detail: AiiiEventMap[T],
   options?: { cancelable?: boolean }
 ): boolean {
   const event = createAiiiEvent(type, detail, options)
@@ -45,10 +45,21 @@ export function dispatchAiiiEvent<T extends AiiiEventType>(
 /**
  * Dispatches the ready event to signal extension is active
  */
-export function dispatchReady(version: string): void {
+export function dispatchReady(
+  version: string,
+  customTools: string[] = []
+): void {
+  const builtInCapabilities = [
+    "click",
+    "type",
+    "navigate",
+    "scroll",
+    "select",
+    "screenshot",
+  ]
   dispatchAiiiEvent("aiii:ready", {
     version,
-    tools: ["click", "type", "navigate", "scroll", "select", "screenshot"],
+    capabilities: [...builtInCapabilities, ...customTools],
   })
 }
 
@@ -56,9 +67,9 @@ export function dispatchReady(version: string): void {
  * Dispatches a before event and returns whether the action should proceed
  * The detail object may be modified by event listeners
  */
-export function dispatchActionBefore(detail: AiiiActionBeforeDetail): {
+export function dispatchActionBefore(detail: AiiiActionBeforeEvent): {
   allowed: boolean
-  detail: AiiiActionBeforeDetail
+  detail: AiiiActionBeforeEvent
 } {
   const event = createAiiiEvent("aiii:action:before", detail, {
     cancelable: true,
@@ -70,8 +81,15 @@ export function dispatchActionBefore(detail: AiiiActionBeforeDetail): {
 /**
  * Dispatches an after event with action results
  */
-export function dispatchActionAfter(detail: AiiiActionAfterDetail): void {
+export function dispatchActionAfter(detail: AiiiActionAfterEvent): void {
   dispatchAiiiEvent("aiii:action:after", detail)
+}
+
+/**
+ * Dispatches a request event to website for custom tool execution
+ */
+export function dispatchRequest(detail: AiiiRequestEvent): void {
+  dispatchAiiiEvent("aiii:request", detail)
 }
 
 /**
