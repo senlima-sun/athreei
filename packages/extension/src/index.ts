@@ -3,4 +3,4 @@
  */
 
 // Placeholder - implementation coming in Phase 3
-export const EXTENSION_ID = "athreei";
+export const EXTENSION_ID = "athreei"

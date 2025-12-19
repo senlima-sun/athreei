@@ -228,15 +228,15 @@ window.addEventListener("aiii:ready", () => {
         },
       },
     })
-  );
-});
+  )
+})
 
 // Website handles custom tool calls
 window.addEventListener("aiii:request", (e) => {
   if (e.detail.tool === "add_to_cart") {
-    const { productId, quantity } = e.detail.args;
+    const { productId, quantity } = e.detail.args
     // Website's own logic
-    addToCart(productId, quantity);
+    addToCart(productId, quantity)
 
     window.dispatchEvent(
       new CustomEvent("aiii:response", {
@@ -246,9 +246,9 @@ window.addEventListener("aiii:request", (e) => {
           result: { cartCount: getCartCount() },
         },
       })
-    );
+    )
   }
-});
+})
 ```
 
 ---

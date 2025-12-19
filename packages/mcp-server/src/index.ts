@@ -4,5 +4,5 @@
 
 // Placeholder - implementation coming in Phase 2
 export const start = () => {
-  console.warn("MCP server not yet implemented");
-};
+  console.warn("MCP server not yet implemented")
+}

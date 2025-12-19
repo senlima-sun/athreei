@@ -3,7 +3,7 @@
  */
 
 // Re-export all types
-export * from "./types/index.js";
+export * from "./types/index.js"
 
 // Version info
-export const VERSION = "0.1.0";
+export const VERSION = "0.1.0"
