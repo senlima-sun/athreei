@@ -16,6 +16,8 @@ import { StatusIndicator } from "./ui/StatusIndicator"
 import { getSystemStatus, getMcpStatus, getExtensionStatus } from "../lib/api"
 import type { SystemStatus, McpStatus, ExtensionStatus } from "../lib/api"
 
+const STATUS_POLLING_INTERVAL_MS = 10000 // 10 seconds
+
 export function ConnectionStatus() {
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null)
   const [mcpStatus, setMcpStatus] = useState<McpStatus | null>(null)
@@ -48,7 +50,7 @@ export function ConnectionStatus() {
   // Initial fetch and polling
   useEffect(() => {
     fetchStatus()
-    const interval = setInterval(fetchStatus, 10000) // Poll every 10 seconds
+    const interval = setInterval(fetchStatus, STATUS_POLLING_INTERVAL_MS)
     return () => clearInterval(interval)
   }, [])
 

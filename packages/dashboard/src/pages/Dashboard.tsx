@@ -22,11 +22,10 @@ export function Dashboard() {
         setLoading(true)
 
         // Fetch all data in parallel
-        const [auditLogs, activeSessions, allSessions, permissions, blockedLogs] =
+        const [auditLogs, activeSessions, permissions, blockedLogs] =
           await Promise.all([
             getAuditLogs({ limit: 5 }), // Last 5 entries for recent activity
             getSessions({ active: true }),
-            getSessions(),
             getPermissions(),
             getAuditLogs({ status: "denied" }),
           ])

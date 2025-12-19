@@ -67,8 +67,8 @@ export interface AuditLogEntry {
   aiApp?: string
   tool: string
   origin: string
-  args: Record<string, any>
-  result?: Record<string, any>
+  args: Record<string, unknown>
+  result?: Record<string, unknown>
   status: 'success' | 'denied' | 'error'
 }
 
@@ -144,13 +144,16 @@ export async function getSessions(params?: {
 }
 
 // Permissions API
+// Aligned with @athreei/shared types
+export type PermissionLevel = 'denied' | 'allowed' | 'ask'
+
 export interface Permission {
   id: string
   origin: string
   tool: string
-  permission: 'allow' | 'deny' | 'prompt'
+  allowed: PermissionLevel
   createdAt: number
-  expiresAt?: number
+  updatedAt: number
 }
 
 export interface PermissionsResponse {
@@ -210,8 +213,17 @@ export async function updateSettings(settings: Partial<Settings>): Promise<Setti
   })
 }
 
-export async function exportData(): Promise<any> {
-  return fetchApi<any>('/api/settings/export', {
+export interface ExportData {
+  version: string
+  exportedAt: number
+  settings: Settings
+  auditLogs: AuditLogEntry[]
+  permissions: Permission[]
+  sessions: Session[]
+}
+
+export async function exportData(): Promise<ExportData> {
+  return fetchApi<ExportData>('/api/settings/export', {
     method: 'POST'
   })
 }

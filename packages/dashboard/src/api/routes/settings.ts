@@ -20,8 +20,8 @@ export interface Settings {
   notifyOnNewSessions: boolean
 }
 
-// Mock settings storage
-let mockSettings: Settings = {
+// Default settings - single source of truth
+const DEFAULT_SETTINGS: Settings = {
   theme: "dark",
   language: "en",
   autoApprove: false,
@@ -31,6 +31,9 @@ let mockSettings: Settings = {
   notifyOnDeniedTools: true,
   notifyOnNewSessions: false,
 }
+
+// Mock settings storage
+let mockSettings: Settings = { ...DEFAULT_SETTINGS }
 
 /**
  * GET /api/settings
@@ -101,16 +104,7 @@ settingsRouter.post("/export", (c) => {
  */
 settingsRouter.delete("/data", (c) => {
   // Reset settings to defaults
-  mockSettings = {
-    theme: "dark",
-    language: "en",
-    autoApprove: false,
-    logRetention: 30,
-    notificationsEnabled: true,
-    notifyOnPermissionRequests: true,
-    notifyOnDeniedTools: true,
-    notifyOnNewSessions: false,
-  }
+  mockSettings = { ...DEFAULT_SETTINGS }
 
   return c.json({
     success: true,
@@ -123,16 +117,7 @@ settingsRouter.delete("/data", (c) => {
  * Reset settings to defaults without clearing data
  */
 settingsRouter.post("/reset", (c) => {
-  mockSettings = {
-    theme: "dark",
-    language: "en",
-    autoApprove: false,
-    logRetention: 30,
-    notificationsEnabled: true,
-    notifyOnPermissionRequests: true,
-    notifyOnDeniedTools: true,
-    notifyOnNewSessions: false,
-  }
+  mockSettings = { ...DEFAULT_SETTINGS }
 
   return c.json({
     success: true,

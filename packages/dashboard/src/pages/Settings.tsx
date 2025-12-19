@@ -12,7 +12,7 @@ import {
   getMcpStatus,
   getExtensionStatus,
 } from "../lib/api"
-import type { Settings as SettingsType } from "../lib/api"
+import type { Settings as SettingsType, McpStatus, ExtensionStatus } from "../lib/api"
 
 export function Settings() {
   const [settings, setSettings] = useState<SettingsType | null>(null)
@@ -20,8 +20,8 @@ export function Settings() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
-  const [mcpStatus, setMcpStatus] = useState<any>(null)
-  const [extensionStatus, setExtensionStatus] = useState<any>(null)
+  const [mcpStatus, setMcpStatus] = useState<McpStatus | null>(null)
+  const [extensionStatus, setExtensionStatus] = useState<ExtensionStatus | null>(null)
 
   // Fetch settings on mount
   useEffect(() => {
