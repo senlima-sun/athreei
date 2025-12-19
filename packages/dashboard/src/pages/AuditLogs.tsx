@@ -1,9 +1,119 @@
 import { h } from "preact"
-import type { AuditLogEntry } from "@athreei/shared"
+import { useState, useEffect } from "preact/hooks"
+import type { AuditLogEntry, AuditStatus } from "@athreei/shared"
+import { api } from "../lib/api"
+import { DataTable, Column } from "../components/ui/DataTable"
+import { SearchInput } from "../components/ui/SearchInput"
+import { Card } from "../components/ui/Card"
+import { Button } from "../components/ui/Button"
+
+interface AuditLogsResponse {
+  logs: AuditLogEntry[]
+  total: number
+  page: number
+  pageSize: number
+}
 
 export function AuditLogs() {
-  // Placeholder - will be populated with actual data in later phases
-  const logs: AuditLogEntry[] = []
+  const [logs, setLogs] = useState<AuditLogEntry[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // Filter state
+  const [statusFilter, setStatusFilter] = useState<string>("")
+  const [toolFilter, setToolFilter] = useState<string>("")
+  const [originFilter, setOriginFilter] = useState<string>("")
+
+  // Pagination state
+  const [page, setPage] = useState(1)
+  const [total, setTotal] = useState(0)
+  const pageSize = 20
+
+  // Fetch logs from API
+  const fetchLogs = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      // Build query params
+      const params = new URLSearchParams()
+      params.set("page", page.toString())
+      params.set("pageSize", pageSize.toString())
+      if (statusFilter) params.set("status", statusFilter)
+      if (toolFilter) params.set("tool", toolFilter)
+      if (originFilter) params.set("origin", originFilter)
+
+      const response = await api.get<AuditLogsResponse>(
+        `/api/audit?${params.toString()}`
+      )
+
+      setLogs(response.logs)
+      setTotal(response.total)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to fetch audit logs")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Fetch logs on mount and when filters/page change
+  useEffect(() => {
+    fetchLogs()
+  }, [page, statusFilter, toolFilter, originFilter])
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setPage(1)
+  }, [statusFilter, toolFilter, originFilter])
+
+  // Get unique tools for filter dropdown
+  const uniqueTools = Array.from(new Set(logs.map((log) => log.tool)))
+
+  // Define table columns
+  const columns: Column<AuditLogEntry>[] = [
+    {
+      accessor: "timestamp",
+      header: "Timestamp",
+      cell: (value) => new Date(value).toLocaleString(),
+    },
+    {
+      accessor: "tool",
+      header: "Tool",
+      cell: (value) => <code>{value}</code>,
+    },
+    {
+      accessor: "origin",
+      header: "Origin",
+      cell: (value) => <span className="text-muted">{value || "N/A"}</span>,
+    },
+    {
+      accessor: "status",
+      header: "Status",
+      cell: (value: AuditStatus) => {
+        const variant =
+          value === "success"
+            ? "success"
+            : value === "denied"
+              ? "warning"
+              : "error"
+        return (
+          <span className={`badge badge-${variant}`}>
+            {value}
+          </span>
+        )
+      },
+    },
+    {
+      accessor: (row) => row.id,
+      header: "Actions",
+      sortable: false,
+      cell: (_, row) => (
+        <Button variant="secondary" size="sm">
+          Details
+        </Button>
+      ),
+    },
+  ]
 
   return (
     <div>
@@ -16,7 +126,7 @@ export function AuditLogs() {
       </div>
 
       {/* Filters */}
-      <div className="card" style={{ marginBottom: "var(--spacing-lg)" }}>
+      <Card style={{ marginBottom: "var(--spacing-lg)" }}>
         <h3 style={{ fontSize: "1rem", marginBottom: "var(--spacing-md)" }}>
           Filters
         </h3>
@@ -29,7 +139,10 @@ export function AuditLogs() {
         >
           <div className="form-group">
             <label>Status</label>
-            <select>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.currentTarget.value)}
+            >
               <option value="">All</option>
               <option value="success">Success</option>
               <option value="denied">Denied</option>
@@ -38,72 +151,51 @@ export function AuditLogs() {
           </div>
           <div className="form-group">
             <label>Tool</label>
-            <select>
+            <select
+              value={toolFilter}
+              onChange={(e) => setToolFilter(e.currentTarget.value)}
+            >
               <option value="">All Tools</option>
+              {uniqueTools.map((tool) => (
+                <option key={tool} value={tool}>
+                  {tool}
+                </option>
+              ))}
             </select>
           </div>
           <div className="form-group">
             <label>Origin</label>
-            <input type="text" placeholder="Filter by origin..." />
+            <SearchInput
+              value={originFilter}
+              onChange={setOriginFilter}
+              placeholder="Filter by origin..."
+            />
           </div>
         </div>
-      </div>
+      </Card>
+
+      {/* Error Message */}
+      {error && (
+        <Card style={{ marginBottom: "var(--spacing-lg)" }}>
+          <div style={{ color: "var(--error)", textAlign: "center" }}>
+            {error}
+          </div>
+        </Card>
+      )}
 
       {/* Logs Table */}
-      <div className="card">
-        {logs.length === 0 ? (
-          <div className="text-center" style={{ padding: "var(--spacing-xl)" }}>
-            <p className="text-muted">No audit logs available yet.</p>
-            <p className="text-muted text-sm">
-              Logs will appear here once AI tools are invoked through the
-              extension.
-            </p>
-          </div>
-        ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table>
-              <thead>
-                <tr>
-                  <th>Timestamp</th>
-                  <th>Tool</th>
-                  <th>Origin</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {logs.map((log) => (
-                  <tr key={log.id}>
-                    <td>{new Date(log.timestamp).toLocaleString()}</td>
-                    <td>
-                      <code>{log.tool}</code>
-                    </td>
-                    <td className="text-muted">{log.origin || "N/A"}</td>
-                    <td>
-                      <span
-                        className={`badge badge-${
-                          log.status === "success"
-                            ? "success"
-                            : log.status === "denied"
-                              ? "warning"
-                              : "error"
-                        }`}
-                      >
-                        {log.status}
-                      </span>
-                    </td>
-                    <td>
-                      <button className="btn btn-secondary" style={{ padding: "0.25rem 0.5rem", fontSize: "0.75rem" }}>
-                        Details
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      <Card>
+        <DataTable
+          columns={columns}
+          data={logs}
+          loading={loading}
+          emptyMessage="No audit logs available yet. Logs will appear here once AI tools are invoked through the extension."
+          page={page}
+          pageSize={pageSize}
+          total={total}
+          onPageChange={setPage}
+        />
+      </Card>
     </div>
   )
 }
