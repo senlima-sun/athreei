@@ -7,12 +7,16 @@
     "build": "vite build",
     "dev": "vite",
     "preview": "vite preview",
+    "server": "bun run src/api/server.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },
   "dependencies": {
     "@athreei/shared": "workspace:*",
-    "preact": "^10.25.4"
+    "@hono/node-server": "^1.19.7",
+    "hono": "^4.11.1",
+    "preact": "^10.25.4",
+    "preact-router": "^4.1.2"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.9.4",
