@@ -88,28 +88,32 @@ athreei/
 
 ### 2.1 Core MCP Server
 
-- [ ] Setup Bun project with MCP SDK
-- [ ] Implement MCP server with stdio transport
-- [ ] Add SSE transport option for web-based AI apps
-- [ ] Implement graceful shutdown handling
+- [x] Setup Bun project with MCP SDK
+- [x] Implement MCP server with stdio transport
+- [x] Add SSE transport option for web-based AI apps
+- [x] Implement graceful shutdown handling
 
 ### 2.2 Browser Tools (MCP Tools)
 
+- [x] All 11 browser tools registered with stub implementations
+
 Expose these capabilities to AI apps:
 
-| Tool                     | Description                         |
-| ------------------------ | ----------------------------------- |
-| `browser_list_tabs`      | List open tabs with titles and URLs |
-| `browser_get_active_tab` | Get current active tab info         |
-| `browser_navigate`       | Navigate to URL                     |
-| `browser_get_content`    | Get page content (a11y tree or DOM) |
-| `browser_get_elements`   | List interactive elements           |
-| `browser_click`          | Click an element                    |
-| `browser_type`           | Type text into element              |
-| `browser_scroll`         | Scroll page or element              |
-| `browser_screenshot`     | Take screenshot                     |
-| `browser_execute_script` | Run JS (with permission)            |
-| `browser_wait`           | Wait for element/condition          |
+| Tool                     | Description                         | Status |
+| ------------------------ | ----------------------------------- | ------ |
+| `browser_list_tabs`      | List open tabs with titles and URLs | ✅     |
+| `browser_get_active_tab` | Get current active tab info         | ✅     |
+| `browser_navigate`       | Navigate to URL                     | ✅     |
+| `browser_get_content`    | Get page content (a11y tree or DOM) | ✅     |
+| `browser_get_elements`   | List interactive elements           | ✅     |
+| `browser_click`          | Click an element                    | ✅     |
+| `browser_type`           | Type text into element              | ✅     |
+| `browser_scroll`         | Scroll page or element              | ✅     |
+| `browser_screenshot`     | Take screenshot                     | ✅     |
+| `browser_execute_script` | Run JS (with permission)            | ✅     |
+| `browser_wait`           | Wait for element/condition          | ✅     |
+
+**Note**: Tools currently return mock data. Phase 2.3 will connect them to the Chrome extension via Native Messaging.
 
 ### 2.3 Native Messaging Bridge
 

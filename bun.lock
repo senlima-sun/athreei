@@ -61,6 +61,9 @@
       "dependencies": {
         "@athreei/shared": "workspace:*",
       },
+      "devDependencies": {
+        "@types/bun": "latest",
+      },
     },
     "packages/shared": {
       "name": "@athreei/shared",
