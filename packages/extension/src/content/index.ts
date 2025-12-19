@@ -8,6 +8,9 @@ import { initWebsiteBridge, getWebsiteBridge } from "./website-bridge"
 import { executeClick } from "./actions/click"
 import { executeType } from "./actions/type"
 import { executeNavigate } from "./actions/navigate"
+import { executeScroll } from "./actions/scroll"
+import { executeWait } from "./actions/wait"
+import { executeForm, executeSelect } from "./actions/form"
 import type {
   AiiiToolType,
   AiiiClickArgs,
@@ -15,6 +18,8 @@ import type {
   AiiiNavigateArgs,
   AiiiScrollArgs,
   AiiiSelectArgs,
+  AiiiWaitArgs,
+  AiiiFormArgs,
   AiiiToolArgs,
 } from "@athreei/shared"
 
@@ -67,40 +72,20 @@ export async function executeAction(
       )
 
     case "scroll":
-      return bridge.executeAction(tool, args as AiiiScrollArgs, async (a) => {
-        const target = a.selector ? document.querySelector(a.selector) : window
-        if (a.selector && !target) {
-          throw new Error(`Element not found: ${a.selector}`)
-        }
-        if (target === window) {
-          window.scrollTo({
-            left: a.x ?? window.scrollX,
-            top: a.y ?? window.scrollY,
-            behavior: a.behavior ?? "auto",
-          })
-        } else {
-          ;(target as Element).scrollTo({
-            left: a.x ?? 0,
-            top: a.y ?? 0,
-            behavior: a.behavior ?? "auto",
-          })
-        }
-        return { scrolled: true }
-      })
+      return bridge.executeAction(tool, args as AiiiScrollArgs, executeScroll)
 
     case "select":
-      return bridge.executeAction(tool, args as AiiiSelectArgs, async (a) => {
-        const element = document.querySelector(a.selector)
-        if (!element || !(element instanceof HTMLSelectElement)) {
-          throw new Error(`Select element not found: ${a.selector}`)
-        }
-        const values = Array.isArray(a.value) ? a.value : [a.value]
-        for (const option of element.options) {
-          option.selected = values.includes(option.value)
-        }
-        element.dispatchEvent(new Event("change", { bubbles: true }))
-        return { selected: values }
-      })
+      return bridge.executeAction(
+        tool,
+        args as AiiiSelectArgs,
+        executeSelect
+      )
+
+    case "wait":
+      return bridge.executeAction(tool, args as AiiiWaitArgs, executeWait)
+
+    case "form":
+      return bridge.executeAction(tool, args as AiiiFormArgs, executeForm)
 
     case "screenshot":
       // Screenshot requires background script / chrome.tabs API
@@ -117,6 +102,40 @@ export async function executeAction(
       }
   }
 }
+
+/**
+ * Handle messages from background script
+ */
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  // Handle browser action requests from background script
+  if (message.type === "browser_action") {
+    const { method, args } = message
+
+    // Execute the action
+    executeAction(method as AiiiToolType, args as AiiiToolArgs)
+      .then((result) => {
+        sendResponse(result)
+      })
+      .catch((error) => {
+        sendResponse({
+          success: false,
+          error: error instanceof Error ? error.message : String(error),
+        })
+      })
+
+    // Return true to keep the message channel open for async response
+    return true
+  }
+
+  // Handle ping requests
+  if (message.type === "ping") {
+    sendResponse({ pong: true, version: VERSION })
+    return false
+  }
+
+  // Unknown message type
+  return false
+})
 
 // Export for external use
 export { getBridge, initBridge } from "./provider-bridge"

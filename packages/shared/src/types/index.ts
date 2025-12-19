@@ -87,3 +87,97 @@ export interface MCPClientInfo {
   name: string
   version: string
 }
+
+// ============================================================================
+// Content Script Action Types
+// ============================================================================
+
+export type AiiiToolType =
+  | "click"
+  | "type"
+  | "navigate"
+  | "scroll"
+  | "select"
+  | "screenshot"
+  | "wait"
+  | "form"
+
+export type AiiiToolArgs =
+  | AiiiClickArgs
+  | AiiiTypeArgs
+  | AiiiNavigateArgs
+  | AiiiScrollArgs
+  | AiiiSelectArgs
+  | AiiiWaitArgs
+  | AiiiFormArgs
+
+export interface AiiiClickArgs {
+  selector?: string
+  text?: string
+  x?: number
+  y?: number
+  button?: "left" | "right" | "middle"
+  clickCount?: number
+  modifiers?: Array<"ctrl" | "shift" | "alt" | "meta">
+}
+
+export interface AiiiTypeArgs {
+  selector: string
+  text: string
+  clear?: boolean
+  delay?: number
+  submit?: boolean
+}
+
+export interface AiiiNavigateArgs {
+  url: string
+  waitUntil?: "load" | "domcontentloaded" | "networkidle"
+}
+
+export interface AiiiScrollArgs {
+  selector?: string
+  direction?: "up" | "down" | "left" | "right"
+  amount?: number
+  x?: number
+  y?: number
+  behavior?: "auto" | "smooth"
+}
+
+export interface AiiiSelectArgs {
+  selector: string
+  value: string | string[]
+}
+
+export interface AiiiWaitArgs {
+  selector?: string
+  state?: "attached" | "detached" | "visible" | "hidden"
+  timeout?: number
+  text?: string
+  condition?: string
+}
+
+export interface AiiiFormArgs {
+  selector: string
+  action: "submit" | "reset" | "get-values" | "set-values"
+  values?: Record<string, unknown>
+}
+
+export type AiiiActionBeforeDetail = {
+  requestId: string
+  tool: string
+  args: Record<string, unknown>
+  timestamp: number
+  origin: string
+  aiApp?: string
+  cancellable?: boolean
+}
+
+export type AiiiActionAfterDetail = {
+  requestId: string
+  tool: string
+  success: boolean
+  result?: unknown
+  error?: string
+  timestamp: number
+  duration: number
+}
