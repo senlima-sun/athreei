@@ -1,0 +1,9 @@
+{
+  "name": "com.athreei.host",
+  "description": "athreei Native Messaging Host - Bridge between Chrome extension and MCP server",
+  "path": "/absolute/path/to/athreei-host",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://EXTENSION_ID_PLACEHOLDER/"
+  ]
+}
