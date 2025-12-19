@@ -1,6 +1,7 @@
 import { h } from "preact"
 import { Link } from "preact-router/match"
 import type { ComponentChildren } from "preact"
+import { ConnectionStatus } from "./ConnectionStatus"
 
 interface LayoutProps {
   children: ComponentChildren
@@ -88,26 +89,8 @@ export function Layout({ children }: LayoutProps) {
         >
           <h1 style={{ margin: 0, fontSize: "1.5rem" }}>Dashboard</h1>
 
-          {/* Connection Status Placeholder */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "var(--spacing-sm)",
-            }}
-          >
-            <div
-              style={{
-                width: "8px",
-                height: "8px",
-                borderRadius: "50%",
-                backgroundColor: "var(--success)",
-              }}
-            />
-            <span style={{ fontSize: "0.875rem", color: "var(--text-secondary)" }}>
-              Connected
-            </span>
-          </div>
+          {/* Connection Status */}
+          <ConnectionStatus />
         </header>
 
         {/* Page Content */}

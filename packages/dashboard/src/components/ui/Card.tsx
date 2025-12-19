@@ -5,10 +5,11 @@ export interface CardProps {
   children: ComponentChildren;
   className?: string;
   actions?: ComponentChildren;
+  style?: h.JSX.CSSProperties;
 }
 
 export function Card(props: CardProps) {
-  const { title, children, className, actions } = props;
+  const { title, children, className, actions, style } = props;
 
   return (
     <div
@@ -18,6 +19,7 @@ export function Card(props: CardProps) {
         border: '1px solid var(--border)',
         borderRadius: '8px',
         overflow: 'hidden',
+        ...style,
       }}
     >
       {(title || actions) && (
