@@ -4,6 +4,8 @@
 
 // Re-export all types
 export * from "./types/index.js"
+export * from "./types/mcp-tools.js"
+export * from "./types/aiii-events.js"
 
 // Version info
 export const VERSION = "0.1.0"

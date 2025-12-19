@@ -76,11 +76,11 @@ athreei/
 
 ### 1.2 Shared Types & Protocols
 
-- [ ] Define MCP tool schemas for browser operations
-- [ ] Define Native Messaging message types
-- [ ] Define `aiii:*` event payload schemas
-- [ ] Define permission model types
-- [ ] Define audit log schemas
+- [x] Define MCP tool schemas for browser operations
+- [x] Define Native Messaging message types
+- [x] Define `aiii:*` event payload schemas
+- [x] Define permission model types
+- [x] Define audit log schemas
 
 ---
 
