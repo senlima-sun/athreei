@@ -23,10 +23,10 @@ const handlers = new Map<string, HandlerFunction>()
  */
 export function registerHandler(method: string, handler: HandlerFunction): void {
   if (handlers.has(method)) {
-    console.warn(`[handlers] Overwriting existing handler for method: ${method}`)
+    console.error(`[handlers] Overwriting existing handler for method: ${method}`)
   }
   handlers.set(method, handler)
-  console.log(`[handlers] Registered handler: ${method}`)
+  console.error(`[handlers] Registered handler: ${method}`)
 }
 
 /**
@@ -35,7 +35,7 @@ export function registerHandler(method: string, handler: HandlerFunction): void 
 export async function handleRequest(request: NativeRequest): Promise<NativeResponse> {
   const { id, method, payload } = request
 
-  console.log(`[handlers] Handling request: ${method} (id: ${id})`)
+  console.error(`[handlers] Handling request: ${method} (id: ${id})`)
 
   try {
     const handler = handlers.get(method)
@@ -72,7 +72,7 @@ export function initializeHandlers(): void {
 
   registerHandler("browser_list_tabs", async (payload) => {
     // TODO: Forward to extension
-    console.log("[handlers] browser_list_tabs called with:", payload)
+    console.error("[handlers] browser_list_tabs called with:", payload)
     return {
       tabs: [],
       // Will be populated by extension
@@ -81,7 +81,7 @@ export function initializeHandlers(): void {
 
   registerHandler("browser_get_active_tab", async (payload) => {
     // TODO: Forward to extension
-    console.log("[handlers] browser_get_active_tab called with:", payload)
+    console.error("[handlers] browser_get_active_tab called with:", payload)
     return {
       id: 0,
       url: "",
@@ -93,7 +93,7 @@ export function initializeHandlers(): void {
 
   registerHandler("browser_navigate", async (payload) => {
     // TODO: Forward to extension
-    console.log("[handlers] browser_navigate called with:", payload)
+    console.error("[handlers] browser_navigate called with:", payload)
     return {
       success: false,
       url: "",
@@ -104,7 +104,7 @@ export function initializeHandlers(): void {
 
   registerHandler("browser_get_content", async (payload) => {
     // TODO: Forward to extension
-    console.log("[handlers] browser_get_content called with:", payload)
+    console.error("[handlers] browser_get_content called with:", payload)
     return {
       content: "",
       format: "a11y",
@@ -116,7 +116,7 @@ export function initializeHandlers(): void {
 
   registerHandler("browser_get_elements", async (payload) => {
     // TODO: Forward to extension
-    console.log("[handlers] browser_get_elements called with:", payload)
+    console.error("[handlers] browser_get_elements called with:", payload)
     return {
       elements: [],
       count: 0,
@@ -126,7 +126,7 @@ export function initializeHandlers(): void {
 
   registerHandler("browser_click", async (payload) => {
     // TODO: Forward to extension
-    console.log("[handlers] browser_click called with:", payload)
+    console.error("[handlers] browser_click called with:", payload)
     return {
       success: false,
       clicked: {
@@ -139,7 +139,7 @@ export function initializeHandlers(): void {
 
   registerHandler("browser_type", async (payload) => {
     // TODO: Forward to extension
-    console.log("[handlers] browser_type called with:", payload)
+    console.error("[handlers] browser_type called with:", payload)
     return {
       success: false,
       typed: {
@@ -152,7 +152,7 @@ export function initializeHandlers(): void {
 
   registerHandler("browser_scroll", async (payload) => {
     // TODO: Forward to extension
-    console.log("[handlers] browser_scroll called with:", payload)
+    console.error("[handlers] browser_scroll called with:", payload)
     return {
       success: false,
       scrollPosition: { x: 0, y: 0 },
@@ -162,7 +162,7 @@ export function initializeHandlers(): void {
 
   registerHandler("browser_screenshot", async (payload) => {
     // TODO: Forward to extension
-    console.log("[handlers] browser_screenshot called with:", payload)
+    console.error("[handlers] browser_screenshot called with:", payload)
     return {
       success: false,
       image: "",
@@ -174,7 +174,7 @@ export function initializeHandlers(): void {
 
   registerHandler("browser_execute_script", async (payload) => {
     // TODO: Forward to extension
-    console.log("[handlers] browser_execute_script called with:", payload)
+    console.error("[handlers] browser_execute_script called with:", payload)
     return {
       success: false,
       result: null,
@@ -184,7 +184,7 @@ export function initializeHandlers(): void {
 
   registerHandler("browser_wait", async (payload) => {
     // TODO: Forward to extension
-    console.log("[handlers] browser_wait called with:", payload)
+    console.error("[handlers] browser_wait called with:", payload)
     return {
       success: false,
       waited: 0,
@@ -193,7 +193,7 @@ export function initializeHandlers(): void {
     }
   })
 
-  console.log(`[handlers] Initialized ${handlers.size} handlers`)
+  console.error(`[handlers] Initialized ${handlers.size} handlers`)
 }
 
 /**
