@@ -11,6 +11,7 @@ import { auditRouter } from "./routes/audit"
 import { permissionsRouter } from "./routes/permissions"
 import { sessionsRouter } from "./routes/sessions"
 import { statusRouter } from "./routes/status"
+import { settingsRouter } from "./routes/settings"
 
 // Create main Hono app
 const app = new Hono()
@@ -40,5 +41,6 @@ app.route("/api/audit", auditRouter)
 app.route("/api/permissions", permissionsRouter)
 app.route("/api/sessions", sessionsRouter)
 app.route("/api/status", statusRouter)
+app.route("/api/settings", settingsRouter)
 
 export default app

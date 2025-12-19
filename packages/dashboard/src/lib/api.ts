@@ -174,3 +174,56 @@ export async function getPermissions(params?: {
   const query = searchParams.toString()
   return fetchApi<PermissionsResponse>(`/api/permissions${query ? `?${query}` : ''}`)
 }
+
+// Settings API
+export interface Settings {
+  theme: 'dark' | 'light' | 'auto'
+  language: string
+  autoApprove: boolean
+  logRetention: number
+  notificationsEnabled: boolean
+  notifyOnPermissionRequests: boolean
+  notifyOnDeniedTools: boolean
+  notifyOnNewSessions: boolean
+}
+
+export interface SettingsUpdateResponse {
+  success: boolean
+  settings?: Settings
+  message?: string
+  error?: string
+}
+
+export interface DataClearResponse {
+  success: boolean
+  message?: string
+}
+
+export async function getSettings(): Promise<Settings> {
+  return fetchApi<Settings>('/api/settings')
+}
+
+export async function updateSettings(settings: Partial<Settings>): Promise<SettingsUpdateResponse> {
+  return fetchApi<SettingsUpdateResponse>('/api/settings', {
+    method: 'PUT',
+    body: JSON.stringify(settings)
+  })
+}
+
+export async function exportData(): Promise<any> {
+  return fetchApi<any>('/api/settings/export', {
+    method: 'POST'
+  })
+}
+
+export async function clearAllData(): Promise<DataClearResponse> {
+  return fetchApi<DataClearResponse>('/api/settings/data', {
+    method: 'DELETE'
+  })
+}
+
+export async function resetSettings(): Promise<SettingsUpdateResponse> {
+  return fetchApi<SettingsUpdateResponse>('/api/settings/reset', {
+    method: 'POST'
+  })
+}
