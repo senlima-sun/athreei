@@ -11,5 +11,8 @@
   },
   "dependencies": {
     "@athreei/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.258"
   }
 }
