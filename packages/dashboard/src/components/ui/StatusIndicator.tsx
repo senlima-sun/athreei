@@ -1,5 +1,3 @@
-import { h } from 'preact';
-
 export type StatusType = 'online' | 'offline' | 'warning' | 'error';
 
 export interface StatusIndicatorProps {

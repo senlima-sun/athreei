@@ -1,11 +1,11 @@
-import { h, ComponentChildren } from 'preact';
+import type { ComponentChildren, JSX } from 'preact';
 
 export interface CardProps {
   title?: string;
   children: ComponentChildren;
   className?: string;
   actions?: ComponentChildren;
-  style?: h.JSX.CSSProperties;
+  style?: JSX.CSSProperties;
 }
 
 export function Card(props: CardProps) {

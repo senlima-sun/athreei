@@ -1,4 +1,4 @@
-import { h, ComponentChildren } from 'preact';
+import type { ComponentChildren, JSX } from 'preact';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost';
 export type ButtonSize = 'sm' | 'md' | 'lg';
@@ -8,12 +8,13 @@ export interface ButtonProps {
   size?: ButtonSize;
   disabled?: boolean;
   loading?: boolean;
-  onClick?: (e: h.JSX.TargetedMouseEvent<HTMLButtonElement>) => void;
+  onClick?: (e: JSX.TargetedMouseEvent<HTMLButtonElement>) => void;
   children: ComponentChildren;
   type?: 'button' | 'submit' | 'reset';
+  style?: JSX.CSSProperties;
 }
 
-const variantStyles: Record<ButtonVariant, h.JSX.CSSProperties> = {
+const variantStyles: Record<ButtonVariant, JSX.CSSProperties> = {
   primary: {
     background: 'var(--accent)',
     color: '#ffffff',
@@ -36,7 +37,7 @@ const variantStyles: Record<ButtonVariant, h.JSX.CSSProperties> = {
   },
 };
 
-const sizeStyles: Record<ButtonSize, h.JSX.CSSProperties> = {
+const sizeStyles: Record<ButtonSize, JSX.CSSProperties> = {
   sm: {
     padding: '4px 12px',
     fontSize: '12px',
@@ -60,11 +61,12 @@ export function Button(props: ButtonProps) {
     onClick,
     children,
     type = 'button',
+    style: customStyle,
   } = props;
 
   const isDisabled = disabled || loading;
 
-  const baseStyle: h.JSX.CSSProperties = {
+  const baseStyle: JSX.CSSProperties = {
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -76,9 +78,10 @@ export function Button(props: ButtonProps) {
     transition: 'all 0.15s ease',
     ...variantStyles[variant],
     ...sizeStyles[size],
+    ...customStyle,
   };
 
-  const handleClick = (e: h.JSX.TargetedMouseEvent<HTMLButtonElement>) => {
+  const handleClick = (e: JSX.TargetedMouseEvent<HTMLButtonElement>) => {
     if (!isDisabled && onClick) {
       onClick(e);
     }

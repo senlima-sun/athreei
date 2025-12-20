@@ -1,10 +1,12 @@
-import { h } from 'preact';
+import type { JSX } from 'preact';
 import { useState } from 'preact/hooks';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface Column<T> {
   accessor: keyof T | ((row: T) => any);
   header: string;
-  cell?: (value: any, row: T) => h.JSX.Element | string | number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  cell?: (value: any, row: T) => JSX.Element | string | number;
   sortable?: boolean;
 }
 
@@ -46,6 +48,7 @@ export function DataTable<T extends Record<string, any>>(props: DataTableProps<T
     direction: null,
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const getCellValue = (row: T, column: Column<T>): any => {
     if (typeof column.accessor === 'function') {
       return column.accessor(row);

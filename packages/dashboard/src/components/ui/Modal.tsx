@@ -1,4 +1,4 @@
-import { h, ComponentChildren } from 'preact';
+import type { ComponentChildren, JSX } from 'preact';
 import { useEffect } from 'preact/hooks';
 
 export interface ModalProps {
@@ -29,7 +29,7 @@ export function Modal(props: ModalProps) {
 
   if (!isOpen) return null;
 
-  const handleBackdropClick = (e: h.JSX.TargetedMouseEvent<HTMLDivElement>) => {
+  const handleBackdropClick = (e: JSX.TargetedMouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
       onClose();
     }
