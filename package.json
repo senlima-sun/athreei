@@ -16,7 +16,8 @@
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "typecheck:all": "bun run --filter '*' typecheck"
   },
   "devDependencies": {
     "@types/bun": "latest",

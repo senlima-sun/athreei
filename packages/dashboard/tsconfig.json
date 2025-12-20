@@ -2,7 +2,6 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src",
     "lib": ["ES2022", "DOM"],
     "jsx": "react-jsx",
     "jsxImportSource": "preact",
@@ -11,6 +10,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "src/types/**/*.d.ts"],
   "exclude": ["node_modules", "dist", "**/*.test.ts"]
 }

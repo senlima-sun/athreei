@@ -6,6 +6,7 @@
   "scripts": {
     "build": "bun run build.ts",
     "dev": "bun run build.ts --watch",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -13,6 +14,7 @@
     "@athreei/shared": "workspace:*"
   },
   "devDependencies": {
-    "@types/chrome": "^0.0.258"
+    "@types/chrome": "^0.0.258",
+    "@types/node": "^22.10.2"
   }
 }

@@ -8,6 +8,7 @@
     "dev": "vite",
     "preview": "vite preview",
     "server": "bun run src/api/server.ts",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"
   },
