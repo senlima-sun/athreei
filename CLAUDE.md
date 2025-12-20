@@ -11,6 +11,21 @@ athreei is a privacy-focused platform connecting AI apps to browsers via the Mod
 AI Apps (Claude, GPT) ←→ MCP Server (stdio/SSE) ←→ Native Host ←→ Chrome Extension ←→ Websites
 ```
 
+## Tech stack documentations
+
+You can find detailed documentation for each technology used in this project:
+
+- [Bun](https://bun.com/llms.txt)
+- [Zod](https://zod.dev/llms.txt)
+- [Better Auth](https://www.better-auth.com/llms.txt)
+- [Tailwind CSS](https://tailwindcss.com/docs/*)
+- [Vite](https://vite.dev/llms.txt)
+- [Vitest](https://vitest.dev/llms.txt)
+- [Shadcn UI](https://ui.shadcn.com/llms.txt)
+- [Model Context Protocol SDK](https://modelcontextprotocol.io/llms.txt)
+
+About React: I suggest if you have any problem please directly read source code via Github.
+
 ## Commands
 
 ```bash
