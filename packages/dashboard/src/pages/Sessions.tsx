@@ -5,7 +5,7 @@ import { DataTable } from "../components/ui/DataTable"
 import type { Column } from "../components/ui/DataTable"
 import { LegacyCard as Card } from "../components/ui/Card"
 import { Button } from "../components/ui/Button"
-import { Tabs } from "../components/ui/Tabs"
+import { LegacyTabs as Tabs } from "../components/ui/Tabs"
 
 interface SessionsResponse {
   sessions: Session[]
