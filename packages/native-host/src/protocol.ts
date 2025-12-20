@@ -11,6 +11,17 @@ import type { NativeMessage, NativeRequest, NativeResponse, NativeEvent } from "
 
 const MAX_MESSAGE_SIZE = 1024 * 1024 // 1MB
 
+// Type augmentation for Bun stdin/stdout with native messaging API
+declare const Bun: {
+  stdin: {
+    read(buffer: Uint8Array): Promise<number | null>
+  }
+  stdout: {
+    write(data: Uint8Array): number
+    flush(): void
+  }
+}
+
 /**
  * Read a single message from stdin
  * Returns null when stdin is closed
