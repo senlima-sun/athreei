@@ -1,4 +1,4 @@
-import { neon } from '@neondatabase/serverless';
+import postgres from 'postgres';
 import { readFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -14,7 +14,7 @@ async function runMigrations() {
     process.exit(1);
   }
 
-  const sql = neon(dbUrl);
+  const sql = postgres(dbUrl);
 
   console.log('Running database migrations...');
 
@@ -23,20 +23,15 @@ async function runMigrations() {
     const migrationPath = join(__dirname, '001_initial_schema.sql');
     const migrationSQL = readFileSync(migrationPath, 'utf-8');
 
-    // Split by semicolons and execute each statement
-    const statements = migrationSQL
-      .split(';')
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0);
-
-    for (const statement of statements) {
-      await sql(statement);
-    }
+    // Execute the entire migration as a single transaction
+    await sql.unsafe(migrationSQL);
 
     console.log('Migrations completed successfully!');
   } catch (error) {
     console.error('Migration failed:', error);
     process.exit(1);
+  } finally {
+    await sql.end();
   }
 }
 

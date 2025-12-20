@@ -1,4 +1,4 @@
-import { neon, neonConfig } from '@neondatabase/serverless';
+import postgres from 'postgres';
 import type {
   Account,
   Device,
@@ -7,13 +7,10 @@ import type {
   SyncSettings,
 } from './schema';
 
-// Configure for development/production
-neonConfig.fetchConnectionCache = true;
-
-let sql: ReturnType<typeof neon>;
+let sql: ReturnType<typeof postgres>;
 
 export function initDatabase(connectionString: string) {
-  sql = neon(connectionString);
+  sql = postgres(connectionString);
   return sql;
 }
 
@@ -23,9 +20,15 @@ export function getDb() {
     if (!connectionString) {
       throw new Error('DATABASE_URL environment variable is not set');
     }
-    sql = neon(connectionString);
+    sql = postgres(connectionString);
   }
   return sql;
+}
+
+export async function closeDatabase() {
+  if (sql) {
+    await sql.end();
+  }
 }
 
 // Account operations
