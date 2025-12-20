@@ -1,5 +1,13 @@
-import { render } from "preact"
+import { StrictMode } from "react"
+import { createRoot } from "react-dom/client"
 import { App } from "./App"
-import "./styles/global.css"
+import { ThemeProvider } from "./components/ThemeProvider"
+import "./styles/globals.css"
 
-render(<App />, document.getElementById("app")!)
+createRoot(document.getElementById("app")!).render(
+  <StrictMode>
+    <ThemeProvider defaultTheme="dark" storageKey="athreei-theme">
+      <App />
+    </ThemeProvider>
+  </StrictMode>
+)

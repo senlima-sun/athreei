@@ -1,9 +1,9 @@
-import { useState, useEffect } from "preact/hooks"
+import { useState, useEffect } from "react"
 import type { Session } from "@athreei/shared"
 import { api } from "../lib/api"
 import { DataTable } from "../components/ui/DataTable"
 import type { Column } from "../components/ui/DataTable"
-import { Card } from "../components/ui/Card"
+import { LegacyCard as Card } from "../components/ui/Card"
 import { Button } from "../components/ui/Button"
 import { Tabs } from "../components/ui/Tabs"
 
@@ -11,11 +11,7 @@ interface SessionsResponse {
   sessions: Session[]
 }
 
-interface SessionsProps {
-  path?: string
-}
-
-export function Sessions(_props: SessionsProps) {
+export function Sessions() {
   const [sessions, setSessions] = useState<Session[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -67,19 +63,19 @@ export function Sessions(_props: SessionsProps) {
     {
       accessor: "id",
       header: "Session ID",
-      cell: (value) => <code>{value.substring(0, 8)}...</code>,
+      cell: (value) => <code className="text-sm">{(value as string).substring(0, 8)}...</code>,
     },
     {
       accessor: "origin",
       header: "Origin",
-      cell: (value) => <code>{value}</code>,
+      cell: (value) => <code className="text-sm">{value as string}</code>,
     },
     {
       accessor: "startedAt",
       header: "Started",
       cell: (value) => (
-        <span className="text-muted">
-          {new Date(value).toLocaleString()}
+        <span className="text-muted-foreground">
+          {new Date(value as number).toLocaleString()}
         </span>
       ),
     },
@@ -87,7 +83,7 @@ export function Sessions(_props: SessionsProps) {
       accessor: (row) => Date.now() - row.startedAt,
       header: "Duration",
       cell: (value) => (
-        <span className="text-muted">{formatDuration(value)}</span>
+        <span className="text-muted-foreground">{formatDuration(value as number)}</span>
       ),
       sortable: false,
     },
@@ -108,19 +104,19 @@ export function Sessions(_props: SessionsProps) {
     {
       accessor: "id",
       header: "Session ID",
-      cell: (value) => <code>{value.substring(0, 8)}...</code>,
+      cell: (value) => <code className="text-sm">{(value as string).substring(0, 8)}...</code>,
     },
     {
       accessor: "origin",
       header: "Origin",
-      cell: (value) => <code>{value}</code>,
+      cell: (value) => <code className="text-sm">{value as string}</code>,
     },
     {
       accessor: "startedAt",
       header: "Started",
       cell: (value) => (
-        <span className="text-muted">
-          {new Date(value).toLocaleString()}
+        <span className="text-muted-foreground">
+          {new Date(value as number).toLocaleString()}
         </span>
       ),
     },
@@ -128,8 +124,8 @@ export function Sessions(_props: SessionsProps) {
       accessor: "endedAt",
       header: "Ended",
       cell: (value) => (
-        <span className="text-muted">
-          {value ? new Date(value).toLocaleString() : "N/A"}
+        <span className="text-muted-foreground">
+          {value ? new Date(value as number).toLocaleString() : "N/A"}
         </span>
       ),
     },
@@ -137,8 +133,8 @@ export function Sessions(_props: SessionsProps) {
       accessor: (row) => (row.endedAt ? row.endedAt - row.startedAt : 0),
       header: "Duration",
       cell: (value) => (
-        <span className="text-muted">
-          {value ? formatDuration(value) : "N/A"}
+        <span className="text-muted-foreground">
+          {value ? formatDuration(value as number) : "N/A"}
         </span>
       ),
       sortable: false,
@@ -147,9 +143,9 @@ export function Sessions(_props: SessionsProps) {
 
   return (
     <div>
-      <div style={{ marginBottom: "var(--spacing-xl)" }}>
-        <h2>Session Management</h2>
-        <p className="text-muted">
+      <div className="mb-8">
+        <h2 className="text-2xl font-semibold mb-2">Session Management</h2>
+        <p className="text-muted-foreground">
           Monitor active and past AI interaction sessions across your browsing
           contexts.
         </p>
@@ -157,10 +153,8 @@ export function Sessions(_props: SessionsProps) {
 
       {/* Error Message */}
       {error && (
-        <Card style={{ marginBottom: "var(--spacing-lg)" }}>
-          <div style={{ color: "var(--error)", textAlign: "center" }}>
-            {error}
-          </div>
+        <Card className="mb-6">
+          <div className="text-error text-center">{error}</div>
         </Card>
       )}
 
@@ -175,7 +169,7 @@ export function Sessions(_props: SessionsProps) {
           onChange={(id) => setActiveTab(id as "active" | "past")}
         />
 
-        <div style={{ marginTop: "var(--spacing-lg)" }}>
+        <div className="mt-6">
           {activeTab === "active" ? (
             <DataTable
               columns={activeColumns}

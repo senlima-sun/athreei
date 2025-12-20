@@ -1,55 +1,89 @@
+import * as React from "react"
+import * as TabsPrimitive from "@radix-ui/react-tabs"
+import { cn } from "@/lib/utils"
+
+const RadixTabs = TabsPrimitive.Root
+
+const TabsList = React.forwardRef<
+  React.ElementRef<typeof TabsPrimitive.List>,
+  React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>
+>(({ className, ...props }, ref) => (
+  <TabsPrimitive.List
+    ref={ref}
+    className={cn(
+      "inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground",
+      className
+    )}
+    {...props}
+  />
+))
+TabsList.displayName = TabsPrimitive.List.displayName
+
+const TabsTrigger = React.forwardRef<
+  React.ElementRef<typeof TabsPrimitive.Trigger>,
+  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>
+>(({ className, ...props }, ref) => (
+  <TabsPrimitive.Trigger
+    ref={ref}
+    className={cn(
+      "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow",
+      className
+    )}
+    {...props}
+  />
+))
+TabsTrigger.displayName = TabsPrimitive.Trigger.displayName
+
+const TabsContent = React.forwardRef<
+  React.ElementRef<typeof TabsPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Content>
+>(({ className, ...props }, ref) => (
+  <TabsPrimitive.Content
+    ref={ref}
+    className={cn(
+      "mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+      className
+    )}
+    {...props}
+  />
+))
+TabsContent.displayName = TabsPrimitive.Content.displayName
+
+// Legacy Tab interface
 export interface Tab {
-  id: string;
-  label: string;
+  id: string
+  label: string
 }
 
 export interface TabsProps {
-  tabs: Tab[];
-  activeTab: string;
-  onChange: (tabId: string) => void;
+  tabs: Tab[]
+  activeTab: string
+  onChange: (tabId: string) => void
 }
 
-export function Tabs(props: TabsProps) {
-  const { tabs, activeTab, onChange } = props;
-
+// Legacy Tabs component for backwards compatibility
+function Tabs({ tabs, activeTab, onChange }: TabsProps) {
   return (
-    <div
-      style={{
-        display: 'flex',
-        borderBottom: '1px solid var(--border)',
-        gap: '4px',
-      }}
-    >
+    <div className="flex border-b border-border gap-1">
       {tabs.map((tab) => {
-        const isActive = tab.id === activeTab;
-
+        const isActive = tab.id === activeTab
         return (
           <button
             key={tab.id}
             onClick={() => onChange(tab.id)}
-            style={{
-              padding: '12px 20px',
-              background: 'transparent',
-              border: 'none',
-              color: isActive ? 'var(--accent)' : 'var(--text-secondary)',
-              fontSize: '14px',
-              fontWeight: isActive ? 600 : 500,
-              cursor: 'pointer',
-              position: 'relative',
-              transition: 'color 0.15s ease',
-              borderBottom: isActive ? '2px solid var(--accent)' : '2px solid transparent',
-              marginBottom: '-1px',
-            }}
+            className={cn(
+              "px-5 py-3 bg-transparent border-none text-sm font-medium cursor-pointer transition-colors relative -mb-px",
+              isActive
+                ? "text-primary border-b-2 border-primary font-semibold"
+                : "text-muted-foreground border-b-2 border-transparent hover:text-primary"
+            )}
           >
             {tab.label}
           </button>
-        );
+        )
       })}
-      <style>{`
-        button:hover {
-          color: var(--accent);
-        }
-      `}</style>
     </div>
-  );
+  )
 }
+
+export { RadixTabs, TabsList, TabsTrigger, TabsContent, Tabs }

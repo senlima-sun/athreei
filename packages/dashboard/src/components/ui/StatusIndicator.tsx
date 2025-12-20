@@ -1,67 +1,48 @@
-export type StatusType = 'online' | 'offline' | 'warning' | 'error';
+import { cn } from "@/lib/utils"
+
+export type StatusType = "online" | "offline" | "warning" | "error"
 
 export interface StatusIndicatorProps {
-  status: StatusType;
-  label?: string;
-  size?: 'sm' | 'md' | 'lg';
+  status: StatusType
+  label?: string
+  size?: "sm" | "md" | "lg"
 }
 
 const statusColors: Record<StatusType, string> = {
-  online: 'var(--success)',
-  offline: 'var(--text-muted)',
-  warning: 'var(--warning)',
-  error: 'var(--error)',
-};
+  online: "bg-success",
+  offline: "bg-muted-foreground",
+  warning: "bg-warning",
+  error: "bg-error",
+}
 
 const sizeMap = {
-  sm: 6,
-  md: 8,
-  lg: 10,
-};
+  sm: "w-1.5 h-1.5",
+  md: "w-2 h-2",
+  lg: "w-2.5 h-2.5",
+}
 
-export function StatusIndicator(props: StatusIndicatorProps) {
-  const { status, label, size = 'md' } = props;
+const labelSizeMap = {
+  sm: "text-xs",
+  md: "text-sm",
+  lg: "text-base",
+}
 
-  const dotSize = sizeMap[size];
-  const color = statusColors[status];
-  const shouldPulse = status === 'online';
-
-  const pulseKeyframes = `
-    @keyframes pulse {
-      0%, 100% {
-        opacity: 1;
-      }
-      50% {
-        opacity: 0.5;
-      }
-    }
-  `;
+export function StatusIndicator({ status, label, size = "md" }: StatusIndicatorProps) {
+  const shouldPulse = status === "online"
 
   return (
-    <div style={{
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: '6px',
-    }}>
-      {shouldPulse && <style>{pulseKeyframes}</style>}
+    <div className="inline-flex items-center gap-1.5">
       <span
-        style={{
-          display: 'inline-block',
-          width: `${dotSize}px`,
-          height: `${dotSize}px`,
-          borderRadius: '50%',
-          backgroundColor: color,
-          animation: shouldPulse ? 'pulse 2s ease-in-out infinite' : 'none',
-        }}
+        className={cn(
+          "inline-block rounded-full",
+          statusColors[status],
+          sizeMap[size],
+          shouldPulse && "animate-pulse"
+        )}
       />
       {label && (
-        <span style={{
-          color: 'var(--text-secondary)',
-          fontSize: size === 'sm' ? '12px' : size === 'lg' ? '16px' : '14px',
-        }}>
-          {label}
-        </span>
+        <span className={cn("text-muted-foreground", labelSizeMap[size])}>{label}</span>
       )}
     </div>
-  );
+  )
 }

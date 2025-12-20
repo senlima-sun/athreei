@@ -1,15 +1,13 @@
-import { useState, useEffect } from "preact/hooks"
-import { route } from "preact-router"
-import { Card } from "../components/ui/Card"
+import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
+import { LegacyCard as Card } from "../components/ui/Card"
 import { Button } from "../components/ui/Button"
 import { getAuditLogs, getSessions, getPermissions } from "../lib/api"
 import type { AuditLogEntry } from "../lib/api"
+import { cn } from "@/lib/utils"
 
-interface DashboardProps {
-  path?: string
-}
-
-export function Dashboard(_props: DashboardProps) {
+export function Dashboard() {
+  const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState({
     totalRequests: 0,
@@ -52,7 +50,6 @@ export function Dashboard(_props: DashboardProps) {
   }, [])
 
   const formatTimestamp = (timestamp: number) => {
-    const date = new Date(timestamp)
     const now = Date.now()
     const diff = now - timestamp
 
@@ -72,39 +69,45 @@ export function Dashboard(_props: DashboardProps) {
     }
 
     // More than 24 hours - show date
-    return date.toLocaleString()
+    return new Date(timestamp).toLocaleString()
   }
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "success":
-        return "var(--success)"
+        return "text-success"
       case "denied":
-        return "var(--warning)"
+        return "text-warning"
       case "error":
-        return "var(--error)"
+        return "text-error"
       default:
-        return "var(--text-tertiary)"
+        return "text-muted-foreground"
+    }
+  }
+
+  const getStatusBorderColor = (status: string) => {
+    switch (status) {
+      case "success":
+        return "border-l-green-500"
+      case "denied":
+        return "border-l-yellow-500"
+      case "error":
+        return "border-l-red-500"
+      default:
+        return "border-l-muted-foreground"
     }
   }
 
   return (
     <div>
-      <h2>Dashboard Overview</h2>
-      <p style={{ color: "var(--text-tertiary)", marginTop: "var(--spacing-sm)" }}>
+      <h2 className="text-2xl font-semibold mb-2">Dashboard Overview</h2>
+      <p className="text-muted-foreground">
         Welcome to the athreei privacy dashboard. This is your central hub for
         monitoring and managing AI interactions.
       </p>
 
       {/* Statistics Grid */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-          gap: "var(--spacing-lg)",
-          marginTop: "var(--spacing-xl)",
-        }}
-      >
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
         <StatCard
           title="Total Requests"
           value={loading ? "..." : String(stats.totalRequests)}
@@ -128,79 +131,44 @@ export function Dashboard(_props: DashboardProps) {
       </div>
 
       {/* Recent Activity */}
-      <Card title="Recent Activity" style={{ marginTop: "var(--spacing-xl)" }}>
+      <Card title="Recent Activity" className="mt-8">
         {loading ? (
-          <div style={{ textAlign: "center", padding: "var(--spacing-lg)" }}>
-            <p style={{ color: "var(--text-tertiary)" }}>Loading activity...</p>
+          <div className="text-center p-6">
+            <p className="text-muted-foreground">Loading activity...</p>
           </div>
         ) : recentActivity.length > 0 ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-md)" }}>
+          <div className="flex flex-col gap-4">
             {recentActivity.map((entry) => (
               <div
                 key={entry.id}
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  padding: "var(--spacing-md)",
-                  backgroundColor: "var(--bg-tertiary)",
-                  borderRadius: "var(--radius-md)",
-                  borderLeft: `3px solid ${getStatusColor(entry.status)}`,
-                }}
+                className={cn(
+                  "flex justify-between items-center p-4 bg-secondary rounded-md border-l-4",
+                  getStatusBorderColor(entry.status)
+                )}
               >
-                <div style={{ flex: 1 }}>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "var(--spacing-sm)",
-                      marginBottom: "var(--spacing-xs)",
-                    }}
-                  >
-                    <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>
-                      {entry.tool}
-                    </span>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-semibold text-sm">{entry.tool}</span>
                     {entry.aiApp && (
-                      <span
-                        style={{
-                          fontSize: "0.75rem",
-                          color: "var(--text-tertiary)",
-                          padding: "2px 6px",
-                          backgroundColor: "var(--bg-secondary)",
-                          borderRadius: "var(--radius-sm)",
-                        }}
-                      >
+                      <span className="text-xs text-muted-foreground px-1.5 py-0.5 bg-muted rounded">
                         {entry.aiApp}
                       </span>
                     )}
                   </div>
-                  <div
-                    style={{
-                      fontSize: "0.75rem",
-                      color: "var(--text-tertiary)",
-                    }}
-                  >
+                  <div className="text-xs text-muted-foreground">
                     {entry.origin}
                   </div>
                 </div>
-                <div style={{ textAlign: "right" }}>
+                <div className="text-right">
                   <div
-                    style={{
-                      fontSize: "0.75rem",
-                      color: getStatusColor(entry.status),
-                      fontWeight: 600,
-                      textTransform: "uppercase",
-                      marginBottom: "var(--spacing-xs)",
-                    }}
+                    className={cn(
+                      "text-xs font-semibold uppercase mb-1",
+                      getStatusColor(entry.status)
+                    )}
                   >
                     {entry.status}
                   </div>
-                  <div
-                    style={{
-                      fontSize: "0.75rem",
-                      color: "var(--text-tertiary)",
-                    }}
-                  >
+                  <div className="text-xs text-muted-foreground">
                     {formatTimestamp(entry.timestamp)}
                   </div>
                 </div>
@@ -208,22 +176,22 @@ export function Dashboard(_props: DashboardProps) {
             ))}
           </div>
         ) : (
-          <p style={{ color: "var(--text-tertiary)", textAlign: "center" }}>
+          <p className="text-muted-foreground text-center">
             No recent activity to display.
           </p>
         )}
       </Card>
 
       {/* Quick Actions */}
-      <Card title="Quick Actions" style={{ marginTop: "var(--spacing-lg)" }}>
-        <div style={{ display: "flex", gap: "var(--spacing-md)", flexWrap: "wrap" }}>
-          <Button variant="primary" onClick={() => route("/logs")}>
+      <Card title="Quick Actions" className="mt-6">
+        <div className="flex gap-4 flex-wrap">
+          <Button variant="primary" onClick={() => navigate("/logs")}>
             View Audit Logs
           </Button>
-          <Button variant="secondary" onClick={() => route("/permissions")}>
+          <Button variant="secondary" onClick={() => navigate("/permissions")}>
             Manage Permissions
           </Button>
-          <Button variant="secondary" onClick={() => route("/settings")}>
+          <Button variant="secondary" onClick={() => navigate("/settings")}>
             Configure Settings
           </Button>
         </div>
@@ -240,31 +208,15 @@ interface StatCardProps {
 
 function StatCard({ title, value, loading }: StatCardProps) {
   return (
-    <div
-      style={{
-        backgroundColor: "var(--bg-secondary)",
-        border: "1px solid var(--border-color)",
-        borderRadius: "var(--radius-md)",
-        padding: "var(--spacing-lg)",
-      }}
-    >
-      <h4
-        style={{
-          fontSize: "0.875rem",
-          marginBottom: "var(--spacing-sm)",
-          color: "var(--text-tertiary)",
-          fontWeight: 500,
-        }}
-      >
+    <div className="bg-card border border-border rounded-lg p-6">
+      <h4 className="text-sm mb-2 text-muted-foreground font-medium">
         {title}
       </h4>
       <p
-        style={{
-          fontSize: "2rem",
-          fontWeight: "600",
-          margin: 0,
-          color: loading ? "var(--text-tertiary)" : "var(--text-primary)",
-        }}
+        className={cn(
+          "text-3xl font-semibold m-0",
+          loading ? "text-muted-foreground" : "text-foreground"
+        )}
       >
         {value}
       </p>

@@ -1,9 +1,9 @@
-import { useState, useEffect } from "preact/hooks"
+import { useState, useEffect } from "react"
 import type { Permission, PermissionLevel } from "@athreei/shared"
 import { api } from "../lib/api"
 import { DataTable } from "../components/ui/DataTable"
 import type { Column } from "../components/ui/DataTable"
-import { Card } from "../components/ui/Card"
+import { LegacyCard as Card } from "../components/ui/Card"
 import { Button } from "../components/ui/Button"
 import { Modal } from "../components/ui/Modal"
 import { PermissionBadge } from "../components/ui/PermissionBadge"
@@ -12,11 +12,7 @@ interface PermissionsResponse {
   permissions: Permission[]
 }
 
-interface PermissionsProps {
-  path?: string
-}
-
-export function Permissions(_props: PermissionsProps) {
+export function Permissions() {
   const [permissions, setPermissions] = useState<Permission[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -99,24 +95,24 @@ export function Permissions(_props: PermissionsProps) {
     {
       accessor: "origin",
       header: "Origin",
-      cell: (value) => <code>{value}</code>,
+      cell: (value) => <code className="text-sm">{value as string}</code>,
     },
     {
       accessor: "tool",
       header: "Tool",
-      cell: (value) => <code>{value}</code>,
+      cell: (value) => <code className="text-sm">{value as string}</code>,
     },
     {
       accessor: "allowed",
       header: "Permission",
-      cell: (value: PermissionLevel) => <PermissionBadge level={value} />,
+      cell: (value) => <PermissionBadge level={value as PermissionLevel} />,
     },
     {
       accessor: "createdAt",
       header: "Created",
       cell: (value) => (
-        <span className="text-muted">
-          {new Date(value).toLocaleDateString()}
+        <span className="text-muted-foreground">
+          {new Date(value as number).toLocaleDateString()}
         </span>
       ),
     },
@@ -124,8 +120,8 @@ export function Permissions(_props: PermissionsProps) {
       accessor: "updatedAt",
       header: "Updated",
       cell: (value) => (
-        <span className="text-muted">
-          {new Date(value).toLocaleDateString()}
+        <span className="text-muted-foreground">
+          {new Date(value as number).toLocaleDateString()}
         </span>
       ),
     },
@@ -134,7 +130,7 @@ export function Permissions(_props: PermissionsProps) {
       header: "Actions",
       sortable: false,
       cell: (_, row) => (
-        <div style={{ display: "flex", gap: "var(--spacing-xs)" }}>
+        <div className="flex gap-1">
           <Button variant="secondary" size="sm" onClick={() => handleEdit(row)}>
             Edit
           </Button>
@@ -148,19 +144,17 @@ export function Permissions(_props: PermissionsProps) {
 
   return (
     <div>
-      <div style={{ marginBottom: "var(--spacing-xl)" }}>
-        <h2>Permissions Management</h2>
-        <p className="text-muted">
+      <div className="mb-8">
+        <h2 className="text-2xl font-semibold mb-2">Permissions Management</h2>
+        <p className="text-muted-foreground">
           Control which AI applications can access specific tools and resources.
         </p>
       </div>
 
       {/* Error Message */}
       {error && (
-        <Card style={{ marginBottom: "var(--spacing-lg)" }}>
-          <div style={{ color: "var(--error)", textAlign: "center" }}>
-            {error}
-          </div>
+        <Card className="mb-6">
+          <div className="text-error text-center">{error}</div>
         </Card>
       )}
 
@@ -175,26 +169,24 @@ export function Permissions(_props: PermissionsProps) {
       </Card>
 
       {/* Permission Levels Info */}
-      <Card style={{ marginTop: "var(--spacing-lg)" }}>
-        <h3 style={{ fontSize: "1rem", marginBottom: "var(--spacing-md)" }}>
-          Permission Levels
-        </h3>
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-sm)" }}>
-          <div>
+      <Card className="mt-6">
+        <h3 className="text-base font-medium mb-4">Permission Levels</h3>
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
             <PermissionBadge level="allowed" />
-            <span className="text-muted text-sm" style={{ marginLeft: "var(--spacing-sm)" }}>
+            <span className="text-muted-foreground text-sm">
               - Always grant access without prompting
             </span>
           </div>
-          <div>
+          <div className="flex items-center gap-2">
             <PermissionBadge level="denied" />
-            <span className="text-muted text-sm" style={{ marginLeft: "var(--spacing-sm)" }}>
+            <span className="text-muted-foreground text-sm">
               - Always deny access without prompting
             </span>
           </div>
-          <div>
+          <div className="flex items-center gap-2">
             <PermissionBadge level="ask" />
-            <span className="text-muted text-sm" style={{ marginLeft: "var(--spacing-sm)" }}>
+            <span className="text-muted-foreground text-sm">
               - Prompt for permission each time
             </span>
           </div>
@@ -219,23 +211,22 @@ export function Permissions(_props: PermissionsProps) {
       >
         {editingPermission && (
           <div>
-            <div style={{ marginBottom: "var(--spacing-md)" }}>
-              <p className="text-muted text-sm" style={{ marginBottom: "var(--spacing-xs)" }}>
-                Origin
-              </p>
+            <div className="mb-4">
+              <p className="text-muted-foreground text-sm mb-1">Origin</p>
               <code>{editingPermission.origin}</code>
             </div>
-            <div style={{ marginBottom: "var(--spacing-md)" }}>
-              <p className="text-muted text-sm" style={{ marginBottom: "var(--spacing-xs)" }}>
-                Tool
-              </p>
+            <div className="mb-4">
+              <p className="text-muted-foreground text-sm mb-1">Tool</p>
               <code>{editingPermission.tool}</code>
             </div>
-            <div className="form-group">
-              <label>Permission Level</label>
+            <div>
+              <label className="block mb-1.5 text-sm font-medium">
+                Permission Level
+              </label>
               <select
                 value={editLevel}
-                onChange={(e) => setEditLevel(e.currentTarget.value as PermissionLevel)}
+                onChange={(e) => setEditLevel(e.target.value as PermissionLevel)}
+                className="w-full p-2 bg-secondary border border-border rounded-md text-foreground"
               >
                 <option value="allowed">Allowed</option>
                 <option value="denied">Denied</option>

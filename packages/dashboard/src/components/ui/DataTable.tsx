@@ -1,255 +1,196 @@
-import type { JSX } from 'preact';
-import { useState } from 'preact/hooks';
+import { useState, useMemo } from "react"
+import {
+  useReactTable,
+  getCoreRowModel,
+  getSortedRowModel,
+  getPaginationRowModel,
+  flexRender,
+  type ColumnDef,
+  type SortingState,
+} from "@tanstack/react-table"
+import { ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-react"
+import { Button } from "./Button"
+import { cn } from "@/lib/utils"
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// Legacy Column interface for backwards compatibility
 export interface Column<T> {
-  accessor: keyof T | ((row: T) => any);
-  header: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  cell?: (value: any, row: T) => JSX.Element | string | number;
-  sortable?: boolean;
+  accessor: keyof T | ((row: T) => unknown)
+  header: string
+  cell?: (value: unknown, row: T) => React.ReactNode
+  sortable?: boolean
 }
 
 export interface DataTableProps<T> {
-  columns: Column<T>[];
-  data: T[];
-  loading?: boolean;
-  emptyMessage?: string;
-  // Pagination props
-  page?: number;
-  pageSize?: number;
-  total?: number;
-  onPageChange?: (page: number) => void;
-  // Virtual scrolling placeholder
-  // TODO: Implement virtual scrolling for large datasets
+  columns: Column<T>[]
+  data: T[]
+  loading?: boolean
+  emptyMessage?: string
+  page?: number
+  pageSize?: number
+  total?: number
+  onPageChange?: (page: number) => void
 }
 
-type SortDirection = 'asc' | 'desc' | null;
+export function DataTable<T extends object>({
+  columns,
+  data,
+  loading = false,
+  emptyMessage = "No data available",
+  page = 1,
+  pageSize = 10,
+  total,
+  onPageChange,
+}: DataTableProps<T>) {
+  const [sorting, setSorting] = useState<SortingState>([])
 
-interface SortState {
-  column: string | null;
-  direction: SortDirection;
-}
+  // Convert legacy columns to TanStack Table column definitions
+  const tableColumns = useMemo<ColumnDef<T>[]>(
+    () =>
+      columns.map((col, idx) => ({
+        id: typeof col.accessor === "string" ? col.accessor : `col_${idx}`,
+        accessorFn: (row: T) =>
+          typeof col.accessor === "function" ? col.accessor(row) : row[col.accessor],
+        header: ({ column }) => {
+          if (col.sortable === false) {
+            return <span>{col.header}</span>
+          }
+          return (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="-ml-3 h-8 data-[state=open]:bg-accent"
+              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            >
+              {col.header}
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            </Button>
+          )
+        },
+        cell: ({ getValue, row }) => {
+          const value = getValue()
+          if (col.cell) {
+            return col.cell(value, row.original)
+          }
+          return value as React.ReactNode
+        },
+        enableSorting: col.sortable !== false,
+      })),
+    [columns]
+  )
 
-export function DataTable<T extends Record<string, any>>(props: DataTableProps<T>) {
-  const {
-    columns,
+  const table = useReactTable({
     data,
-    loading = false,
-    emptyMessage = 'No data available',
-    page = 1,
-    pageSize = 10,
-    total,
-    onPageChange,
-  } = props;
+    columns: tableColumns,
+    state: {
+      sorting,
+      pagination: {
+        pageIndex: page - 1,
+        pageSize,
+      },
+    },
+    onSortingChange: setSorting,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: onPageChange ? undefined : getPaginationRowModel(),
+    manualPagination: !!onPageChange,
+    pageCount: total ? Math.ceil(total / pageSize) : undefined,
+  })
 
-  const [sortState, setSortState] = useState<SortState>({
-    column: null,
-    direction: null,
-  });
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const getCellValue = (row: T, column: Column<T>): any => {
-    if (typeof column.accessor === 'function') {
-      return column.accessor(row);
-    }
-    return row[column.accessor];
-  };
-
-  const handleSort = (column: Column<T>, columnIndex: number) => {
-    if (column.sortable === false) return;
-
-    const columnKey = typeof column.accessor === 'string' ? column.accessor : `col_${columnIndex}`;
-
-    let newDirection: SortDirection = 'asc';
-    if (sortState.column === columnKey) {
-      if (sortState.direction === 'asc') {
-        newDirection = 'desc';
-      } else if (sortState.direction === 'desc') {
-        newDirection = null;
-      }
-    }
-
-    setSortState({
-      column: newDirection ? columnKey : null,
-      direction: newDirection,
-    });
-  };
-
-  // Sort data
-  let sortedData = [...data];
-  if (sortState.column !== null && sortState.direction) {
-    sortedData.sort((a, b) => {
-      const columnIndex = columns.findIndex((col, idx) => {
-        const key = typeof col.accessor === 'string' ? col.accessor : `col_${idx}`;
-        return key === sortState.column;
-      });
-
-      if (columnIndex === -1) return 0;
-
-      const column = columns[columnIndex];
-      const aValue = getCellValue(a, column);
-      const bValue = getCellValue(b, column);
-
-      if (aValue === bValue) return 0;
-
-      const comparison = aValue > bValue ? 1 : -1;
-      return sortState.direction === 'asc' ? comparison : -comparison;
-    });
-  }
-
-  // Calculate pagination
-  const totalPages = total ? Math.ceil(total / pageSize) : Math.ceil(sortedData.length / pageSize);
-  const isPaginated = onPageChange !== undefined;
-
-  const renderSortIndicator = (column: Column<T>, columnIndex: number) => {
-    if (column.sortable === false) return null;
-
-    const columnKey = typeof column.accessor === 'string' ? column.accessor : `col_${columnIndex}`;
-    if (sortState.column !== columnKey) {
-      return <span style={{ marginLeft: '4px', opacity: 0.3 }}>⇅</span>;
-    }
-
-    return (
-      <span style={{ marginLeft: '4px' }}>
-        {sortState.direction === 'asc' ? '↑' : '↓'}
-      </span>
-    );
-  };
-
-  const renderPagination = () => {
-    if (!isPaginated) return null;
-
-    return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        gap: '8px',
-        marginTop: '16px',
-        padding: '8px',
-      }}>
-        <button
-          onClick={() => onPageChange(page - 1)}
-          disabled={page <= 1}
-          style={{
-            padding: '4px 12px',
-            background: 'var(--bg-secondary)',
-            color: 'var(--text-primary)',
-            border: '1px solid var(--border)',
-            borderRadius: '4px',
-            cursor: page <= 1 ? 'not-allowed' : 'pointer',
-            opacity: page <= 1 ? 0.5 : 1,
-          }}
-        >
-          Previous
-        </button>
-        <span style={{ color: 'var(--text-secondary)' }}>
-          Page {page} of {totalPages}
-        </span>
-        <button
-          onClick={() => onPageChange(page + 1)}
-          disabled={page >= totalPages}
-          style={{
-            padding: '4px 12px',
-            background: 'var(--bg-secondary)',
-            color: 'var(--text-primary)',
-            border: '1px solid var(--border)',
-            borderRadius: '4px',
-            cursor: page >= totalPages ? 'not-allowed' : 'pointer',
-            opacity: page >= totalPages ? 0.5 : 1,
-          }}
-        >
-          Next
-        </button>
-      </div>
-    );
-  };
+  const isPaginated = onPageChange !== undefined
+  const totalPages = total ? Math.ceil(total / pageSize) : table.getPageCount()
 
   if (loading) {
     return (
-      <div style={{
-        padding: '32px',
-        textAlign: 'center',
-        color: 'var(--text-secondary)',
-      }}>
-        Loading...
-      </div>
-    );
+      <div className="p-8 text-center text-muted-foreground">Loading...</div>
+    )
   }
 
-  if (sortedData.length === 0) {
+  if (data.length === 0) {
     return (
-      <div style={{
-        padding: '32px',
-        textAlign: 'center',
-        color: 'var(--text-muted)',
-      }}>
-        {emptyMessage}
-      </div>
-    );
+      <div className="p-8 text-center text-muted-foreground">{emptyMessage}</div>
+    )
   }
 
   return (
-    <div style={{ width: '100%' }}>
-      <div style={{ overflowX: 'auto' }}>
-        <table style={{
-          width: '100%',
-          borderCollapse: 'collapse',
-          color: 'var(--text-primary)',
-        }}>
+    <div className="w-full">
+      <div className="overflow-x-auto rounded-md border border-border">
+        <table className="w-full border-collapse text-sm">
           <thead>
-            <tr style={{
-              borderBottom: '1px solid var(--border)',
-              background: 'var(--bg-secondary)',
-            }}>
-              {columns.map((column, idx) => (
-                <th
-                  key={idx}
-                  onClick={() => handleSort(column, idx)}
-                  style={{
-                    padding: '12px',
-                    textAlign: 'left',
-                    fontWeight: 600,
-                    cursor: column.sortable !== false ? 'pointer' : 'default',
-                    userSelect: 'none',
-                  }}
-                >
-                  {column.header}
-                  {renderSortIndicator(column, idx)}
-                </th>
-              ))}
-            </tr>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr
+                key={headerGroup.id}
+                className="border-b border-border bg-muted/50"
+              >
+                {headerGroup.headers.map((header) => (
+                  <th
+                    key={header.id}
+                    className="px-4 py-3 text-left font-semibold text-muted-foreground"
+                  >
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </th>
+                ))}
+              </tr>
+            ))}
           </thead>
           <tbody>
-            {sortedData.map((row, rowIdx) => (
+            {table.getRowModel().rows.map((row) => (
               <tr
-                key={rowIdx}
-                style={{
-                  borderBottom: '1px solid var(--border-light)',
-                }}
+                key={row.id}
+                className={cn(
+                  "border-b border-border transition-colors",
+                  "hover:bg-muted/50"
+                )}
               >
-                {columns.map((column, colIdx) => {
-                  const value = getCellValue(row, column);
-                  const displayValue = column.cell ? column.cell(value, row) : value;
-
-                  return (
-                    <td
-                      key={colIdx}
-                      style={{
-                        padding: '12px',
-                      }}
-                    >
-                      {displayValue}
-                    </td>
-                  );
-                })}
+                {row.getVisibleCells().map((cell) => (
+                  <td key={cell.id} className="px-4 py-3">
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      {renderPagination()}
+
+      {(isPaginated || totalPages > 1) && (
+        <div className="flex items-center justify-center gap-2 mt-4 py-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() =>
+              isPaginated
+                ? onPageChange(page - 1)
+                : table.previousPage()
+            }
+            disabled={isPaginated ? page <= 1 : !table.getCanPreviousPage()}
+          >
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            Previous
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            Page {isPaginated ? page : table.getState().pagination.pageIndex + 1} of{" "}
+            {totalPages}
+          </span>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() =>
+              isPaginated ? onPageChange(page + 1) : table.nextPage()
+            }
+            disabled={
+              isPaginated ? page >= totalPages : !table.getCanNextPage()
+            }
+          >
+            Next
+            <ChevronRight className="h-4 w-4 ml-1" />
+          </Button>
+        </div>
+      )}
     </div>
-  );
+  )
 }

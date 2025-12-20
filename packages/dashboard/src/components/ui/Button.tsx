@@ -1,125 +1,58 @@
-import type { ComponentChildren, JSX } from 'preact';
+import * as React from "react"
+import { Slot } from "@radix-ui/react-slot"
+import { cva, type VariantProps } from "class-variance-authority"
+import { Loader2 } from "lucide-react"
+import { cn } from "@/lib/utils"
 
-export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost';
-export type ButtonSize = 'sm' | 'md' | 'lg';
+const buttonVariants = cva(
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
+  {
+    variants: {
+      variant: {
+        primary: "bg-primary text-primary-foreground shadow hover:bg-primary/90",
+        secondary: "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80 border border-border",
+        danger: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
+      },
+      size: {
+        sm: "h-8 rounded-md px-3 text-xs",
+        md: "h-9 px-4 py-2",
+        lg: "h-10 rounded-md px-6",
+      },
+    },
+    defaultVariants: {
+      variant: "secondary",
+      size: "md",
+    },
+  }
+)
 
-export interface ButtonProps {
-  variant?: ButtonVariant;
-  size?: ButtonSize;
-  disabled?: boolean;
-  loading?: boolean;
-  onClick?: (e: JSX.TargetedMouseEvent<HTMLButtonElement>) => void;
-  children: ComponentChildren;
-  type?: 'button' | 'submit' | 'reset';
-  style?: JSX.CSSProperties;
+export type ButtonVariant = "primary" | "secondary" | "danger" | "ghost"
+export type ButtonSize = "sm" | "md" | "lg"
+
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {
+  asChild?: boolean
+  loading?: boolean
 }
 
-const variantStyles: Record<ButtonVariant, JSX.CSSProperties> = {
-  primary: {
-    background: 'var(--accent)',
-    color: '#ffffff',
-    border: '1px solid var(--accent)',
-  },
-  secondary: {
-    background: 'var(--bg-secondary)',
-    color: 'var(--text-primary)',
-    border: '1px solid var(--border)',
-  },
-  danger: {
-    background: 'var(--error)',
-    color: '#ffffff',
-    border: '1px solid var(--error)',
-  },
-  ghost: {
-    background: 'transparent',
-    color: 'var(--text-secondary)',
-    border: '1px solid transparent',
-  },
-};
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant, size, asChild = false, loading, children, disabled, ...props }, ref) => {
+    const Comp = asChild ? Slot : "button"
+    return (
+      <Comp
+        className={cn(buttonVariants({ variant, size, className }))}
+        ref={ref}
+        disabled={disabled || loading}
+        {...props}
+      >
+        {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+        {children}
+      </Comp>
+    )
+  }
+)
+Button.displayName = "Button"
 
-const sizeStyles: Record<ButtonSize, JSX.CSSProperties> = {
-  sm: {
-    padding: '4px 12px',
-    fontSize: '12px',
-  },
-  md: {
-    padding: '8px 16px',
-    fontSize: '14px',
-  },
-  lg: {
-    padding: '12px 24px',
-    fontSize: '16px',
-  },
-};
-
-export function Button(props: ButtonProps) {
-  const {
-    variant = 'secondary',
-    size = 'md',
-    disabled = false,
-    loading = false,
-    onClick,
-    children,
-    type = 'button',
-    style: customStyle,
-  } = props;
-
-  const isDisabled = disabled || loading;
-
-  const baseStyle: JSX.CSSProperties = {
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '6px',
-    borderRadius: '6px',
-    fontWeight: 500,
-    cursor: isDisabled ? 'not-allowed' : 'pointer',
-    opacity: isDisabled ? 0.6 : 1,
-    transition: 'all 0.15s ease',
-    ...variantStyles[variant],
-    ...sizeStyles[size],
-    ...customStyle,
-  };
-
-  const handleClick = (e: JSX.TargetedMouseEvent<HTMLButtonElement>) => {
-    if (!isDisabled && onClick) {
-      onClick(e);
-    }
-  };
-
-  return (
-    <button
-      type={type}
-      disabled={isDisabled}
-      onClick={handleClick}
-      style={baseStyle}
-    >
-      {loading && (
-        <span
-          style={{
-            display: 'inline-block',
-            width: '14px',
-            height: '14px',
-            border: '2px solid currentColor',
-            borderTopColor: 'transparent',
-            borderRadius: '50%',
-            animation: 'spin 0.6s linear infinite',
-          }}
-        />
-      )}
-      {children}
-      <style>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-        button:hover:not(:disabled) {
-          opacity: 0.9;
-          transform: translateY(-1px);
-        }
-        button:active:not(:disabled) {
-          transform: translateY(0);
-        }
-      `}</style>
-    </button>
-  );
-}
+export { Button, buttonVariants }

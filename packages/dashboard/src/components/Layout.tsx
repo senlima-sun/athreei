@@ -1,151 +1,108 @@
-import { Link } from "preact-router/match"
-import type { ComponentChildren } from "preact"
+import { NavLink, useLocation } from "react-router-dom"
+import type { ReactNode } from "react"
 import { ConnectionStatus } from "./ConnectionStatus"
+import { ThemeToggle } from "./ThemeToggle"
+import { cn } from "@/lib/utils"
 
 interface LayoutProps {
-  children: ComponentChildren
+  children: ReactNode
 }
 
 export function Layout({ children }: LayoutProps) {
+  const location = useLocation()
+
+  // Get page title based on current route
+  const getPageTitle = () => {
+    switch (location.pathname) {
+      case "/":
+        return "Dashboard"
+      case "/logs":
+        return "Audit Logs"
+      case "/permissions":
+        return "Permissions"
+      case "/sessions":
+        return "Sessions"
+      case "/settings":
+        return "Settings"
+      default:
+        return "Dashboard"
+    }
+  }
+
   return (
-    <div style={{ display: "flex", height: "100vh" }}>
+    <div className="flex h-screen">
       {/* Sidebar */}
-      <aside
-        style={{
-          width: "240px",
-          backgroundColor: "var(--bg-secondary)",
-          borderRight: "1px solid var(--border-color)",
-          display: "flex",
-          flexDirection: "column",
-          padding: "var(--spacing-lg)",
-        }}
-      >
+      <aside className="w-60 bg-card border-r border-border flex flex-col p-6">
         {/* Logo/Brand */}
-        <div style={{ marginBottom: "var(--spacing-xl)" }}>
-          <h2 style={{ margin: 0, color: "var(--accent-primary)" }}>athreei</h2>
-          <p
-            style={{
-              margin: 0,
-              fontSize: "0.75rem",
-              color: "var(--text-tertiary)",
-            }}
-          >
-            Privacy Dashboard
-          </p>
+        <div className="mb-8">
+          <h2 className="m-0 text-primary text-xl font-semibold">athreei</h2>
+          <p className="m-0 text-xs text-muted-foreground">Privacy Dashboard</p>
         </div>
 
         {/* Navigation Links */}
-        <nav style={{ flex: 1 }}>
-          <NavLink href="/" icon="📊">
+        <nav className="flex-1 space-y-1">
+          <SidebarLink to="/" icon="📊">
             Dashboard
-          </NavLink>
-          <NavLink href="/logs" icon="📝">
+          </SidebarLink>
+          <SidebarLink to="/logs" icon="📝">
             Audit Logs
-          </NavLink>
-          <NavLink href="/permissions" icon="🔒">
+          </SidebarLink>
+          <SidebarLink to="/permissions" icon="🔒">
             Permissions
-          </NavLink>
-          <NavLink href="/sessions" icon="🔗">
+          </SidebarLink>
+          <SidebarLink to="/sessions" icon="🔗">
             Sessions
-          </NavLink>
-          <NavLink href="/settings" icon="⚙️">
+          </SidebarLink>
+          <SidebarLink to="/settings" icon="⚙️">
             Settings
-          </NavLink>
+          </SidebarLink>
         </nav>
 
         {/* Version Info */}
-        <div
-          style={{
-            marginTop: "auto",
-            paddingTop: "var(--spacing-md)",
-            borderTop: "1px solid var(--border-color)",
-          }}
-        >
-          <p
-            style={{
-              margin: 0,
-              fontSize: "0.75rem",
-              color: "var(--text-tertiary)",
-            }}
-          >
-            v0.1.0
-          </p>
+        <div className="mt-auto pt-4 border-t border-border">
+          <p className="m-0 text-xs text-muted-foreground">v0.1.0</p>
         </div>
       </aside>
 
       {/* Main Content */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+      <div className="flex-1 flex flex-col">
         {/* Header */}
-        <header
-          style={{
-            backgroundColor: "var(--bg-secondary)",
-            borderBottom: "1px solid var(--border-color)",
-            padding: "var(--spacing-lg)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <h1 style={{ margin: 0, fontSize: "1.5rem" }}>Dashboard</h1>
+        <header className="bg-card border-b border-border p-6 flex items-center justify-between">
+          <h1 className="m-0 text-2xl font-semibold">{getPageTitle()}</h1>
 
-          {/* Connection Status */}
-          <ConnectionStatus />
+          <div className="flex items-center gap-4">
+            <ThemeToggle />
+            <ConnectionStatus />
+          </div>
         </header>
 
         {/* Page Content */}
-        <main
-          style={{
-            flex: 1,
-            padding: "var(--spacing-xl)",
-            overflowY: "auto",
-          }}
-        >
-          {children}
-        </main>
+        <main className="flex-1 p-8 overflow-y-auto">{children}</main>
       </div>
     </div>
   )
 }
 
-interface NavLinkProps {
-  href: string
+interface SidebarLinkProps {
+  to: string
   icon: string
-  children: ComponentChildren
+  children: ReactNode
 }
 
-function NavLink({ href, icon, children }: NavLinkProps) {
+function SidebarLink({ to, icon, children }: SidebarLinkProps) {
   return (
-    <Link
-      href={href}
-      activeClassName="nav-active"
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "var(--spacing-md)",
-        padding: "var(--spacing-sm) var(--spacing-md)",
-        marginBottom: "var(--spacing-xs)",
-        borderRadius: "var(--radius-md)",
-        color: "var(--text-secondary)",
-        textDecoration: "none",
-        transition: "all 0.2s",
-      }}
+    <NavLink
+      to={to}
+      className={({ isActive }) =>
+        cn(
+          "flex items-center gap-4 px-4 py-2 rounded-md text-muted-foreground no-underline transition-colors",
+          "hover:bg-accent hover:text-foreground",
+          isActive && "bg-accent text-foreground"
+        )
+      }
     >
       <span>{icon}</span>
       <span>{children}</span>
-    </Link>
+    </NavLink>
   )
 }
-
-// Add active link styling via global styles
-const style = document.createElement("style")
-style.textContent = `
-  .nav-active {
-    background-color: var(--bg-hover) !important;
-    color: var(--text-primary) !important;
-  }
-  a[href]:hover {
-    background-color: var(--bg-tertiary);
-    color: var(--text-primary);
-  }
-`
-document.head.appendChild(style)

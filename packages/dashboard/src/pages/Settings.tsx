@@ -1,5 +1,5 @@
-import { useState, useEffect } from "preact/hooks"
-import { Card } from "../components/ui/Card"
+import { useState, useEffect } from "react"
+import { LegacyCard as Card } from "../components/ui/Card"
 import { Button } from "../components/ui/Button"
 import { ConnectionStatus } from "../components/ConnectionStatus"
 import {
@@ -12,12 +12,9 @@ import {
   getExtensionStatus,
 } from "../lib/api"
 import type { Settings as SettingsType, McpStatus, ExtensionStatus } from "../lib/api"
+import { cn } from "@/lib/utils"
 
-interface SettingsProps {
-  path?: string
-}
-
-export function Settings(_props: SettingsProps) {
+export function Settings() {
   const [settings, setSettings] = useState<SettingsType | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -165,15 +162,15 @@ export function Settings(_props: SettingsProps) {
   if (loading) {
     return (
       <div>
-        <div style={{ marginBottom: "var(--spacing-xl)" }}>
-          <h2>Settings</h2>
-          <p style={{ color: "var(--text-tertiary)", marginTop: "var(--spacing-sm)" }}>
+        <div className="mb-8">
+          <h2 className="text-2xl font-semibold mb-2">Settings</h2>
+          <p className="text-muted-foreground">
             Configure your athreei dashboard and privacy preferences.
           </p>
         </div>
         <Card>
-          <div style={{ textAlign: "center", padding: "var(--spacing-xl)" }}>
-            <p style={{ color: "var(--text-tertiary)" }}>Loading settings...</p>
+          <div className="text-center p-8">
+            <p className="text-muted-foreground">Loading settings...</p>
           </div>
         </Card>
       </div>
@@ -183,16 +180,16 @@ export function Settings(_props: SettingsProps) {
   if (error && !settings) {
     return (
       <div>
-        <div style={{ marginBottom: "var(--spacing-xl)" }}>
-          <h2>Settings</h2>
+        <div className="mb-8">
+          <h2 className="text-2xl font-semibold mb-2">Settings</h2>
         </div>
         <Card>
-          <div style={{ textAlign: "center", padding: "var(--spacing-xl)" }}>
-            <p style={{ color: "var(--error)" }}>Error: {error}</p>
+          <div className="text-center p-8">
+            <p className="text-error">Error: {error}</p>
             <Button
               variant="secondary"
               onClick={() => window.location.reload()}
-              style={{ marginTop: "var(--spacing-md)" }}
+              className="mt-4"
             >
               Retry
             </Button>
@@ -204,71 +201,38 @@ export function Settings(_props: SettingsProps) {
 
   return (
     <div>
-      <div style={{ marginBottom: "var(--spacing-xl)" }}>
-        <h2>Settings</h2>
-        <p style={{ color: "var(--text-tertiary)", marginTop: "var(--spacing-sm)" }}>
+      <div className="mb-8">
+        <h2 className="text-2xl font-semibold mb-2">Settings</h2>
+        <p className="text-muted-foreground">
           Configure your athreei dashboard and privacy preferences.
         </p>
       </div>
 
       {/* Status Messages */}
       {error && (
-        <div
-          style={{
-            padding: "var(--spacing-md)",
-            marginBottom: "var(--spacing-lg)",
-            backgroundColor: "var(--error)",
-            color: "#ffffff",
-            borderRadius: "var(--radius-md)",
-          }}
-        >
+        <div className="p-4 mb-6 bg-destructive text-destructive-foreground rounded-md">
           {error}
         </div>
       )}
 
       {successMessage && (
-        <div
-          style={{
-            padding: "var(--spacing-md)",
-            marginBottom: "var(--spacing-lg)",
-            backgroundColor: "var(--success)",
-            color: "#ffffff",
-            borderRadius: "var(--radius-md)",
-          }}
-        >
+        <div className="p-4 mb-6 bg-success text-white rounded-md">
           {successMessage}
         </div>
       )}
 
       {/* General Settings */}
-      <Card title="General" style={{ marginBottom: "var(--spacing-lg)" }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-md)" }}>
+      <Card title="General" className="mb-6">
+        <div className="flex flex-col gap-4">
           <div>
-            <label
-              htmlFor="theme"
-              style={{
-                display: "block",
-                marginBottom: "var(--spacing-xs)",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-              }}
-            >
+            <label htmlFor="theme" className="block mb-1.5 text-sm font-medium">
               Theme
             </label>
             <select
               id="theme"
               value={settings?.theme || "dark"}
-              onChange={(e) =>
-                updateSetting("theme", (e.target as HTMLSelectElement).value as any)
-              }
-              style={{
-                width: "100%",
-                padding: "var(--spacing-sm)",
-                backgroundColor: "var(--bg-tertiary)",
-                border: "1px solid var(--border-color)",
-                borderRadius: "var(--radius-md)",
-                color: "var(--text-primary)",
-              }}
+              onChange={(e) => updateSetting("theme", e.target.value as "dark" | "light" | "auto")}
+              className="w-full p-2 bg-secondary border border-border rounded-md text-foreground"
             >
               <option value="dark">Dark</option>
               <option value="light">Light</option>
@@ -277,31 +241,14 @@ export function Settings(_props: SettingsProps) {
           </div>
 
           <div>
-            <label
-              htmlFor="language"
-              style={{
-                display: "block",
-                marginBottom: "var(--spacing-xs)",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-              }}
-            >
+            <label htmlFor="language" className="block mb-1.5 text-sm font-medium">
               Language
             </label>
             <select
               id="language"
               value={settings?.language || "en"}
-              onChange={(e) =>
-                updateSetting("language", (e.target as HTMLSelectElement).value)
-              }
-              style={{
-                width: "100%",
-                padding: "var(--spacing-sm)",
-                backgroundColor: "var(--bg-tertiary)",
-                border: "1px solid var(--border-color)",
-                borderRadius: "var(--radius-md)",
-                color: "var(--text-primary)",
-              }}
+              onChange={(e) => updateSetting("language", e.target.value)}
+              className="w-full p-2 bg-secondary border border-border rounded-md text-foreground"
             >
               <option value="en">English</option>
               <option value="es">Spanish</option>
@@ -312,60 +259,32 @@ export function Settings(_props: SettingsProps) {
       </Card>
 
       {/* Privacy Settings */}
-      <Card title="Privacy" style={{ marginBottom: "var(--spacing-lg)" }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-md)" }}>
+      <Card title="Privacy" className="mb-6">
+        <div className="flex flex-col gap-4">
           <div>
-            <label style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
+            <label className="flex items-center cursor-pointer">
               <input
                 type="checkbox"
                 checked={settings?.autoApprove || false}
-                onChange={(e) =>
-                  updateSetting("autoApprove", (e.target as HTMLInputElement).checked)
-                }
-                style={{ marginRight: "var(--spacing-sm)", width: "auto", cursor: "pointer" }}
+                onChange={(e) => updateSetting("autoApprove", e.target.checked)}
+                className="mr-2 w-4 h-4 cursor-pointer"
               />
-              <span style={{ fontSize: "0.875rem", fontWeight: 500 }}>
-                Auto-approve known origins
-              </span>
+              <span className="text-sm font-medium">Auto-approve known origins</span>
             </label>
-            <p
-              style={{
-                marginTop: "var(--spacing-xs)",
-                marginLeft: "28px",
-                fontSize: "0.75rem",
-                color: "var(--text-tertiary)",
-              }}
-            >
+            <p className="mt-1 ml-6 text-xs text-muted-foreground">
               Automatically grant permissions to previously approved origins.
             </p>
           </div>
 
           <div>
-            <label
-              htmlFor="retention"
-              style={{
-                display: "block",
-                marginBottom: "var(--spacing-xs)",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-              }}
-            >
+            <label htmlFor="retention" className="block mb-1.5 text-sm font-medium">
               Log Retention (days)
             </label>
             <select
               id="retention"
               value={settings?.logRetention || 30}
-              onChange={(e) =>
-                updateSetting("logRetention", parseInt((e.target as HTMLSelectElement).value))
-              }
-              style={{
-                width: "100%",
-                padding: "var(--spacing-sm)",
-                backgroundColor: "var(--bg-tertiary)",
-                border: "1px solid var(--border-color)",
-                borderRadius: "var(--radius-md)",
-                color: "var(--text-primary)",
-              }}
+              onChange={(e) => updateSetting("logRetention", parseInt(e.target.value))}
+              className="w-full p-2 bg-secondary border border-border rounded-md text-foreground"
             >
               <option value="7">7 days</option>
               <option value="30">30 days</option>
@@ -373,13 +292,7 @@ export function Settings(_props: SettingsProps) {
               <option value="365">1 year</option>
               <option value="0">Forever</option>
             </select>
-            <p
-              style={{
-                marginTop: "var(--spacing-xs)",
-                fontSize: "0.75rem",
-                color: "var(--text-tertiary)",
-              }}
-            >
+            <p className="mt-1 text-xs text-muted-foreground">
               Audit logs older than this will be automatically deleted.
             </p>
           </div>
@@ -387,93 +300,63 @@ export function Settings(_props: SettingsProps) {
       </Card>
 
       {/* Notification Settings */}
-      <Card title="Notifications" style={{ marginBottom: "var(--spacing-lg)" }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-md)" }}>
+      <Card title="Notifications" className="mb-6">
+        <div className="flex flex-col gap-4">
           <div>
-            <label style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
+            <label className="flex items-center cursor-pointer">
               <input
                 type="checkbox"
                 checked={settings?.notificationsEnabled || false}
-                onChange={(e) =>
-                  updateSetting("notificationsEnabled", (e.target as HTMLInputElement).checked)
-                }
-                style={{ marginRight: "var(--spacing-sm)", width: "auto", cursor: "pointer" }}
+                onChange={(e) => updateSetting("notificationsEnabled", e.target.checked)}
+                className="mr-2 w-4 h-4 cursor-pointer"
               />
-              <span style={{ fontSize: "0.875rem", fontWeight: 500 }}>
-                Enable notifications
-              </span>
+              <span className="text-sm font-medium">Enable notifications</span>
             </label>
-            <p
-              style={{
-                marginTop: "var(--spacing-xs)",
-                marginLeft: "28px",
-                fontSize: "0.75rem",
-                color: "var(--text-tertiary)",
-              }}
-            >
+            <p className="mt-1 ml-6 text-xs text-muted-foreground">
               Receive browser notifications for important events.
             </p>
           </div>
 
           <div>
-            <label
-              style={{
-                display: "block",
-                marginBottom: "var(--spacing-xs)",
-                fontSize: "0.875rem",
-                fontWeight: 500,
-              }}
-            >
-              Notify on:
-            </label>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "var(--spacing-sm)",
-                marginLeft: "var(--spacing-md)",
-              }}
-            >
-              <label style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
+            <label className="block mb-1.5 text-sm font-medium">Notify on:</label>
+            <div className="flex flex-col gap-2 ml-4">
+              <label className="flex items-center cursor-pointer">
                 <input
                   type="checkbox"
                   checked={settings?.notifyOnPermissionRequests || false}
                   disabled={!settings?.notificationsEnabled}
                   onChange={(e) =>
-                    updateSetting(
-                      "notifyOnPermissionRequests",
-                      (e.target as HTMLInputElement).checked
-                    )
+                    updateSetting("notifyOnPermissionRequests", e.target.checked)
                   }
-                  style={{ marginRight: "var(--spacing-sm)", width: "auto", cursor: "pointer" }}
+                  className="mr-2 w-4 h-4 cursor-pointer"
                 />
-                <span style={{ fontSize: "0.875rem" }}>New permission requests</span>
+                <span className="text-sm">New permission requests</span>
               </label>
 
-              <label style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
+              <label className="flex items-center cursor-pointer">
                 <input
                   type="checkbox"
                   checked={settings?.notifyOnDeniedTools || false}
                   disabled={!settings?.notificationsEnabled}
                   onChange={(e) =>
-                    updateSetting("notifyOnDeniedTools", (e.target as HTMLInputElement).checked)
+                    updateSetting("notifyOnDeniedTools", e.target.checked)
                   }
-                  style={{ marginRight: "var(--spacing-sm)", width: "auto", cursor: "pointer" }}
+                  className="mr-2 w-4 h-4 cursor-pointer"
                 />
-                <span style={{ fontSize: "0.875rem" }}>Denied tool invocations</span>
+                <span className="text-sm">Denied tool invocations</span>
               </label>
 
-              <label style={{ display: "flex", alignItems: "center", cursor: "pointer" }}>
+              <label className="flex items-center cursor-pointer">
                 <input
                   type="checkbox"
                   checked={settings?.notifyOnNewSessions || false}
                   disabled={!settings?.notificationsEnabled}
                   onChange={(e) =>
-                    updateSetting("notifyOnNewSessions", (e.target as HTMLInputElement).checked)
+                    updateSetting("notifyOnNewSessions", e.target.checked)
                   }
-                  style={{ marginRight: "var(--spacing-sm)", width: "auto", cursor: "pointer" }}
+                  className="mr-2 w-4 h-4 cursor-pointer"
                 />
-                <span style={{ fontSize: "0.875rem" }}>New AI sessions</span>
+                <span className="text-sm">New AI sessions</span>
               </label>
             </div>
           </div>
@@ -481,19 +364,13 @@ export function Settings(_props: SettingsProps) {
       </Card>
 
       {/* Data Management */}
-      <Card title="Data Management" style={{ marginBottom: "var(--spacing-lg)" }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-md)" }}>
+      <Card title="Data Management" className="mb-6">
+        <div className="flex flex-col gap-4">
           <div>
             <Button variant="secondary" onClick={handleExportData} disabled={saving}>
               Export Data
             </Button>
-            <p
-              style={{
-                marginTop: "var(--spacing-xs)",
-                fontSize: "0.75rem",
-                color: "var(--text-tertiary)",
-              }}
-            >
+            <p className="mt-1 text-xs text-muted-foreground">
               Download all your audit logs and permissions as JSON.
             </p>
           </div>
@@ -502,13 +379,7 @@ export function Settings(_props: SettingsProps) {
             <Button variant="danger" onClick={handleClearAllData} disabled={saving}>
               Clear All Data
             </Button>
-            <p
-              style={{
-                marginTop: "var(--spacing-xs)",
-                fontSize: "0.75rem",
-                color: "var(--text-tertiary)",
-              }}
-            >
+            <p className="mt-1 text-xs text-muted-foreground">
               Permanently delete all audit logs, permissions, and sessions.
             </p>
           </div>
@@ -516,63 +387,49 @@ export function Settings(_props: SettingsProps) {
       </Card>
 
       {/* System Status */}
-      <Card title="System Status" style={{ marginBottom: "var(--spacing-lg)" }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-md)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: "0.875rem", color: "var(--text-secondary)" }}>
-              Version:
-            </span>
-            <code style={{ fontSize: "0.875rem" }}>0.1.0</code>
+      <Card title="System Status" className="mb-6">
+        <div className="flex flex-col gap-4">
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-muted-foreground">Version:</span>
+            <code className="text-sm">0.1.0</code>
           </div>
 
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: "0.875rem", color: "var(--text-secondary)" }}>
-              MCP Server Status:
-            </span>
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-muted-foreground">MCP Server Status:</span>
             <span
-              style={{
-                padding: "4px 8px",
-                fontSize: "0.75rem",
-                fontWeight: 600,
-                borderRadius: "var(--radius-sm)",
-                backgroundColor: mcpStatus?.running
-                  ? "var(--success)"
-                  : "var(--error)",
-                color: "#ffffff",
-              }}
+              className={cn(
+                "px-2 py-1 text-xs font-semibold rounded",
+                mcpStatus?.running
+                  ? "bg-success text-white"
+                  : "bg-destructive text-destructive-foreground"
+              )}
             >
               {mcpStatus?.running ? "Running" : "Stopped"}
             </span>
           </div>
 
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: "0.875rem", color: "var(--text-secondary)" }}>
-              Extension Status:
-            </span>
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-muted-foreground">Extension Status:</span>
             <span
-              style={{
-                padding: "4px 8px",
-                fontSize: "0.75rem",
-                fontWeight: 600,
-                borderRadius: "var(--radius-sm)",
-                backgroundColor: extensionStatus?.installed
-                  ? "var(--success)"
-                  : "var(--error)",
-                color: "#ffffff",
-              }}
+              className={cn(
+                "px-2 py-1 text-xs font-semibold rounded",
+                extensionStatus?.installed
+                  ? "bg-success text-white"
+                  : "bg-destructive text-destructive-foreground"
+              )}
             >
               {extensionStatus?.installed ? "Active" : "Inactive"}
             </span>
           </div>
 
-          <div style={{ marginTop: "var(--spacing-sm)" }}>
+          <div className="mt-2">
             <ConnectionStatus />
           </div>
         </div>
       </Card>
 
       {/* Action Buttons */}
-      <div style={{ display: "flex", gap: "var(--spacing-md)", marginTop: "var(--spacing-xl)" }}>
+      <div className="flex gap-4 mt-8">
         <Button
           variant="primary"
           onClick={handleSaveSettings}
@@ -581,11 +438,7 @@ export function Settings(_props: SettingsProps) {
         >
           Save Changes
         </Button>
-        <Button
-          variant="secondary"
-          onClick={handleResetToDefaults}
-          disabled={saving}
-        >
+        <Button variant="secondary" onClick={handleResetToDefaults} disabled={saving}>
           Reset to Defaults
         </Button>
       </div>

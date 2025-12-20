@@ -1,59 +1,96 @@
-import type { ComponentChildren, JSX } from 'preact';
+import * as React from "react"
+import { cn } from "@/lib/utils"
 
-export interface CardProps {
-  title?: string;
-  children: ComponentChildren;
-  className?: string;
-  actions?: ComponentChildren;
-  style?: JSX.CSSProperties;
+const Card = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn(
+      "rounded-xl border border-border bg-card text-card-foreground shadow",
+      className
+    )}
+    {...props}
+  />
+))
+Card.displayName = "Card"
+
+const CardHeader = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("flex flex-col space-y-1.5 p-6", className)}
+    {...props}
+  />
+))
+CardHeader.displayName = "CardHeader"
+
+const CardTitle = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("font-semibold leading-none tracking-tight", className)}
+    {...props}
+  />
+))
+CardTitle.displayName = "CardTitle"
+
+const CardDescription = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("text-sm text-muted-foreground", className)}
+    {...props}
+  />
+))
+CardDescription.displayName = "CardDescription"
+
+const CardContent = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
+))
+CardContent.displayName = "CardContent"
+
+const CardFooter = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("flex items-center p-6 pt-0", className)}
+    {...props}
+  />
+))
+CardFooter.displayName = "CardFooter"
+
+// Legacy Card interface for backwards compatibility
+export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+  title?: string
+  actions?: React.ReactNode
 }
 
-export function Card(props: CardProps) {
-  const { title, children, className, actions, style } = props;
-
-  return (
-    <div
-      className={className}
-      style={{
-        background: 'var(--bg-secondary)',
-        border: '1px solid var(--border)',
-        borderRadius: '8px',
-        overflow: 'hidden',
-        ...style,
-      }}
-    >
+const LegacyCard = React.forwardRef<HTMLDivElement, CardProps>(
+  ({ title, actions, children, className, ...props }, ref) => (
+    <Card ref={ref} className={className} {...props}>
       {(title || actions) && (
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '16px 20px',
-            borderBottom: '1px solid var(--border-light)',
-          }}
-        >
-          {title && (
-            <h3
-              style={{
-                margin: 0,
-                fontSize: '18px',
-                fontWeight: 600,
-                color: 'var(--text-primary)',
-              }}
-            >
-              {title}
-            </h3>
-          )}
-          {actions && (
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              {actions}
-            </div>
-          )}
-        </div>
+        <CardHeader className="flex-row items-center justify-between space-y-0 pb-4">
+          {title && <CardTitle className="text-lg">{title}</CardTitle>}
+          {actions && <div className="flex items-center gap-2">{actions}</div>}
+        </CardHeader>
       )}
-      <div style={{ padding: '20px' }}>
-        {children}
-      </div>
-    </div>
-  );
-}
+      <CardContent className={title || actions ? "" : "pt-6"}>{children}</CardContent>
+    </Card>
+  )
+)
+LegacyCard.displayName = "LegacyCard"
+
+export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent, LegacyCard }

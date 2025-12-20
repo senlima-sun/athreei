@@ -1,143 +1,91 @@
-import { h } from 'preact';
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useRef, useState } from "react"
+import { Search, X } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 export interface SearchInputProps {
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-  debounceMs?: number;
+  value: string
+  onChange: (value: string) => void
+  placeholder?: string
+  debounceMs?: number
+  className?: string
 }
 
-export function SearchInput(props: SearchInputProps) {
-  const { value, onChange, placeholder = 'Search...', debounceMs = 300 } = props;
-
-  const [localValue, setLocalValue] = useState(value);
-  const timeoutRef = useRef<number | null>(null);
+export function SearchInput({
+  value,
+  onChange,
+  placeholder = "Search...",
+  debounceMs = 300,
+  className,
+}: SearchInputProps) {
+  const [localValue, setLocalValue] = useState(value)
+  const timeoutRef = useRef<number | null>(null)
 
   // Sync local value when external value changes
   useEffect(() => {
-    setLocalValue(value);
-  }, [value]);
+    setLocalValue(value)
+  }, [value])
 
   // Debounced onChange
   useEffect(() => {
     if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
+      clearTimeout(timeoutRef.current)
     }
 
     timeoutRef.current = window.setTimeout(() => {
       if (localValue !== value) {
-        onChange(localValue);
+        onChange(localValue)
       }
-    }, debounceMs);
+    }, debounceMs)
 
     return () => {
       if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
+        clearTimeout(timeoutRef.current)
       }
-    };
-  }, [localValue, debounceMs]);
+    }
+  }, [localValue, debounceMs, onChange, value])
 
-  const handleInput = (e: h.JSX.TargetedEvent<HTMLInputElement>) => {
-    setLocalValue(e.currentTarget.value);
-  };
+  const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLocalValue(e.currentTarget.value)
+  }
 
   const handleClear = () => {
-    setLocalValue('');
-    onChange('');
-  };
+    setLocalValue("")
+    onChange("")
+  }
 
   return (
-    <div
-      style={{
-        position: 'relative',
-        display: 'inline-flex',
-        alignItems: 'center',
-        width: '100%',
-      }}
-    >
+    <div className={cn("relative inline-flex items-center w-full", className)}>
       {/* Search icon */}
-      <span
-        style={{
-          position: 'absolute',
-          left: '12px',
-          color: 'var(--text-muted)',
-          pointerEvents: 'none',
-        }}
-      >
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 16 16"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <circle cx="7" cy="7" r="5" />
-          <line x1="11" y1="11" x2="15" y2="15" />
-        </svg>
+      <span className="absolute left-3 text-muted-foreground pointer-events-none">
+        <Search className="h-4 w-4" />
       </span>
 
       <input
         type="text"
         value={localValue}
-        onInput={handleInput}
+        onChange={handleInput}
         placeholder={placeholder}
-        style={{
-          width: '100%',
-          padding: '8px 36px 8px 36px',
-          background: 'var(--bg-secondary)',
-          border: '1px solid var(--border)',
-          borderRadius: '6px',
-          color: 'var(--text-primary)',
-          fontSize: '14px',
-          outline: 'none',
-          transition: 'border-color 0.15s ease',
-        }}
-        onFocus={(e) => {
-          e.currentTarget.style.borderColor = 'var(--accent)';
-        }}
-        onBlur={(e) => {
-          e.currentTarget.style.borderColor = 'var(--border)';
-        }}
+        className={cn(
+          "w-full py-2 px-9 bg-secondary border border-border rounded-md",
+          "text-foreground text-sm outline-none transition-colors",
+          "focus:border-primary focus:ring-1 focus:ring-primary"
+        )}
       />
 
       {/* Clear button */}
       {localValue && (
         <button
           onClick={handleClear}
-          style={{
-            position: 'absolute',
-            right: '8px',
-            background: 'transparent',
-            border: 'none',
-            color: 'var(--text-muted)',
-            cursor: 'pointer',
-            padding: '4px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderRadius: '4px',
-          }}
+          className={cn(
+            "absolute right-2 bg-transparent border-none text-muted-foreground",
+            "cursor-pointer p-1 flex items-center justify-center rounded",
+            "hover:text-foreground transition-colors"
+          )}
           aria-label="Clear search"
         >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <line x1="12" y1="4" x2="4" y2="12" />
-            <line x1="4" y1="4" x2="12" y2="12" />
-          </svg>
+          <X className="h-4 w-4" />
         </button>
       )}
     </div>
-  );
+  )
 }

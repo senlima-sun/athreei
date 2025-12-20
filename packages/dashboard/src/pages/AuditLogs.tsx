@@ -1,11 +1,12 @@
-import { useState, useEffect } from "preact/hooks"
+import { useState, useEffect } from "react"
 import type { AuditLogEntry, AuditStatus } from "@athreei/shared"
 import { api } from "../lib/api"
 import { DataTable } from "../components/ui/DataTable"
 import type { Column } from "../components/ui/DataTable"
 import { SearchInput } from "../components/ui/SearchInput"
-import { Card } from "../components/ui/Card"
+import { LegacyCard as Card } from "../components/ui/Card"
 import { Button } from "../components/ui/Button"
+import { cn } from "@/lib/utils"
 
 interface AuditLogsResponse {
   logs: AuditLogEntry[]
@@ -14,11 +15,7 @@ interface AuditLogsResponse {
   pageSize: number
 }
 
-interface AuditLogsProps {
-  path?: string
-}
-
-export function AuditLogs(_props: AuditLogsProps) {
+export function AuditLogs() {
   const [logs, setLogs] = useState<AuditLogEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -78,31 +75,39 @@ export function AuditLogs(_props: AuditLogsProps) {
     {
       accessor: "timestamp",
       header: "Timestamp",
-      cell: (value) => new Date(value).toLocaleString(),
+      cell: (value) => new Date(value as number).toLocaleString(),
     },
     {
       accessor: "tool",
       header: "Tool",
-      cell: (value) => <code>{value}</code>,
+      cell: (value) => <code className="text-sm">{value as string}</code>,
     },
     {
       accessor: "origin",
       header: "Origin",
-      cell: (value) => <span className="text-muted">{value || "N/A"}</span>,
+      cell: (value) => (
+        <span className="text-muted-foreground">{(value as string) || "N/A"}</span>
+      ),
     },
     {
       accessor: "status",
       header: "Status",
-      cell: (value: AuditStatus) => {
+      cell: (value) => {
+        const status = value as AuditStatus
         const variant =
-          value === "success"
-            ? "success"
-            : value === "denied"
-              ? "warning"
-              : "error"
+          status === "success"
+            ? "bg-success/10 text-success"
+            : status === "denied"
+              ? "bg-warning/10 text-warning"
+              : "bg-error/10 text-error"
         return (
-          <span className={`badge badge-${variant}`}>
-            {value}
+          <span
+            className={cn(
+              "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
+              variant
+            )}
+          >
+            {status}
           </span>
         )
       },
@@ -121,31 +126,26 @@ export function AuditLogs(_props: AuditLogsProps) {
 
   return (
     <div>
-      <div style={{ marginBottom: "var(--spacing-xl)" }}>
-        <h2>Audit Logs</h2>
-        <p className="text-muted">
+      <div className="mb-8">
+        <h2 className="text-2xl font-semibold mb-2">Audit Logs</h2>
+        <p className="text-muted-foreground">
           Track all AI tool invocations and their outcomes for transparency and
           accountability.
         </p>
       </div>
 
       {/* Filters */}
-      <Card style={{ marginBottom: "var(--spacing-lg)" }}>
-        <h3 style={{ fontSize: "1rem", marginBottom: "var(--spacing-md)" }}>
-          Filters
-        </h3>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-            gap: "var(--spacing-md)",
-          }}
-        >
-          <div className="form-group">
-            <label>Status</label>
+      <Card className="mb-6">
+        <h3 className="text-base font-medium mb-4">Filters</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block mb-1.5 text-sm font-medium text-muted-foreground">
+              Status
+            </label>
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.currentTarget.value)}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full p-2 bg-secondary border border-border rounded-md text-foreground"
             >
               <option value="">All</option>
               <option value="success">Success</option>
@@ -153,11 +153,14 @@ export function AuditLogs(_props: AuditLogsProps) {
               <option value="error">Error</option>
             </select>
           </div>
-          <div className="form-group">
-            <label>Tool</label>
+          <div>
+            <label className="block mb-1.5 text-sm font-medium text-muted-foreground">
+              Tool
+            </label>
             <select
               value={toolFilter}
-              onChange={(e) => setToolFilter(e.currentTarget.value)}
+              onChange={(e) => setToolFilter(e.target.value)}
+              className="w-full p-2 bg-secondary border border-border rounded-md text-foreground"
             >
               <option value="">All Tools</option>
               {uniqueTools.map((tool) => (
@@ -167,8 +170,10 @@ export function AuditLogs(_props: AuditLogsProps) {
               ))}
             </select>
           </div>
-          <div className="form-group">
-            <label>Origin</label>
+          <div>
+            <label className="block mb-1.5 text-sm font-medium text-muted-foreground">
+              Origin
+            </label>
             <SearchInput
               value={originFilter}
               onChange={setOriginFilter}
@@ -180,10 +185,8 @@ export function AuditLogs(_props: AuditLogsProps) {
 
       {/* Error Message */}
       {error && (
-        <Card style={{ marginBottom: "var(--spacing-lg)" }}>
-          <div style={{ color: "var(--error)", textAlign: "center" }}>
-            {error}
-          </div>
+        <Card className="mb-6">
+          <div className="text-error text-center">{error}</div>
         </Card>
       )}
 

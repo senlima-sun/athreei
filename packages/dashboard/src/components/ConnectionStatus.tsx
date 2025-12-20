@@ -10,10 +10,12 @@
  * Shows dropdown with details when clicked
  */
 
-import { useState, useEffect, useRef } from "preact/hooks"
+import { useState, useEffect, useRef } from "react"
+import { ChevronUp, ChevronDown } from "lucide-react"
 import { StatusIndicator } from "./ui/StatusIndicator"
 import { getSystemStatus, getMcpStatus, getExtensionStatus } from "../lib/api"
 import type { SystemStatus, McpStatus, ExtensionStatus } from "../lib/api"
+import { cn } from "@/lib/utils"
 
 const STATUS_POLLING_INTERVAL_MS = 10000 // 10 seconds
 
@@ -72,18 +74,18 @@ export function ConnectionStatus() {
   const statusType = loading
     ? "warning"
     : error
-    ? "error"
-    : isConnected
-    ? "online"
-    : "offline"
+      ? "error"
+      : isConnected
+        ? "online"
+        : "offline"
 
   const statusLabel = loading
     ? "Connecting..."
     : error
-    ? "Error"
-    : isConnected
-    ? "Connected"
-    : "Disconnected"
+      ? "Error"
+      : isConnected
+        ? "Connected"
+        : "Disconnected"
 
   // Format uptime
   const formatUptime = (ms: number | undefined) => {
@@ -100,88 +102,49 @@ export function ConnectionStatus() {
   }
 
   return (
-    <div style={{ position: "relative" }} ref={dropdownRef}>
+    <div className="relative" ref={dropdownRef}>
       {/* Status indicator button */}
       <button
         onClick={() => setShowDetails(!showDetails)}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "var(--spacing-sm)",
-          padding: "var(--spacing-xs) var(--spacing-md)",
-          background: "transparent",
-          border: "1px solid var(--border-color)",
-          borderRadius: "var(--radius-md)",
-          cursor: "pointer",
-          transition: "all 0.2s",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = "var(--bg-tertiary)"
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = "transparent"
-        }}
+        className={cn(
+          "flex items-center gap-2 px-4 py-1.5",
+          "bg-transparent border border-border rounded-md",
+          "cursor-pointer transition-colors",
+          "hover:bg-accent"
+        )}
       >
         <StatusIndicator status={statusType} />
-        <span style={{ fontSize: "0.875rem", color: "var(--text-secondary)" }}>
-          {statusLabel}
-        </span>
-        <span style={{ fontSize: "0.75rem", color: "var(--text-tertiary)" }}>
-          {showDetails ? "▲" : "▼"}
-        </span>
+        <span className="text-sm text-muted-foreground">{statusLabel}</span>
+        {showDetails ? (
+          <ChevronUp className="h-3 w-3 text-muted-foreground" />
+        ) : (
+          <ChevronDown className="h-3 w-3 text-muted-foreground" />
+        )}
       </button>
 
       {/* Details dropdown */}
       {showDetails && (
         <div
-          style={{
-            position: "absolute",
-            top: "calc(100% + var(--spacing-sm))",
-            right: 0,
-            minWidth: "320px",
-            backgroundColor: "var(--bg-secondary)",
-            border: "1px solid var(--border-color)",
-            borderRadius: "var(--radius-md)",
-            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-            padding: "var(--spacing-md)",
-            zIndex: 1000,
-          }}
+          className={cn(
+            "absolute top-full right-0 mt-2 min-w-80",
+            "bg-card border border-border rounded-md shadow-lg p-4 z-50"
+          )}
         >
           {error ? (
             <div>
-              <h4 style={{ margin: "0 0 var(--spacing-sm) 0", color: "var(--error)" }}>
-                Connection Error
-              </h4>
-              <p style={{ margin: 0, fontSize: "0.875rem", color: "var(--text-tertiary)" }}>
-                {error}
-              </p>
+              <h4 className="m-0 mb-2 text-error">Connection Error</h4>
+              <p className="m-0 text-sm text-muted-foreground">{error}</p>
             </div>
           ) : (
             <>
               {/* MCP Server Status */}
-              <div style={{ marginBottom: "var(--spacing-md)" }}>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "var(--spacing-sm)",
-                    marginBottom: "var(--spacing-xs)",
-                  }}
-                >
-                  <StatusIndicator
-                    status={mcpStatus?.running ? "online" : "offline"}
-                    size="sm"
-                  />
-                  <h4 style={{ margin: 0, fontSize: "0.875rem" }}>MCP Server</h4>
+              <div className="mb-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <StatusIndicator status={mcpStatus?.running ? "online" : "offline"} size="sm" />
+                  <h4 className="m-0 text-sm font-medium">MCP Server</h4>
                 </div>
                 {mcpStatus && (
-                  <div
-                    style={{
-                      marginLeft: "20px",
-                      fontSize: "0.75rem",
-                      color: "var(--text-tertiary)",
-                    }}
-                  >
+                  <div className="ml-5 text-xs text-muted-foreground space-y-0.5">
                     <div>Version: {mcpStatus.version}</div>
                     <div>Uptime: {formatUptime(mcpStatus.uptime)}</div>
                     <div>Connected clients: {mcpStatus.connectedClients}</div>
@@ -191,29 +154,16 @@ export function ConnectionStatus() {
               </div>
 
               {/* Extension Status */}
-              <div style={{ marginBottom: "var(--spacing-md)" }}>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "var(--spacing-sm)",
-                    marginBottom: "var(--spacing-xs)",
-                  }}
-                >
+              <div className="mb-4">
+                <div className="flex items-center gap-2 mb-1">
                   <StatusIndicator
                     status={extensionStatus?.installed ? "online" : "offline"}
                     size="sm"
                   />
-                  <h4 style={{ margin: 0, fontSize: "0.875rem" }}>Chrome Extension</h4>
+                  <h4 className="m-0 text-sm font-medium">Chrome Extension</h4>
                 </div>
                 {extensionStatus && (
-                  <div
-                    style={{
-                      marginLeft: "20px",
-                      fontSize: "0.75rem",
-                      color: "var(--text-tertiary)",
-                    }}
-                  >
+                  <div className="ml-5 text-xs text-muted-foreground space-y-0.5">
                     <div>Version: {extensionStatus.version}</div>
                     <div>Active tabs: {extensionStatus.activeTabs}</div>
                     <div>
@@ -226,62 +176,26 @@ export function ConnectionStatus() {
 
               {/* Connected AI Apps */}
               <div>
-                <h4
-                  style={{
-                    margin: "0 0 var(--spacing-xs) 0",
-                    fontSize: "0.875rem",
-                  }}
-                >
-                  Connected AI Apps
-                </h4>
+                <h4 className="m-0 mb-1 text-sm font-medium">Connected AI Apps</h4>
                 {systemStatus?.aiApps && systemStatus.aiApps.length > 0 ? (
-                  <div
-                    style={{
-                      display: "flex",
-                      flexWrap: "wrap",
-                      gap: "var(--spacing-xs)",
-                      marginTop: "var(--spacing-xs)",
-                    }}
-                  >
+                  <div className="flex flex-wrap gap-1 mt-1">
                     {systemStatus.aiApps.map((app) => (
                       <span
                         key={app}
-                        style={{
-                          padding: "4px 8px",
-                          backgroundColor: "var(--bg-tertiary)",
-                          borderRadius: "var(--radius-sm)",
-                          fontSize: "0.75rem",
-                          color: "var(--text-secondary)",
-                        }}
+                        className="px-2 py-1 bg-secondary rounded text-xs text-muted-foreground"
                       >
                         {app}
                       </span>
                     ))}
                   </div>
                 ) : (
-                  <p
-                    style={{
-                      margin: 0,
-                      fontSize: "0.75rem",
-                      color: "var(--text-tertiary)",
-                    }}
-                  >
-                    No AI apps connected
-                  </p>
+                  <p className="m-0 text-xs text-muted-foreground">No AI apps connected</p>
                 )}
               </div>
 
               {/* System Info */}
               {systemStatus?.version && (
-                <div
-                  style={{
-                    marginTop: "var(--spacing-md)",
-                    paddingTop: "var(--spacing-md)",
-                    borderTop: "1px solid var(--border-color)",
-                    fontSize: "0.75rem",
-                    color: "var(--text-tertiary)",
-                  }}
-                >
+                <div className="mt-4 pt-4 border-t border-border text-xs text-muted-foreground">
                   <div>System version: {systemStatus.version}</div>
                   {systemStatus.uptime && (
                     <div>System uptime: {formatUptime(systemStatus.uptime)}</div>
