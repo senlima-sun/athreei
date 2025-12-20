@@ -4,11 +4,84 @@
  * Registers all browser automation tools with the MCP server.
  * For now, these are stub implementations that return mock data.
  * Phase 2.3 will connect these to the Chrome extension via Native Messaging.
+ *
+ * @ts-nocheck - MCP SDK has excessively deep type instantiation issues with Zod schemas
  */
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { MCP_TOOL_DEFINITIONS } from "@athreei/shared";
 import { logger } from "../utils/logger.js";
+
+// Type definitions for tool arguments to avoid implicit any
+interface NavigateArgs {
+  url: string
+  tabId?: number
+  waitUntil?: "load" | "domcontentloaded" | "networkidle"
+}
+
+interface ContentArgs {
+  tabId?: number
+  format?: "a11y" | "html" | "text"
+  selector?: string
+}
+
+interface ElementsArgs {
+  tabId?: number
+  selector?: string
+  roles?: string[]
+  interactiveOnly?: boolean
+}
+
+interface ClickArgs {
+  tabId?: number
+  selector?: string
+  index?: number
+  button?: "left" | "right" | "middle"
+  clickCount?: number
+  modifiers?: string[]
+}
+
+interface TypeArgs {
+  tabId?: number
+  selector?: string
+  index?: number
+  text: string
+  clear?: boolean
+  delay?: number
+  submit?: boolean
+}
+
+interface ScrollArgs {
+  tabId?: number
+  selector?: string
+  direction?: "up" | "down" | "left" | "right"
+  amount?: number
+  x?: number
+  y?: number
+  behavior?: "smooth" | "instant"
+}
+
+interface ScreenshotArgs {
+  tabId?: number
+  selector?: string
+  fullPage?: boolean
+  format?: "png" | "jpeg"
+  quality?: number
+}
+
+interface ExecuteScriptArgs {
+  tabId?: number
+  script: string
+  args?: unknown[]
+}
+
+interface WaitArgs {
+  tabId?: number
+  selector?: string
+  state?: "visible" | "hidden" | "attached" | "detached"
+  timeout?: number
+  condition?: string
+}
 
 /**
  * Register all browser tools with the MCP server
@@ -17,12 +90,10 @@ export function registerBrowserTools(server: McpServer) {
   logger.info("Registering browser tools...");
 
   // browser_list_tabs
-  server.registerTool(
+  server.tool(
     "browser_list_tabs",
-    {
-      description: MCP_TOOL_DEFINITIONS.browser_list_tabs.description,
-      inputSchema: MCP_TOOL_DEFINITIONS.browser_list_tabs.inputSchema,
-    },
+    MCP_TOOL_DEFINITIONS.browser_list_tabs.description,
+    {},
     async () => {
       logger.debug("browser_list_tabs called");
       // Stub - will be replaced with Native Messaging call
@@ -55,12 +126,10 @@ export function registerBrowserTools(server: McpServer) {
   );
 
   // browser_get_active_tab
-  server.registerTool(
+  server.tool(
     "browser_get_active_tab",
-    {
-      description: MCP_TOOL_DEFINITIONS.browser_get_active_tab.description,
-      inputSchema: MCP_TOOL_DEFINITIONS.browser_get_active_tab.inputSchema,
-    },
+    MCP_TOOL_DEFINITIONS.browser_get_active_tab.description,
+    {},
     async () => {
       logger.debug("browser_get_active_tab called");
       // Stub - will be replaced with Native Messaging call
@@ -81,13 +150,13 @@ export function registerBrowserTools(server: McpServer) {
   );
 
   // browser_navigate
-  server.registerTool(
+  server.tool(
     "browser_navigate",
-    {
-      description: MCP_TOOL_DEFINITIONS.browser_navigate.description,
-      inputSchema: MCP_TOOL_DEFINITIONS.browser_navigate.inputSchema,
-    },
-    async ({ url, tabId, waitUntil }) => {
+    MCP_TOOL_DEFINITIONS.browser_navigate.description,
+    MCP_TOOL_DEFINITIONS.browser_navigate.inputSchema.shape,
+    // @ts-ignore - Type instantiation too deep
+    async (args: NavigateArgs) => {
+      const { url, tabId, waitUntil } = args
       logger.debug(`browser_navigate called: ${url} (tabId: ${tabId}, waitUntil: ${waitUntil})`);
       // Stub - will be replaced with Native Messaging call
       return {
@@ -106,13 +175,12 @@ export function registerBrowserTools(server: McpServer) {
   );
 
   // browser_get_content
-  server.registerTool(
+  server.tool(
     "browser_get_content",
-    {
-      description: MCP_TOOL_DEFINITIONS.browser_get_content.description,
-      inputSchema: MCP_TOOL_DEFINITIONS.browser_get_content.inputSchema,
-    },
-    async ({ tabId, format, selector }) => {
+    MCP_TOOL_DEFINITIONS.browser_get_content.description,
+    MCP_TOOL_DEFINITIONS.browser_get_content.inputSchema.shape,
+    async (args: ContentArgs) => {
+      const { tabId, format, selector } = args
       logger.debug(`browser_get_content called: tabId=${tabId}, format=${format}, selector=${selector}`);
       // Stub - will be replaced with Native Messaging call
       return {
@@ -136,13 +204,12 @@ export function registerBrowserTools(server: McpServer) {
   );
 
   // browser_get_elements
-  server.registerTool(
+  server.tool(
     "browser_get_elements",
-    {
-      description: MCP_TOOL_DEFINITIONS.browser_get_elements.description,
-      inputSchema: MCP_TOOL_DEFINITIONS.browser_get_elements.inputSchema,
-    },
-    async ({ tabId, selector, roles, interactiveOnly }) => {
+    MCP_TOOL_DEFINITIONS.browser_get_elements.description,
+    MCP_TOOL_DEFINITIONS.browser_get_elements.inputSchema.shape,
+    async (args: ElementsArgs) => {
+      const { tabId, selector, roles, interactiveOnly } = args
       logger.debug(`browser_get_elements called: tabId=${tabId}, selector=${selector}, roles=${roles}, interactiveOnly=${interactiveOnly}`);
       // Stub - will be replaced with Native Messaging call
       return {
@@ -171,13 +238,12 @@ export function registerBrowserTools(server: McpServer) {
   );
 
   // browser_click
-  server.registerTool(
+  server.tool(
     "browser_click",
-    {
-      description: MCP_TOOL_DEFINITIONS.browser_click.description,
-      inputSchema: MCP_TOOL_DEFINITIONS.browser_click.inputSchema,
-    },
-    async ({ tabId, selector, index, button, clickCount, modifiers }) => {
+    MCP_TOOL_DEFINITIONS.browser_click.description,
+    MCP_TOOL_DEFINITIONS.browser_click.inputSchema.shape,
+    async (args: ClickArgs) => {
+      const { selector, index, button, clickCount, modifiers } = args
       logger.debug(`browser_click called: selector=${selector}, index=${index}, button=${button}, clickCount=${clickCount}, modifiers=${modifiers}`);
       // Stub - will be replaced with Native Messaging call
       return {
@@ -198,13 +264,12 @@ export function registerBrowserTools(server: McpServer) {
   );
 
   // browser_type
-  server.registerTool(
+  server.tool(
     "browser_type",
-    {
-      description: MCP_TOOL_DEFINITIONS.browser_type.description,
-      inputSchema: MCP_TOOL_DEFINITIONS.browser_type.inputSchema,
-    },
-    async ({ tabId, selector, index, text, clear, delay, submit }) => {
+    MCP_TOOL_DEFINITIONS.browser_type.description,
+    MCP_TOOL_DEFINITIONS.browser_type.inputSchema.shape,
+    async (args: TypeArgs) => {
+      const { selector, index, text, clear, delay, submit } = args
       logger.debug(`browser_type called: selector=${selector}, index=${index}, text=${text}, clear=${clear}, delay=${delay}, submit=${submit}`);
       // Stub - will be replaced with Native Messaging call
       return {
@@ -226,13 +291,12 @@ export function registerBrowserTools(server: McpServer) {
   );
 
   // browser_scroll
-  server.registerTool(
+  server.tool(
     "browser_scroll",
-    {
-      description: MCP_TOOL_DEFINITIONS.browser_scroll.description,
-      inputSchema: MCP_TOOL_DEFINITIONS.browser_scroll.inputSchema,
-    },
-    async ({ tabId, selector, direction, amount, x, y, behavior }) => {
+    MCP_TOOL_DEFINITIONS.browser_scroll.description,
+    MCP_TOOL_DEFINITIONS.browser_scroll.inputSchema.shape,
+    async (args: ScrollArgs) => {
+      const { selector, direction, amount, x, y, behavior } = args
       logger.debug(`browser_scroll called: selector=${selector}, direction=${direction}, amount=${amount}, x=${x}, y=${y}, behavior=${behavior}`);
       // Stub - will be replaced with Native Messaging call
       return {
@@ -253,13 +317,12 @@ export function registerBrowserTools(server: McpServer) {
   );
 
   // browser_screenshot
-  server.registerTool(
+  server.tool(
     "browser_screenshot",
-    {
-      description: MCP_TOOL_DEFINITIONS.browser_screenshot.description,
-      inputSchema: MCP_TOOL_DEFINITIONS.browser_screenshot.inputSchema,
-    },
-    async ({ tabId, selector, fullPage, format, quality }) => {
+    MCP_TOOL_DEFINITIONS.browser_screenshot.description,
+    MCP_TOOL_DEFINITIONS.browser_screenshot.inputSchema.shape,
+    async (args: ScreenshotArgs) => {
+      const { tabId, selector, fullPage, format, quality } = args
       logger.debug(`browser_screenshot called: tabId=${tabId}, selector=${selector}, fullPage=${fullPage}, format=${format}, quality=${quality}`);
       // Stub - will be replaced with Native Messaging call
       return {
@@ -282,13 +345,12 @@ export function registerBrowserTools(server: McpServer) {
   );
 
   // browser_execute_script
-  server.registerTool(
+  server.tool(
     "browser_execute_script",
-    {
-      description: MCP_TOOL_DEFINITIONS.browser_execute_script.description,
-      inputSchema: MCP_TOOL_DEFINITIONS.browser_execute_script.inputSchema,
-    },
-    async ({ tabId, script, args }) => {
+    MCP_TOOL_DEFINITIONS.browser_execute_script.description,
+    MCP_TOOL_DEFINITIONS.browser_execute_script.inputSchema.shape,
+    async (handlerArgs: ExecuteScriptArgs) => {
+      const { tabId, script } = handlerArgs
       logger.debug(`browser_execute_script called: tabId=${tabId}, script=${script.substring(0, 50)}...`);
       // Stub - will be replaced with Native Messaging call
       return {
@@ -306,13 +368,12 @@ export function registerBrowserTools(server: McpServer) {
   );
 
   // browser_wait
-  server.registerTool(
+  server.tool(
     "browser_wait",
-    {
-      description: MCP_TOOL_DEFINITIONS.browser_wait.description,
-      inputSchema: MCP_TOOL_DEFINITIONS.browser_wait.inputSchema,
-    },
-    async ({ tabId, selector, state, timeout, condition }) => {
+    MCP_TOOL_DEFINITIONS.browser_wait.description,
+    MCP_TOOL_DEFINITIONS.browser_wait.inputSchema.shape,
+    async (args: WaitArgs) => {
+      const { tabId, selector, state, timeout } = args
       logger.debug(`browser_wait called: tabId=${tabId}, selector=${selector}, state=${state}, timeout=${timeout}`);
       // Stub - will be replaced with Native Messaging call
       return {

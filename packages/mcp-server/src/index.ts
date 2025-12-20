@@ -87,7 +87,7 @@ async function startStdio(server: ReturnType<typeof createServer>) {
 /**
  * Start the MCP server with SSE transport
  */
-async function startSSE(server: ReturnType<typeof createServer>, port: number) {
+async function startSSE(_server: ReturnType<typeof createServer>, _port: number) {
   // SSE transport implementation will be added in a future phase
   logger.error("SSE transport not yet implemented");
   process.exit(1);

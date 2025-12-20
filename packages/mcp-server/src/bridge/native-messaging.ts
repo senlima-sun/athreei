@@ -321,7 +321,7 @@ export class NativeMessagingClient {
     this.isConnected = false
 
     // Reject all pending requests
-    for (const [id, pending] of this.pendingRequests) {
+    for (const [_id, pending] of this.pendingRequests) {
       clearTimeout(pending.timeout)
       pending.reject(new Error("Disconnected from native host"))
     }

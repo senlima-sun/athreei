@@ -22,10 +22,7 @@ export function createServer() {
   // Register all browser tools
   registerBrowserTools(server);
 
-  // Log when server is initialized
-  server.onerror = (error) => {
-    logger.error("MCP Server error:", error);
-  };
+  // Log when server is initialized (error handling moved to index.ts)
 
   logger.info("MCP server created successfully");
 
