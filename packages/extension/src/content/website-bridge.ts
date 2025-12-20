@@ -19,7 +19,7 @@ interface PendingRequest {
   toolName: string
   resolve: (value: unknown) => void
   reject: (error: Error) => void
-  timeoutId: NodeJS.Timeout
+  timeoutId: ReturnType<typeof setTimeout>
 }
 
 /**

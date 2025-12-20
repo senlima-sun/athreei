@@ -59,13 +59,15 @@ async function bundle(entrypoint: string, outfile: string) {
     if (builtFile) {
       await Bun.write(outfile, builtFile)
       // Also write the sourcemap
-      const mapFile = result.outputs.find(o => o.path.endsWith('.map'))
+      const mapFile = result.outputs.find((o) => o.path.endsWith(".map"))
       if (mapFile) {
-        await Bun.write(outfile + '.map', mapFile)
+        await Bun.write(outfile + ".map", mapFile)
       }
     }
 
-    console.log(`✅ Bundled ${relativePath} → ${outfile.replace(import.meta.dir + "/", "")}`)
+    console.log(
+      `✅ Bundled ${relativePath} → ${outfile.replace(import.meta.dir + "/", "")}`
+    )
   } catch (error) {
     console.error(`❌ Error bundling ${relativePath}:`, error)
     throw error
@@ -79,7 +81,9 @@ async function copyManifest() {
   console.log("📄 Copying manifest.json...")
   const destPath = join(DIST_DIR, "manifest.json")
   await copyFile(MANIFEST_PATH, destPath)
-  console.log(`✅ Copied manifest.json → ${destPath.replace(import.meta.dir + "/", "")}`)
+  console.log(
+    `✅ Copied manifest.json → ${destPath.replace(import.meta.dir + "/", "")}`
+  )
 }
 
 /**

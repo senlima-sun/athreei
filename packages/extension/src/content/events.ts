@@ -4,10 +4,13 @@
 
 import type {
   AiiiEventMap,
-  AiiiReadyEvent,
   AiiiActionBeforeEvent,
   AiiiActionAfterEvent,
   AiiiRequestEvent,
+} from "@athreei/shared"
+
+export type {
+  AiiiReadyEvent,
   AiiiResponseEvent,
   AiiiRegisterEvent,
   AiiiPermissionEvent,

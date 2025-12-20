@@ -106,7 +106,7 @@ export async function executeAction(
 /**
  * Handle messages from background script
  */
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   // Handle browser action requests from background script
   if (message.type === "browser_action") {
     const { method, args } = message

@@ -173,10 +173,17 @@ function waitForPageLoad(
             }
 
             const originalOpen = XMLHttpRequest.prototype.open
-            XMLHttpRequest.prototype.open = function (...args) {
+            XMLHttpRequest.prototype.open = function (
+              this: XMLHttpRequest,
+              method: string,
+              url: string | URL,
+              async?: boolean,
+              username?: string | null,
+              password?: string | null
+            ) {
               resetTimer()
               this.addEventListener("loadend", resetTimer)
-              return originalOpen.apply(this, args)
+              return originalOpen.call(this, method, url, async ?? true, username, password)
             }
 
             // Start the timer

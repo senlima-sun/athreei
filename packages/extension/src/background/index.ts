@@ -28,7 +28,8 @@ const RETRY_BACKOFF_MULTIPLIER = 2
 
 // Health check configuration
 const HEALTH_CHECK_INTERVAL_MS = 30000
-const HEALTH_CHECK_TIMEOUT_MS = 5000
+// @ts-expect-error Reserved for future use
+const _HEALTH_CHECK_TIMEOUT_MS = 5000
 
 // ============================================================================
 // Connection State
@@ -102,8 +103,9 @@ function connectToNativeHost(): void {
 
 /**
  * Disconnect from native host
+ * @ts-expect-error Exported for debugging/testing purposes
  */
-function disconnectFromNativeHost(): void {
+function _disconnectFromNativeHost(): void {
   if (connection.port) {
     connection.port.disconnect()
     connection.port = null
@@ -113,7 +115,7 @@ function disconnectFromNativeHost(): void {
   connection.state = "disconnected"
 
   // Reject all pending requests
-  for (const [id, pending] of connection.pendingRequests) {
+  for (const [_id, pending] of connection.pendingRequests) {
     pending.reject(new Error("Native host disconnected"))
   }
   connection.pendingRequests.clear()
@@ -133,7 +135,7 @@ function handleNativeDisconnect(): void {
   stopHealthCheck()
 
   // Reject all pending requests
-  for (const [id, pending] of connection.pendingRequests) {
+  for (const [_id, pending] of connection.pendingRequests) {
     pending.reject(new Error(error?.message || "Native host disconnected"))
   }
   connection.pendingRequests.clear()
@@ -350,7 +352,7 @@ async function sendToNativeHost(message: NativeRequest): Promise<NativeResponse>
     })
 
     try {
-      connection.port.postMessage(message)
+      connection.port!.postMessage(message)
     } catch (error) {
       connection.pendingRequests.delete(message.id)
       clearTimeout(timeout)
@@ -535,7 +537,7 @@ async function forwardToContentScript(request: NativeRequest): Promise<unknown> 
 /**
  * Handle messages from content scripts
  */
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   console.log("[Background] Message from content script:", message)
 
   // Handle different message types
@@ -615,7 +617,6 @@ chrome.runtime.onStartup.addListener(() => {
 
 // Expose connection state for debugging
 if (typeof globalThis !== "undefined") {
-  (globalThis as any).__athreei_connection = connection
+  (globalThis as any).__athreei_connection = connection;
+  (globalThis as any).__athreei_disconnect = _disconnectFromNativeHost
 }
-
-export {}

@@ -12,17 +12,17 @@ import {
   generateRequestId,
 } from "../events"
 import type {
-  AiiiReadyDetail,
-  AiiiActionBeforeDetail,
-  AiiiActionAfterDetail,
+  AiiiReadyEvent,
+  AiiiActionBeforeEvent,
+  AiiiActionAfterEvent,
 } from "@athreei/shared"
 
 describe("events", () => {
   describe("createAiiiEvent", () => {
     it("creates a custom event with correct type and detail", () => {
-      const detail: AiiiReadyDetail = {
+      const detail: AiiiReadyEvent = {
         version: "1.0.0",
-        tools: ["click", "type"],
+        capabilities: ["click", "type"],
       }
       const event = createAiiiEvent("aiii:ready", detail)
 
@@ -33,12 +33,13 @@ describe("events", () => {
     })
 
     it("creates cancelable event when specified", () => {
-      const detail: AiiiActionBeforeDetail = {
+      const detail: AiiiActionBeforeEvent = {
         requestId: "test-123",
         tool: "click",
         args: { selector: "#btn" },
         timestamp: Date.now(),
         origin: "https://example.com",
+        cancellable: true,
       }
       const event = createAiiiEvent("aiii:action:before", detail, {
         cancelable: true,
@@ -50,9 +51,9 @@ describe("events", () => {
 
   describe("dispatchAiiiEvent", () => {
     it("returns true when event is not prevented", () => {
-      const detail: AiiiReadyDetail = {
+      const detail: AiiiReadyEvent = {
         version: "1.0.0",
-        tools: ["click"],
+        capabilities: ["click"],
       }
       const result = dispatchAiiiEvent("aiii:ready", detail)
       expect(result).toBe(true)
@@ -62,12 +63,13 @@ describe("events", () => {
       const handler = (e: Event) => e.preventDefault()
       document.addEventListener("aiii:action:before", handler)
 
-      const detail: AiiiActionBeforeDetail = {
+      const detail: AiiiActionBeforeEvent = {
         requestId: "test-123",
         tool: "click",
         args: { selector: "#btn" },
         timestamp: Date.now(),
         origin: "https://example.com",
+        cancellable: true,
       }
       const result = dispatchAiiiEvent("aiii:action:before", detail, {
         cancelable: true,
@@ -79,17 +81,17 @@ describe("events", () => {
   })
 
   describe("dispatchReady", () => {
-    it("dispatches ready event with version and tools", () => {
+    it("dispatches ready event with version and capabilities", () => {
       const handler = vi.fn()
       document.addEventListener("aiii:ready", handler)
 
       dispatchReady("1.0.0")
 
       expect(handler).toHaveBeenCalledTimes(1)
-      const event = handler.mock.calls[0][0] as CustomEvent<AiiiReadyDetail>
+      const event = handler.mock.calls[0][0] as CustomEvent<AiiiReadyEvent>
       expect(event.detail.version).toBe("1.0.0")
-      expect(event.detail.tools).toContain("click")
-      expect(event.detail.tools).toContain("type")
+      expect(event.detail.capabilities).toContain("click")
+      expect(event.detail.capabilities).toContain("type")
 
       document.removeEventListener("aiii:ready", handler)
     })
@@ -97,12 +99,13 @@ describe("events", () => {
 
   describe("dispatchActionBefore", () => {
     it("returns allowed true when not prevented", () => {
-      const detail: AiiiActionBeforeDetail = {
+      const detail: AiiiActionBeforeEvent = {
         requestId: "test-123",
         tool: "click",
         args: { selector: "#btn" },
         timestamp: Date.now(),
         origin: "https://example.com",
+        cancellable: true,
       }
 
       const result = dispatchActionBefore(detail)
@@ -114,12 +117,13 @@ describe("events", () => {
       const handler = (e: Event) => e.preventDefault()
       document.addEventListener("aiii:action:before", handler)
 
-      const detail: AiiiActionBeforeDetail = {
+      const detail: AiiiActionBeforeEvent = {
         requestId: "test-123",
         tool: "click",
         args: { selector: "#btn" },
         timestamp: Date.now(),
         origin: "https://example.com",
+        cancellable: true,
       }
 
       const result = dispatchActionBefore(detail)
@@ -129,17 +133,18 @@ describe("events", () => {
     })
 
     it("allows detail modification by listeners", () => {
-      const handler = (e: CustomEvent<AiiiActionBeforeDetail>) => {
+      const handler = (e: CustomEvent<AiiiActionBeforeEvent>) => {
         e.detail.args = { selector: "#modified" }
       }
       document.addEventListener("aiii:action:before", handler as EventListener)
 
-      const detail: AiiiActionBeforeDetail = {
+      const detail: AiiiActionBeforeEvent = {
         requestId: "test-123",
         tool: "click",
         args: { selector: "#btn" },
         timestamp: Date.now(),
         origin: "https://example.com",
+        cancellable: true,
       }
 
       const result = dispatchActionBefore(detail)
@@ -159,7 +164,7 @@ describe("events", () => {
       const handler = vi.fn()
       document.addEventListener("aiii:action:after", handler)
 
-      const detail: AiiiActionAfterDetail = {
+      const detail: AiiiActionAfterEvent = {
         requestId: "test-123",
         tool: "click",
         success: true,
@@ -172,7 +177,7 @@ describe("events", () => {
 
       expect(handler).toHaveBeenCalledTimes(1)
       const event = handler.mock
-        .calls[0][0] as CustomEvent<AiiiActionAfterDetail>
+        .calls[0][0] as CustomEvent<AiiiActionAfterEvent>
       expect(event.detail.success).toBe(true)
       expect(event.detail.result).toEqual({ clicked: true })
 

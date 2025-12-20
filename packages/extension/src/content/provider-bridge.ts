@@ -61,7 +61,7 @@ export class ProviderBridge {
     const beforeDetail: AiiiActionBeforeEvent = {
       requestId,
       tool,
-      args,
+      args: args as Record<string, unknown>,
       timestamp: Date.now(),
       origin: this.origin,
       cancellable: true,
