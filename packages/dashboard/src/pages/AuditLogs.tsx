@@ -1,8 +1,8 @@
-import { h } from "preact"
 import { useState, useEffect } from "preact/hooks"
 import type { AuditLogEntry, AuditStatus } from "@athreei/shared"
 import { api } from "../lib/api"
-import { DataTable, Column } from "../components/ui/DataTable"
+import { DataTable } from "../components/ui/DataTable"
+import type { Column } from "../components/ui/DataTable"
 import { SearchInput } from "../components/ui/SearchInput"
 import { Card } from "../components/ui/Card"
 import { Button } from "../components/ui/Button"
@@ -14,7 +14,11 @@ interface AuditLogsResponse {
   pageSize: number
 }
 
-export function AuditLogs() {
+interface AuditLogsProps {
+  path?: string
+}
+
+export function AuditLogs(_props: AuditLogsProps) {
   const [logs, setLogs] = useState<AuditLogEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -107,7 +111,7 @@ export function AuditLogs() {
       accessor: (row) => row.id,
       header: "Actions",
       sortable: false,
-      cell: (_, row) => (
+      cell: () => (
         <Button variant="secondary" size="sm">
           Details
         </Button>

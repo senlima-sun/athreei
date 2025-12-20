@@ -239,3 +239,19 @@ export async function resetSettings(): Promise<SettingsUpdateResponse> {
     method: 'POST'
   })
 }
+
+// API client object for pages that use object-style API calls
+export const api = {
+  get: <T>(path: string): Promise<T> => fetchApi<T>(path),
+  post: <T>(path: string, data?: unknown): Promise<T> => fetchApi<T>(path, {
+    method: 'POST',
+    body: data ? JSON.stringify(data) : undefined
+  }),
+  put: <T>(path: string, data?: unknown): Promise<T> => fetchApi<T>(path, {
+    method: 'PUT',
+    body: data ? JSON.stringify(data) : undefined
+  }),
+  delete: <T>(path: string): Promise<T> => fetchApi<T>(path, {
+    method: 'DELETE'
+  })
+}

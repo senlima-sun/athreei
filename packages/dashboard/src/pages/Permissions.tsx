@@ -1,8 +1,8 @@
-import { h } from "preact"
 import { useState, useEffect } from "preact/hooks"
 import type { Permission, PermissionLevel } from "@athreei/shared"
 import { api } from "../lib/api"
-import { DataTable, Column } from "../components/ui/DataTable"
+import { DataTable } from "../components/ui/DataTable"
+import type { Column } from "../components/ui/DataTable"
 import { Card } from "../components/ui/Card"
 import { Button } from "../components/ui/Button"
 import { Modal } from "../components/ui/Modal"
@@ -12,7 +12,11 @@ interface PermissionsResponse {
   permissions: Permission[]
 }
 
-export function Permissions() {
+interface PermissionsProps {
+  path?: string
+}
+
+export function Permissions(_props: PermissionsProps) {
   const [permissions, setPermissions] = useState<Permission[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

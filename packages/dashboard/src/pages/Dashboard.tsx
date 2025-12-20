@@ -1,4 +1,3 @@
-import { h } from "preact"
 import { useState, useEffect } from "preact/hooks"
 import { route } from "preact-router"
 import { Card } from "../components/ui/Card"
@@ -6,7 +5,11 @@ import { Button } from "../components/ui/Button"
 import { getAuditLogs, getSessions, getPermissions } from "../lib/api"
 import type { AuditLogEntry } from "../lib/api"
 
-export function Dashboard() {
+interface DashboardProps {
+  path?: string
+}
+
+export function Dashboard(_props: DashboardProps) {
   const [loading, setLoading] = useState(true)
   const [stats, setStats] = useState({
     totalRequests: 0,

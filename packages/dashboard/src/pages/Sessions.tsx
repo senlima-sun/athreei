@@ -1,8 +1,8 @@
-import { h } from "preact"
 import { useState, useEffect } from "preact/hooks"
 import type { Session } from "@athreei/shared"
 import { api } from "../lib/api"
-import { DataTable, Column } from "../components/ui/DataTable"
+import { DataTable } from "../components/ui/DataTable"
+import type { Column } from "../components/ui/DataTable"
 import { Card } from "../components/ui/Card"
 import { Button } from "../components/ui/Button"
 import { Tabs } from "../components/ui/Tabs"
@@ -11,7 +11,11 @@ interface SessionsResponse {
   sessions: Session[]
 }
 
-export function Sessions() {
+interface SessionsProps {
+  path?: string
+}
+
+export function Sessions(_props: SessionsProps) {
   const [sessions, setSessions] = useState<Session[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

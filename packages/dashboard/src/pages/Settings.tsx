@@ -1,4 +1,3 @@
-import { h } from "preact"
 import { useState, useEffect } from "preact/hooks"
 import { Card } from "../components/ui/Card"
 import { Button } from "../components/ui/Button"
@@ -14,7 +13,11 @@ import {
 } from "../lib/api"
 import type { Settings as SettingsType, McpStatus, ExtensionStatus } from "../lib/api"
 
-export function Settings() {
+interface SettingsProps {
+  path?: string
+}
+
+export function Settings(_props: SettingsProps) {
   const [settings, setSettings] = useState<SettingsType | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)

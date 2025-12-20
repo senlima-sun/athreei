@@ -10,7 +10,6 @@
  * Shows dropdown with details when clicked
  */
 
-import { h } from "preact"
 import { useState, useEffect, useRef } from "preact/hooks"
 import { StatusIndicator } from "./ui/StatusIndicator"
 import { getSystemStatus, getMcpStatus, getExtensionStatus } from "../lib/api"
