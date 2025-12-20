@@ -238,11 +238,11 @@ export async function updateSyncSettings(
   // Use COALESCE to only update provided fields, preserving existing values
   const [updated] = await db<SyncSettings[]>`
     UPDATE sync_settings
-    SET sync_permissions = COALESCE(${settings.sync_permissions}, sync_permissions),
-        sync_audit_log = COALESCE(${settings.sync_audit_log}, sync_audit_log),
-        sync_sessions = COALESCE(${settings.sync_sessions}, sync_sessions),
-        sync_settings = COALESCE(${settings.sync_settings}, sync_settings),
-        audit_log_retention_days = COALESCE(${settings.audit_log_retention_days}, audit_log_retention_days)
+    SET sync_permissions = COALESCE(${settings.sync_permissions ?? null}, sync_permissions),
+        sync_audit_log = COALESCE(${settings.sync_audit_log ?? null}, sync_audit_log),
+        sync_sessions = COALESCE(${settings.sync_sessions ?? null}, sync_sessions),
+        sync_settings = COALESCE(${settings.sync_settings ?? null}, sync_settings),
+        audit_log_retention_days = COALESCE(${settings.audit_log_retention_days ?? null}, audit_log_retention_days)
     WHERE account_id = ${accountId}
     RETURNING *
   `;
