@@ -1,7 +1,18 @@
 import { Context, Next } from 'hono';
 import type { JwtPayload, AuthContext } from '../types';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'development-secret-change-in-production';
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('JWT_SECRET environment variable is required in production');
+    }
+    return 'development-secret-do-not-use-in-production';
+  }
+  return secret;
+}
+
+const JWT_SECRET = getJwtSecret();
 
 // Simple JWT encode/decode for Bun (without external dependencies)
 function base64urlEncode(str: string): string {

@@ -232,37 +232,14 @@ export async function updateSyncSettings(
 ): Promise<SyncSettings> {
   const db = getDb();
 
-  const updates: string[] = [];
-  const values: any[] = [];
-
-  if (settings.sync_permissions !== undefined) {
-    updates.push('sync_permissions = $' + (values.length + 1));
-    values.push(settings.sync_permissions);
-  }
-  if (settings.sync_audit_log !== undefined) {
-    updates.push('sync_audit_log = $' + (values.length + 1));
-    values.push(settings.sync_audit_log);
-  }
-  if (settings.sync_sessions !== undefined) {
-    updates.push('sync_sessions = $' + (values.length + 1));
-    values.push(settings.sync_sessions);
-  }
-  if (settings.sync_settings !== undefined) {
-    updates.push('sync_settings = $' + (values.length + 1));
-    values.push(settings.sync_settings);
-  }
-  if (settings.audit_log_retention_days !== undefined) {
-    updates.push('audit_log_retention_days = $' + (values.length + 1));
-    values.push(settings.audit_log_retention_days);
-  }
-
+  // Use COALESCE to only update provided fields, preserving existing values
   const [updated] = await db<SyncSettings[]>`
     UPDATE sync_settings
-    SET sync_permissions = ${settings.sync_permissions ?? null},
-        sync_audit_log = ${settings.sync_audit_log ?? null},
-        sync_sessions = ${settings.sync_sessions ?? null},
-        sync_settings = ${settings.sync_settings ?? null},
-        audit_log_retention_days = ${settings.audit_log_retention_days ?? null}
+    SET sync_permissions = COALESCE(${settings.sync_permissions}, sync_permissions),
+        sync_audit_log = COALESCE(${settings.sync_audit_log}, sync_audit_log),
+        sync_sessions = COALESCE(${settings.sync_sessions}, sync_sessions),
+        sync_settings = COALESCE(${settings.sync_settings}, sync_settings),
+        audit_log_retention_days = COALESCE(${settings.audit_log_retention_days}, audit_log_retention_days)
     WHERE account_id = ${accountId}
     RETURNING *
   `;
