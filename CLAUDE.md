@@ -123,6 +123,7 @@ bun run migrate   # Run DB migrations
 - **Backend:** Hono web framework
 - **Frontend:** React 18, Vite 6, Tailwind CSS v4, shadcn/ui, Radix UI
 - **Database:** PostgreSQL (sync-server), SQLite planned (local storage)
+- **ORM:** Drizzle ORM (sync-server)
 - **Validation:** Zod
 - **Crypto:** @noble/hashes, @noble/ciphers, Argon2
 - **Testing:** Vitest with jsdom for extension tests
