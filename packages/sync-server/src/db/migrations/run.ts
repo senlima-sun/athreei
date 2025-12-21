@@ -1,10 +1,7 @@
+import { migrate } from 'drizzle-orm/postgres-js/migrator';
+import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import { readFileSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import * as schema from '../schema';
 
 async function runMigrations() {
   const dbUrl = process.env.DATABASE_URL;
@@ -14,24 +11,21 @@ async function runMigrations() {
     process.exit(1);
   }
 
-  const sql = postgres(dbUrl);
+  // Create a separate postgres client for migrations
+  const migrationClient = postgres(dbUrl, { max: 1 });
+  const db = drizzle(migrationClient, { schema });
 
   console.log('Running database migrations...');
 
   try {
-    // Read and execute migration file
-    const migrationPath = join(__dirname, '001_initial_schema.sql');
-    const migrationSQL = readFileSync(migrationPath, 'utf-8');
-
-    // Execute the entire migration as a single transaction
-    await sql.unsafe(migrationSQL);
-
+    // Run migrations from the drizzle folder
+    await migrate(db, { migrationsFolder: './drizzle' });
     console.log('Migrations completed successfully!');
   } catch (error) {
     console.error('Migration failed:', error);
     process.exit(1);
   } finally {
-    await sql.end();
+    await migrationClient.end();
   }
 }
 
