@@ -2,7 +2,7 @@
  * Tests for Native Messaging Protocol
  */
 
-import { describe, test, expect } from "vitest"
+import { describe, test, expect, beforeEach } from "vitest"
 import {
   createRequest,
   createResponse,
@@ -10,7 +10,17 @@ import {
   isRequest,
   isResponse,
   isEvent,
+  resetStdinReader,
 } from "./protocol"
+import {
+  registerHandler,
+  removeHandler,
+  clearHandlers,
+  handleRequest,
+  initializeHandlers,
+  getRegisteredMethods,
+} from "./handlers"
+import type { NativeRequest } from "@athreei/shared"
 
 describe("Protocol Helpers", () => {
   describe("createRequest", () => {
@@ -96,6 +106,12 @@ describe("Protocol Helpers", () => {
       expect(isEvent(event)).toBe(true)
     })
   })
+
+  describe("resetStdinReader", () => {
+    test("can be called without error", () => {
+      expect(() => resetStdinReader()).not.toThrow()
+    })
+  })
 })
 
 describe("Message Encoding/Decoding", () => {
@@ -107,7 +123,6 @@ describe("Message Encoding/Decoding", () => {
     const lengthBuffer = Buffer.alloc(4)
     lengthBuffer.writeUInt32LE(messageLength, 0)
 
-    // Verify it's little-endian by checking byte order
     expect(lengthBuffer.readUInt32LE(0)).toBe(messageLength)
     expect(lengthBuffer.readUInt32BE(0)).not.toBe(messageLength)
   })
@@ -124,11 +139,9 @@ describe("Message Encoding/Decoding", () => {
   test("handles message size limits", () => {
     const MAX_MESSAGE_SIZE = 1024 * 1024 // 1MB
 
-    // Just under the limit should be OK
     const validLength = MAX_MESSAGE_SIZE - 1
     expect(validLength).toBeLessThan(MAX_MESSAGE_SIZE)
 
-    // Over the limit should fail
     const invalidLength = MAX_MESSAGE_SIZE + 1
     expect(invalidLength).toBeGreaterThan(MAX_MESSAGE_SIZE)
   })
@@ -184,7 +197,6 @@ describe("Message Encoding/Decoding", () => {
   })
 
   test("handles large payloads", () => {
-    // Create a payload close to the 1MB limit
     const largeString = "x".repeat(500000) // 500KB string
     const request = createRequest("id", "method", {
       data: largeString,
@@ -194,11 +206,243 @@ describe("Message Encoding/Decoding", () => {
     const json = JSON.stringify(request)
     const size = Buffer.from(json, "utf-8").length
 
-    // Should be under 1MB
     expect(size).toBeLessThan(1024 * 1024)
 
-    // Should be deserializable
     const parsed = JSON.parse(json)
     expect(parsed.payload.data).toBe(largeString)
+  })
+})
+
+describe("Handler Registry", () => {
+  beforeEach(() => {
+    clearHandlers()
+  })
+
+  describe("registerHandler", () => {
+    test("registers a handler successfully", () => {
+      registerHandler("test_method", async () => ({ result: "ok" }))
+      expect(getRegisteredMethods()).toContain("test_method")
+    })
+
+    test("throws error when registering duplicate handler", () => {
+      registerHandler("duplicate", async () => ({}))
+      expect(() => registerHandler("duplicate", async () => ({}))).toThrow(
+        "Handler already registered for method: duplicate"
+      )
+    })
+  })
+
+  describe("removeHandler", () => {
+    test("removes an existing handler", () => {
+      registerHandler("to_remove", async () => ({}))
+      expect(getRegisteredMethods()).toContain("to_remove")
+
+      const removed = removeHandler("to_remove")
+      expect(removed).toBe(true)
+      expect(getRegisteredMethods()).not.toContain("to_remove")
+    })
+
+    test("returns false when removing non-existent handler", () => {
+      const removed = removeHandler("non_existent")
+      expect(removed).toBe(false)
+    })
+  })
+
+  describe("clearHandlers", () => {
+    test("removes all handlers", () => {
+      registerHandler("handler1", async () => ({}))
+      registerHandler("handler2", async () => ({}))
+      expect(getRegisteredMethods().length).toBe(2)
+
+      clearHandlers()
+      expect(getRegisteredMethods().length).toBe(0)
+    })
+  })
+})
+
+describe("handleRequest", () => {
+  beforeEach(() => {
+    clearHandlers()
+  })
+
+  test("returns error for unknown method", async () => {
+    const request: NativeRequest = {
+      id: "req-1",
+      type: "request",
+      method: "unknown_method",
+      payload: {},
+    }
+
+    const response = await handleRequest(request)
+    expect(response.success).toBe(false)
+    expect(response.error).toBe("Unknown method: unknown_method")
+  })
+
+  test("handles successful request", async () => {
+    registerHandler("echo", async (payload) => ({ echoed: payload }))
+
+    const request: NativeRequest = {
+      id: "req-2",
+      type: "request",
+      method: "echo",
+      payload: { message: "hello" },
+    }
+
+    const response = await handleRequest(request)
+    expect(response.success).toBe(true)
+    expect(response.payload).toEqual({ echoed: { message: "hello" } })
+  })
+
+  test("handles handler errors gracefully", async () => {
+    registerHandler("error_handler", async () => {
+      throw new Error("Handler failed")
+    })
+
+    const request: NativeRequest = {
+      id: "req-3",
+      type: "request",
+      method: "error_handler",
+      payload: {},
+    }
+
+    const response = await handleRequest(request)
+    expect(response.success).toBe(false)
+    expect(response.error).toBe("Handler failed")
+  })
+
+  test("validates payload with schema", async () => {
+    const { z } = await import("zod")
+
+    registerHandler(
+      "validated",
+      async (payload: { name: string }) => ({ greeting: `Hello, ${payload.name}` }),
+      z.object({ name: z.string() })
+    )
+
+    // Valid payload
+    const validRequest: NativeRequest = {
+      id: "req-4",
+      type: "request",
+      method: "validated",
+      payload: { name: "World" },
+    }
+
+    const validResponse = await handleRequest(validRequest)
+    expect(validResponse.success).toBe(true)
+    expect(validResponse.payload).toEqual({ greeting: "Hello, World" })
+
+    // Invalid payload
+    const invalidRequest: NativeRequest = {
+      id: "req-5",
+      type: "request",
+      method: "validated",
+      payload: { name: 123 }, // should be string
+    }
+
+    const invalidResponse = await handleRequest(invalidRequest)
+    expect(invalidResponse.success).toBe(false)
+    expect(invalidResponse.error).toContain("Invalid payload")
+  })
+})
+
+describe("initializeHandlers", () => {
+  beforeEach(() => {
+    clearHandlers()
+  })
+
+  test("registers all built-in handlers", () => {
+    initializeHandlers()
+
+    const methods = getRegisteredMethods()
+    expect(methods).toContain("ping")
+    expect(methods).toContain("browser_list_tabs")
+    expect(methods).toContain("browser_get_active_tab")
+    expect(methods).toContain("browser_navigate")
+    expect(methods).toContain("browser_get_content")
+    expect(methods).toContain("browser_get_elements")
+    expect(methods).toContain("browser_click")
+    expect(methods).toContain("browser_type")
+    expect(methods).toContain("browser_scroll")
+    expect(methods).toContain("browser_screenshot")
+    expect(methods).toContain("browser_execute_script")
+    expect(methods).toContain("browser_wait")
+  })
+
+  test("ping handler returns pong with timestamp", async () => {
+    initializeHandlers()
+
+    const request: NativeRequest = {
+      id: "ping-1",
+      type: "request",
+      method: "ping",
+      payload: {},
+    }
+
+    const response = await handleRequest(request)
+    expect(response.success).toBe(true)
+    expect(response.payload).toHaveProperty("pong", true)
+    expect(response.payload).toHaveProperty("timestamp")
+    expect(typeof (response.payload as { timestamp: number }).timestamp).toBe("number")
+  })
+
+  test("stub handlers return stub response", async () => {
+    initializeHandlers()
+
+    const request: NativeRequest = {
+      id: "stub-1",
+      type: "request",
+      method: "browser_list_tabs",
+      payload: {},
+    }
+
+    const response = await handleRequest(request)
+    expect(response.success).toBe(true)
+    expect(response.payload).toHaveProperty("stub", true)
+    expect(response.payload).toHaveProperty("message")
+  })
+
+  test("browser_navigate validates URL payload", async () => {
+    initializeHandlers()
+
+    const invalidRequest: NativeRequest = {
+      id: "nav-1",
+      type: "request",
+      method: "browser_navigate",
+      payload: { url: "not-a-valid-url" },
+    }
+
+    const response = await handleRequest(invalidRequest)
+    expect(response.success).toBe(false)
+    expect(response.error).toContain("Invalid payload")
+  })
+
+  test("browser_navigate accepts valid URL", async () => {
+    initializeHandlers()
+
+    const validRequest: NativeRequest = {
+      id: "nav-2",
+      type: "request",
+      method: "browser_navigate",
+      payload: { url: "https://example.com" },
+    }
+
+    const response = await handleRequest(validRequest)
+    expect(response.success).toBe(true)
+    expect(response.payload).toHaveProperty("stub", true)
+  })
+
+  test("browser_type validates required fields", async () => {
+    initializeHandlers()
+
+    const invalidRequest: NativeRequest = {
+      id: "type-1",
+      type: "request",
+      method: "browser_type",
+      payload: { selector: "#input" }, // missing 'text' field
+    }
+
+    const response = await handleRequest(invalidRequest)
+    expect(response.success).toBe(false)
+    expect(response.error).toContain("Invalid payload")
   })
 })

@@ -10,11 +10,51 @@
  *   Communication happens automatically via stdin/stdout.
  */
 
-import { readMessage, writeMessage, isRequest, createEvent } from "./protocol.js"
-import { handleRequest, initializeHandlers, getRegisteredMethods } from "./handlers.js"
+import { readMessage, writeMessage, isRequest, createEvent, resetStdinReader } from "./protocol.js"
+import { handleRequest, initializeHandlers, getRegisteredMethods, clearHandlers } from "./handlers.js"
 
 export const HOST_NAME = "com.athreei.host"
 export const VERSION = "0.1.0"
+
+let eventCounter = 0
+let isShuttingDown = false
+
+/**
+ * Generate a deterministic event ID
+ */
+function nextEventId(): string {
+  return `event-${eventCounter++}`
+}
+
+/**
+ * Cleanup resources before shutdown
+ */
+async function cleanup(): Promise<void> {
+  console.error("[native-host] Cleaning up resources...")
+  clearHandlers()
+  resetStdinReader()
+  console.error("[native-host] Cleanup complete")
+}
+
+/**
+ * Graceful shutdown with cleanup
+ */
+async function gracefulShutdown(reason: string, code: number): Promise<void> {
+  if (isShuttingDown) {
+    return
+  }
+  isShuttingDown = true
+
+  console.error(`[native-host] Shutting down: ${reason}`)
+
+  try {
+    await cleanup()
+  } catch (error) {
+    console.error("[native-host] Error during cleanup:", error)
+  }
+
+  process.exit(code)
+}
 
 /**
  * Main loop
@@ -28,7 +68,7 @@ async function main() {
   console.error(`[native-host] Registered methods: ${getRegisteredMethods().join(", ")}`)
 
   // Send ready event to extension
-  const readyEvent = createEvent(crypto.randomUUID(), "ready", {
+  const readyEvent = createEvent(nextEventId(), "ready", {
     version: VERSION,
     methods: getRegisteredMethods(),
     pid: process.pid,
@@ -37,9 +77,7 @@ async function main() {
   console.error("[native-host] Sent ready event")
 
   // Main message loop
-  let running = true
-
-  while (running) {
+  while (!isShuttingDown) {
     try {
       const message = await readMessage()
 
@@ -63,35 +101,32 @@ async function main() {
       console.error(`[native-host] Error in main loop: ${errorMessage}`)
 
       // Don't crash on individual message errors, continue processing
-      // The response will have already been sent by handleRequest if it was a valid request
     }
   }
 
-  console.error("[native-host] Shutting down")
-  process.exit(0)
+  await gracefulShutdown("main loop ended", 0)
 }
 
 /**
- * Graceful shutdown handler
+ * Setup signal and error handlers
  */
 function setupShutdownHandlers() {
-  const shutdown = (signal: string) => {
-    console.error(`[native-host] Received ${signal}, shutting down...`)
-    process.exit(0)
-  }
+  process.on("SIGINT", () => {
+    gracefulShutdown("SIGINT received", 0)
+  })
 
-  process.on("SIGINT", () => shutdown("SIGINT"))
-  process.on("SIGTERM", () => shutdown("SIGTERM"))
+  process.on("SIGTERM", () => {
+    gracefulShutdown("SIGTERM received", 0)
+  })
 
-  // Handle uncaught errors
   process.on("uncaughtException", (error) => {
     console.error("[native-host] Uncaught exception:", error)
-    process.exit(1)
+    gracefulShutdown("uncaught exception", 1)
   })
 
   process.on("unhandledRejection", (reason) => {
     console.error("[native-host] Unhandled rejection:", reason)
-    process.exit(1)
+    gracefulShutdown("unhandled rejection", 1)
   })
 }
 
@@ -99,5 +134,5 @@ function setupShutdownHandlers() {
 setupShutdownHandlers()
 main().catch((error) => {
   console.error("[native-host] Fatal error:", error)
-  process.exit(1)
+  gracefulShutdown("fatal error in main", 1)
 })
