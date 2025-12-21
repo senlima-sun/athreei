@@ -10,21 +10,6 @@ import type { NativeRequest, NativeResponse } from "@athreei/shared"
 import { createResponse } from "./protocol.js"
 
 /**
- * Stub response marker - indicates handler is not yet implemented
- */
-interface StubResponse {
-  stub: true
-  message: string
-}
-
-function createStubResponse(method: string): StubResponse {
-  return {
-    stub: true,
-    message: `Handler '${method}' is not yet implemented. Will forward to Chrome extension.`,
-  }
-}
-
-/**
  * Handler function type with typed payload validation
  */
 type HandlerFunction<TPayload = unknown, TResult = unknown> = (payload: TPayload) => Promise<TResult>
@@ -112,85 +97,10 @@ export async function handleRequest(request: NativeRequest): Promise<NativeRespo
 }
 
 /**
- * Payload schemas for browser tool handlers
- */
-const BrowserListTabsPayload = z.object({}).passthrough()
-
-const BrowserGetActiveTabPayload = z.object({}).passthrough()
-
-const BrowserNavigatePayload = z.object({
-  url: z.string().url(),
-  tabId: z.number().optional(),
-  waitUntil: z.enum(["load", "domcontentloaded", "networkidle"]).optional(),
-})
-
-const BrowserGetContentPayload = z.object({
-  tabId: z.number().optional(),
-  format: z.enum(["a11y", "html", "text", "markdown"]).optional(),
-  selector: z.string().optional(),
-})
-
-const BrowserGetElementsPayload = z.object({
-  tabId: z.number().optional(),
-  selector: z.string().optional(),
-  role: z.string().optional(),
-  text: z.string().optional(),
-  limit: z.number().optional(),
-})
-
-const BrowserClickPayload = z.object({
-  tabId: z.number().optional(),
-  selector: z.string().optional(),
-  index: z.number().optional(),
-  text: z.string().optional(),
-  x: z.number().optional(),
-  y: z.number().optional(),
-})
-
-const BrowserTypePayload = z.object({
-  tabId: z.number().optional(),
-  selector: z.string(),
-  text: z.string(),
-  clear: z.boolean().optional(),
-  submit: z.boolean().optional(),
-})
-
-const BrowserScrollPayload = z.object({
-  tabId: z.number().optional(),
-  direction: z.enum(["up", "down", "left", "right"]).optional(),
-  amount: z.number().optional(),
-  selector: z.string().optional(),
-  x: z.number().optional(),
-  y: z.number().optional(),
-})
-
-const BrowserScreenshotPayload = z.object({
-  tabId: z.number().optional(),
-  selector: z.string().optional(),
-  format: z.enum(["png", "jpeg", "webp"]).optional(),
-  quality: z.number().min(0).max(100).optional(),
-  fullPage: z.boolean().optional(),
-})
-
-const BrowserExecuteScriptPayload = z.object({
-  tabId: z.number().optional(),
-  script: z.string(),
-  args: z.array(z.unknown()).optional(),
-})
-
-const BrowserWaitPayload = z.object({
-  tabId: z.number().optional(),
-  selector: z.string().optional(),
-  state: z.enum(["attached", "detached", "visible", "hidden"]).optional(),
-  timeout: z.number().optional(),
-  text: z.string().optional(),
-})
-
-/**
  * Initialize built-in handlers
  *
- * Note: Browser tool handlers are stubs that will forward to Chrome extension.
- * The ping handler is fully implemented for health checks.
+ * Note: Browser tool handlers are removed - requests will be forwarded to Chrome extension via IPC.
+ * Only the ping handler remains for health checks.
  */
 export function initializeHandlers(): void {
   // Heartbeat/ping handler for health checks (fully implemented)
@@ -200,73 +110,6 @@ export function initializeHandlers(): void {
       return { pong: true, timestamp: Date.now() }
     },
     z.object({}).passthrough()
-  )
-
-  // Browser tool handlers (stubs - will forward to Chrome extension)
-  registerHandler(
-    "browser_list_tabs",
-    async () => createStubResponse("browser_list_tabs"),
-    BrowserListTabsPayload
-  )
-
-  registerHandler(
-    "browser_get_active_tab",
-    async () => createStubResponse("browser_get_active_tab"),
-    BrowserGetActiveTabPayload
-  )
-
-  registerHandler(
-    "browser_navigate",
-    async () => createStubResponse("browser_navigate"),
-    BrowserNavigatePayload
-  )
-
-  registerHandler(
-    "browser_get_content",
-    async () => createStubResponse("browser_get_content"),
-    BrowserGetContentPayload
-  )
-
-  registerHandler(
-    "browser_get_elements",
-    async () => createStubResponse("browser_get_elements"),
-    BrowserGetElementsPayload
-  )
-
-  registerHandler(
-    "browser_click",
-    async () => createStubResponse("browser_click"),
-    BrowserClickPayload
-  )
-
-  registerHandler(
-    "browser_type",
-    async () => createStubResponse("browser_type"),
-    BrowserTypePayload
-  )
-
-  registerHandler(
-    "browser_scroll",
-    async () => createStubResponse("browser_scroll"),
-    BrowserScrollPayload
-  )
-
-  registerHandler(
-    "browser_screenshot",
-    async () => createStubResponse("browser_screenshot"),
-    BrowserScreenshotPayload
-  )
-
-  registerHandler(
-    "browser_execute_script",
-    async () => createStubResponse("browser_execute_script"),
-    BrowserExecuteScriptPayload
-  )
-
-  registerHandler(
-    "browser_wait",
-    async () => createStubResponse("browser_wait"),
-    BrowserWaitPayload
   )
 
   console.error(`[handlers] Initialized ${handlers.size} handlers`)

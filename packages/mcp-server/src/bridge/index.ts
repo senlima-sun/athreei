@@ -6,4 +6,5 @@
  */
 
 export { NativeMessagingClient, createNativeMessagingClient } from "./native-messaging.js"
+export { IPCClient, getIPCClient } from "./ipc-client.js"
 export type { BridgeState, BridgeConfig, BridgeHealth, BridgeMetrics } from "./types.js"

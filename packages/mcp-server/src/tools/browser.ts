@@ -2,8 +2,7 @@
  * Browser Tools Registration
  *
  * Registers all browser automation tools with the MCP server.
- * For now, these are stub implementations that return mock data.
- * Phase 2.3 will connect these to the Chrome extension via Native Messaging.
+ * These tools connect to the Chrome extension via the IPC client.
  *
  * @ts-nocheck - MCP SDK has excessively deep type instantiation issues with Zod schemas
  */
@@ -11,6 +10,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { MCP_TOOL_DEFINITIONS } from "@athreei/shared";
 import { logger } from "../utils/logger.js";
+import { getIPCClient } from "../bridge/index.js";
 
 // Type definitions for tool arguments to avoid implicit any
 interface NavigateArgs {
@@ -96,32 +96,19 @@ export function registerBrowserTools(server: McpServer) {
     {},
     async () => {
       logger.debug("browser_list_tabs called");
-      // Stub - will be replaced with Native Messaging call
-      return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify({
-              tabs: [
-                {
-                  id: 1,
-                  url: "https://example.com",
-                  title: "Example Domain",
-                  active: true,
-                  windowId: 1,
-                },
-                {
-                  id: 2,
-                  url: "https://github.com",
-                  title: "GitHub",
-                  active: false,
-                  windowId: 1,
-                },
-              ],
-            }, null, 2),
-          },
-        ],
-      };
+      try {
+        const client = getIPCClient();
+        const result = await client.sendRequest("browser_list_tabs", {});
+        return {
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+        };
+      } catch (error) {
+        logger.error("browser_list_tabs error", error);
+        return {
+          content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }],
+          isError: true
+        };
+      }
     },
   );
 
@@ -132,20 +119,19 @@ export function registerBrowserTools(server: McpServer) {
     {},
     async () => {
       logger.debug("browser_get_active_tab called");
-      // Stub - will be replaced with Native Messaging call
-      return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify({
-              id: 1,
-              url: "https://example.com",
-              title: "Example Domain",
-              windowId: 1,
-            }, null, 2),
-          },
-        ],
-      };
+      try {
+        const client = getIPCClient();
+        const result = await client.sendRequest("browser_get_active_tab", {});
+        return {
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+        };
+      } catch (error) {
+        logger.error("browser_get_active_tab error", error);
+        return {
+          content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }],
+          isError: true
+        };
+      }
     },
   );
 
@@ -158,19 +144,19 @@ export function registerBrowserTools(server: McpServer) {
     async (args: NavigateArgs) => {
       const { url, tabId, waitUntil } = args
       logger.debug(`browser_navigate called: ${url} (tabId: ${tabId}, waitUntil: ${waitUntil})`);
-      // Stub - will be replaced with Native Messaging call
-      return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify({
-              success: true,
-              url,
-              title: "Page Title",
-            }, null, 2),
-          },
-        ],
-      };
+      try {
+        const client = getIPCClient();
+        const result = await client.sendRequest("browser_navigate", { url, tabId, waitUntil });
+        return {
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+        };
+      } catch (error) {
+        logger.error("browser_navigate error", error);
+        return {
+          content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }],
+          isError: true
+        };
+      }
     },
   );
 
@@ -182,24 +168,19 @@ export function registerBrowserTools(server: McpServer) {
     async (args: ContentArgs) => {
       const { tabId, format, selector } = args
       logger.debug(`browser_get_content called: tabId=${tabId}, format=${format}, selector=${selector}`);
-      // Stub - will be replaced with Native Messaging call
-      return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify({
-              content: format === "a11y"
-                ? "RootWebArea: Example Domain\n  heading[1]: Example Domain\n  text: This domain is for use in illustrative examples...\n  link: More information..."
-                : format === "html"
-                ? "<html><body><h1>Example Domain</h1><p>This domain is for use in illustrative examples...</p></body></html>"
-                : "Example Domain\nThis domain is for use in illustrative examples...",
-              format: format || "a11y",
-              url: "https://example.com",
-              title: "Example Domain",
-            }, null, 2),
-          },
-        ],
-      };
+      try {
+        const client = getIPCClient();
+        const result = await client.sendRequest("browser_get_content", { tabId, format, selector });
+        return {
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+        };
+      } catch (error) {
+        logger.error("browser_get_content error", error);
+        return {
+          content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }],
+          isError: true
+        };
+      }
     },
   );
 
@@ -211,29 +192,19 @@ export function registerBrowserTools(server: McpServer) {
     async (args: ElementsArgs) => {
       const { tabId, selector, roles, interactiveOnly } = args
       logger.debug(`browser_get_elements called: tabId=${tabId}, selector=${selector}, roles=${roles}, interactiveOnly=${interactiveOnly}`);
-      // Stub - will be replaced with Native Messaging call
-      return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify({
-              elements: [
-                {
-                  index: 0,
-                  selector: "a[href='https://www.iana.org/domains/example']",
-                  role: "link",
-                  name: "More information...",
-                  text: "More information...",
-                  boundingBox: { x: 10, y: 100, width: 150, height: 20 },
-                  enabled: true,
-                  visible: true,
-                },
-              ],
-              count: 1,
-            }, null, 2),
-          },
-        ],
-      };
+      try {
+        const client = getIPCClient();
+        const result = await client.sendRequest("browser_get_elements", { tabId, selector, roles, interactiveOnly });
+        return {
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+        };
+      } catch (error) {
+        logger.error("browser_get_elements error", error);
+        return {
+          content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }],
+          isError: true
+        };
+      }
     },
   );
 
@@ -243,23 +214,21 @@ export function registerBrowserTools(server: McpServer) {
     MCP_TOOL_DEFINITIONS.browser_click.description,
     MCP_TOOL_DEFINITIONS.browser_click.inputSchema.shape,
     async (args: ClickArgs) => {
-      const { selector, index, button, clickCount, modifiers } = args
-      logger.debug(`browser_click called: selector=${selector}, index=${index}, button=${button}, clickCount=${clickCount}, modifiers=${modifiers}`);
-      // Stub - will be replaced with Native Messaging call
-      return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify({
-              success: true,
-              clicked: {
-                selector: selector || `element[${index}]`,
-                text: "More information...",
-              },
-            }, null, 2),
-          },
-        ],
-      };
+      const { tabId, selector, index, button, clickCount, modifiers } = args
+      logger.debug(`browser_click called: tabId=${tabId}, selector=${selector}, index=${index}, button=${button}, clickCount=${clickCount}, modifiers=${modifiers}`);
+      try {
+        const client = getIPCClient();
+        const result = await client.sendRequest("browser_click", { tabId, selector, index, button, clickCount, modifiers });
+        return {
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+        };
+      } catch (error) {
+        logger.error("browser_click error", error);
+        return {
+          content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }],
+          isError: true
+        };
+      }
     },
   );
 
@@ -269,24 +238,21 @@ export function registerBrowserTools(server: McpServer) {
     MCP_TOOL_DEFINITIONS.browser_type.description,
     MCP_TOOL_DEFINITIONS.browser_type.inputSchema.shape,
     async (args: TypeArgs) => {
-      const { selector, index, text, clear, delay, submit } = args
-      logger.debug(`browser_type called: selector=${selector}, index=${index}, text=${text}, clear=${clear}, delay=${delay}, submit=${submit}`);
-      // Stub - will be replaced with Native Messaging call
-      return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify({
-              success: true,
-              typed: {
-                selector: selector || `element[${index}]`,
-                text,
-                previousValue: clear ? "old value" : undefined,
-              },
-            }, null, 2),
-          },
-        ],
-      };
+      const { tabId, selector, index, text, clear, delay, submit } = args
+      logger.debug(`browser_type called: tabId=${tabId}, selector=${selector}, index=${index}, text=${text}, clear=${clear}, delay=${delay}, submit=${submit}`);
+      try {
+        const client = getIPCClient();
+        const result = await client.sendRequest("browser_type", { tabId, selector, index, text, clear, delay, submit });
+        return {
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+        };
+      } catch (error) {
+        logger.error("browser_type error", error);
+        return {
+          content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }],
+          isError: true
+        };
+      }
     },
   );
 
@@ -296,23 +262,21 @@ export function registerBrowserTools(server: McpServer) {
     MCP_TOOL_DEFINITIONS.browser_scroll.description,
     MCP_TOOL_DEFINITIONS.browser_scroll.inputSchema.shape,
     async (args: ScrollArgs) => {
-      const { selector, direction, amount, x, y, behavior } = args
-      logger.debug(`browser_scroll called: selector=${selector}, direction=${direction}, amount=${amount}, x=${x}, y=${y}, behavior=${behavior}`);
-      // Stub - will be replaced with Native Messaging call
-      return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify({
-              success: true,
-              scrollPosition: {
-                x: x || 0,
-                y: y || (direction === "down" ? 500 : 0),
-              },
-            }, null, 2),
-          },
-        ],
-      };
+      const { tabId, selector, direction, amount, x, y, behavior } = args
+      logger.debug(`browser_scroll called: tabId=${tabId}, selector=${selector}, direction=${direction}, amount=${amount}, x=${x}, y=${y}, behavior=${behavior}`);
+      try {
+        const client = getIPCClient();
+        const result = await client.sendRequest("browser_scroll", { tabId, selector, direction, amount, x, y, behavior });
+        return {
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+        };
+      } catch (error) {
+        logger.error("browser_scroll error", error);
+        return {
+          content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }],
+          isError: true
+        };
+      }
     },
   );
 
@@ -324,23 +288,19 @@ export function registerBrowserTools(server: McpServer) {
     async (args: ScreenshotArgs) => {
       const { tabId, selector, fullPage, format, quality } = args
       logger.debug(`browser_screenshot called: tabId=${tabId}, selector=${selector}, fullPage=${fullPage}, format=${format}, quality=${quality}`);
-      // Stub - will be replaced with Native Messaging call
-      return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify({
-              success: true,
-              image: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
-              format: format || "png",
-              dimensions: {
-                width: 1920,
-                height: 1080,
-              },
-            }, null, 2),
-          },
-        ],
-      };
+      try {
+        const client = getIPCClient();
+        const result = await client.sendRequest("browser_screenshot", { tabId, selector, fullPage, format, quality });
+        return {
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+        };
+      } catch (error) {
+        logger.error("browser_screenshot error", error);
+        return {
+          content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }],
+          isError: true
+        };
+      }
     },
   );
 
@@ -350,20 +310,21 @@ export function registerBrowserTools(server: McpServer) {
     MCP_TOOL_DEFINITIONS.browser_execute_script.description,
     MCP_TOOL_DEFINITIONS.browser_execute_script.inputSchema.shape,
     async (handlerArgs: ExecuteScriptArgs) => {
-      const { tabId, script } = handlerArgs
+      const { tabId, script, args } = handlerArgs
       logger.debug(`browser_execute_script called: tabId=${tabId}, script=${script.substring(0, 50)}...`);
-      // Stub - will be replaced with Native Messaging call
-      return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify({
-              success: true,
-              result: { message: "Script executed (stub)" },
-            }, null, 2),
-          },
-        ],
-      };
+      try {
+        const client = getIPCClient();
+        const result = await client.sendRequest("browser_execute_script", { tabId, script, args });
+        return {
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+        };
+      } catch (error) {
+        logger.error("browser_execute_script error", error);
+        return {
+          content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }],
+          isError: true
+        };
+      }
     },
   );
 
@@ -373,21 +334,21 @@ export function registerBrowserTools(server: McpServer) {
     MCP_TOOL_DEFINITIONS.browser_wait.description,
     MCP_TOOL_DEFINITIONS.browser_wait.inputSchema.shape,
     async (args: WaitArgs) => {
-      const { tabId, selector, state, timeout } = args
+      const { tabId, selector, state, timeout, condition } = args
       logger.debug(`browser_wait called: tabId=${tabId}, selector=${selector}, state=${state}, timeout=${timeout}`);
-      // Stub - will be replaced with Native Messaging call
-      return {
-        content: [
-          {
-            type: "text",
-            text: JSON.stringify({
-              success: true,
-              waited: 100,
-              timedOut: false,
-            }, null, 2),
-          },
-        ],
-      };
+      try {
+        const client = getIPCClient();
+        const result = await client.sendRequest("browser_wait", { tabId, selector, state, timeout, condition });
+        return {
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
+        };
+      } catch (error) {
+        logger.error("browser_wait error", error);
+        return {
+          content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }],
+          isError: true
+        };
+      }
     },
   );
 

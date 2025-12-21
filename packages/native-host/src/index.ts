@@ -10,14 +10,19 @@
  *   Communication happens automatically via stdin/stdout.
  */
 
-import { readMessage, writeMessage, isRequest, createEvent, resetStdinReader } from "./protocol.js"
+import { readMessage, writeMessage, isRequest, isResponse, createEvent, resetStdinReader } from "./protocol.js"
 import { handleRequest, initializeHandlers, getRegisteredMethods, clearHandlers } from "./handlers.js"
+import { IPCServer } from "./ipc/index.js"
 
 export const HOST_NAME = "com.athreei.host"
 export const VERSION = "0.1.0"
 
 let eventCounter = 0
 let isShuttingDown = false
+
+// IPC server and pending requests map
+const ipcServer = new IPCServer()
+const pendingIPCRequests = new Map<string, string>()
 
 /**
  * Generate a deterministic event ID
@@ -31,6 +36,14 @@ function nextEventId(): string {
  */
 async function cleanup(): Promise<void> {
   console.error("[native-host] Cleaning up resources...")
+
+  // Stop IPC server
+  try {
+    await ipcServer.stop()
+  } catch (error) {
+    console.error("[native-host] Error stopping IPC server:", error)
+  }
+
   clearHandlers()
   resetStdinReader()
   console.error("[native-host] Cleanup complete")
@@ -67,6 +80,22 @@ async function main() {
   initializeHandlers()
   console.error(`[native-host] Registered methods: ${getRegisteredMethods().join(", ")}`)
 
+  // Start IPC server
+  try {
+    await ipcServer.start()
+    console.error("[native-host] IPC server started")
+
+    // Set up handler for IPC requests - forward to Chrome extension
+    ipcServer.onRequest = (request, clientId) => {
+      console.error(`[native-host] IPC request from ${clientId}: ${request.type} (id: ${request.id})`)
+      pendingIPCRequests.set(request.id, clientId)
+      writeMessage(request)
+    }
+  } catch (error) {
+    console.error("[native-host] Failed to start IPC server:", error)
+    console.error("[native-host] Continuing without IPC support")
+  }
+
   // Send ready event to extension
   const readyEvent = createEvent(nextEventId(), "ready", {
     version: VERSION,
@@ -88,7 +117,13 @@ async function main() {
 
       console.error(`[native-host] Received message: ${message.type} (id: ${message.id})`)
 
-      if (isRequest(message)) {
+      // Check if this is a response to an IPC request
+      if (isResponse(message) && pendingIPCRequests.has(message.id)) {
+        const clientId = pendingIPCRequests.get(message.id)!
+        pendingIPCRequests.delete(message.id)
+        console.error(`[native-host] Routing response to IPC client ${clientId}`)
+        ipcServer.sendResponse(clientId, message)
+      } else if (isRequest(message)) {
         // Handle request and send response
         const response = await handleRequest(message)
         writeMessage(response)
