@@ -6,12 +6,14 @@
  */
 
 import { watch } from "fs"
-import { copyFile, mkdir, rm } from "fs/promises"
-import { join, dirname } from "path"
+import { copyFile, mkdir, readdir, rm } from "fs/promises"
+import { join } from "path"
 
 const DIST_DIR = join(import.meta.dir, "dist")
 const SRC_DIR = join(import.meta.dir, "src")
 const MANIFEST_PATH = join(import.meta.dir, "manifest.json")
+const ICONS_DIR = join(import.meta.dir, "icons")
+const POPUP_HTML = join(import.meta.dir, "popup.html")
 
 // Check if watch mode is enabled
 const isWatchMode = process.argv.includes("--watch")
@@ -75,15 +77,53 @@ async function bundle(entrypoint: string, outfile: string) {
 }
 
 /**
- * Copy manifest.json to dist
+ * Copy and transform manifest.json for dist folder
+ * Adjusts paths since dist/ becomes the extension root
  */
 async function copyManifest() {
-  console.log("📄 Copying manifest.json...")
+  console.log("📄 Processing manifest.json...")
+  const manifest = await Bun.file(MANIFEST_PATH).json()
+
+  // Adjust paths for dist folder (remove dist/ prefix since dist is the root)
+  if (manifest.background?.service_worker) {
+    manifest.background.service_worker = manifest.background.service_worker.replace("dist/", "")
+  }
+  if (manifest.content_scripts) {
+    for (const script of manifest.content_scripts) {
+      if (script.js) {
+        script.js = script.js.map((js: string) => js.replace("dist/", ""))
+      }
+    }
+  }
+
   const destPath = join(DIST_DIR, "manifest.json")
-  await copyFile(MANIFEST_PATH, destPath)
+  await Bun.write(destPath, JSON.stringify(manifest, null, 2))
   console.log(
-    `✅ Copied manifest.json → ${destPath.replace(import.meta.dir + "/", "")}`
+    `✅ Processed manifest.json → ${destPath.replace(import.meta.dir + "/", "")}`
   )
+}
+
+/**
+ * Copy static assets (popup.html, icons)
+ */
+async function copyAssets() {
+  console.log("📂 Copying static assets...")
+
+  // Copy popup.html
+  await copyFile(POPUP_HTML, join(DIST_DIR, "popup.html"))
+  console.log("✅ Copied popup.html")
+
+  // Copy icons
+  const iconsDistDir = join(DIST_DIR, "icons")
+  await mkdir(iconsDistDir, { recursive: true })
+
+  const iconFiles = await readdir(ICONS_DIR)
+  for (const file of iconFiles) {
+    if (file.endsWith(".png")) {
+      await copyFile(join(ICONS_DIR, file), join(iconsDistDir, file))
+      console.log(`✅ Copied icons/${file}`)
+    }
+  }
 }
 
 /**
@@ -109,8 +149,15 @@ async function build() {
       join(DIST_DIR, "content.js")
     )
 
-    // Copy manifest
+    // Bundle popup script
+    await bundle(
+      join(SRC_DIR, "popup/index.ts"),
+      join(DIST_DIR, "popup.js")
+    )
+
+    // Copy manifest and static assets
     await copyManifest()
+    await copyAssets()
 
     console.log("")
     console.log("✨ Build complete!")
