@@ -17,7 +17,7 @@ import type {
   SyncItemResponse,
   ConflictResponse,
 } from '../types';
-import type { SyncItem } from '../db/schema';
+import type { SyncItem, ItemType } from '../db/schema';
 
 /**
  * Pull changes from server since last sync
@@ -98,7 +98,7 @@ export async function pushChanges(
   deviceId: string,
   items: Array<{
     id?: string;
-    itemType: string;
+    itemType: ItemType;
     encryptedData: string;
     version?: number;
     deleted?: boolean;

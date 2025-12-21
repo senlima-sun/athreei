@@ -8,6 +8,8 @@ import type {
   SyncItem,
   SyncState,
   SyncSettings,
+  ItemType,
+  NewSyncSettings,
 } from './schema';
 
 let client: ReturnType<typeof postgres>;
@@ -30,9 +32,6 @@ export function getDb() {
   }
   return db;
 }
-
-// Export the db instance for migration runner
-export { db };
 
 export async function closeDatabase() {
   if (client) {
@@ -132,7 +131,7 @@ export async function deleteDevice(id: string, accountId: string): Promise<void>
 export async function createSyncItem(
   accountId: string,
   deviceId: string,
-  itemType: string,
+  itemType: ItemType,
   encryptedData: string
 ): Promise<SyncItem> {
   const database = getDb();
@@ -141,7 +140,7 @@ export async function createSyncItem(
     .values({
       account_id: accountId,
       device_id: deviceId,
-      item_type: itemType as any, // Type assertion for enum
+      item_type: itemType,
       encrypted_data: encryptedData,
     })
     .returning();
@@ -285,7 +284,7 @@ export async function updateSyncSettings(
   const database = getDb();
 
   // Build the update object with only the fields that were provided
-  const updateValues: any = {};
+  const updateValues: Partial<Omit<NewSyncSettings, 'account_id'>> = {};
 
   if (settings.sync_permissions !== undefined) {
     updateValues.sync_permissions = settings.sync_permissions;
