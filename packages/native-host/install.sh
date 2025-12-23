@@ -17,7 +17,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Configuration
-HOST_NAME="com.athreei.host"
+HOST_NAME="com.athreei.native_host"
 BINARY_NAME="athreei-host"
 DEFAULT_EXTENSION_ID="EXTENSION_ID_PLACEHOLDER"
 
@@ -149,12 +149,19 @@ uninstall() {
 install() {
   echo -e "${YELLOW}Installing athreei native host...${NC}"
 
-  # Check if binary exists
+  # Check if binary exists (try platform-specific first, then generic)
   BINARY_PATH="$SCRIPT_DIR/dist/$BINARY_SOURCE"
   if [ ! -f "$BINARY_PATH" ]; then
-    echo -e "${RED}Error: Binary not found at $BINARY_PATH${NC}"
-    echo "Please run 'bun run build' first"
-    exit 1
+    # Fall back to generic binary name
+    GENERIC_BINARY="$SCRIPT_DIR/dist/athreei-host"
+    if [ -f "$GENERIC_BINARY" ]; then
+      BINARY_PATH="$GENERIC_BINARY"
+      echo -e "${YELLOW}Using generic binary: $BINARY_PATH${NC}"
+    else
+      echo -e "${RED}Error: Binary not found at $BINARY_PATH${NC}"
+      echo "Please run 'bun run build' first"
+      exit 1
+    fi
   fi
 
   # Create install directory
