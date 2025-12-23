@@ -78,6 +78,7 @@
       "dependencies": {
         "@athreei/shared": "workspace:*",
         "@modelcontextprotocol/sdk": "^1.0.0",
+        "hono": "^4.6.0",
       },
     },
     "packages/native-host": {
@@ -85,9 +86,11 @@
       "version": "0.1.0",
       "dependencies": {
         "@athreei/shared": "workspace:*",
+        "zod": "^3.24.1",
       },
       "devDependencies": {
         "@types/bun": "latest",
+        "vitest": "^2.1.8",
       },
     },
     "packages/shared": {

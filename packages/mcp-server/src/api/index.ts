@@ -1,0 +1,72 @@
+/**
+ * HTTP API Server
+ *
+ * Provides REST endpoints for the dashboard to query local state.
+ * Runs alongside the MCP server on port 3001.
+ */
+
+import { Hono } from "hono"
+import { cors } from "hono/cors"
+import { logger as apiLogger } from "hono/logger"
+
+// Initialize database (runs migrations)
+import "../db/index.js"
+
+import { statusRoutes } from "./routes/status.js"
+import { auditRoutes } from "./routes/audit.js"
+import { sessionsRoutes } from "./routes/sessions.js"
+import { permissionsRoutes } from "./routes/permissions.js"
+import { settingsRoutes } from "./routes/settings.js"
+import { logger } from "../utils/logger.js"
+
+const API_PORT = 3001
+
+/**
+ * Create and configure the Hono app
+ */
+export function createApiServer() {
+  const app = new Hono()
+
+  // CORS for dashboard (running on :5173 or :5174)
+  app.use("*", cors({
+    origin: ["http://localhost:5173", "http://localhost:5174", "http://127.0.0.1:5173", "http://127.0.0.1:5174"],
+    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowHeaders: ["Content-Type"],
+    credentials: true,
+  }))
+
+  // Request logging (logs to stderr)
+  app.use("*", apiLogger((message) => {
+    logger.info(message)
+  }))
+
+  // Mount routes
+  app.route("/api/status", statusRoutes)
+  app.route("/api/audit", auditRoutes)
+  app.route("/api/sessions", sessionsRoutes)
+  app.route("/api/permissions", permissionsRoutes)
+  app.route("/api/settings", settingsRoutes)
+
+  // Health check
+  app.get("/health", (c) => c.json({ ok: true }))
+
+  return app
+}
+
+/**
+ * Start the HTTP API server
+ */
+export function startApiServer() {
+  const app = createApiServer()
+
+  logger.info(`Starting HTTP API server on port ${API_PORT}...`)
+
+  const server = Bun.serve({
+    port: API_PORT,
+    fetch: app.fetch,
+  })
+
+  logger.info(`HTTP API server running on http://localhost:${API_PORT}`)
+
+  return server
+}

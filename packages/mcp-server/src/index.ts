@@ -3,10 +3,12 @@
  *
  * Local MCP server for browser automation that connects AI apps to your browser.
  * Supports stdio transport (for Claude Desktop) and SSE transport (for web-based AI apps).
+ * Also runs an HTTP API server for the dashboard on port 3001.
  */
 
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { createServer } from "./server.js";
+import { startApiServer } from "./api/index.js";
 import { logger } from "./utils/logger.js";
 
 /**
@@ -96,11 +98,18 @@ async function startSSE(_server: ReturnType<typeof createServer>, _port: number)
 /**
  * Setup graceful shutdown handlers
  */
-function setupShutdownHandlers(server: ReturnType<typeof createServer>) {
+function setupShutdownHandlers(
+  server: ReturnType<typeof createServer>,
+  apiServer?: ReturnType<typeof Bun.serve>
+) {
   const shutdown = async (signal: string) => {
     logger.info(`Received ${signal}, shutting down gracefully...`);
     try {
       await server.close();
+      if (apiServer) {
+        apiServer.stop();
+        logger.info("HTTP API Server stopped");
+      }
       logger.info("MCP Server closed successfully");
       process.exit(0);
     } catch (error) {
@@ -136,11 +145,14 @@ async function main() {
     logger.info(`Client name: ${config.clientName}`);
   }
 
-  // Create the server
+  // Start the HTTP API server for the dashboard
+  const apiServer = startApiServer();
+
+  // Create the MCP server
   const server = createServer();
 
   // Setup graceful shutdown
-  setupShutdownHandlers(server);
+  setupShutdownHandlers(server, apiServer);
 
   // Start the appropriate transport
   if (config.transport === "stdio") {
