@@ -9,10 +9,13 @@ import { Button } from "../components/ui/Button"
 import { cn } from "@/lib/utils"
 
 interface AuditLogsResponse {
-  logs: AuditLogEntry[]
-  total: number
-  page: number
-  pageSize: number
+  data: AuditLogEntry[]
+  pagination: {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+  }
 }
 
 export function AuditLogs() {
@@ -39,7 +42,7 @@ export function AuditLogs() {
       // Build query params
       const params = new URLSearchParams()
       params.set("page", page.toString())
-      params.set("pageSize", pageSize.toString())
+      params.set("limit", pageSize.toString())
       if (statusFilter) params.set("status", statusFilter)
       if (toolFilter) params.set("tool", toolFilter)
       if (originFilter) params.set("origin", originFilter)
@@ -48,8 +51,8 @@ export function AuditLogs() {
         `/api/audit?${params.toString()}`
       )
 
-      setLogs(response.logs)
-      setTotal(response.total)
+      setLogs(response.data || [])
+      setTotal(response.pagination?.total || 0)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch audit logs")
     } finally {
