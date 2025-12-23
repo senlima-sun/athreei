@@ -34,7 +34,7 @@ async function clean() {
 /**
  * Bundle a TypeScript file using Bun
  */
-async function bundle(entrypoint: string, outfile: string) {
+async function bundle(entrypoint: string, outfile: string, format: "esm" | "iife" = "esm") {
   const relativePath = entrypoint.replace(SRC_DIR + "/", "")
   console.log(`📦 Bundling ${relativePath}...`)
 
@@ -43,7 +43,7 @@ async function bundle(entrypoint: string, outfile: string) {
       entrypoints: [entrypoint],
       outdir: DIST_DIR,
       target: "browser",
-      format: "esm",
+      format,
       minify: false,
       sourcemap: "external",
     })
@@ -143,10 +143,11 @@ async function build() {
       join(DIST_DIR, "background.js")
     )
 
-    // Bundle content script
+    // Bundle content script (IIFE format - content scripts can't use ES modules)
     await bundle(
       join(SRC_DIR, "content/index.ts"),
-      join(DIST_DIR, "content.js")
+      join(DIST_DIR, "content.js"),
+      "iife"
     )
 
     // Bundle popup script

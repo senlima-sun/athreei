@@ -8,8 +8,8 @@ const statusText = document.getElementById('statusText')
 
 async function checkConnection() {
   try {
-    // Try to send a ping to the background script
-    const response = await chrome.runtime.sendMessage({ type: 'ping' })
+    // Check connection status from background script
+    const response = await chrome.runtime.sendMessage({ type: 'get_connection_status' })
 
     if (response?.connected) {
       statusDot?.classList.remove('disconnected')
