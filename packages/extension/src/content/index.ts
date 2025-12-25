@@ -169,3 +169,8 @@ export { getBridge, initBridge } from "./provider-bridge"
 export { getWebsiteBridge, initWebsiteBridge } from "./website-bridge"
 export { getRegistry, resetRegistry } from "./registry"
 export * from "./events"
+export { showPermissionDialog, getToolDescription } from "./permission-dialog"
+export type {
+  PermissionDialogOptions,
+  PermissionResponse,
+} from "./permission-dialog"

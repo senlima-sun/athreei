@@ -5,6 +5,7 @@ This guide explains how website owners can integrate athreei to provide custom A
 ## Table of Contents
 
 - [Overview](#overview)
+- [Using the SDK (Recommended)](#using-the-sdk-recommended)
 - [Quick Start](#quick-start)
 - [Events Reference](#events-reference)
 - [Registering Custom Tools](#registering-custom-tools)
@@ -25,7 +26,132 @@ athreei allows websites to enhance AI interactions through a custom event system
 
 This integration is entirely optional. If your website doesn't implement any `aiii:*` events, athreei's built-in tools will still work.
 
+## Using the SDK (Recommended)
+
+The easiest way to integrate athreei is using the official `@athreei/sdk` package. The SDK provides:
+
+- TypeScript type definitions
+- Simplified API with automatic event handling
+- Mock mode for testing without the extension
+- Built-in error handling and validation
+- Better developer experience
+
+### Installation
+
+```bash
+npm install @athreei/sdk
+```
+
+```bash
+yarn add @athreei/sdk
+```
+
+```bash
+pnpm add @athreei/sdk
+```
+
+```bash
+bun add @athreei/sdk
+```
+
+### SDK Quick Start
+
+```javascript
+import { athreei } from '@athreei/sdk'
+
+// Wait for athreei extension to be ready
+athreei.onReady((info) => {
+  console.log('athreei ready:', info.version)
+})
+
+// Register a custom tool with built-in handler
+athreei.registerTool({
+  name: 'add_to_cart',
+  description: 'Add a product to the shopping cart',
+  parameters: {
+    productId: {
+      type: 'string',
+      required: true,
+      description: 'The product ID or SKU'
+    },
+    quantity: {
+      type: 'number',
+      default: 1,
+      description: 'Quantity to add'
+    }
+  },
+  handler: async ({ productId, quantity }) => {
+    // Your implementation
+    await addToCart(productId, quantity)
+    return {
+      success: true,
+      cartCount: getCartCount(),
+      message: `Added ${quantity}x ${productId} to cart`
+    }
+  }
+})
+```
+
+### SDK Benefits
+
+**With SDK:**
+```javascript
+import { athreei } from '@athreei/sdk'
+
+athreei.registerTool({
+  name: 'my_tool',
+  description: 'Does something',
+  parameters: {
+    input: { type: 'string', required: true }
+  },
+  handler: async ({ input }) => {
+    return { result: input.toUpperCase() }
+  }
+})
+```
+
+**Without SDK (raw events):**
+```javascript
+window.addEventListener('aiii:ready', () => {
+  window.dispatchEvent(new CustomEvent('aiii:register', {
+    detail: {
+      tool: 'my_tool',
+      description: 'Does something',
+      parameters: {
+        input: { type: 'string', required: true }
+      }
+    }
+  }))
+})
+
+window.addEventListener('aiii:request', (event) => {
+  const { requestId, tool, args } = event.detail
+  if (tool === 'my_tool') {
+    try {
+      const result = { result: args.input.toUpperCase() }
+      window.dispatchEvent(new CustomEvent('aiii:response', {
+        detail: { requestId, success: true, result }
+      }))
+    } catch (error) {
+      window.dispatchEvent(new CustomEvent('aiii:response', {
+        detail: { requestId, success: false, error: error.message }
+      }))
+    }
+  }
+})
+```
+
+The SDK version is shorter, clearer, and handles errors automatically.
+
+### SDK Documentation
+
+For complete SDK documentation, see:
+- [SDK README](../packages/sdk/README.md) - Full API reference and examples
+- [Examples Directory](../examples/README.md) - Working example projects
+
 ## Quick Start
+
+This section shows the raw event-based API. For most use cases, we recommend using the SDK instead (see above).
 
 Add this snippet to detect athreei and register a custom tool:
 
@@ -806,6 +932,29 @@ window.addEventListener("aiii:ready", () => {
   })
 })
 ```
+
+## Using the SDK vs Raw Events
+
+The examples in this guide show the raw event-based API for advanced users who need fine-grained control. However, **we strongly recommend using the `@athreei/sdk` package** for most use cases.
+
+### When to Use the SDK
+
+Use the SDK if you want:
+- TypeScript support and type safety
+- Simplified API with less boilerplate
+- Built-in error handling
+- Mock mode for testing
+- Better developer experience
+
+See [SDK Documentation](../packages/sdk/README.md) for details.
+
+### When to Use Raw Events
+
+Use raw events if you:
+- Need to minimize bundle size (SDK is ~5KB gzipped)
+- Want to avoid npm dependencies
+- Need custom event handling logic
+- Are building a framework-specific wrapper
 
 ## Debugging
 

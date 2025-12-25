@@ -90,45 +90,39 @@ See the [Developer Guide](docs/developer-guide.md) for detailed instructions.
 
 ### For Website Owners
 
-Integrate athreei into your website to provide custom AI tools:
+Integrate athreei into your website using the official SDK:
+
+```bash
+npm install @athreei/sdk
+```
 
 ```javascript
-// Register a custom tool
-window.addEventListener("aiii:ready", () => {
-  window.dispatchEvent(
-    new CustomEvent("aiii:register", {
-      detail: {
-        tool: "add_to_cart",
-        description: "Add a product to the shopping cart",
-        parameters: {
-          productId: { type: "string", required: true },
-          quantity: { type: "number", default: 1 },
-        },
-      },
-    })
-  )
+import { athreei } from '@athreei/sdk'
+
+// Wait for athreei to be ready
+athreei.onReady((info) => {
+  console.log('athreei ready:', info.version)
 })
 
-// Handle tool calls
-window.addEventListener("aiii:request", (e) => {
-  if (e.detail.tool === "add_to_cart") {
-    // Your implementation
-    addToCart(e.detail.args.productId, e.detail.args.quantity)
-
-    window.dispatchEvent(
-      new CustomEvent("aiii:response", {
-        detail: {
-          requestId: e.detail.requestId,
-          success: true,
-          result: { cartCount: getCartCount() },
-        },
-      })
-    )
+// Register a custom tool
+athreei.registerTool({
+  name: 'add_to_cart',
+  description: 'Add a product to the shopping cart',
+  parameters: {
+    productId: { type: 'string', required: true },
+    quantity: { type: 'number', default: 1 }
+  },
+  handler: async ({ productId, quantity }) => {
+    await addToCart(productId, quantity)
+    return {
+      success: true,
+      cartCount: getCartCount()
+    }
   }
 })
 ```
 
-See the [Website Integration Guide](docs/website-integration.md) for the complete API.
+See the [SDK Documentation](packages/sdk/README.md) for the complete API, or check out the [examples](examples/README.md) for working code.
 
 ## Available Browser Tools
 
@@ -150,7 +144,9 @@ See the [Website Integration Guide](docs/website-integration.md) for the complet
 
 - [User Guide](docs/user-guide.md) - Installation and usage for end users
 - [Developer Guide](docs/developer-guide.md) - Development setup and contribution
+- [SDK Documentation](packages/sdk/README.md) - Official SDK for website integration
 - [Website Integration](docs/website-integration.md) - Integrate athreei into your website
+- [Examples](examples/README.md) - Working code examples
 - [API Reference](docs/api-reference.md) - Complete `aiii:*` events API
 
 ## Project Structure
@@ -163,9 +159,11 @@ athreei/
 │   ├── dashboard/       # Web dashboard (React + Vite)
 │   ├── shared/          # Shared types & utilities
 │   ├── native-host/     # Native messaging bridge binary
-│   └── sync-server/     # E2E encrypted sync service
-└── apps/
-    └── web/             # Marketing/documentation site
+│   ├── sync-server/     # E2E encrypted sync service
+│   └── sdk/             # Official SDK for website integration
+├── apps/
+│   └── web/             # Marketing/documentation site
+└── examples/            # SDK usage examples
 ```
 
 ## Security
