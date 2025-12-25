@@ -11,6 +11,8 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { MCP_TOOL_DEFINITIONS } from "@athreei/shared";
 import { logger } from "../utils/logger.js";
 import { getIPCClient } from "../bridge/index.js";
+import { createAuditLogEntry } from "../db/repositories/audit-log.js";
+import type { AuditStatus } from "@athreei/shared";
 
 // Type definitions for tool arguments to avoid implicit any
 interface NavigateArgs {
@@ -84,6 +86,79 @@ interface WaitArgs {
 }
 
 /**
+ * Helper function to log tool execution with audit logging
+ *
+ * Wraps tool execution to automatically create audit log entries with:
+ * - Start/end timestamps
+ * - Tool name and arguments
+ * - Origin URL (extracted from result)
+ * - Success/error status
+ * - Execution duration
+ */
+async function logToolExecution<T = unknown>(
+  tool: string,
+  args: Record<string, unknown>,
+  executor: () => Promise<T>
+): Promise<T> {
+  const startTime = Date.now();
+  const logId = crypto.randomUUID();
+
+  try {
+    // Execute the tool
+    const result = await executor();
+
+    // Extract origin from result if available (most tools return a url field)
+    const resultObj = result as Record<string, unknown>;
+    const origin = typeof resultObj.url === 'string' ? new URL(resultObj.url).origin : undefined;
+
+    // Log successful execution
+    createAuditLogEntry({
+      id: logId,
+      timestamp: startTime,
+      aiApp: undefined, // TODO: Extract from MCP context when available
+      tool,
+      origin,
+      args,
+      result,
+      status: "success" as AuditStatus,
+    });
+
+    logger.debug(`Audit log created for ${tool}: success (${Date.now() - startTime}ms)`);
+
+    return result;
+  } catch (error) {
+    // Extract origin from args if available (e.g., browser_navigate has url in args)
+    let origin: string | undefined;
+    if (typeof args.url === 'string') {
+      try {
+        origin = new URL(args.url).origin;
+      } catch {
+        // Invalid URL, leave origin undefined
+      }
+    }
+
+    // Log failed execution
+    createAuditLogEntry({
+      id: logId,
+      timestamp: startTime,
+      aiApp: undefined, // TODO: Extract from MCP context when available
+      tool,
+      origin,
+      args,
+      result: {
+        error: error instanceof Error ? error.message : String(error)
+      },
+      status: "error" as AuditStatus,
+    });
+
+    logger.debug(`Audit log created for ${tool}: error (${Date.now() - startTime}ms)`);
+
+    // Re-throw the error to maintain normal error handling
+    throw error;
+  }
+}
+
+/**
  * Register all browser tools with the MCP server
  */
 export function registerBrowserTools(server: McpServer) {
@@ -97,8 +172,14 @@ export function registerBrowserTools(server: McpServer) {
     async () => {
       logger.debug("browser_list_tabs called");
       try {
-        const client = getIPCClient();
-        const result = await client.sendRequest("browser_list_tabs", {});
+        const result = await logToolExecution(
+          "browser_list_tabs",
+          {},
+          async () => {
+            const client = getIPCClient();
+            return await client.sendRequest("browser_list_tabs", {});
+          }
+        );
         return {
           content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
         };
@@ -120,8 +201,14 @@ export function registerBrowserTools(server: McpServer) {
     async () => {
       logger.debug("browser_get_active_tab called");
       try {
-        const client = getIPCClient();
-        const result = await client.sendRequest("browser_get_active_tab", {});
+        const result = await logToolExecution(
+          "browser_get_active_tab",
+          {},
+          async () => {
+            const client = getIPCClient();
+            return await client.sendRequest("browser_get_active_tab", {});
+          }
+        );
         return {
           content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
         };
@@ -145,8 +232,14 @@ export function registerBrowserTools(server: McpServer) {
       const { url, tabId, waitUntil } = args
       logger.debug(`browser_navigate called: ${url} (tabId: ${tabId}, waitUntil: ${waitUntil})`);
       try {
-        const client = getIPCClient();
-        const result = await client.sendRequest("browser_navigate", { url, tabId, waitUntil });
+        const result = await logToolExecution(
+          "browser_navigate",
+          { url, tabId, waitUntil },
+          async () => {
+            const client = getIPCClient();
+            return await client.sendRequest("browser_navigate", { url, tabId, waitUntil });
+          }
+        );
         return {
           content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
         };
@@ -169,8 +262,14 @@ export function registerBrowserTools(server: McpServer) {
       const { tabId, format, selector } = args
       logger.debug(`browser_get_content called: tabId=${tabId}, format=${format}, selector=${selector}`);
       try {
-        const client = getIPCClient();
-        const result = await client.sendRequest("browser_get_content", { tabId, format, selector });
+        const result = await logToolExecution(
+          "browser_get_content",
+          { tabId, format, selector },
+          async () => {
+            const client = getIPCClient();
+            return await client.sendRequest("browser_get_content", { tabId, format, selector });
+          }
+        );
         return {
           content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
         };
@@ -193,8 +292,14 @@ export function registerBrowserTools(server: McpServer) {
       const { tabId, selector, roles, interactiveOnly } = args
       logger.debug(`browser_get_elements called: tabId=${tabId}, selector=${selector}, roles=${roles}, interactiveOnly=${interactiveOnly}`);
       try {
-        const client = getIPCClient();
-        const result = await client.sendRequest("browser_get_elements", { tabId, selector, roles, interactiveOnly });
+        const result = await logToolExecution(
+          "browser_get_elements",
+          { tabId, selector, roles, interactiveOnly },
+          async () => {
+            const client = getIPCClient();
+            return await client.sendRequest("browser_get_elements", { tabId, selector, roles, interactiveOnly });
+          }
+        );
         return {
           content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
         };
@@ -217,8 +322,14 @@ export function registerBrowserTools(server: McpServer) {
       const { tabId, selector, index, button, clickCount, modifiers } = args
       logger.debug(`browser_click called: tabId=${tabId}, selector=${selector}, index=${index}, button=${button}, clickCount=${clickCount}, modifiers=${modifiers}`);
       try {
-        const client = getIPCClient();
-        const result = await client.sendRequest("browser_click", { tabId, selector, index, button, clickCount, modifiers });
+        const result = await logToolExecution(
+          "browser_click",
+          { tabId, selector, index, button, clickCount, modifiers },
+          async () => {
+            const client = getIPCClient();
+            return await client.sendRequest("browser_click", { tabId, selector, index, button, clickCount, modifiers });
+          }
+        );
         return {
           content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
         };
@@ -241,8 +352,14 @@ export function registerBrowserTools(server: McpServer) {
       const { tabId, selector, index, text, clear, delay, submit } = args
       logger.debug(`browser_type called: tabId=${tabId}, selector=${selector}, index=${index}, text=${text}, clear=${clear}, delay=${delay}, submit=${submit}`);
       try {
-        const client = getIPCClient();
-        const result = await client.sendRequest("browser_type", { tabId, selector, index, text, clear, delay, submit });
+        const result = await logToolExecution(
+          "browser_type",
+          { tabId, selector, index, text, clear, delay, submit },
+          async () => {
+            const client = getIPCClient();
+            return await client.sendRequest("browser_type", { tabId, selector, index, text, clear, delay, submit });
+          }
+        );
         return {
           content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
         };
@@ -265,8 +382,14 @@ export function registerBrowserTools(server: McpServer) {
       const { tabId, selector, direction, amount, x, y, behavior } = args
       logger.debug(`browser_scroll called: tabId=${tabId}, selector=${selector}, direction=${direction}, amount=${amount}, x=${x}, y=${y}, behavior=${behavior}`);
       try {
-        const client = getIPCClient();
-        const result = await client.sendRequest("browser_scroll", { tabId, selector, direction, amount, x, y, behavior });
+        const result = await logToolExecution(
+          "browser_scroll",
+          { tabId, selector, direction, amount, x, y, behavior },
+          async () => {
+            const client = getIPCClient();
+            return await client.sendRequest("browser_scroll", { tabId, selector, direction, amount, x, y, behavior });
+          }
+        );
         return {
           content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
         };
@@ -289,8 +412,14 @@ export function registerBrowserTools(server: McpServer) {
       const { tabId, selector, fullPage, format, quality } = args
       logger.debug(`browser_screenshot called: tabId=${tabId}, selector=${selector}, fullPage=${fullPage}, format=${format}, quality=${quality}`);
       try {
-        const client = getIPCClient();
-        const result = await client.sendRequest("browser_screenshot", { tabId, selector, fullPage, format, quality });
+        const result = await logToolExecution(
+          "browser_screenshot",
+          { tabId, selector, fullPage, format, quality },
+          async () => {
+            const client = getIPCClient();
+            return await client.sendRequest("browser_screenshot", { tabId, selector, fullPage, format, quality });
+          }
+        );
         return {
           content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
         };
@@ -313,8 +442,14 @@ export function registerBrowserTools(server: McpServer) {
       const { tabId, script, args } = handlerArgs
       logger.debug(`browser_execute_script called: tabId=${tabId}, script=${script.substring(0, 50)}...`);
       try {
-        const client = getIPCClient();
-        const result = await client.sendRequest("browser_execute_script", { tabId, script, args });
+        const result = await logToolExecution(
+          "browser_execute_script",
+          { tabId, script, args },
+          async () => {
+            const client = getIPCClient();
+            return await client.sendRequest("browser_execute_script", { tabId, script, args });
+          }
+        );
         return {
           content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
         };
@@ -337,8 +472,14 @@ export function registerBrowserTools(server: McpServer) {
       const { tabId, selector, state, timeout, condition } = args
       logger.debug(`browser_wait called: tabId=${tabId}, selector=${selector}, state=${state}, timeout=${timeout}`);
       try {
-        const client = getIPCClient();
-        const result = await client.sendRequest("browser_wait", { tabId, selector, state, timeout, condition });
+        const result = await logToolExecution(
+          "browser_wait",
+          { tabId, selector, state, timeout, condition },
+          async () => {
+            const client = getIPCClient();
+            return await client.sendRequest("browser_wait", { tabId, selector, state, timeout, condition });
+          }
+        );
         return {
           content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
         };
@@ -352,5 +493,5 @@ export function registerBrowserTools(server: McpServer) {
     },
   );
 
-  logger.info("Successfully registered 11 browser tools");
+  logger.info("Successfully registered 11 browser tools with audit logging");
 }
