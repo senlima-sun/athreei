@@ -48,6 +48,7 @@ let mockOptions: Required<MockModeOptions> = {
   capabilities: ["click", "type", "navigate", "scroll", "screenshot"],
   autoTriggerTools: [],
 }
+let cleanupFunctions: (() => void)[] = []
 
 /**
  * Enable mock mode for testing
@@ -92,20 +93,24 @@ export function enableMockMode(options: MockModeOptions = {}): void {
   }, mockOptions.simulateDelay)
 
   // Listen for tool registrations to add them to capabilities
-  document.addEventListener(AIII_EVENT_NAMES.REGISTER, (event) => {
+  const registerHandler = (event: Event) => {
     const customEvent = event as CustomEvent
     const toolName = customEvent.detail.tool
     if (!mockOptions.capabilities.includes(toolName)) {
       mockOptions.capabilities.push(toolName)
       console.log("[athreei mock] Tool registered:", toolName)
     }
-  })
+  }
+  document.addEventListener(AIII_EVENT_NAMES.REGISTER, registerHandler)
+  cleanupFunctions.push(() => document.removeEventListener(AIII_EVENT_NAMES.REGISTER, registerHandler))
 
   // Listen for responses to log them
-  document.addEventListener(AIII_EVENT_NAMES.RESPONSE, (event) => {
+  const responseHandler = (event: Event) => {
     const customEvent = event as CustomEvent
     console.log("[athreei mock] Response received:", customEvent.detail)
-  })
+  }
+  document.addEventListener(AIII_EVENT_NAMES.RESPONSE, responseHandler)
+  cleanupFunctions.push(() => document.removeEventListener(AIII_EVENT_NAMES.RESPONSE, responseHandler))
 }
 
 /**
@@ -113,6 +118,8 @@ export function enableMockMode(options: MockModeOptions = {}): void {
  */
 export function disableMockMode(): void {
   mockModeEnabled = false
+  cleanupFunctions.forEach(fn => fn())
+  cleanupFunctions = []
   console.log("[athreei mock] Mock mode disabled")
 }
 

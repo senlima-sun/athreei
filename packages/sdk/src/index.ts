@@ -81,6 +81,9 @@ function createSimpleAPI(): SimpleAPI {
   let client: AthreeiClient | null = null
 
   const getClient = () => {
+    if (typeof window === "undefined") {
+      throw new Error("athreei SDK requires a browser environment")
+    }
     if (!client) {
       client = new AthreeiClient({ debug: false })
     }

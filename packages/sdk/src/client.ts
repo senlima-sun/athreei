@@ -31,10 +31,6 @@ import {
 export class AthreeiClient {
   private options: Required<AthreeiClientOptions>
   private handlers = new Map<string, RequestHandler>()
-  private pendingRequests = new Map<
-    string,
-    { resolve: (value: unknown) => void; reject: (error: Error) => void; timeout: ReturnType<typeof setTimeout> }
-  >()
   private readyPromise: Promise<AthreeiInfo> | null = null
   private unsubscribers: Unsubscribe[] = []
 
@@ -188,6 +184,8 @@ export class AthreeiClient {
    * Request permission from the user
    */
   async requestPermission(options: PermissionOptions): Promise<boolean> {
+    console.warn("[athreei SDK] Permission system not yet fully implemented - returning true by default")
+
     // Normalize scopes
     const scopes = options.scopes || (options.scope ? [options.scope] : undefined)
 
@@ -262,7 +260,5 @@ export class AthreeiClient {
     this.unsubscribers.forEach((unsub) => unsub())
     this.unsubscribers = []
     this.handlers.clear()
-    this.pendingRequests.forEach(({ timeout }) => clearTimeout(timeout))
-    this.pendingRequests.clear()
   }
 }
