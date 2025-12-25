@@ -30,43 +30,24 @@ athreei lets you use AI assistants (Claude, ChatGPT, Gemini, etc.) to interact w
 
 ## Quick Start
 
-### For Users
+### Automated Setup
 
-1. **Install the MCP Server**
+```bash
+git clone https://github.com/yourusername/athreei.git
+cd athreei
 
-   ```bash
-   # Download the binary for your platform from releases
-   # Or build from source:
-   git clone https://github.com/yourusername/athreei.git
-   cd athreei
-   bun install
-   cd packages/native-host && bun run build
-   ```
+# macOS / Linux
+./scripts/setup.sh
 
-2. **Install the Chrome Extension**
-   - Load unpacked from `packages/extension/dist/` (developer mode)
-   - Or install from Chrome Web Store (coming soon)
+# Windows (PowerShell)
+.\scripts\setup.ps1
+```
 
-3. **Configure Your AI App**
+The setup script guides you through the entire installation process.
 
-   For Claude Desktop, add to `claude_desktop_config.json`:
+### Manual Setup
 
-   ```json
-   {
-     "mcpServers": {
-       "athreei": {
-         "command": "/path/to/athreei-host"
-       }
-     }
-   }
-   ```
-
-4. **Start Using**
-   - Open Chrome and navigate to any website
-   - Ask your AI to interact with the page
-   - Grant permissions when prompted
-
-See the [User Guide](docs/user-guide.md) for detailed instructions.
+See [INSTALL.md](INSTALL.md) for detailed step-by-step instructions, platform-specific notes, and troubleshooting.
 
 ### For Developers
 
@@ -142,7 +123,8 @@ See the [SDK Documentation](packages/sdk/README.md) for the complete API, or che
 
 ## Documentation
 
-- [User Guide](docs/user-guide.md) - Installation and usage for end users
+- [Installation Guide](INSTALL.md) - Complete installation instructions with troubleshooting
+- [User Guide](docs/user-guide.md) - Usage guide for end users
 - [Developer Guide](docs/developer-guide.md) - Development setup and contribution
 - [SDK Documentation](packages/sdk/README.md) - Official SDK for website integration
 - [Website Integration](docs/website-integration.md) - Integrate athreei into your website
