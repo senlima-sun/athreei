@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TechStore - E-commerce Demo with athreei SDK</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+    }
+
+    .header {
+      background: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      padding: 1rem 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #2563eb;
+    }
+
+    .search-bar {
+      flex: 1;
+      max-width: 500px;
+      margin: 0 2rem;
+    }
+
+    .search-bar input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+
+    .search-bar input:focus {
+      outline: none;
+      border-color: #2563eb;
+    }
+
+    .cart-button {
+      position: relative;
+      padding: 0.75rem 1.5rem;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+
+    .cart-button:hover {
+      background: #1d4ed8;
+    }
+
+    .cart-count {
+      position: absolute;
+      top: -8px;
+      right: -8px;
+      background: #ef4444;
+      color: white;
+      font-size: 0.75rem;
+      font-weight: bold;
+      padding: 0.25rem 0.5rem;
+      border-radius: 12px;
+      min-width: 24px;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+      display: grid;
+      grid-template-columns: 1fr 350px;
+      gap: 2rem;
+    }
+
+    .main-content {
+      min-height: calc(100vh - 200px);
+    }
+
+    .category-filter {
+      margin-bottom: 1.5rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .category-btn {
+      padding: 0.5rem 1rem;
+      border: 2px solid #e5e7eb;
+      background: white;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.9rem;
+    }
+
+    .category-btn:hover {
+      border-color: #2563eb;
+    }
+
+    .category-btn.active {
+      background: #2563eb;
+      color: white;
+      border-color: #2563eb;
+    }
+
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .product-card {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .product-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+
+    .product-image {
+      width: 100%;
+      height: 200px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      color: white;
+    }
+
+    .product-info {
+      padding: 1rem;
+    }
+
+    .product-name {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #1f2937;
+    }
+
+    .product-category {
+      font-size: 0.85rem;
+      color: #6b7280;
+      margin-bottom: 0.5rem;
+    }
+
+    .product-price {
+      font-size: 1.25rem;
+      font-weight: bold;
+      color: #2563eb;
+      margin-bottom: 1rem;
+    }
+
+    .add-to-cart-btn {
+      width: 100%;
+      padding: 0.75rem;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+
+    .add-to-cart-btn:hover {
+      background: #1d4ed8;
+    }
+
+    .add-to-cart-btn:active {
+      transform: scale(0.98);
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 100px;
+      height: fit-content;
+    }
+
+    .cart-panel, .ai-status-panel {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 1.5rem;
+    }
+
+    .panel-title {
+      font-size: 1.25rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      color: #1f2937;
+    }
+
+    .cart-empty {
+      text-align: center;
+      color: #6b7280;
+      padding: 2rem 0;
+    }
+
+    .cart-items {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .cart-item:last-child {
+      border-bottom: none;
+    }
+
+    .cart-item-info {
+      flex: 1;
+    }
+
+    .cart-item-name {
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .cart-item-price {
+      color: #6b7280;
+      font-size: 0.85rem;
+    }
+
+    .cart-item-quantity {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-left: 1rem;
+    }
+
+    .quantity-btn {
+      width: 24px;
+      height: 24px;
+      border: 1px solid #e5e7eb;
+      background: white;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .quantity-btn:hover {
+      background: #f3f4f6;
+    }
+
+    .cart-total {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 2px solid #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 1.25rem;
+      font-weight: bold;
+    }
+
+    .checkout-btn {
+      width: 100%;
+      padding: 1rem;
+      background: #10b981;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: bold;
+      margin-top: 1rem;
+      transition: background 0.2s;
+    }
+
+    .checkout-btn:hover {
+      background: #059669;
+    }
+
+    .checkout-btn:disabled {
+      background: #d1d5db;
+      cursor: not-allowed;
+    }
+
+    .ai-status {
+      font-size: 0.9rem;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .status-ready {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .status-waiting {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .ai-logs {
+      margin-top: 1rem;
+      max-height: 200px;
+      overflow-y: auto;
+      font-size: 0.85rem;
+      background: #f9fafb;
+      border-radius: 6px;
+      padding: 0.75rem;
+    }
+
+    .ai-log-entry {
+      margin-bottom: 0.5rem;
+      padding: 0.5rem;
+      background: white;
+      border-left: 3px solid #2563eb;
+      border-radius: 4px;
+    }
+
+    .ai-log-time {
+      color: #6b7280;
+      font-size: 0.75rem;
+    }
+
+    .ai-log-message {
+      margin-top: 0.25rem;
+      color: #1f2937;
+    }
+
+    .success-message {
+      background: #d1fae5;
+      color: #065f46;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-top: 1rem;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    @media (max-width: 1024px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-content">
+      <div class="logo">TechStore</div>
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Search products...">
+      </div>
+      <button class="cart-button" id="cartToggle">
+        Cart
+        <span class="cart-count" id="cartCount">0</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="container">
+    <main class="main-content">
+      <div class="category-filter">
+        <button class="category-btn active" data-category="all">All Products</button>
+        <button class="category-btn" data-category="electronics">Electronics</button>
+        <button class="category-btn" data-category="books">Books</button>
+        <button class="category-btn" data-category="home">Home & Kitchen</button>
+        <button class="category-btn" data-category="sports">Sports</button>
+      </div>
+
+      <div class="products-grid" id="productsGrid">
+        <!-- Products will be rendered here -->
+      </div>
+    </main>
+
+    <aside class="sidebar">
+      <div class="ai-status-panel">
+        <div class="panel-title">AI Assistant Status</div>
+        <div class="ai-status">
+          <div class="status-badge status-waiting" id="aiStatusBadge">Waiting for extension...</div>
+          <div style="margin-top: 0.5rem; font-size: 0.85rem; color: #6b7280;" id="aiStatusText">
+            This demo uses mock mode to demonstrate AI integration.
+          </div>
+        </div>
+        <div class="ai-logs" id="aiLogs">
+          <div style="text-align: center; color: #9ca3af;">No activity yet</div>
+        </div>
+      </div>
+
+      <div class="cart-panel">
+        <div class="panel-title">Shopping Cart</div>
+        <div id="cartContent">
+          <div class="cart-empty">Your cart is empty</div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Load the athreei SDK from the built package -->
+  <script type="module" src="script.js"></script>
+</body>
+</html>
