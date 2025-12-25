@@ -118,18 +118,20 @@ class PermissionManagerImpl {
       }
 
       const data = await response.json()
-      const level = data.allowed as PermissionLevel
+      const level = data.allowed
 
-      // Validate response
+      // Validate response before using
       if (!["allowed", "denied", "ask"].includes(level)) {
         console.error("[PermissionManager] Invalid permission level from server:", level)
         return "ask"
       }
 
-      // Cache the result
-      await this.cachePermission(origin, tool, level)
+      const validLevel = level as PermissionLevel
 
-      return level
+      // Cache the result
+      await this.cachePermission(origin, tool, validLevel)
+
+      return validLevel
     } catch (error) {
       console.error("[PermissionManager] Error fetching from server:", error)
       // Default to "ask" on error

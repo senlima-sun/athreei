@@ -16,7 +16,7 @@ import type {
 } from "@athreei/shared"
 
 import { permissionManager } from "./permission-manager"
-import { PermissionDeniedError, PermissionPromptRequiredError } from "./types"
+import { PermissionDeniedError } from "./types"
 
 // ============================================================================
 // Constants
@@ -444,7 +444,7 @@ async function handleNavigate(payload: Record<string, unknown>): Promise<unknown
 
   // Check permissions before navigation
   const origin = await getTabOrigin(targetTabId)
-  await checkAndEnforcePermission(origin, "browser_navigate")
+  await checkAndEnforcePermission(origin, "browser_navigate", targetTabId)
 
   // Navigate
   const tab = await chrome.tabs.update(targetTabId, { url })
@@ -481,7 +481,7 @@ async function handleScreenshot(payload: Record<string, unknown>): Promise<unkno
 
   // Check permissions before screenshot
   const origin = await getTabOrigin(targetTabId)
-  await checkAndEnforcePermission(origin, "browser_screenshot")
+  await checkAndEnforcePermission(origin, "browser_screenshot", targetTabId)
 
   // Get window ID for the tab
   const tab = await chrome.tabs.get(targetTabId)
@@ -538,7 +538,7 @@ async function forwardToContentScript(request: NativeRequest): Promise<unknown> 
 
   // Check permissions before forwarding
   const origin = await getTabOrigin(targetTabId)
-  await checkAndEnforcePermission(origin, request.method)
+  await checkAndEnforcePermission(origin, request.method, targetTabId)
 
   // Send message to content script
   const response = await chrome.tabs.sendMessage(targetTabId, {
@@ -634,9 +634,14 @@ async function getTabOrigin(tabId: number): Promise<string> {
 }
 
 /**
- * Check permission and throw error if not allowed
+ * Check permission and show dialog if needed
+ * Returns true if allowed, throws error if denied
  */
-async function checkAndEnforcePermission(origin: string, tool: string): Promise<void> {
+async function checkAndEnforcePermission(
+  origin: string,
+  tool: string,
+  tabId?: number
+): Promise<void> {
   const level = await permissionManager.checkPermission(origin, tool)
 
   if (level === "denied") {
@@ -644,12 +649,109 @@ async function checkAndEnforcePermission(origin: string, tool: string): Promise<
   }
 
   if (level === "ask") {
-    // TODO: In the future, this will show a permission dialog
-    // For now, we deny with a specific error message
-    throw new PermissionPromptRequiredError(origin, tool)
+    // Show permission dialog to user
+    const response = await showPermissionDialogToUser(origin, tool, tabId)
+
+    if (response.decision === "deny") {
+      throw new PermissionDeniedError(origin, tool, "denied")
+    }
+
+    // If "remember" was checked, update the permission
+    if (response.remember && response.decision !== "allow_once") {
+      await updatePermissionLevel(
+        origin,
+        tool,
+        response.decision === "allow" ? "allowed" : "denied"
+      )
+    }
+
+    // If "allow_once", we don't update anything but continue execution
+    if (response.decision === "allow" || response.decision === "allow_once") {
+      return // Continue execution
+    }
   }
 
   // level === "allowed" - continue execution
+}
+
+/**
+ * Show permission dialog via content script
+ */
+async function showPermissionDialogToUser(
+  origin: string,
+  tool: string,
+  tabId?: number
+): Promise<{ decision: "allow" | "deny" | "allow_once"; remember: boolean }> {
+  let targetTabId = tabId
+
+  // If no tabId, get active tab
+  if (!targetTabId) {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true })
+    if (tabs.length === 0) {
+      throw new Error("No active tab found to show permission dialog")
+    }
+    targetTabId = tabs[0].id
+  }
+
+  if (!targetTabId) {
+    throw new Error("Could not determine target tab for permission dialog")
+  }
+
+  // Send message to content script to show dialog
+  const response = await chrome.tabs.sendMessage(targetTabId, {
+    type: "show_permission_dialog",
+    tool,
+    origin,
+    aiApp: "AI Assistant", // TODO: Get from MCP context when available
+    toolDescription: undefined, // Let content script use default description
+  })
+
+  // Validate response
+  if (!response || typeof response.decision !== "string") {
+    console.error("[Background] Invalid permission dialog response:", response)
+    return { decision: "deny", remember: false }
+  }
+
+  return response
+}
+
+/**
+ * Update permission level in the database via MCP server API
+ */
+async function updatePermissionLevel(
+  origin: string,
+  tool: string,
+  level: "allowed" | "denied"
+): Promise<void> {
+  const MCP_SERVER_URL = "http://localhost:3001"
+
+  try {
+    const response = await fetch(`${MCP_SERVER_URL}/api/permissions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        origin,
+        tool,
+        level,
+      }),
+    })
+
+    if (!response.ok) {
+      console.error(
+        `[Background] Failed to update permission: ${response.status} ${response.statusText}`
+      )
+      return
+    }
+
+    // Invalidate cache so next check gets fresh data
+    await permissionManager.invalidateCache(origin, tool)
+
+    console.log(`[Background] Permission updated: ${origin} / ${tool} -> ${level}`)
+  } catch (error) {
+    console.error("[Background] Error updating permission:", error)
+  }
 }
 
 // ============================================================================

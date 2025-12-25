@@ -14,6 +14,7 @@ import { executeForm, executeSelect } from "./actions/form"
 import { executeGetContent } from "./actions/get-content"
 import { executeGetElements } from "./actions/get-elements"
 import { executeScript } from "./actions/execute-script"
+import { showPermissionDialog, type PermissionResponse } from "./permission-dialog"
 import type {
   AiiiToolType,
   AiiiClickArgs,
@@ -158,6 +159,31 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message.type === "ping") {
     sendResponse({ pong: true, version: VERSION })
     return false
+  }
+
+  // Handle permission dialog request from background script
+  if (message.type === "show_permission_dialog") {
+    const { tool, origin, aiApp, toolDescription } = message
+
+    showPermissionDialog({
+      tool,
+      toolDescription,
+      origin,
+      aiApp: aiApp || "AI Assistant",
+    })
+      .then((response: PermissionResponse) => {
+        sendResponse(response)
+      })
+      .catch((err: unknown) => {
+        sendResponse({
+          decision: "deny",
+          remember: false,
+          error: err instanceof Error ? err.message : String(err),
+        })
+      })
+
+    // Return true to keep the message channel open for async response
+    return true
   }
 
   // Unknown message type

@@ -109,7 +109,14 @@ async function logToolExecution<T = unknown>(
 
     // Extract origin from result if available (most tools return a url field)
     const resultObj = result as Record<string, unknown>;
-    const origin = typeof resultObj.url === 'string' ? new URL(resultObj.url).origin : undefined;
+    let origin: string | undefined;
+    if (typeof resultObj.url === 'string') {
+      try {
+        origin = new URL(resultObj.url).origin;
+      } catch {
+        // Invalid URL, leave origin undefined
+      }
+    }
 
     // Log successful execution
     createAuditLogEntry({

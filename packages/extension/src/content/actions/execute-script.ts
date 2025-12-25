@@ -45,7 +45,6 @@ export async function executeScript(
     // Return error information
     const errorMessage =
       error instanceof Error ? error.message : String(error)
-    const errorStack = error instanceof Error ? error.stack : undefined
 
     return {
       executed: false,
