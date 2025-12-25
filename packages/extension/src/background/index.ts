@@ -6,6 +6,7 @@
  * - Route messages between native host and content scripts
  * - Handle browser tab operations (chrome.tabs API)
  * - Track connection state with auto-reconnect
+ * - Enforce permissions for browser operations
  */
 
 import type {
@@ -13,6 +14,9 @@ import type {
   NativeResponse,
   NativeMessage,
 } from "@athreei/shared"
+
+import { permissionManager } from "./permission-manager"
+import { PermissionDeniedError, PermissionPromptRequiredError } from "./types"
 
 // ============================================================================
 // Constants
@@ -438,6 +442,10 @@ async function handleNavigate(payload: Record<string, unknown>): Promise<unknown
     throw new Error("Could not determine target tab")
   }
 
+  // Check permissions before navigation
+  const origin = await getTabOrigin(targetTabId)
+  await checkAndEnforcePermission(origin, "browser_navigate")
+
   // Navigate
   const tab = await chrome.tabs.update(targetTabId, { url })
 
@@ -470,6 +478,10 @@ async function handleScreenshot(payload: Record<string, unknown>): Promise<unkno
   if (!targetTabId) {
     throw new Error("Could not determine target tab")
   }
+
+  // Check permissions before screenshot
+  const origin = await getTabOrigin(targetTabId)
+  await checkAndEnforcePermission(origin, "browser_screenshot")
 
   // Get window ID for the tab
   const tab = await chrome.tabs.get(targetTabId)
@@ -523,6 +535,10 @@ async function forwardToContentScript(request: NativeRequest): Promise<unknown> 
   if (!targetTabId) {
     throw new Error("Could not determine target tab")
   }
+
+  // Check permissions before forwarding
+  const origin = await getTabOrigin(targetTabId)
+  await checkAndEnforcePermission(origin, request.method)
 
   // Send message to content script
   const response = await chrome.tabs.sendMessage(targetTabId, {
@@ -587,6 +603,53 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
  */
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+}
+
+/**
+ * Extract origin from URL
+ */
+function getOriginFromUrl(url: string): string {
+  try {
+    const urlObj = new URL(url)
+    return urlObj.origin
+  } catch {
+    return ""
+  }
+}
+
+/**
+ * Get tab and extract origin
+ */
+async function getTabOrigin(tabId: number): Promise<string> {
+  try {
+    const tab = await chrome.tabs.get(tabId)
+    if (!tab.url) {
+      throw new Error("Tab has no URL")
+    }
+    return getOriginFromUrl(tab.url)
+  } catch (error) {
+    console.error("[Background] Error getting tab origin:", error)
+    throw error
+  }
+}
+
+/**
+ * Check permission and throw error if not allowed
+ */
+async function checkAndEnforcePermission(origin: string, tool: string): Promise<void> {
+  const level = await permissionManager.checkPermission(origin, tool)
+
+  if (level === "denied") {
+    throw new PermissionDeniedError(origin, tool, level)
+  }
+
+  if (level === "ask") {
+    // TODO: In the future, this will show a permission dialog
+    // For now, we deny with a specific error message
+    throw new PermissionPromptRequiredError(origin, tool)
+  }
+
+  // level === "allowed" - continue execution
 }
 
 // ============================================================================
