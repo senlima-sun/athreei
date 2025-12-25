@@ -11,6 +11,9 @@ import { executeNavigate } from "./actions/navigate"
 import { executeScroll } from "./actions/scroll"
 import { executeWait } from "./actions/wait"
 import { executeForm, executeSelect } from "./actions/form"
+import { executeGetContent } from "./actions/get-content"
+import { executeGetElements } from "./actions/get-elements"
+import { executeScript } from "./actions/execute-script"
 import type {
   AiiiToolType,
   AiiiClickArgs,
@@ -20,6 +23,9 @@ import type {
   AiiiSelectArgs,
   AiiiWaitArgs,
   AiiiFormArgs,
+  AiiiGetContentArgs,
+  AiiiGetElementsArgs,
+  AiiiExecuteScriptArgs,
   AiiiToolArgs,
 } from "@athreei/shared"
 
@@ -86,6 +92,27 @@ export async function executeAction(
 
     case "form":
       return bridge.executeAction(tool, args as AiiiFormArgs, executeForm)
+
+    case "get_content":
+      return bridge.executeAction(
+        tool,
+        args as AiiiGetContentArgs,
+        executeGetContent
+      )
+
+    case "get_elements":
+      return bridge.executeAction(
+        tool,
+        args as AiiiGetElementsArgs,
+        executeGetElements
+      )
+
+    case "execute_script":
+      return bridge.executeAction(
+        tool,
+        args as AiiiExecuteScriptArgs,
+        executeScript
+      )
 
     case "screenshot":
       // Screenshot requires background script / chrome.tabs API

@@ -101,6 +101,9 @@ export type AiiiToolType =
   | "screenshot"
   | "wait"
   | "form"
+  | "get_content"
+  | "get_elements"
+  | "execute_script"
 
 export type AiiiToolArgs =
   | AiiiClickArgs
@@ -110,6 +113,9 @@ export type AiiiToolArgs =
   | AiiiSelectArgs
   | AiiiWaitArgs
   | AiiiFormArgs
+  | AiiiGetContentArgs
+  | AiiiGetElementsArgs
+  | AiiiExecuteScriptArgs
 
 export interface AiiiClickArgs {
   selector?: string
@@ -160,6 +166,19 @@ export interface AiiiFormArgs {
   selector: string
   action: "submit" | "reset" | "get-values" | "set-values"
   values?: Record<string, unknown>
+}
+
+export interface AiiiGetContentArgs {
+  format?: "accessibility" | "html" | "text" | "markdown"
+  selector?: string
+}
+
+export interface AiiiGetElementsArgs {
+  filter?: string
+}
+
+export interface AiiiExecuteScriptArgs {
+  script: string
 }
 
 export type AiiiActionBeforeDetail = {
