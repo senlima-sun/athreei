@@ -24,15 +24,16 @@ Demonstrates a realistic e-commerce integration with:
 
 **Best for**: Understanding complex multi-tool scenarios, realistic use cases
 
-### Form Wizard Example (Coming Soon)
+### [Form Wizard Example](./form-wizard/)
 
 Shows how to build an AI-assisted multi-step form:
-- Form field filling
-- Validation feedback
-- Step navigation
+- Multi-step form with validation
+- Automatic field filling
+- Step-by-step navigation
 - Complex state management
+- Real-time validation feedback
 
-**Best for**: Form-heavy applications, step-by-step workflows
+**Best for**: Form-heavy applications, step-by-step workflows, complex validation logic
 
 ## Running the Examples
 
