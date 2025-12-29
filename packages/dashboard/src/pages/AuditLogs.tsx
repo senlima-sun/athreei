@@ -6,6 +6,13 @@ import type { Column } from "../components/ui/DataTable"
 import { SearchInput } from "../components/ui/SearchInput"
 import { LegacyCard as Card } from "../components/ui/Card"
 import { Button } from "../components/ui/Button"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "../components/ui/dialog"
 import { cn } from "@/lib/utils"
 
 interface AuditLogsResponse {
@@ -22,6 +29,7 @@ export function AuditLogs() {
   const [logs, setLogs] = useState<AuditLogEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [selectedLog, setSelectedLog] = useState<AuditLogEntry | null>(null)
 
   // Filter state
   const [statusFilter, setStatusFilter] = useState<string>("")
@@ -119,8 +127,8 @@ export function AuditLogs() {
       accessor: (row) => row.id,
       header: "Actions",
       sortable: false,
-      cell: () => (
-        <Button variant="secondary" size="sm">
+      cell: (_value, row) => (
+        <Button variant="secondary" size="sm" onClick={() => setSelectedLog(row)}>
           Details
         </Button>
       ),
@@ -206,6 +214,87 @@ export function AuditLogs() {
           onPageChange={setPage}
         />
       </Card>
+
+      {/* Log Details Dialog */}
+      <Dialog open={!!selectedLog} onOpenChange={(open) => !open && setSelectedLog(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Audit Log Details</DialogTitle>
+            <DialogDescription>
+              Full details of the tool invocation
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedLog && (
+            <div className="space-y-4">
+              {/* Basic Info */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">ID</label>
+                  <p className="text-sm font-mono break-all">{selectedLog.id}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Timestamp</label>
+                  <p className="text-sm">{new Date(selectedLog.timestamp).toLocaleString()}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Tool</label>
+                  <p className="text-sm"><code>{selectedLog.tool}</code></p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Status</label>
+                  <p className="text-sm">
+                    <span
+                      className={cn(
+                        "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium",
+                        selectedLog.status === "success"
+                          ? "bg-success/10 text-success"
+                          : selectedLog.status === "denied"
+                            ? "bg-warning/10 text-warning"
+                            : "bg-error/10 text-error"
+                      )}
+                    >
+                      {selectedLog.status}
+                    </span>
+                  </p>
+                </div>
+                {selectedLog.aiApp && (
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">AI App</label>
+                    <p className="text-sm">{selectedLog.aiApp}</p>
+                  </div>
+                )}
+                {selectedLog.origin && (
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Origin</label>
+                    <p className="text-sm">{selectedLog.origin}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Arguments */}
+              {selectedLog.args && Object.keys(selectedLog.args).length > 0 && (
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Arguments</label>
+                  <pre className="mt-1 p-3 bg-muted rounded-md text-xs overflow-x-auto">
+                    {JSON.stringify(selectedLog.args, null, 2)}
+                  </pre>
+                </div>
+              )}
+
+              {/* Result */}
+              {selectedLog.result !== undefined && (
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Result</label>
+                  <pre className="mt-1 p-3 bg-muted rounded-md text-xs overflow-x-auto">
+                    {JSON.stringify(selectedLog.result, null, 2)}
+                  </pre>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
