@@ -4,15 +4,18 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AuthLayout } from "@/components/auth/auth-layout";
-import { authClient } from "@/lib/auth-client";
+import { authClient, useSession } from "@/lib/auth-client";
 import { isEmailVerificationEnabled } from "@/lib/api";
 
 export default function VerifyEmailPage() {
   const router = useRouter();
+  const { data: session, isPending: isSessionLoading } = useSession();
   const [isResending, setIsResending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isCheckingFeature, setIsCheckingFeature] = useState(true);
+
+  const userEmail = session?.user?.email;
 
   useEffect(() => {
     // Redirect if email verification is not enabled
@@ -20,19 +23,24 @@ export default function VerifyEmailPage() {
       if (!enabled) {
         router.replace("/");
       } else {
-        setIsLoading(false);
+        setIsCheckingFeature(false);
       }
     });
   }, [router]);
 
   const handleResend = async () => {
+    if (!userEmail) {
+      setError("No email found. Please sign in again.");
+      return;
+    }
+
     setIsResending(true);
     setError(null);
     setMessage(null);
 
     try {
       await authClient.sendVerificationEmail({
-        email: "", // The server should use the session email
+        email: userEmail,
         callbackURL: "/",
       });
       setMessage("Verification email sent! Check your inbox.");
@@ -46,6 +54,8 @@ export default function VerifyEmailPage() {
       setIsResending(false);
     }
   };
+
+  const isLoading = isCheckingFeature || isSessionLoading;
 
   if (isLoading) {
     return (
@@ -74,8 +84,8 @@ export default function VerifyEmailPage() {
           </div>
         )}
         <p className="text-sm text-gray-600">
-          Please check your email and click the verification link to activate
-          your account.
+          Please check your email{userEmail ? ` (${userEmail})` : ""} and click
+          the verification link to activate your account.
         </p>
         <div className="space-y-3">
           <button
