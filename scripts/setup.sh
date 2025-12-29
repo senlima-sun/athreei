@@ -226,19 +226,12 @@ run_verification() {
 print_claude_config() {
   print_step "8" "Configure Claude Desktop (Optional)"
 
-  # Detect platform and binary path
-  local binary_path
-  case "$(uname -s)" in
-    Darwin*)
-      binary_path="$HOME/Library/Application Support/athreei/athreei-host"
-      ;;
-    Linux*)
-      binary_path="$HOME/.local/share/athreei/athreei-host"
-      ;;
-    *)
-      binary_path="/path/to/athreei-host"
-      ;;
-  esac
+  # Get the path to bun
+  local bun_path
+  bun_path=$(which bun 2>/dev/null || echo "/usr/local/bin/bun")
+
+  # MCP server source path
+  local mcp_server_path="$PROJECT_ROOT/packages/mcp-server/src/index.ts"
 
   echo ""
   echo "To use athreei with Claude Desktop, add this to your config:"
@@ -251,10 +244,14 @@ print_claude_config() {
   echo "{"
   echo "  \"mcpServers\": {"
   echo "    \"athreei\": {"
-  echo "      \"command\": \"$binary_path\""
+  echo "      \"command\": \"$bun_path\","
+  echo "      \"args\": [\"run\", \"$mcp_server_path\"]"
   echo "    }"
   echo "  }"
   echo "}"
+  echo ""
+  echo -e "${YELLOW}Note: The native host (athreei-host) is for Chrome extension"
+  echo -e "communication only. Claude Desktop connects to the MCP server.${NC}"
   echo ""
 }
 
