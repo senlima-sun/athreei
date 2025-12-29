@@ -4,12 +4,32 @@ import type { BetterAuthOptions } from "better-auth";
 
 export type DatabaseProvider = "sqlite" | "pg" | "mysql";
 
+/**
+ * Email callback functions for auth flows
+ */
+export interface EmailCallbacks {
+  sendResetPassword?: (params: {
+    user: { email: string; name: string };
+    url: string;
+    token: string;
+  }) => Promise<void>;
+  sendVerificationEmail?: (params: {
+    user: { email: string; name: string };
+    url: string;
+    token: string;
+  }) => Promise<void>;
+}
+
 export interface AuthConfigOptions extends Partial<BetterAuthOptions> {
   /**
    * Database provider type
    * @default "sqlite"
    */
   provider?: DatabaseProvider;
+  /**
+   * Email callback functions for password reset and verification
+   */
+  email?: EmailCallbacks;
 }
 
 /**
@@ -22,7 +42,7 @@ export function createAuthConfig(
   db: Parameters<typeof drizzleAdapter>[0],
   options: AuthConfigOptions = {}
 ): BetterAuthOptions {
-  const { provider = "sqlite", ...restOptions } = options;
+  const { provider = "sqlite", email, ...restOptions } = options;
 
   return {
     database: drizzleAdapter(db, {
@@ -32,26 +52,43 @@ export function createAuthConfig(
     // Email and Password authentication
     emailAndPassword: {
       enabled: true,
-      // Password reset configuration (implement sendEmail function as needed)
-      // sendResetPassword: async ({ user, url, token }, request) => {
-      //   await sendEmail({
-      //     to: user.email,
-      //     subject: "Reset your password",
-      //     text: `Click the link to reset your password: ${url}`,
-      //   });
-      // },
+      ...(email?.sendResetPassword
+        ? {
+            sendResetPassword: async ({
+              user,
+              url,
+              token,
+            }: {
+              user: { email: string; name: string };
+              url: string;
+              token: string;
+            }) => {
+              await email.sendResetPassword!({ user, url, token });
+            },
+          }
+        : {}),
     },
 
-    // Email verification (optional - implement as needed)
-    // emailVerification: {
-    //   sendVerificationEmail: async ({ user, url, token }, request) => {
-    //     await sendEmail({
-    //       to: user.email,
-    //       subject: "Verify your email address",
-    //       text: `Click the link to verify your email: ${url}`,
-    //     });
-    //   },
-    // },
+    // Email verification (enabled when sendVerificationEmail is provided)
+    ...(email?.sendVerificationEmail
+      ? {
+          emailVerification: {
+            sendVerificationEmail: async ({
+              user,
+              url,
+              token,
+            }: {
+              user: { email: string; name: string };
+              url: string;
+              token: string;
+            }) => {
+              await email.sendVerificationEmail!({ user, url, token });
+            },
+            sendOnSignUp: true,
+            autoSignInAfterVerification: true,
+          },
+        }
+      : {}),
 
     // OAuth Providers (configure with environment variables)
     socialProviders: {
