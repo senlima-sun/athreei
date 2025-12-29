@@ -20,9 +20,16 @@ const auth = new Hono();
  * - GET /api/auth/session - Get current session
  * - POST /api/auth/forget-password - Request password reset
  * - POST /api/auth/reset-password - Reset password
+ * - GET /api/auth/verify-email - Verify email
  * - And all organization-related endpoints
  */
-auth.all("/*", async (c) => {
+auth.all("/:path{.*}", async (c) => {
+  const authInstance = getAuth();
+  return authInstance.handler(c.req.raw);
+});
+
+// Also match the root path
+auth.all("/", async (c) => {
   const authInstance = getAuth();
   return authInstance.handler(c.req.raw);
 });
