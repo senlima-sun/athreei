@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
+import { isEmailVerificationEnabled } from "@/lib/api";
 
 export function RegisterForm() {
   const router = useRouter();
@@ -42,7 +43,14 @@ export function RegisterForm() {
         return;
       }
 
-      router.push("/verify-email");
+      // Redirect based on whether email verification is enabled
+      const emailEnabled = await isEmailVerificationEnabled();
+      if (emailEnabled) {
+        router.push("/verify-email");
+      } else {
+        // Skip verification, go directly to dashboard
+        router.push("/");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create account");
     } finally {

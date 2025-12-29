@@ -1,15 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AuthLayout } from "@/components/auth/auth-layout";
 import { authClient } from "@/lib/auth-client";
+import { getConfig } from "@/lib/api";
 
 export default function ForgotPasswordPage() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingFeature, setIsCheckingFeature] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
+
+  useEffect(() => {
+    // Redirect if password reset is not enabled
+    getConfig().then((config) => {
+      if (!config.features.passwordReset) {
+        router.replace("/login");
+      } else {
+        setIsCheckingFeature(false);
+      }
+    });
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,6 +45,16 @@ export default function ForgotPasswordPage() {
       setIsLoading(false);
     }
   };
+
+  if (isCheckingFeature) {
+    return (
+      <AuthLayout title="Loading..." description="">
+        <div className="text-center py-8">
+          <div className="animate-spin inline-block w-6 h-6 border-2 border-gray-300 border-t-gray-900 rounded-full" />
+        </div>
+      </AuthLayout>
+    );
+  }
 
   if (isSubmitted) {
     return (

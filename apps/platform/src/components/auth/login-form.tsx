@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
+import { getConfig } from "@/lib/api";
 
 export function LoginForm() {
   const router = useRouter();
@@ -11,6 +12,13 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [passwordResetEnabled, setPasswordResetEnabled] = useState(false);
+
+  useEffect(() => {
+    getConfig().then((config) => {
+      setPasswordResetEnabled(config.features.passwordReset);
+    });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,16 +90,18 @@ export function LoginForm() {
           placeholder="Enter your password"
         />
       </div>
-      <div className="flex items-center justify-between">
-        <div className="text-sm">
-          <Link
-            href="/forgot-password"
-            className="font-medium text-gray-600 hover:text-gray-500"
-          >
-            Forgot your password?
-          </Link>
+      {passwordResetEnabled && (
+        <div className="flex items-center justify-between">
+          <div className="text-sm">
+            <Link
+              href="/forgot-password"
+              className="font-medium text-gray-600 hover:text-gray-500"
+            >
+              Forgot your password?
+            </Link>
+          </div>
         </div>
-      </div>
+      )}
       <button
         type="submit"
         disabled={isLoading}

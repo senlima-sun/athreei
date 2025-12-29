@@ -1,14 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AuthLayout } from "@/components/auth/auth-layout";
 import { authClient } from "@/lib/auth-client";
+import { isEmailVerificationEnabled } from "@/lib/api";
 
 export default function VerifyEmailPage() {
+  const router = useRouter();
   const [isResending, setIsResending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Redirect if email verification is not enabled
+    isEmailVerificationEnabled().then((enabled) => {
+      if (!enabled) {
+        router.replace("/");
+      } else {
+        setIsLoading(false);
+      }
+    });
+  }, [router]);
 
   const handleResend = async () => {
     setIsResending(true);
@@ -31,6 +46,16 @@ export default function VerifyEmailPage() {
       setIsResending(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <AuthLayout title="Loading..." description="">
+        <div className="text-center py-8">
+          <div className="animate-spin inline-block w-6 h-6 border-2 border-gray-300 border-t-gray-900 rounded-full" />
+        </div>
+      </AuthLayout>
+    );
+  }
 
   return (
     <AuthLayout
