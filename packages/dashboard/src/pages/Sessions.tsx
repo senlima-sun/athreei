@@ -8,7 +8,9 @@ import { Button } from "../components/ui/Button"
 import { LegacyTabs as Tabs } from "../components/ui/Tabs"
 
 interface SessionsResponse {
-  sessions: Session[]
+  data: Session[]
+  count: number
+  total: number
 }
 
 export function Sessions() {
@@ -24,7 +26,7 @@ export function Sessions() {
       setError(null)
 
       const response = await api.get<SessionsResponse>("/api/sessions")
-      setSessions(response.sessions)
+      setSessions(response.data)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch sessions")
     } finally {

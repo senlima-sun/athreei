@@ -9,7 +9,8 @@ import { Modal } from "../components/ui/Modal"
 import { PermissionBadge } from "../components/ui/PermissionBadge"
 
 interface PermissionsResponse {
-  permissions: Permission[]
+  data: Permission[]
+  count: number
 }
 
 export function Permissions() {
@@ -30,7 +31,7 @@ export function Permissions() {
       setError(null)
 
       const response = await api.get<PermissionsResponse>("/api/permissions")
-      setPermissions(response.permissions)
+      setPermissions(response.data)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch permissions")
     } finally {
