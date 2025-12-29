@@ -75,7 +75,9 @@ describe("createClient", () => {
     const client = createClient("http://localhost:3000");
 
     expect(client).toHaveProperty("organization");
+    // @ts-expect-error - organization is added by plugin at runtime
     expect(client.organization).toHaveProperty("list");
+    // @ts-expect-error - organization is added by plugin at runtime
     expect(client.organization).toHaveProperty("create");
   });
 
@@ -101,9 +103,10 @@ describe("createClient", () => {
   it("passes plugins array with organization client", () => {
     createClient("http://localhost:3000");
 
-    const calledConfig = mockCreateAuthClient.mock.calls[0][0];
-    expect(calledConfig.plugins).toBeDefined();
-    expect(Array.isArray(calledConfig.plugins)).toBe(true);
-    expect(calledConfig.plugins).toHaveLength(1);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const calledConfig = (mockCreateAuthClient.mock.calls as any)[0]?.[0];
+    expect(calledConfig?.plugins).toBeDefined();
+    expect(Array.isArray(calledConfig?.plugins)).toBe(true);
+    expect(calledConfig?.plugins).toHaveLength(1);
   });
 });

@@ -105,9 +105,10 @@ describe("createAuth", () => {
   it("includes organization plugin in config", () => {
     createAuth(mockDb);
 
-    const calledConfig = mockBetterAuth.mock.calls[0][0];
-    expect(calledConfig.plugins).toHaveLength(1);
-    expect(calledConfig.plugins[0]).toHaveProperty("id", "organization");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const calledConfig = (mockBetterAuth.mock.calls as any)[0]?.[0];
+    expect(calledConfig?.plugins).toHaveLength(1);
+    expect(calledConfig?.plugins[0]).toHaveProperty("id", "organization");
   });
 
   it("can override emailAndPassword setting", () => {
