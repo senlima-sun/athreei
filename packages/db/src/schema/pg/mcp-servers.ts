@@ -1,0 +1,53 @@
+/**
+ * MCP Server Registry Schema (PostgreSQL)
+ */
+
+import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
+import { organization } from "./auth";
+
+export const mcpServer = pgTable("mcp_server", {
+  id: text("id").primaryKey(),
+  organizationId: text("organizationId")
+    .notNull()
+    .references(() => organization.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  description: text("description"),
+  transport: text("transport").notNull(),
+  command: text("command"),
+  args: text("args"),
+  url: text("url"),
+  status: text("status").notNull().default("active"),
+  lastSeenAt: timestamp("lastSeenAt"),
+  version: text("version"),
+  capabilities: text("capabilities"),
+  createdAt: timestamp("createdAt").notNull(),
+  updatedAt: timestamp("updatedAt").notNull(),
+});
+
+export const mcpTool = pgTable("mcp_tool", {
+  id: text("id").primaryKey(),
+  serverId: text("serverId")
+    .notNull()
+    .references(() => mcpServer.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  description: text("description"),
+  inputSchema: text("inputSchema"),
+  createdAt: timestamp("createdAt").notNull(),
+  updatedAt: timestamp("updatedAt").notNull(),
+});
+
+export const mcpServerRelations = relations(mcpServer, ({ one, many }) => ({
+  organization: one(organization, {
+    fields: [mcpServer.organizationId],
+    references: [organization.id],
+  }),
+  tools: many(mcpTool),
+}));
+
+export const mcpToolRelations = relations(mcpTool, ({ one }) => ({
+  server: one(mcpServer, {
+    fields: [mcpTool.serverId],
+    references: [mcpServer.id],
+  }),
+}));
