@@ -55,18 +55,27 @@ export function createApiServer() {
 
 /**
  * Start the HTTP API server
+ * Returns undefined if port is already in use (non-fatal for MCP server)
  */
-export function startApiServer() {
+export function startApiServer(): ReturnType<typeof Bun.serve> | undefined {
   const app = createApiServer()
 
   logger.info(`Starting HTTP API server on port ${API_PORT}...`)
 
-  const server = Bun.serve({
-    port: API_PORT,
-    fetch: app.fetch,
-  })
+  try {
+    const server = Bun.serve({
+      port: API_PORT,
+      fetch: app.fetch,
+    })
 
-  logger.info(`HTTP API server running on http://localhost:${API_PORT}`)
-
-  return server
+    logger.info(`HTTP API server running on http://localhost:${API_PORT}`)
+    return server
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("EADDRINUSE")) {
+      logger.warn(`Port ${API_PORT} is already in use. Dashboard API will not be available.`)
+      logger.warn("This is non-fatal - MCP server will continue without the dashboard API.")
+      return undefined
+    }
+    throw error
+  }
 }
