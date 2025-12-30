@@ -1,11 +1,13 @@
-import { SITE_URL } from './index'
+import Router from 'preact-router'
+import { HomePage } from './pages/HomePage'
+import { DocsPage } from './pages/DocsPage'
 
 export function App() {
   return (
-    <main>
-      <h1>athreei</h1>
-      <p>Privacy-focused AI browser bridge via MCP</p>
-      <p>Coming soon at {SITE_URL}</p>
-    </main>
+    <Router>
+      <HomePage path="/" />
+      <DocsPage path="/docs" />
+      <DocsPage path="/docs/*" />
+    </Router>
   )
 }
