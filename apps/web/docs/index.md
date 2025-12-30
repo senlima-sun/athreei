@@ -17,6 +17,7 @@ Step-by-step guides for common tasks:
 - [Using the Cloud Gateway](./guides/cloud-gateway.md) - Connect to the athreei Platform
 - [Managing API Keys](./guides/api-keys.md) - Create, rotate, and secure API keys
 - [Team Collaboration](./guides/team-collaboration.md) - Share configurations with your team
+- [Deployment Guide](./guides/deployment.md) - Deploy athreei services to production
 
 ## Reference
 
