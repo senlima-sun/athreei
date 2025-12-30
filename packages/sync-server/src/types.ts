@@ -37,11 +37,51 @@ export const SyncSettingsSchema = z.object({
   auditLogRetentionDays: z.number().int().positive().optional(),
 });
 
+// Trace schemas
+export const TraceUploadItemSchema = z.object({
+  requestId: z.string().uuid(),
+  namespaceId: z.string().uuid().optional(),
+  mcpServerId: z.string().uuid().optional(),
+  endpointId: z.string().uuid().optional(),
+  toolName: z.string().min(1),
+  encryptedPayload: z.string(), // Base64 encoded encrypted payload
+  status: z.enum(['success', 'error']),
+  durationMs: z.number().int().optional(),
+  createdAt: z.string().datetime().optional(),
+});
+
+export const TraceUploadRequestSchema = z.object({
+  traces: z.array(TraceUploadItemSchema).min(1).max(100),
+});
+
+export const TraceQuerySchema = z.object({
+  endpoint: z.string().uuid().optional(),
+  namespace: z.string().uuid().optional(),
+  mcpServer: z.string().uuid().optional(),
+  tool: z.string().optional(),
+  status: z.enum(['success', 'error']).optional(),
+  from: z.string().datetime().optional(),
+  to: z.string().datetime().optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+  offset: z.coerce.number().int().min(0).default(0),
+});
+
+export const TraceBulkDeleteSchema = z.object({
+  traceIds: z.array(z.string().uuid()).min(1).max(100).optional(),
+  before: z.string().datetime().optional(),
+  namespace: z.string().uuid().optional(),
+  endpoint: z.string().uuid().optional(),
+});
+
 export type RegisterRequest = z.infer<typeof RegisterRequestSchema>;
 export type LoginRequest = z.infer<typeof LoginRequestSchema>;
 export type RegisterDeviceRequest = z.infer<typeof RegisterDeviceRequestSchema>;
 export type SyncPushRequest = z.infer<typeof SyncPushRequestSchema>;
 export type SyncSettingsUpdate = z.infer<typeof SyncSettingsSchema>;
+export type TraceUploadItem = z.infer<typeof TraceUploadItemSchema>;
+export type TraceUploadRequest = z.infer<typeof TraceUploadRequestSchema>;
+export type TraceQuery = z.infer<typeof TraceQuerySchema>;
+export type TraceBulkDelete = z.infer<typeof TraceBulkDeleteSchema>;
 
 // Response types
 export interface AuthResponse {
@@ -98,6 +138,38 @@ export interface SyncSettingsResponse {
 export interface ErrorResponse {
   error: string;
   details?: string;
+}
+
+// Trace response types
+export interface TraceResponse {
+  id: string;
+  namespaceId: string | null;
+  mcpServerId: string | null;
+  endpointId: string | null;
+  toolName: string;
+  requestId: string;
+  encryptedPayload: string; // Base64 encoded
+  status: 'success' | 'error';
+  durationMs: number | null;
+  createdAt: string;
+}
+
+export interface TraceListResponse {
+  traces: TraceResponse[];
+  total: number;
+  hasMore: boolean;
+}
+
+export interface TraceUploadResponse {
+  success: boolean;
+  uploaded: number;
+  failed: number;
+  errors?: string[];
+}
+
+export interface TraceBulkDeleteResponse {
+  success: boolean;
+  deleted: number;
 }
 
 // JWT payload

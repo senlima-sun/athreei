@@ -1,8 +1,39 @@
-import { pgTable, uuid, text, timestamp, integer, boolean, pgEnum, index, primaryKey } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, integer, boolean, pgEnum, index, primaryKey, customType } from 'drizzle-orm/pg-core';
 import { InferSelectModel, InferInsertModel, relations } from 'drizzle-orm';
 
 // Enum for sync item types
 export const itemTypeEnum = pgEnum('item_type', ['permission', 'session', 'audit_log', 'settings']);
+
+// Enum for trace status
+export const traceStatusEnum = pgEnum('trace_status', ['success', 'error']);
+
+// Custom type for bytea (binary data)
+const bytea = customType<{ data: Uint8Array; dpiName: string }>({
+  dataType() {
+    return 'bytea';
+  },
+  toDriver(value: Uint8Array): Buffer {
+    return Buffer.from(value);
+  },
+  fromDriver(value: unknown): Uint8Array {
+    if (value instanceof Buffer) {
+      return new Uint8Array(value);
+    }
+    if (typeof value === 'string') {
+      // Handle hex-encoded bytea strings from PostgreSQL (e.g., "\x...")
+      if (value.startsWith('\\x')) {
+        const hex = value.slice(2);
+        const bytes = new Uint8Array(hex.length / 2);
+        for (let i = 0; i < bytes.length; i++) {
+          bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
+        }
+        return bytes;
+      }
+      return new Uint8Array(Buffer.from(value));
+    }
+    return new Uint8Array();
+  },
+});
 
 // Accounts table
 export const accounts = pgTable('accounts', {
@@ -70,6 +101,30 @@ export const syncSettings = pgTable('sync_settings', {
   updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 });
 
+// Traces table - stores encrypted tool call traces from Gateway
+export const traces = pgTable('traces', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  account_id: uuid('account_id').notNull().references(() => accounts.id, { onDelete: 'cascade' }),
+  namespace_id: uuid('namespace_id'),
+  mcp_server_id: uuid('mcp_server_id'),
+  endpoint_id: uuid('endpoint_id'),
+  tool_name: text('tool_name').notNull(),
+  request_id: uuid('request_id').notNull(),
+  encrypted_payload: bytea('encrypted_payload').notNull(),
+  status: traceStatusEnum('status').notNull(),
+  duration_ms: integer('duration_ms'),
+  created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+}, (table) => ({
+  accountIdIdx: index('idx_traces_account_id').on(table.account_id),
+  namespaceIdIdx: index('idx_traces_namespace_id').on(table.namespace_id),
+  mcpServerIdIdx: index('idx_traces_mcp_server_id').on(table.mcp_server_id),
+  endpointIdIdx: index('idx_traces_endpoint_id').on(table.endpoint_id),
+  toolNameIdx: index('idx_traces_tool_name').on(table.tool_name),
+  statusIdx: index('idx_traces_status').on(table.status),
+  createdAtIdx: index('idx_traces_created_at').on(table.created_at),
+  requestIdIdx: index('idx_traces_request_id').on(table.request_id),
+}));
+
 // Inferred types for TypeScript
 export type Account = InferSelectModel<typeof accounts>;
 export type NewAccount = InferInsertModel<typeof accounts>;
@@ -86,8 +141,12 @@ export type NewSyncState = InferInsertModel<typeof syncState>;
 export type SyncSettings = InferSelectModel<typeof syncSettings>;
 export type NewSyncSettings = InferInsertModel<typeof syncSettings>;
 
+export type Trace = InferSelectModel<typeof traces>;
+export type NewTrace = InferInsertModel<typeof traces>;
+
 // Derived union type from enum values
 export type ItemType = typeof itemTypeEnum.enumValues[number];
+export type TraceStatus = typeof traceStatusEnum.enumValues[number];
 
 // Relations
 export const accountsRelations = relations(accounts, ({ many, one }) => ({
@@ -95,6 +154,7 @@ export const accountsRelations = relations(accounts, ({ many, one }) => ({
   syncItems: many(syncItems),
   syncSettings: one(syncSettings),
   syncStates: many(syncState),
+  traces: many(traces),
 }));
 
 export const devicesRelations = relations(devices, ({ one, many }) => ({
@@ -131,6 +191,13 @@ export const syncStateRelations = relations(syncState, ({ one }) => ({
 export const syncSettingsRelations = relations(syncSettings, ({ one }) => ({
   account: one(accounts, {
     fields: [syncSettings.account_id],
+    references: [accounts.id],
+  }),
+}));
+
+export const tracesRelations = relations(traces, ({ one }) => ({
+  account: one(accounts, {
+    fields: [traces.account_id],
     references: [accounts.id],
   }),
 }));

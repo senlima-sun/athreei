@@ -26,8 +26,15 @@ import {
 import { loadConfig, ConfigSyncManager } from "./config-sync.js";
 import { connectToAllServers, disconnectAllServers } from "./mcp-client.js";
 import { TraceCollector } from "./trace-collector.js";
+import { TraceSyncClient, createTraceSyncClient } from "./trace-sync.js";
 import { log, setLogLevel } from "./logger.js";
 import type { NamespaceConfig, GatewayConfig } from "./types.js";
+
+// Re-export for library use
+export { TraceCollector } from "./trace-collector.js";
+export { TraceSyncClient, createTraceSyncClient } from "./trace-sync.js";
+export { log, setLogLevel } from "./logger.js";
+export * from "./types.js";
 
 // =============================================================================
 // CLI Argument Parsing
@@ -218,6 +225,7 @@ function setupShutdownHandlers(
   state: GatewayState,
   syncManager: ConfigSyncManager,
   traceCollector: TraceCollector,
+  traceSyncClient: TraceSyncClient | null,
   server: ReturnType<typeof createServer>
 ): void {
   const shutdown = async (signal: string) => {
@@ -227,9 +235,11 @@ function setupShutdownHandlers(
       // Stop sync and trace collection
       syncManager.stopPeriodicSync();
       traceCollector.stopPeriodicFlush();
+      traceSyncClient?.stopPeriodicFlush();
 
       // Flush remaining traces
       await traceCollector.flush().catch(() => {});
+      await traceSyncClient?.flushAll().catch(() => {});
 
       // Disconnect from all MCP servers
       const mcps = Array.from(state.connectedMcps.values());
@@ -321,14 +331,32 @@ async function main(): Promise<void> {
   // Create gateway state
   const state = createGatewayState();
 
-  // Create trace collector
+  // Create trace collector (in-memory)
   const traceCollector = new TraceCollector({
     maxTraces: 1000,
-    sendToPlatform: false, // Can be enabled via config
+    sendToPlatform: false, // Use TraceSyncClient instead for Platform sync
   });
 
   // Add trace collector event handler
   addEventHandler(state, traceCollector.createEventHandler());
+
+  // Create trace sync client for Platform (if API key is configured)
+  let traceSyncClient: TraceSyncClient | null = null;
+  if (gatewayConfig.apiKey) {
+    traceSyncClient = createTraceSyncClient({
+      platformUrl: gatewayConfig.platformUrl ?? "https://athreei.com",
+      apiKey: gatewayConfig.apiKey,
+      batchSize: 100,
+      flushInterval: 30000, // 30 seconds
+    });
+
+    // Forward traces to sync client
+    addEventHandler(state, (event) => {
+      if (event.type === "tool_call") {
+        traceSyncClient?.addTrace(event.trace);
+      }
+    });
+  }
 
   // Create config sync manager
   const syncManager = new ConfigSyncManager(gatewayConfig);
@@ -349,21 +377,37 @@ async function main(): Promise<void> {
   // Initialize gateway (connect to all MCP servers)
   await initializeGateway(gatewayConfig, namespaceConfig, state);
 
+  // Update trace sync client with namespace config
+  if (traceSyncClient) {
+    traceSyncClient.setNamespaceConfig(namespaceConfig);
+  }
+
   // Setup config change handler
   syncManager.setOnConfigChange((newConfig) => {
     handleConfigChange(newConfig, state).catch((error) => {
       log.error("Failed to handle config change:", error);
     });
+
+    // Update trace sync client with new namespace config
+    if (traceSyncClient) {
+      traceSyncClient.setNamespaceConfig(newConfig);
+    }
   });
 
   // Start periodic config sync
   syncManager.startPeriodicSync();
 
+  // Start periodic trace sync to Platform
+  if (traceSyncClient) {
+    traceSyncClient.startPeriodicFlush();
+    log.info("Trace sync to Platform enabled");
+  }
+
   // Create the gateway MCP server
   const server = createServer(state);
 
   // Setup shutdown handlers
-  setupShutdownHandlers(state, syncManager, traceCollector, server);
+  setupShutdownHandlers(state, syncManager, traceCollector, traceSyncClient, server);
 
   // Start the appropriate transport
   if (cliArgs.transport === "stdio") {

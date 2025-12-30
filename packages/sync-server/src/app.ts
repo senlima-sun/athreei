@@ -4,6 +4,7 @@ import { logger } from 'hono/logger';
 import authRoutes from './routes/auth';
 import devicesRoutes from './routes/devices';
 import syncRoutes from './routes/sync';
+import tracesRoutes from './routes/traces';
 
 const app = new Hono();
 
@@ -37,6 +38,7 @@ app.get('/health', (c) => {
 app.route('/auth', authRoutes);
 app.route('/devices', devicesRoutes);
 app.route('/sync', syncRoutes);
+app.route('/api/traces', tracesRoutes);
 
 // 404 handler
 app.notFound((c) => {
