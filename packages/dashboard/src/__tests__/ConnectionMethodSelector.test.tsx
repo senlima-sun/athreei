@@ -82,14 +82,21 @@ describe("ConnectionMethodSelector", () => {
     it("renders download button for local gateway", () => {
       render(<ConnectionMethodSelector />)
 
-      const downloadButton = screen.getByRole("button", { name: /download for/i })
+      // Find the button within the local gateway card
+      const localCard = screen.getByText("Local Gateway").closest("[data-slot='card']")
+      const downloadButton = localCard!.querySelector("button[class*='flex-1']")
       expect(downloadButton).toBeInTheDocument()
+      expect(downloadButton).toHaveTextContent(/download for/i)
     })
 
     it("renders SSE URL button for cloud gateway", () => {
       render(<ConnectionMethodSelector />)
 
-      expect(screen.getByRole("button", { name: /get sse url/i })).toBeInTheDocument()
+      // Find the button within the cloud gateway card
+      const cloudCard = screen.getByText("Cloud Gateway").closest("[data-slot='card']")
+      const sseButton = cloudCard!.querySelector("button")
+      expect(sseButton).toBeInTheDocument()
+      expect(sseButton).toHaveTextContent(/get sse url/i)
     })
 
     it("displays the default SSE URL", () => {
@@ -142,13 +149,94 @@ describe("ConnectionMethodSelector", () => {
       expect(cloudCard).toHaveClass("ring-2")
       expect(cloudCard).toHaveClass("ring-primary")
     })
+
+    it("calls onMethodSelect when local gateway is activated with Enter key", () => {
+      const onMethodSelect = vi.fn()
+      render(<ConnectionMethodSelector onMethodSelect={onMethodSelect} />)
+
+      const localCard = screen.getByText("Local Gateway").closest("[data-slot='card']")
+      fireEvent.keyDown(localCard!, { key: "Enter" })
+
+      expect(onMethodSelect).toHaveBeenCalledWith("local")
+    })
+
+    it("calls onMethodSelect when local gateway is activated with Space key", () => {
+      const onMethodSelect = vi.fn()
+      render(<ConnectionMethodSelector onMethodSelect={onMethodSelect} />)
+
+      const localCard = screen.getByText("Local Gateway").closest("[data-slot='card']")
+      fireEvent.keyDown(localCard!, { key: " " })
+
+      expect(onMethodSelect).toHaveBeenCalledWith("local")
+    })
+
+    it("calls onMethodSelect when cloud gateway is activated with Enter key", () => {
+      const onMethodSelect = vi.fn()
+      render(<ConnectionMethodSelector onMethodSelect={onMethodSelect} />)
+
+      const cloudCard = screen.getByText("Cloud Gateway").closest("[data-slot='card']")
+      fireEvent.keyDown(cloudCard!, { key: "Enter" })
+
+      expect(onMethodSelect).toHaveBeenCalledWith("cloud")
+    })
+
+    it("calls onMethodSelect when cloud gateway is activated with Space key", () => {
+      const onMethodSelect = vi.fn()
+      render(<ConnectionMethodSelector onMethodSelect={onMethodSelect} />)
+
+      const cloudCard = screen.getByText("Cloud Gateway").closest("[data-slot='card']")
+      fireEvent.keyDown(cloudCard!, { key: " " })
+
+      expect(onMethodSelect).toHaveBeenCalledWith("cloud")
+    })
+
+    it("does not call onMethodSelect for other keys", () => {
+      const onMethodSelect = vi.fn()
+      render(<ConnectionMethodSelector onMethodSelect={onMethodSelect} />)
+
+      const localCard = screen.getByText("Local Gateway").closest("[data-slot='card']")
+      fireEvent.keyDown(localCard!, { key: "Tab" })
+      fireEvent.keyDown(localCard!, { key: "Escape" })
+      fireEvent.keyDown(localCard!, { key: "a" })
+
+      expect(onMethodSelect).not.toHaveBeenCalled()
+    })
+
+    it("has correct ARIA attributes on cards", () => {
+      render(<ConnectionMethodSelector selectedMethod="local" />)
+
+      const localCard = screen.getByText("Local Gateway").closest("[data-slot='card']")
+      const cloudCard = screen.getByText("Cloud Gateway").closest("[data-slot='card']")
+
+      expect(localCard).toHaveAttribute("role", "button")
+      expect(localCard).toHaveAttribute("tabIndex", "0")
+      expect(localCard).toHaveAttribute("aria-pressed", "true")
+
+      expect(cloudCard).toHaveAttribute("role", "button")
+      expect(cloudCard).toHaveAttribute("tabIndex", "0")
+      expect(cloudCard).toHaveAttribute("aria-pressed", "false")
+    })
+
+    it("has correct ARIA attributes on platform dropdown button", () => {
+      render(<ConnectionMethodSelector />)
+
+      const dropdownButton = screen.getByRole("button", { name: /select platform/i })
+      expect(dropdownButton).toHaveAttribute("aria-haspopup", "listbox")
+      expect(dropdownButton).toHaveAttribute("aria-expanded", "false")
+
+      fireEvent.click(dropdownButton)
+
+      expect(dropdownButton).toHaveAttribute("aria-expanded", "true")
+    })
   })
 
   describe("download functionality", () => {
     it("opens download URL when download button is clicked", () => {
       render(<ConnectionMethodSelector />)
 
-      const downloadButton = screen.getByRole("button", { name: /download for/i })
+      // Find the download button within the local gateway card
+      const localCard = screen.getByText("Local Gateway").closest("[data-slot='card']")
+      const downloadButton = localCard!.querySelector("button[class*='flex-1']") as HTMLElement
       fireEvent.click(downloadButton)
 
       expect(mockWindowOpen).toHaveBeenCalledWith(
@@ -161,7 +249,9 @@ describe("ConnectionMethodSelector", () => {
       const customBaseUrl = "https://custom.example.com/downloads"
       render(<ConnectionMethodSelector downloadBaseUrl={customBaseUrl} />)
 
-      const downloadButton = screen.getByRole("button", { name: /download for/i })
+      // Find the download button within the local gateway card
+      const localCard = screen.getByText("Local Gateway").closest("[data-slot='card']")
+      const downloadButton = localCard!.querySelector("button[class*='flex-1']") as HTMLElement
       fireEvent.click(downloadButton)
 
       expect(mockWindowOpen).toHaveBeenCalledWith(
@@ -215,7 +305,9 @@ describe("ConnectionMethodSelector", () => {
     it("copies SSE URL to clipboard when button is clicked", async () => {
       render(<ConnectionMethodSelector />)
 
-      const copyButton = screen.getByRole("button", { name: /get sse url/i })
+      // Find the copy button within the cloud gateway card
+      const cloudCard = screen.getByText("Cloud Gateway").closest("[data-slot='card']")
+      const copyButton = cloudCard!.querySelector("button") as HTMLElement
       fireEvent.click(copyButton)
 
       await waitFor(() => {
@@ -229,7 +321,9 @@ describe("ConnectionMethodSelector", () => {
       const customUrl = "https://custom.example.com/sse"
       render(<ConnectionMethodSelector sseUrl={customUrl} />)
 
-      const copyButton = screen.getByRole("button", { name: /get sse url/i })
+      // Find the copy button within the cloud gateway card
+      const cloudCard = screen.getByText("Cloud Gateway").closest("[data-slot='card']")
+      const copyButton = cloudCard!.querySelector("button") as HTMLElement
       fireEvent.click(copyButton)
 
       await waitFor(() => {
@@ -240,7 +334,9 @@ describe("ConnectionMethodSelector", () => {
     it("shows 'Copied!' text after copying", async () => {
       render(<ConnectionMethodSelector />)
 
-      const copyButton = screen.getByRole("button", { name: /get sse url/i })
+      // Find the copy button within the cloud gateway card
+      const cloudCard = screen.getByText("Cloud Gateway").closest("[data-slot='card']")
+      const copyButton = cloudCard!.querySelector("button") as HTMLElement
       fireEvent.click(copyButton)
 
       await waitFor(() => {
@@ -254,7 +350,9 @@ describe("ConnectionMethodSelector", () => {
       const onMethodSelect = vi.fn()
       render(<ConnectionMethodSelector onMethodSelect={onMethodSelect} />)
 
-      const downloadButton = screen.getByRole("button", { name: /download for/i })
+      // Find the download button within the local gateway card
+      const localCard = screen.getByText("Local Gateway").closest("[data-slot='card']")
+      const downloadButton = localCard!.querySelector("button[class*='flex-1']") as HTMLElement
       fireEvent.click(downloadButton)
 
       // onMethodSelect should not be called when clicking the download button
@@ -265,8 +363,15 @@ describe("ConnectionMethodSelector", () => {
       const onMethodSelect = vi.fn()
       render(<ConnectionMethodSelector onMethodSelect={onMethodSelect} />)
 
-      const copyButton = screen.getByRole("button", { name: /get sse url/i })
+      // Find the copy button within the cloud gateway card
+      const cloudCard = screen.getByText("Cloud Gateway").closest("[data-slot='card']")
+      const copyButton = cloudCard!.querySelector("button") as HTMLElement
       fireEvent.click(copyButton)
+
+      // Wait for the clipboard operation to complete
+      await waitFor(() => {
+        expect(mockClipboard.writeText).toHaveBeenCalled()
+      })
 
       // onMethodSelect should not be called when clicking the copy button
       expect(onMethodSelect).not.toHaveBeenCalled()

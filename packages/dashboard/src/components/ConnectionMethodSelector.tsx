@@ -5,7 +5,7 @@
  * Displays pros/cons for each option with download links and SSE URL copy.
  */
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, KeyboardEvent } from "react"
 import {
   Card,
   CardHeader,
@@ -179,6 +179,16 @@ export function ConnectionMethodSelector({
   const isLocalSelected = selectedMethod === "local"
   const isCloudSelected = selectedMethod === "cloud"
 
+  const handleCardKeyDown = useCallback(
+    (method: "local" | "cloud") => (e: KeyboardEvent<HTMLDivElement>) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault()
+        onMethodSelect?.(method)
+      }
+    },
+    [onMethodSelect]
+  )
+
   return (
     <div className={cn("space-y-4", className)}>
       <div className="space-y-2">
@@ -197,7 +207,11 @@ export function ConnectionMethodSelector({
               ? "ring-2 ring-primary border-primary"
               : "hover:border-primary/50"
           )}
+          role="button"
+          tabIndex={0}
+          aria-pressed={isLocalSelected}
           onClick={() => onMethodSelect?.("local")}
+          onKeyDown={handleCardKeyDown("local")}
         >
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
@@ -236,6 +250,8 @@ export function ConnectionMethodSelector({
                     setShowPlatformDropdown(!showPlatformDropdown)
                   }}
                   aria-label="Select platform"
+                  aria-expanded={showPlatformDropdown}
+                  aria-haspopup="listbox"
                 >
                   <ChevronDown
                     className={cn(
@@ -250,11 +266,15 @@ export function ConnectionMethodSelector({
               {showPlatformDropdown && (
                 <div
                   className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-md shadow-lg z-10"
+                  role="listbox"
+                  aria-label="Platform options"
                   onClick={(e) => e.stopPropagation()}
                 >
                   {(Object.keys(PLATFORM_LABELS) as Platform[]).map((platform) => (
                     <button
                       key={platform}
+                      role="option"
+                      aria-selected={platform === detectedPlatform}
                       className={cn(
                         "w-full px-4 py-2 text-left text-sm hover:bg-accent transition-colors",
                         "first:rounded-t-md last:rounded-b-md",
@@ -279,7 +299,11 @@ export function ConnectionMethodSelector({
               ? "ring-2 ring-primary border-primary"
               : "hover:border-primary/50"
           )}
+          role="button"
+          tabIndex={0}
+          aria-pressed={isCloudSelected}
           onClick={() => onMethodSelect?.("cloud")}
+          onKeyDown={handleCardKeyDown("cloud")}
         >
           <CardHeader className="pb-2">
             <div className="flex items-center gap-2">
