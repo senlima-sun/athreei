@@ -5,6 +5,8 @@ import { AuditLogs } from "./pages/AuditLogs"
 import { Permissions } from "./pages/Permissions"
 import { Sessions } from "./pages/Sessions"
 import { Settings } from "./pages/Settings"
+import { Traces } from "./pages/Traces"
+import { TraceDetail } from "./pages/TraceDetail"
 
 export function App() {
   return (
@@ -12,6 +14,8 @@ export function App() {
       <Layout>
         <Routes>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/traces" element={<Traces />} />
+          <Route path="/traces/:uuid" element={<TraceDetail />} />
           <Route path="/logs" element={<AuditLogs />} />
           <Route path="/permissions" element={<Permissions />} />
           <Route path="/sessions" element={<Sessions />} />

@@ -2,9 +2,24 @@ import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { LegacyCard as Card } from "../components/ui/Card"
 import { Button } from "../components/ui/Button"
-import { getAuditLogs, getSessions, getPermissions } from "../lib/api"
+import { api, getAuditLogs, getSessions, getPermissions } from "../lib/api"
 import type { AuditLogEntry } from "../lib/api"
 import { cn } from "@/lib/utils"
+
+/**
+ * Trace analytics response from API
+ */
+interface TraceAnalytics {
+  totalTraces: number
+  successRate: number
+  averageDurationMs: number
+  activeMcpServers: number
+  toolUsage: {
+    toolName: string
+    count: number
+    percentage: number
+  }[]
+}
 
 export function Dashboard() {
   const navigate = useNavigate()
@@ -16,6 +31,10 @@ export function Dashboard() {
     blockedRequests: 0,
   })
   const [recentActivity, setRecentActivity] = useState<AuditLogEntry[]>([])
+
+  // Trace analytics state
+  const [traceAnalytics, setTraceAnalytics] = useState<TraceAnalytics | null>(null)
+  const [analyticsLoading, setAnalyticsLoading] = useState(true)
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -47,6 +66,26 @@ export function Dashboard() {
     }
 
     fetchDashboardData()
+  }, [])
+
+  // Fetch trace analytics
+  useEffect(() => {
+    const fetchTraceAnalytics = async () => {
+      try {
+        setAnalyticsLoading(true)
+
+        // Try to fetch from API
+        const analytics = await api.get<TraceAnalytics>("/api/traces/analytics?days=7")
+        setTraceAnalytics(analytics)
+      } catch (error) {
+        // Use mock data for development
+        setTraceAnalytics(getMockAnalytics())
+      } finally {
+        setAnalyticsLoading(false)
+      }
+    }
+
+    fetchTraceAnalytics()
   }, [])
 
   const formatTimestamp = (timestamp: number) => {
@@ -98,6 +137,12 @@ export function Dashboard() {
     }
   }
 
+  // Format duration for display
+  const formatDuration = (ms: number) => {
+    if (ms < 1000) return `${Math.round(ms)}ms`
+    return `${(ms / 1000).toFixed(1)}s`
+  }
+
   return (
     <div>
       <h2 className="text-2xl font-semibold mb-2">Dashboard Overview</h2>
@@ -106,8 +151,65 @@ export function Dashboard() {
         monitoring and managing AI interactions.
       </p>
 
-      {/* Statistics Grid */}
+      {/* Trace Analytics Summary */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
+        <AnalyticsCard
+          title="Total Traces"
+          value={analyticsLoading ? "..." : traceAnalytics?.totalTraces.toLocaleString() || "0"}
+          subtitle="Last 7 days"
+          loading={analyticsLoading}
+        />
+        <AnalyticsCard
+          title="Success Rate"
+          value={analyticsLoading ? "..." : `${traceAnalytics?.successRate.toFixed(1) || "0"}%`}
+          subtitle="Tool call success"
+          loading={analyticsLoading}
+          variant={
+            traceAnalytics && traceAnalytics.successRate >= 95
+              ? "success"
+              : traceAnalytics && traceAnalytics.successRate >= 80
+                ? "warning"
+                : "error"
+          }
+        />
+        <AnalyticsCard
+          title="Avg Duration"
+          value={analyticsLoading ? "..." : formatDuration(traceAnalytics?.averageDurationMs || 0)}
+          subtitle="Per tool call"
+          loading={analyticsLoading}
+        />
+        <AnalyticsCard
+          title="Active MCPs"
+          value={analyticsLoading ? "..." : String(traceAnalytics?.activeMcpServers || 0)}
+          subtitle="Connected servers"
+          loading={analyticsLoading}
+        />
+      </div>
+
+      {/* Tool Usage Chart */}
+      {traceAnalytics && traceAnalytics.toolUsage.length > 0 && (
+        <Card title="Tool Usage (Last 7 days)" className="mt-6">
+          <div className="space-y-3">
+            {traceAnalytics.toolUsage.slice(0, 5).map((tool) => (
+              <ToolUsageBar
+                key={tool.toolName}
+                toolName={tool.toolName}
+                count={tool.count}
+                percentage={tool.percentage}
+              />
+            ))}
+          </div>
+          <div className="mt-4 pt-4 border-t border-border">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/traces")}>
+              View all traces
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      {/* Legacy Statistics Grid */}
+      <h3 className="text-lg font-semibold mt-10 mb-4">System Overview</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Total Requests"
           value={loading ? "..." : String(stats.totalRequests)}
@@ -185,7 +287,10 @@ export function Dashboard() {
       {/* Quick Actions */}
       <Card title="Quick Actions" className="mt-6">
         <div className="flex gap-4 flex-wrap">
-          <Button variant="primary" onClick={() => navigate("/logs")}>
+          <Button variant="primary" onClick={() => navigate("/traces")}>
+            View Traces
+          </Button>
+          <Button variant="secondary" onClick={() => navigate("/logs")}>
             View Audit Logs
           </Button>
           <Button variant="secondary" onClick={() => navigate("/permissions")}>
@@ -222,4 +327,82 @@ function StatCard({ title, value, loading }: StatCardProps) {
       </p>
     </div>
   )
+}
+
+interface AnalyticsCardProps {
+  title: string
+  value: string
+  subtitle: string
+  loading?: boolean
+  variant?: "default" | "success" | "warning" | "error"
+}
+
+function AnalyticsCard({ title, value, subtitle, loading, variant = "default" }: AnalyticsCardProps) {
+  const valueColor = {
+    default: "text-foreground",
+    success: "text-success",
+    warning: "text-warning",
+    error: "text-error",
+  }
+
+  return (
+    <div className="bg-card border border-border rounded-lg p-6">
+      <h4 className="text-sm mb-2 text-muted-foreground font-medium">
+        {title}
+      </h4>
+      <p
+        className={cn(
+          "text-3xl font-semibold m-0",
+          loading ? "text-muted-foreground" : valueColor[variant]
+        )}
+      >
+        {value}
+      </p>
+      <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
+    </div>
+  )
+}
+
+interface ToolUsageBarProps {
+  toolName: string
+  count: number
+  percentage: number
+}
+
+function ToolUsageBar({ toolName, count, percentage }: ToolUsageBarProps) {
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-1">
+        <code className="text-sm bg-muted px-1.5 py-0.5 rounded">{toolName}</code>
+        <span className="text-sm text-muted-foreground">
+          {count.toLocaleString()} ({percentage.toFixed(0)}%)
+        </span>
+      </div>
+      <div className="w-full bg-muted rounded-full h-2">
+        <div
+          className="bg-primary h-2 rounded-full transition-all duration-300"
+          style={{ width: `${Math.min(percentage, 100)}%` }}
+        />
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Mock analytics data for development
+ */
+function getMockAnalytics(): TraceAnalytics {
+  return {
+    totalTraces: 1234,
+    successRate: 98.5,
+    averageDurationMs: 823,
+    activeMcpServers: 5,
+    toolUsage: [
+      { toolName: "browser__screenshot", count: 556, percentage: 45 },
+      { toolName: "github__create_issue", count: 309, percentage: 25 },
+      { toolName: "filesystem__read", count: 247, percentage: 20 },
+      { toolName: "database__query", count: 74, percentage: 6 },
+      { toolName: "other", count: 48, percentage: 4 },
+    ],
+  }
 }

@@ -13,20 +13,14 @@ export function Layout({ children }: LayoutProps) {
 
   // Get page title based on current route
   const getPageTitle = () => {
-    switch (location.pathname) {
-      case "/":
-        return "Dashboard"
-      case "/logs":
-        return "Audit Logs"
-      case "/permissions":
-        return "Permissions"
-      case "/sessions":
-        return "Sessions"
-      case "/settings":
-        return "Settings"
-      default:
-        return "Dashboard"
-    }
+    if (location.pathname === "/") return "Dashboard"
+    if (location.pathname === "/traces") return "Traces"
+    if (location.pathname.startsWith("/traces/")) return "Trace Details"
+    if (location.pathname === "/logs") return "Audit Logs"
+    if (location.pathname === "/permissions") return "Permissions"
+    if (location.pathname === "/sessions") return "Sessions"
+    if (location.pathname === "/settings") return "Settings"
+    return "Dashboard"
   }
 
   return (
@@ -43,6 +37,9 @@ export function Layout({ children }: LayoutProps) {
         <nav className="flex-1 space-y-1">
           <SidebarLink to="/" icon="📊">
             Dashboard
+          </SidebarLink>
+          <SidebarLink to="/traces" icon="📈">
+            Traces
           </SidebarLink>
           <SidebarLink to="/logs" icon="📝">
             Audit Logs
