@@ -98,21 +98,20 @@ export function TraceDetail() {
 
   // Decrypt trace payload using stored key
   const decryptTracePayload = useCallback(async (traceData: TraceEntry) => {
-    if (!traceData.encryptedPayload || !traceData.nonce || !decryptionSession) {
+    if (!traceData.encryptedPayload || !decryptionSession) {
       return
     }
 
     try {
       // Dynamic import of crypto functions from @athreei/shared
       const cryptoModule = await import("@athreei/shared")
-      const { decrypt } = cryptoModule
+      const { decryptTrace } = cryptoModule
 
-      const decrypted = decrypt({
-        ciphertext: traceData.encryptedPayload,
-        nonce: traceData.nonce,
-        salt: "", // Salt is stored with the key
-        keyVersion: traceData.keyVersion || 1,
-      }, decryptionSession.key) as TracePayload
+      // Parse the encrypted payload (base64-encoded JSON with nonce, ciphertext, etc.)
+      // The nonce is embedded inside the JSON payload, not a separate field
+      const encryptedPayloadJson = JSON.parse(atob(traceData.encryptedPayload))
+
+      const decrypted = decryptTrace(encryptedPayloadJson, decryptionSession.key) as TracePayload
 
       setDecryptedPayload(decrypted)
       setDecryptionError(null)
@@ -132,25 +131,39 @@ export function TraceDetail() {
 
       // Dynamic import of crypto functions from @athreei/shared
       const cryptoModule = await import("@athreei/shared")
-      const { deriveKey, decrypt } = cryptoModule
+      const { deriveKey, decryptTrace } = cryptoModule
 
-      // Get salt from trace or use default
-      const saltBase64 = trace.nonce || ""
-      const salt = saltBase64
-        ? new Uint8Array(atob(saltBase64).split("").map(c => c.charCodeAt(0)))
-        : undefined
+      // Step 1: Try to get existing salt from account
+      let salt: Uint8Array | undefined
+      try {
+        const saltResponse = await api.get<{ salt: string | null }>("/api/account/encryption-salt")
+        if (saltResponse.salt) {
+          salt = new Uint8Array(atob(saltResponse.salt).split("").map(c => c.charCodeAt(0)))
+        }
+      } catch {
+        // Salt endpoint not available, will generate new salt
+      }
 
-      // Derive key from password
+      // Step 2: Derive key from password (with existing salt or generate new one)
       const derived = await deriveKey(password, salt)
 
-      // Try to decrypt the payload
-      if (trace.encryptedPayload && trace.nonce) {
-        const decrypted = decrypt({
-          ciphertext: trace.encryptedPayload,
-          nonce: trace.nonce,
-          salt: "",
-          keyVersion: trace.keyVersion || 1,
-        }, derived.key) as TracePayload
+      // Step 3: If no salt existed, save the new salt to the server
+      if (!salt) {
+        try {
+          const saltBase64 = btoa(String.fromCharCode(...derived.salt))
+          await api.post("/api/account/encryption-salt", { salt: saltBase64 })
+        } catch {
+          // Failed to save salt, but continue with decryption
+          console.warn("Failed to save encryption salt to server")
+        }
+      }
+
+      // Step 4: Try to decrypt the payload
+      if (trace.encryptedPayload) {
+        // Parse the encrypted payload (base64-encoded JSON with nonce, ciphertext, etc.)
+        const encryptedPayloadJson = JSON.parse(atob(trace.encryptedPayload))
+
+        const decrypted = decryptTrace(encryptedPayloadJson, derived.key) as TracePayload
 
         setDecryptedPayload(decrypted)
 
@@ -475,8 +488,8 @@ function getMockTrace(traceId: string): TraceEntry {
     startTime: now - 5000,
     endTime: now - 3766,
     // Mock encrypted payload (in real use, this would be actual encrypted data)
+    // encryptedPayload contains: { nonce, ciphertext, keyVersion, algorithm }
     encryptedPayload: undefined,
-    nonce: undefined,
     keyVersion: 1,
   }
 }

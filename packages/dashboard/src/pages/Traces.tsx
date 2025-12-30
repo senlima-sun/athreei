@@ -28,11 +28,12 @@ export interface TraceEntry {
   startTime: number
   /** End timestamp */
   endTime?: number
-  /** Encrypted request/response payload (base64) */
+  /**
+   * Encrypted request/response payload (base64-encoded JSON)
+   * Contains: { nonce, ciphertext, keyVersion, algorithm }
+   */
   encryptedPayload?: string
-  /** Nonce for decryption */
-  nonce?: string
-  /** Key version used for encryption */
+  /** Key version used for encryption (also embedded in encryptedPayload) */
   keyVersion?: number
   /** Error message if status is error */
   errorMessage?: string
