@@ -55,11 +55,8 @@ function renderWithRouter(component: React.ReactNode) {
 describe("Dashboard", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    // @ts-expect-error - Mock implementation for testing
     vi.mocked(getAuditLogs).mockResolvedValue(mockAuditLogs)
-    // @ts-expect-error - Mock implementation for testing
     vi.mocked(getSessions).mockResolvedValue(mockSessions)
-    // @ts-expect-error - Mock implementation for testing
     vi.mocked(getPermissions).mockResolvedValue(mockPermissions)
     vi.mocked(api.get).mockResolvedValue(mockAnalytics)
   })
