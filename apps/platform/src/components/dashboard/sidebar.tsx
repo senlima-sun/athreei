@@ -11,6 +11,8 @@ import {
   Settings,
   Menu,
   X,
+  Globe,
+  HardDrive,
 } from "lucide-react";
 import { useState } from "react";
 import { OrgSwitcher } from "./org-switcher";
@@ -21,13 +23,32 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
 }
 
-const navItems: NavItem[] = [
-  { label: "Home", href: "/dashboard", icon: Home },
-  { label: "MCPs", href: "/dashboard/mcps", icon: Server },
-  { label: "Namespaces", href: "/dashboard/namespaces", icon: Boxes },
-  { label: "Traces", href: "/dashboard/traces", icon: Activity },
-  { label: "Team", href: "/dashboard/organizations", icon: Users },
-  { label: "Settings", href: "/dashboard/settings", icon: Settings },
+interface NavSection {
+  title?: string;
+  items: NavItem[];
+}
+
+const navSections: NavSection[] = [
+  {
+    items: [
+      { label: "Home", href: "/dashboard", icon: Home },
+    ],
+  },
+  {
+    title: "MCP",
+    items: [
+      { label: "Registry", href: "/dashboard/registry", icon: Globe },
+      { label: "My Servers", href: "/dashboard/mcp-servers", icon: HardDrive },
+      { label: "Namespaces", href: "/dashboard/namespaces", icon: Boxes },
+    ],
+  },
+  {
+    items: [
+      { label: "Traces", href: "/dashboard/traces", icon: Activity },
+      { label: "Team", href: "/dashboard/organizations", icon: Users },
+      { label: "Settings", href: "/dashboard/settings", icon: Settings },
+    ],
+  },
 ];
 
 export function Sidebar() {
@@ -104,9 +125,20 @@ export function Sidebar() {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 space-y-1 px-3 py-4">
-            {navItems.map((item) => (
-              <NavLink key={item.href} item={item} />
+          <nav className="flex-1 space-y-6 px-3 py-4">
+            {navSections.map((section, index) => (
+              <div key={index}>
+                {section.title && (
+                  <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                    {section.title}
+                  </p>
+                )}
+                <div className="space-y-1">
+                  {section.items.map((item) => (
+                    <NavLink key={item.href} item={item} />
+                  ))}
+                </div>
+              </div>
             ))}
           </nav>
 
