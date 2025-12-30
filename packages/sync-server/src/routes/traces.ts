@@ -5,10 +5,12 @@ import {
   TraceUploadRequestSchema,
   TraceQuerySchema,
   TraceBulkDeleteSchema,
+  TraceAnalyticsQuerySchema,
   type TraceResponse,
   type TraceListResponse,
   type TraceUploadResponse,
   type TraceBulkDeleteResponse,
+  type TraceAnalyticsResponse,
   type ErrorResponse,
 } from '../types';
 import { getDb } from '../db/client';
@@ -91,8 +93,13 @@ traces.post(
       }));
 
       try {
-        await db.insert(schema.traces).values(tracesToInsert);
-        uploaded = tracesToInsert.length;
+        // Use onConflictDoNothing to handle duplicate request_ids (retry-safe)
+        const result = await db
+          .insert(schema.traces)
+          .values(tracesToInsert)
+          .onConflictDoNothing({ target: [schema.traces.account_id, schema.traces.request_id] })
+          .returning({ id: schema.traces.id });
+        uploaded = result.length;
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Unknown error';
         errors.push(`Batch insert failed: ${message}`);
@@ -178,6 +185,85 @@ traces.get(
       return c.json(response, 200);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to list traces';
+      return c.json<ErrorResponse>({ error: message }, 500);
+    }
+  }
+);
+
+/**
+ * GET /traces/analytics - Get trace analytics summary
+ */
+traces.get(
+  '/analytics',
+  zValidator('query', TraceAnalyticsQuerySchema),
+  async (c) => {
+    try {
+      const { accountId } = getAuthContext(c);
+      const { days, namespace, endpoint, mcpServer } = c.req.valid('query');
+      const db = getDb();
+
+      const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+      // Build conditions
+      const conditions = [
+        eq(schema.traces.account_id, accountId),
+        gte(schema.traces.created_at, since),
+      ];
+
+      if (namespace) {
+        conditions.push(eq(schema.traces.namespace_id, namespace));
+      }
+      if (endpoint) {
+        conditions.push(eq(schema.traces.endpoint_id, endpoint));
+      }
+      if (mcpServer) {
+        conditions.push(eq(schema.traces.mcp_server_id, mcpServer));
+      }
+
+      const whereClause = and(...conditions);
+
+      // Get aggregate stats
+      const [stats] = await db
+        .select({
+          total: sql<number>`count(*)::int`,
+          success: sql<number>`count(*) filter (where ${schema.traces.status} = 'success')::int`,
+          avgDuration: sql<number>`coalesce(avg(${schema.traces.duration_ms})::int, 0)`,
+          activeMcps: sql<number>`count(distinct ${schema.traces.mcp_server_id})::int`,
+        })
+        .from(schema.traces)
+        .where(whereClause);
+
+      // Get tool usage breakdown
+      const toolUsage = await db
+        .select({
+          toolName: schema.traces.tool_name,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(schema.traces)
+        .where(whereClause)
+        .groupBy(schema.traces.tool_name)
+        .orderBy(desc(sql`count(*)`))
+        .limit(10);
+
+      const total = stats?.total ?? 0;
+      const successCount = stats?.success ?? 0;
+      const successRate = total > 0 ? (successCount / total) * 100 : 0;
+
+      const response: TraceAnalyticsResponse = {
+        totalTraces: total,
+        successRate: Math.round(successRate * 10) / 10,
+        averageDurationMs: stats?.avgDuration ?? 0,
+        activeMcpServers: stats?.activeMcps ?? 0,
+        toolUsage: toolUsage.map((t) => ({
+          toolName: t.toolName,
+          count: t.count,
+          percentage: total > 0 ? Math.round((t.count / total) * 100) : 0,
+        })),
+      };
+
+      return c.json(response, 200);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to get analytics';
       return c.json<ErrorResponse>({ error: message }, 500);
     }
   }

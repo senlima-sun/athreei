@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, integer, boolean, pgEnum, index, primaryKey, customType } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, timestamp, integer, boolean, pgEnum, index, uniqueIndex, primaryKey, customType } from 'drizzle-orm/pg-core';
 import { InferSelectModel, InferInsertModel, relations } from 'drizzle-orm';
 
 // Enum for sync item types
@@ -40,6 +40,8 @@ export const accounts = pgTable('accounts', {
   id: uuid('id').primaryKey().defaultRandom(),
   email: text('email').notNull().unique(),
   password_hash: text('password_hash').notNull(),
+  /** Salt for trace encryption key derivation (Argon2, 16 bytes) */
+  encryption_salt: bytea('encryption_salt'),
   created_at: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   updated_at: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 }, (table) => ({
@@ -123,6 +125,8 @@ export const traces = pgTable('traces', {
   statusIdx: index('idx_traces_status').on(table.status),
   createdAtIdx: index('idx_traces_created_at').on(table.created_at),
   requestIdIdx: index('idx_traces_request_id').on(table.request_id),
+  // Unique constraint to prevent duplicate traces on retry
+  accountRequestUnique: uniqueIndex('idx_traces_account_request_unique').on(table.account_id, table.request_id),
 }));
 
 // Inferred types for TypeScript

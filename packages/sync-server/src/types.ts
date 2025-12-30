@@ -73,6 +73,13 @@ export const TraceBulkDeleteSchema = z.object({
   endpoint: z.string().uuid().optional(),
 });
 
+export const TraceAnalyticsQuerySchema = z.object({
+  days: z.coerce.number().int().min(1).max(365).default(7),
+  namespace: z.string().uuid().optional(),
+  endpoint: z.string().uuid().optional(),
+  mcpServer: z.string().uuid().optional(),
+});
+
 export type RegisterRequest = z.infer<typeof RegisterRequestSchema>;
 export type LoginRequest = z.infer<typeof LoginRequestSchema>;
 export type RegisterDeviceRequest = z.infer<typeof RegisterDeviceRequestSchema>;
@@ -82,6 +89,7 @@ export type TraceUploadItem = z.infer<typeof TraceUploadItemSchema>;
 export type TraceUploadRequest = z.infer<typeof TraceUploadRequestSchema>;
 export type TraceQuery = z.infer<typeof TraceQuerySchema>;
 export type TraceBulkDelete = z.infer<typeof TraceBulkDeleteSchema>;
+export type TraceAnalyticsQuery = z.infer<typeof TraceAnalyticsQuerySchema>;
 
 // Response types
 export interface AuthResponse {
@@ -170,6 +178,18 @@ export interface TraceUploadResponse {
 export interface TraceBulkDeleteResponse {
   success: boolean;
   deleted: number;
+}
+
+export interface TraceAnalyticsResponse {
+  totalTraces: number;
+  successRate: number;
+  averageDurationMs: number;
+  activeMcpServers: number;
+  toolUsage: {
+    toolName: string;
+    count: number;
+    percentage: number;
+  }[];
 }
 
 // JWT payload

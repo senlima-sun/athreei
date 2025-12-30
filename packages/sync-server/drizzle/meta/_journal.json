@@ -15,6 +15,20 @@
       "when": 1735570800000,
       "tag": "0001_add_traces",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1735574400000,
+      "tag": "0002_add_traces_unique_constraint",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1735578000000,
+      "tag": "0003_add_encryption_salt",
+      "breakpoints": true
     }
   ]
 }
