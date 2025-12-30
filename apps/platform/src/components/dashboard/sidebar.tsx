@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   Home,
   Server,
+  Boxes,
   Activity,
   Users,
   Settings,
@@ -23,6 +24,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: "Home", href: "/dashboard", icon: Home },
   { label: "MCPs", href: "/dashboard/mcps", icon: Server },
+  { label: "Namespaces", href: "/dashboard/namespaces", icon: Boxes },
   { label: "Traces", href: "/dashboard/traces", icon: Activity },
   { label: "Team", href: "/dashboard/organizations", icon: Users },
   { label: "Settings", href: "/dashboard/settings", icon: Settings },
