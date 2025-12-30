@@ -154,6 +154,18 @@
         "@types/node": "^22.10.2",
       },
     },
+    "packages/gateway": {
+      "name": "@athreei/gateway",
+      "version": "0.1.0",
+      "dependencies": {
+        "@modelcontextprotocol/sdk": "^1.0.0",
+      },
+      "devDependencies": {
+        "@types/bun": "^1.1.0",
+        "typescript": "^5.7.0",
+        "vitest": "^2.1.0",
+      },
+    },
     "packages/mcp-server": {
       "name": "@athreei/mcp-server",
       "version": "0.1.0",
@@ -240,6 +252,8 @@
     "@athreei/email": ["@athreei/email@workspace:packages/email"],
 
     "@athreei/extension": ["@athreei/extension@workspace:packages/extension"],
+
+    "@athreei/gateway": ["@athreei/gateway@workspace:packages/gateway"],
 
     "@athreei/mcp-server": ["@athreei/mcp-server@workspace:packages/mcp-server"],
 

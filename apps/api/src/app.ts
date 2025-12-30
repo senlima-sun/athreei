@@ -7,7 +7,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-import { healthRoutes, configRoutes, organizationsRoutes, endpointsRoutes, apiKeysRoutes, mcpServersRoutes, namespacesRoutes } from "./routes";
+import { healthRoutes, configRoutes, organizationsRoutes, endpointsRoutes, apiKeysRoutes, mcpServersRoutes, namespacesRoutes, gatewayRoutes } from "./routes";
 import { errorHandler, notFoundHandler } from "./middleware";
 import { getAuth } from "./lib/auth";
 
@@ -71,6 +71,9 @@ app.route("/api/mcp-servers", mcpServersRoutes);
 
 // Namespace routes (protected)
 app.route("/api/namespaces", namespacesRoutes);
+
+// Gateway routes (API key auth via Bearer token)
+app.route("/api/gateway", gatewayRoutes);
 
 // =============================================================================
 // Error Handling
