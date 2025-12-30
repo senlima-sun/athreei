@@ -63,3 +63,11 @@ export {
   TableHeader,
   TableRow,
 } from "./table"
+
+// New components for Task 5.8
+export { Toast, ToastViewport } from "./toast"
+export type { ToastProps, ToastViewportProps } from "./toast"
+export { Toaster } from "./Toaster"
+export { Spinner, LoadingState } from "./Spinner"
+export { EmptyState, EmptyIcon, NoDataIcon, SearchIcon, LockIcon, ActivityIcon } from "./EmptyState"
+export type { EmptyStateProps } from "./EmptyState"

@@ -81,7 +81,7 @@ describe("TraceDetail", () => {
   it("renders loading state initially", () => {
     vi.mocked(api.get).mockImplementation(() => new Promise(() => {}))
     renderWithRouter()
-    expect(screen.getByText("Loading trace...")).toBeInTheDocument()
+    expect(screen.getByText("Loading trace details...")).toBeInTheDocument()
   })
 
   it("renders trace metadata when loaded", async () => {

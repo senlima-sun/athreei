@@ -5,7 +5,7 @@
  * Displays pros/cons for each option with download links and SSE URL copy.
  */
 
-import { useState, useCallback, KeyboardEvent } from "react"
+import { useState, useCallback, type KeyboardEvent } from "react"
 import {
   Card,
   CardHeader,

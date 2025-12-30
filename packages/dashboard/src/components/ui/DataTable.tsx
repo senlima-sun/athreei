@@ -10,6 +10,7 @@ import {
 } from "@tanstack/react-table"
 import { ArrowUpDown, ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "./Button"
+import { Spinner } from "./Spinner"
 import { cn } from "@/lib/utils"
 
 // Legacy Column interface for backwards compatibility
@@ -101,7 +102,10 @@ export function DataTable<T extends object>({
 
   if (loading) {
     return (
-      <div className="p-8 text-center text-muted-foreground">Loading...</div>
+      <div className="flex flex-col items-center justify-center p-8 gap-3">
+        <Spinner size="lg" />
+        <p className="text-muted-foreground text-sm">Loading data...</p>
+      </div>
     )
   }
 

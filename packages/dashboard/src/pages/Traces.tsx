@@ -6,6 +6,7 @@ import type { Column } from "../components/ui/DataTable"
 import { LegacyCard as Card } from "../components/ui/Card"
 import { Button } from "../components/ui/Button"
 import { cn } from "@/lib/utils"
+import { toast } from "@/hooks/use-toast"
 
 /**
  * Trace entry from the API
@@ -108,7 +109,13 @@ export function Traces() {
       // Update filter options from data
       updateFilterOptions(response.data || [])
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch traces")
+      const errorMessage = err instanceof Error ? err.message : "Failed to fetch traces"
+      setError(errorMessage)
+      // Show toast notification
+      toast.warning({
+        title: "Using mock data",
+        description: "Could not fetch traces from API. Showing sample data for development.",
+      })
       // Use mock data for development
       setTraces(getMockTraces())
       setTotal(getMockTraces().length)

@@ -3,6 +3,8 @@ import { useParams, useNavigate } from "react-router-dom"
 import { api } from "../lib/api"
 import { LegacyCard as Card } from "../components/ui/Card"
 import { Button } from "../components/ui/Button"
+import { Spinner } from "../components/ui/Spinner"
+import { EmptyState, SearchIcon } from "../components/ui/EmptyState"
 import {
   Dialog,
   DialogContent,
@@ -217,20 +219,25 @@ export function TraceDetail() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-muted-foreground">Loading trace...</div>
+      <div className="flex flex-col items-center justify-center h-64 gap-3">
+        <Spinner size="lg" />
+        <p className="text-muted-foreground">Loading trace details...</p>
       </div>
     )
   }
 
   if (!trace) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <div className="text-muted-foreground">Trace not found</div>
-        <Button variant="secondary" onClick={() => navigate("/traces")}>
-          Back to Traces
-        </Button>
-      </div>
+      <EmptyState
+        icon={<SearchIcon />}
+        title="Trace not found"
+        description="The requested trace could not be found. It may have been deleted or the ID is incorrect."
+        action={{
+          label: "Back to Traces",
+          onClick: () => navigate("/traces"),
+        }}
+        className="h-64"
+      />
     )
   }
 

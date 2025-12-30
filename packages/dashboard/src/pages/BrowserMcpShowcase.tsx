@@ -16,7 +16,6 @@ import {
 } from "../components/ui/Card"
 import { Button } from "../components/ui/Button"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "../components/ui/Tabs"
-import { cn } from "@/lib/utils"
 
 /**
  * Browser tool definition for display

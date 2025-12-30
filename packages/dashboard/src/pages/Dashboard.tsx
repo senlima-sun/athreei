@@ -2,6 +2,8 @@ import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { LegacyCard as Card } from "../components/ui/Card"
 import { Button } from "../components/ui/Button"
+import { Spinner } from "../components/ui/Spinner"
+import { EmptyState, ActivityIcon } from "../components/ui/EmptyState"
 import { api, getAuditLogs, getSessions, getPermissions } from "../lib/api"
 import type { AuditLogEntry } from "../lib/api"
 import { cn } from "@/lib/utils"
@@ -235,8 +237,9 @@ export function Dashboard() {
       {/* Recent Activity */}
       <Card title="Recent Activity" className="mt-8">
         {loading ? (
-          <div className="text-center p-6">
-            <p className="text-muted-foreground">Loading activity...</p>
+          <div className="flex flex-col items-center justify-center p-8 gap-3">
+            <Spinner size="lg" />
+            <p className="text-muted-foreground text-sm">Loading activity...</p>
           </div>
         ) : recentActivity.length > 0 ? (
           <div className="flex flex-col gap-4">
@@ -278,9 +281,11 @@ export function Dashboard() {
             ))}
           </div>
         ) : (
-          <p className="text-muted-foreground text-center">
-            No recent activity to display.
-          </p>
+          <EmptyState
+            icon={<ActivityIcon />}
+            title="No recent activity"
+            description="Activity will appear here once AI tools are invoked through the extension."
+          />
         )}
       </Card>
 
