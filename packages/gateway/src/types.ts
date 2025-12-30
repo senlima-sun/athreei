@@ -132,6 +132,8 @@ export interface ParsedToolName {
 export interface ToolCallTrace {
   /** Unique trace ID */
   traceId: string;
+  /** Request ID for correlation (used for encryption) */
+  requestId: string;
   /** Aggregated tool name that was called */
   aggregatedToolName: string;
   /** Parsed server name */
@@ -150,6 +152,43 @@ export interface ToolCallTrace {
   endedAt?: Date;
   /** Duration in milliseconds */
   durationMs?: number;
+  /** Status of the trace */
+  status: "success" | "error";
+}
+
+/**
+ * Trace with encrypted payload (for sending to Platform)
+ */
+export interface EncryptedToolCallTrace {
+  /** Unique trace ID */
+  traceId: string;
+  /** Request ID for correlation */
+  requestId: string;
+  /** Aggregated tool name (unencrypted for routing/filtering) */
+  aggregatedToolName: string;
+  /** Server name (unencrypted for routing/filtering) */
+  serverName: string;
+  /** Original tool name (unencrypted for routing/filtering) */
+  toolName: string;
+  /** Call start timestamp */
+  startedAt: Date;
+  /** Call end timestamp */
+  endedAt?: Date;
+  /** Duration in milliseconds */
+  durationMs?: number;
+  /** Status of the trace */
+  status: "success" | "error";
+  /** Encrypted payload containing arguments, result, and error */
+  encryptedPayload: {
+    /** Base64-encoded nonce */
+    nonce: string;
+    /** Base64-encoded ciphertext */
+    ciphertext: string;
+    /** Key version used for encryption */
+    keyVersion: number;
+    /** Encryption algorithm */
+    algorithm: "xchacha20poly1305";
+  };
 }
 
 // =============================================================================

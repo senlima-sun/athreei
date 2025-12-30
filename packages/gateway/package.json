@@ -14,7 +14,8 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.0"
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@athreei/shared": "workspace:*"
   },
   "devDependencies": {
     "@types/bun": "^1.1.0",

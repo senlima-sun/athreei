@@ -62,3 +62,22 @@ export {
   getKeyVersionStats,
   planKeyRotation,
 } from "./rotation.js"
+
+// Export trace encryption functions
+export type {
+  TracePayload,
+  EncryptedTrace,
+  TraceEncryptionConfig,
+} from "./trace-encryption.js"
+
+export {
+  encryptTrace,
+  decryptTrace,
+  encryptTraceToBytes,
+  decryptTraceFromBytes,
+  deriveTraceKey,
+  generateTraceNonce,
+  isValidEncryptedTrace,
+  encryptTraceBatch,
+  decryptTraceBatch,
+} from "./trace-encryption.js"

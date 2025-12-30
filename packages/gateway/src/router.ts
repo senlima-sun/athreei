@@ -71,13 +71,16 @@ export async function routeToolCall(
   }
 
   // Create trace record
+  const requestId = crypto.randomUUID();
   const trace: ToolCallTrace = {
     traceId,
+    requestId,
     aggregatedToolName: prefixedName,
     serverName,
     toolName,
     arguments: args,
     startedAt: new Date(),
+    status: "success", // Will be updated on error
   };
 
   try {
@@ -107,6 +110,7 @@ export async function routeToolCall(
     trace.endedAt = new Date();
     trace.durationMs = Date.now() - startTime;
     trace.error = error instanceof Error ? error.message : String(error);
+    trace.status = "error";
 
     log.error(`Tool call failed: ${prefixedName}`, error);
 
