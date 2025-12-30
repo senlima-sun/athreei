@@ -96,6 +96,8 @@ export class TraceSyncClient {
   private config: TraceSyncConfig & typeof DEFAULT_CONFIG;
   private pendingTraces: ToolCallTrace[] = [];
   private flushTimer: ReturnType<typeof setInterval> | null = null;
+  /** Track in-flight request IDs to prevent duplicate concurrent uploads */
+  private inFlightRequestIds: Set<string> = new Set();
 
   constructor(config: TraceSyncConfig) {
     this.config = { ...DEFAULT_CONFIG, ...config };
@@ -232,7 +234,29 @@ export class TraceSyncClient {
       return { success: false, uploaded: 0, failed: this.pendingTraces.length, errors: ["Encryption not enabled"] };
     }
 
-    const tracesToSend = this.pendingTraces.splice(0, this.config.batchSize);
+    // Filter out traces that are already in-flight to prevent duplicates
+    const availableTraces = this.pendingTraces.filter(
+      (trace) => !this.inFlightRequestIds.has(trace.requestId)
+    );
+
+    if (availableTraces.length === 0) {
+      log.debug("All pending traces are currently in-flight, skipping flush");
+      return { success: true, uploaded: 0, failed: 0 };
+    }
+
+    // Take a batch of available traces
+    const tracesToSend = availableTraces.slice(0, this.config.batchSize);
+
+    // Mark these traces as in-flight
+    const requestIds = tracesToSend.map((t) => t.requestId);
+    for (const id of requestIds) {
+      this.inFlightRequestIds.add(id);
+    }
+
+    // Remove from pending (they're now in-flight)
+    this.pendingTraces = this.pendingTraces.filter(
+      (t) => !requestIds.includes(t.requestId)
+    );
 
     log.debug(`Flushing ${tracesToSend.length} traces to Platform`);
 
@@ -249,7 +273,10 @@ export class TraceSyncClient {
       });
 
       if (!response.ok) {
-        // Put traces back for retry
+        // Put traces back for retry and remove from in-flight
+        for (const id of requestIds) {
+          this.inFlightRequestIds.delete(id);
+        }
         this.pendingTraces.unshift(...tracesToSend);
         const errorText = await response.text();
         const message = `Trace upload failed: ${response.status} - ${errorText}`;
@@ -262,13 +289,21 @@ export class TraceSyncClient {
         };
       }
 
+      // Success - remove from in-flight tracking (server has them now)
+      for (const id of requestIds) {
+        this.inFlightRequestIds.delete(id);
+      }
+
       const result = (await response.json()) as TraceUploadResponse;
 
       log.debug(`Successfully uploaded ${result.uploaded} traces (${result.failed} failed)`);
 
       return result;
     } catch (error) {
-      // Put traces back for retry (only for unexpected errors like network failures)
+      // Network error - put traces back for retry and remove from in-flight
+      for (const id of requestIds) {
+        this.inFlightRequestIds.delete(id);
+      }
       this.pendingTraces.unshift(...tracesToSend);
       const message = error instanceof Error ? error.message : String(error);
       log.error("Trace upload failed:", message);
@@ -314,6 +349,7 @@ export class TraceSyncClient {
   clear(): void {
     const count = this.pendingTraces.length;
     this.pendingTraces = [];
+    this.inFlightRequestIds.clear();
     log.info(`Cleared ${count} pending traces`);
   }
 }
