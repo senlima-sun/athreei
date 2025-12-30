@@ -172,6 +172,22 @@
         "vitest": "^2.1.0",
       },
     },
+    "packages/gateway-cloud": {
+      "name": "@athreei/gateway-cloud",
+      "version": "0.1.0",
+      "dependencies": {
+        "@athreei/gateway-core": "workspace:*",
+        "@athreei/shared": "workspace:*",
+        "@modelcontextprotocol/sdk": "^1.0.0",
+        "hono": "^4.6.14",
+        "zod": "^3.24.1",
+      },
+      "devDependencies": {
+        "@types/bun": "^1.1.0",
+        "typescript": "^5.7.0",
+        "vitest": "^2.1.0",
+      },
+    },
     "packages/gateway-core": {
       "name": "@athreei/gateway-core",
       "version": "0.1.0",
@@ -274,6 +290,8 @@
     "@athreei/extension": ["@athreei/extension@workspace:packages/extension"],
 
     "@athreei/gateway": ["@athreei/gateway@workspace:packages/gateway"],
+
+    "@athreei/gateway-cloud": ["@athreei/gateway-cloud@workspace:packages/gateway-cloud"],
 
     "@athreei/gateway-core": ["@athreei/gateway-core@workspace:packages/gateway-core"],
 
