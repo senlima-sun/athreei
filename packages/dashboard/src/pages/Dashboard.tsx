@@ -80,8 +80,7 @@ export function Dashboard() {
         const analytics = await api.get<TraceAnalytics>("/api/traces/analytics?days=7")
         setTraceAnalytics(analytics)
       } catch (error) {
-        // Use mock data for development
-        setTraceAnalytics(getMockAnalytics())
+        setTraceAnalytics(null)
       } finally {
         setAnalyticsLoading(false)
       }
@@ -187,6 +186,19 @@ export function Dashboard() {
           loading={analyticsLoading}
         />
       </div>
+
+      {/* Empty state when no analytics data */}
+      {!analyticsLoading && !traceAnalytics && (
+        <Card className="mt-6">
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <ActivityIcon />
+            <h3 className="mt-4 text-lg font-medium text-foreground">No analytics data yet</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Start using your MCP tools to see analytics
+            </p>
+          </div>
+        </Card>
+      )}
 
       {/* Tool Usage Chart */}
       {traceAnalytics && traceAnalytics.toolUsage.length > 0 && (
@@ -433,23 +445,4 @@ function ToolUsageBar({ toolName, count, percentage }: ToolUsageBarProps) {
       </div>
     </div>
   )
-}
-
-/**
- * Mock analytics data for development
- */
-function getMockAnalytics(): TraceAnalytics {
-  return {
-    totalTraces: 1234,
-    successRate: 98.5,
-    averageDurationMs: 823,
-    activeMcpServers: 5,
-    toolUsage: [
-      { toolName: "browser__screenshot", count: 556, percentage: 45 },
-      { toolName: "github__create_issue", count: 309, percentage: 25 },
-      { toolName: "filesystem__read", count: 247, percentage: 20 },
-      { toolName: "database__query", count: 74, percentage: 6 },
-      { toolName: "other", count: 48, percentage: 4 },
-    ],
-  }
 }

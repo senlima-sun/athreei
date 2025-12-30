@@ -87,9 +87,8 @@ export function TraceDetail() {
           await decryptTracePayload(response.data)
         }
       } catch (err) {
-        // Use mock data for development
-        setTrace(getMockTrace(uuid))
-        setError("Using mock data for development")
+        setTrace(null)
+        setError(err instanceof Error ? err.message : "Failed to load trace details")
       } finally {
         setLoading(false)
       }
@@ -280,12 +279,6 @@ export function TraceDetail() {
         </div>
       </div>
 
-      {/* Error Message */}
-      {error && (
-        <Card className="mb-6">
-          <div className="text-warning text-center text-sm">{error}</div>
-        </Card>
-      )}
 
       {/* Metadata */}
       <Card className="mb-6">
@@ -479,24 +472,3 @@ export function TraceDetail() {
   )
 }
 
-/**
- * Mock trace for development
- */
-function getMockTrace(traceId: string): TraceEntry {
-  const now = Date.now()
-  return {
-    id: "1",
-    traceId: traceId || "trace-001",
-    toolName: "browser__screenshot",
-    serverName: "browser-mcp",
-    endpointId: "my-endpoint",
-    status: "success",
-    durationMs: 1234,
-    startTime: now - 5000,
-    endTime: now - 3766,
-    // Mock encrypted payload (in real use, this would be actual encrypted data)
-    // encryptedPayload contains: { nonce, ciphertext, keyVersion, algorithm }
-    encryptedPayload: undefined,
-    keyVersion: 1,
-  }
-}

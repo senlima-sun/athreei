@@ -6,7 +6,6 @@ import type { Column } from "../components/ui/DataTable"
 import { LegacyCard as Card } from "../components/ui/Card"
 import { Button } from "../components/ui/Button"
 import { cn } from "@/lib/utils"
-import { toast } from "@/hooks/use-toast"
 
 /**
  * Trace entry from the API
@@ -111,14 +110,8 @@ export function Traces() {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to fetch traces"
       setError(errorMessage)
-      // Show toast notification
-      toast.warning({
-        title: "Using mock data",
-        description: "Could not fetch traces from API. Showing sample data for development.",
-      })
-      // Use mock data for development
-      setTraces(getMockTraces())
-      setTotal(getMockTraces().length)
+      setTraces([])
+      setTotal(0)
     } finally {
       setLoading(false)
     }
@@ -370,7 +363,7 @@ export function Traces() {
       {error && (
         <Card className="mb-6">
           <div className="text-warning text-center text-sm">
-            {error} - Showing mock data for development
+            {error}
           </div>
         </Card>
       )}
@@ -390,69 +383,4 @@ export function Traces() {
       </Card>
     </div>
   )
-}
-
-/**
- * Mock traces for development/testing
- */
-function getMockTraces(): TraceEntry[] {
-  const now = Date.now()
-  return [
-    {
-      id: "1",
-      traceId: "trace-001",
-      toolName: "browser__screenshot",
-      serverName: "browser-mcp",
-      endpointId: "my-endpoint",
-      status: "success",
-      durationMs: 1234,
-      startTime: now - 5000,
-      endTime: now - 3766,
-    },
-    {
-      id: "2",
-      traceId: "trace-002",
-      toolName: "github__create_issue",
-      serverName: "github-mcp",
-      endpointId: "my-endpoint",
-      status: "success",
-      durationMs: 823,
-      startTime: now - 10000,
-      endTime: now - 9177,
-    },
-    {
-      id: "3",
-      traceId: "trace-003",
-      toolName: "filesystem__read",
-      serverName: "filesystem-mcp",
-      endpointId: "my-endpoint",
-      status: "error",
-      durationMs: 102,
-      startTime: now - 15000,
-      endTime: now - 14898,
-      errorMessage: "File not found",
-    },
-    {
-      id: "4",
-      traceId: "trace-004",
-      toolName: "database__query",
-      serverName: "postgres-mcp",
-      endpointId: "my-endpoint",
-      status: "success",
-      durationMs: 456,
-      startTime: now - 20000,
-      endTime: now - 19544,
-    },
-    {
-      id: "5",
-      traceId: "trace-005",
-      toolName: "browser__navigate",
-      serverName: "browser-mcp",
-      endpointId: "my-endpoint",
-      status: "success",
-      durationMs: 2100,
-      startTime: now - 25000,
-      endTime: now - 22900,
-    },
-  ]
 }
