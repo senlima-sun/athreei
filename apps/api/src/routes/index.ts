@@ -11,3 +11,4 @@ export { default as organizationsRoutes } from "./organizations";
 export { default as endpointsRoutes } from "./endpoints";
 export { default as apiKeysRoutes } from "./api-keys";
 export { default as mcpServersRoutes } from "./mcp-servers";
+export { default as namespacesRoutes } from "./namespaces";

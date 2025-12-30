@@ -1,53 +1,179 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { PageHeader } from "@/components/dashboard/page-header";
-import { McpServerForm, McpServerFormData, McpServer } from "@/components/mcp";
+import { McpServerForm, McpServerFormData, McpServer, McpTransportType } from "@/components/mcp";
+import { useActiveOrganization } from "@/lib/auth-client";
 import { Server, ArrowLeft, Trash2, AlertTriangle, Loader2 } from "lucide-react";
 
-// Mock data - same as mcp-servers page
-const mockUserServers: McpServer[] = [
-  {
-    id: "user-1",
-    name: "Local Development Server",
-    description: "My local MCP server for development and testing",
-    transportType: "stdio",
-    status: "active",
-    command: "node",
-    args: ["/path/to/my-mcp-server/index.js"],
-  },
-  {
-    id: "user-2",
-    name: "Production API Gateway",
-    description: "Production MCP server connecting to our internal APIs",
-    transportType: "http",
-    status: "active",
-    url: "https://mcp.mycompany.com/api",
-  },
-  {
-    id: "user-3",
-    name: "Staging Environment",
-    description: "Staging server for testing new features",
-    transportType: "sse",
-    status: "inactive",
-    url: "https://staging-mcp.mycompany.com/sse",
-  },
-];
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
+// API response type
+interface ApiMcpServer {
+  id: string;
+  name: string;
+  description?: string | null;
+  transport: "stdio" | "sse" | "streamable-http";
+  status: "active" | "inactive" | "pending";
+  command?: string | null;
+  args?: string | null;
+  url?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Transform API response to frontend format
+function toFrontendFormat(server: ApiMcpServer): McpServer {
+  return {
+    id: server.id,
+    name: server.name,
+    description: server.description || undefined,
+    transportType: (server.transport === "streamable-http" ? "http" : server.transport) as McpTransportType,
+    status: server.status === "pending" ? "inactive" : server.status,
+    command: server.command || undefined,
+    args: server.args ? JSON.parse(server.args) : undefined,
+    url: server.url || undefined,
+    createdAt: new Date(server.createdAt),
+    updatedAt: new Date(server.updatedAt),
+  };
+}
+
+// Transform frontend form data to API format
+function toApiFormat(data: McpServerFormData) {
+  return {
+    name: data.name,
+    description: data.description || undefined,
+    transport: data.transportType === "http" ? "streamable-http" : data.transportType,
+    status: data.status,
+    command: data.command || undefined,
+    args: data.args?.length ? JSON.stringify(data.args) : undefined,
+    url: data.url || undefined,
+  };
+}
 
 export default function EditMcpServerPage() {
   const params = useParams();
   const router = useRouter();
-  const id = params.id as string;
+  const serverId = params.id as string;
+  const { data: activeOrg, isPending: isOrgPending } = useActiveOrganization();
 
+  const [server, setServer] = useState<McpServer | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const server = useMemo(() => {
-    return mockUserServers.find((s) => s.id === id);
-  }, [id]);
+  // Load server data
+  const loadServer = useCallback(async () => {
+    try {
+      const response = await fetch(
+        `${API_URL}/api/mcp-servers/${serverId}`,
+        { credentials: "include" }
+      );
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          setServer(null);
+          return;
+        }
+        throw new Error("Failed to fetch MCP server");
+      }
+
+      const data = await response.json();
+      setServer(toFrontendFormat(data));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load server");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [serverId]);
+
+  useEffect(() => {
+    if (!isOrgPending) {
+      loadServer();
+    }
+  }, [isOrgPending, loadServer]);
+
+  const handleSubmit = async (data: McpServerFormData) => {
+    setError(null);
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/mcp-servers/${serverId}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify(toApiFormat(data)),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || "Failed to update MCP server");
+      }
+
+      router.push("/dashboard/mcp-servers");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update MCP server");
+      throw err;
+    }
+  };
+
+  const handleDelete = async () => {
+    setError(null);
+    setIsDeleting(true);
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/mcp-servers/${serverId}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || "Failed to delete MCP server");
+      }
+
+      router.push("/dashboard/mcp-servers");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete MCP server");
+      setShowDeleteConfirm(false);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  if (isOrgPending || isLoading) {
+    return (
+      <div>
+        <PageHeader title="Edit MCP Server" />
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!activeOrg) {
+    return (
+      <div>
+        <PageHeader title="Edit MCP Server" />
+        <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-6 text-center">
+          <p className="text-sm text-yellow-700">
+            Please select an organization to view MCP server details.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (!server) {
     return (
@@ -70,37 +196,6 @@ export default function EditMcpServerPage() {
     );
   }
 
-  const handleSubmit = async (data: McpServerFormData) => {
-    // In a real implementation, this would call an API to update the server
-    console.log("Updating MCP server:", id, data);
-
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    // Redirect to the servers list
-    router.push("/dashboard/mcp-servers");
-  };
-
-  const handleDelete = async () => {
-    setError(null);
-    setIsDeleting(true);
-
-    try {
-      // In a real implementation, this would call an API to delete the server
-      console.log("Deleting MCP server:", id);
-
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 500));
-
-      router.push("/dashboard/mcp-servers");
-    } catch (err) {
-      setError("Failed to delete MCP server");
-      setShowDeleteConfirm(false);
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
   return (
     <div>
       <PageHeader
@@ -116,6 +211,12 @@ export default function EditMcpServerPage() {
           </Link>
         }
       />
+
+      {error && (
+        <div className="mx-auto mb-6 max-w-2xl rounded-lg border border-red-200 bg-red-50 p-4">
+          <p className="text-sm text-red-600">{error}</p>
+        </div>
+      )}
 
       <div className="mx-auto max-w-2xl space-y-6">
         {/* Edit form */}
@@ -134,12 +235,6 @@ export default function EditMcpServerPage() {
           <p className="mt-1 text-sm text-gray-500">
             Permanently delete this MCP server configuration.
           </p>
-
-          {error && (
-            <div className="mt-4 rounded-md bg-red-50 p-3 text-sm text-red-600">
-              {error}
-            </div>
-          )}
 
           <div className="mt-6">
             {!showDeleteConfirm ? (

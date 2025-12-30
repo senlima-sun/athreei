@@ -4,50 +4,67 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { PageHeader } from "@/components/dashboard/page-header";
 import { NamespaceCard, type Namespace } from "@/components/namespaces";
-import { Boxes, Plus } from "lucide-react";
+import { useActiveOrganization } from "@/lib/auth-client";
+import { Boxes, Plus, Loader2 } from "lucide-react";
 
-// TODO: Replace with actual API calls when backend is ready
-const mockNamespaces: Namespace[] = [
-  {
-    id: "1",
-    name: "Personal Tools",
-    description: "My personal development environment",
-    serverCount: 3,
-    createdAt: new Date("2024-01-15"),
-  },
-  {
-    id: "2",
-    name: "Work Dev",
-    description: "Development servers for work projects",
-    serverCount: 5,
-    createdAt: new Date("2024-02-01"),
-  },
-  {
-    id: "3",
-    name: "Project X",
-    description: null,
-    serverCount: 2,
-    createdAt: new Date("2024-03-10"),
-  },
-];
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 export default function NamespacesPage() {
+  const { data: activeOrg, isPending: isOrgPending } = useActiveOrganization();
   const [namespaces, setNamespaces] = useState<Namespace[]>([]);
-  const [isPending, setIsPending] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // TODO: Replace with actual API call
     const loadNamespaces = async () => {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      setNamespaces(mockNamespaces);
-      setIsPending(false);
+      if (!activeOrg?.id) return;
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const response = await fetch(
+          `${API_URL}/api/namespaces?organizationId=${activeOrg.id}`,
+          { credentials: "include" }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch namespaces");
+        }
+
+        const data = await response.json();
+        // Transform API response to match Namespace type
+        const transformedNamespaces: Namespace[] = (data.namespaces || []).map(
+          (ns: {
+            id: string;
+            name: string;
+            description?: string | null;
+            serverCount: number;
+            createdAt: string;
+          }) => ({
+            id: ns.id,
+            name: ns.name,
+            description: ns.description,
+            serverCount: ns.serverCount,
+            createdAt: new Date(ns.createdAt),
+          })
+        );
+        setNamespaces(transformedNamespaces);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Failed to load namespaces"
+        );
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    loadNamespaces();
-  }, []);
+    if (!isOrgPending) {
+      loadNamespaces();
+    }
+  }, [activeOrg?.id, isOrgPending]);
 
-  if (isPending) {
+  if (isOrgPending || isLoading) {
     return (
       <div>
         <PageHeader
@@ -55,7 +72,44 @@ export default function NamespacesPage() {
           description="Organize your MCP servers into environments"
         />
         <div className="flex items-center justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-gray-600" />
+          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!activeOrg) {
+    return (
+      <div>
+        <PageHeader
+          title="Namespaces"
+          description="Organize your MCP servers into environments"
+        />
+        <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-6 text-center">
+          <p className="text-sm text-yellow-700">
+            Please select an organization to view namespaces.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div>
+        <PageHeader
+          title="Namespaces"
+          description="Organize your MCP servers into environments"
+        />
+        <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
+          <p className="text-sm text-red-600">{error}</p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="mt-4 text-sm font-medium text-red-700 hover:underline"
+          >
+            Try again
+          </button>
         </div>
       </div>
     );
