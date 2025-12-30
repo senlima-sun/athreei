@@ -47,8 +47,7 @@ async function main() {
     const schema = getSchema(dbType);
     const seedData = getMcpServerSeedData(organizationId);
 
-    console.log(`
-Inserting ${seedData.length} MCP servers...`);
+    console.log(`\nInserting ${seedData.length} MCP servers...`);
 
     // Insert each server
     for (const server of seedData) {
@@ -56,8 +55,7 @@ Inserting ${seedData.length} MCP servers...`);
       console.log(`  + ${server.name}`);
     }
 
-    console.log("
-Seed completed successfully!");
+    console.log("\nSeed completed successfully!");
     console.log(`Inserted ${seedData.length} MCP servers.`);
   } catch (error) {
     console.error("Failed to seed database:", error);

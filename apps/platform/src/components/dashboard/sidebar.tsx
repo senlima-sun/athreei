@@ -40,6 +40,7 @@ const navSections: NavSection[] = [
       { label: "Registry", href: "/dashboard/registry", icon: Globe },
       { label: "My Servers", href: "/dashboard/mcp-servers", icon: HardDrive },
       { label: "Namespaces", href: "/dashboard/namespaces", icon: Boxes },
+      { label: "Endpoints", href: "/dashboard/endpoints", icon: Server },
     ],
   },
   {
