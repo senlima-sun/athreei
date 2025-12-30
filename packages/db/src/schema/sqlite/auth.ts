@@ -36,6 +36,10 @@ export const session = sqliteTable("session", {
   expiresAt: integer("expiresAt", { mode: "timestamp" }).notNull(),
   ipAddress: text("ipAddress"),
   userAgent: text("userAgent"),
+  activeOrganizationId: text("activeOrganizationId").references(
+    () => organization.id,
+    { onDelete: "set null" }
+  ),
   createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
 });
@@ -137,6 +141,10 @@ export const sessionRelations = relations(session, ({ one }) => ({
   user: one(user, {
     fields: [session.userId],
     references: [user.id],
+  }),
+  activeOrganization: one(organization, {
+    fields: [session.activeOrganizationId],
+    references: [organization.id],
   }),
 }));
 

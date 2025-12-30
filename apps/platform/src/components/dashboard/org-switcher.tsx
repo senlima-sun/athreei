@@ -39,6 +39,8 @@ export function OrgSwitcher() {
   const handleSwitchOrg = async (orgId: string) => {
     await organization.setActive({ organizationId: orgId });
     setOpen(false);
+    // Refresh to update the active organization state
+    router.refresh();
   };
 
   const handleCreateOrg = () => {

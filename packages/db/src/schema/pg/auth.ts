@@ -28,6 +28,10 @@ export const session = pgTable("session", {
   expiresAt: timestamp("expiresAt").notNull(),
   ipAddress: text("ipAddress"),
   userAgent: text("userAgent"),
+  activeOrganizationId: text("activeOrganizationId").references(
+    () => organization.id,
+    { onDelete: "set null" }
+  ),
   createdAt: timestamp("createdAt").notNull(),
   updatedAt: timestamp("updatedAt").notNull(),
 });
@@ -114,6 +118,10 @@ export const sessionRelations = relations(session, ({ one }) => ({
   user: one(user, {
     fields: [session.userId],
     references: [user.id],
+  }),
+  activeOrganization: one(organization, {
+    fields: [session.activeOrganizationId],
+    references: [organization.id],
   }),
 }));
 

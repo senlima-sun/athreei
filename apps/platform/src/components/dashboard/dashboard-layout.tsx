@@ -4,6 +4,7 @@ import { ReactNode } from "react";
 import { Sidebar } from "./sidebar";
 import { UserMenu } from "./user-menu";
 import { Breadcrumbs } from "./breadcrumbs";
+import { OnboardingGuard } from "@/components/onboarding/onboarding-guard";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -11,6 +12,7 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
+    <OnboardingGuard>
     <div className="min-h-screen bg-gray-50">
       {/* Sidebar */}
       <Sidebar />
@@ -39,5 +41,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </main>
       </div>
     </div>
+    </OnboardingGuard>
   );
 }
