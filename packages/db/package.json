@@ -7,7 +7,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./client": "./src/client.ts",
-    "./schema": "./src/schema/index.ts"
+    "./schema": "./src/schema/index.ts",
+    "./seeds": "./src/seeds/index.ts"
   },
   "scripts": {
     "generate": "drizzle-kit generate",
@@ -16,7 +17,8 @@
     "studio": "drizzle-kit studio",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "seed": "bun run src/seeds/run.ts"
   },
   "dependencies": {
     "better-sqlite3": "^11.7.0",
