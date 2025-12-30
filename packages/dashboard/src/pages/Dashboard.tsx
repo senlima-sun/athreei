@@ -301,6 +301,48 @@ export function Dashboard() {
           </Button>
         </div>
       </Card>
+
+      {/* Browser MCP Showcase */}
+      <Card title="Featured: Browser MCP" className="mt-6">
+        <div className="flex flex-col md:flex-row gap-6 items-start">
+          <div className="flex-1">
+            <p className="text-muted-foreground mb-4">
+              Control your browser with AI using natural language. Navigate pages,
+              click elements, fill forms, take screenshots, and automate workflows
+              - all with full privacy controls and audit logging.
+            </p>
+            <div className="flex flex-wrap gap-2 mb-4">
+              <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">
+                11 Browser Tools
+              </span>
+              <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">
+                Privacy-First
+              </span>
+              <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">
+                Works with Claude
+              </span>
+            </div>
+            <Button variant="primary" onClick={() => navigate("/showcase/browser")}>
+              Learn More
+            </Button>
+          </div>
+          <div className="hidden md:flex w-48 h-32 bg-muted rounded-lg items-center justify-center">
+            <svg
+              className="w-16 h-16 text-muted-foreground/50"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
+              />
+            </svg>
+          </div>
+        </div>
+      </Card>
     </div>
   )
 }

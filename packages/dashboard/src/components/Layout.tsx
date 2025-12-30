@@ -20,6 +20,7 @@ export function Layout({ children }: LayoutProps) {
     if (location.pathname === "/permissions") return "Permissions"
     if (location.pathname === "/sessions") return "Sessions"
     if (location.pathname === "/settings") return "Settings"
+    if (location.pathname === "/showcase/browser") return "Browser MCP"
     return "Dashboard"
   }
 

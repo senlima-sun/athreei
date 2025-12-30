@@ -7,6 +7,7 @@ import { Sessions } from "./pages/Sessions"
 import { Settings } from "./pages/Settings"
 import { Traces } from "./pages/Traces"
 import { TraceDetail } from "./pages/TraceDetail"
+import { BrowserMcpShowcase } from "./pages/BrowserMcpShowcase"
 
 export function App() {
   return (
@@ -20,6 +21,7 @@ export function App() {
           <Route path="/permissions" element={<Permissions />} />
           <Route path="/sessions" element={<Sessions />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/showcase/browser" element={<BrowserMcpShowcase />} />
         </Routes>
       </Layout>
     </BrowserRouter>

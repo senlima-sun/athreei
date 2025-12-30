@@ -11,8 +11,17 @@ import {
 
 describe("MCP Registry Seed Data", () => {
   describe("openSourceMcpServers", () => {
-    it("should contain 5 MCP servers", () => {
-      expect(openSourceMcpServers).toHaveLength(5);
+    it("should contain 6 MCP servers", () => {
+      expect(openSourceMcpServers).toHaveLength(6);
+    });
+
+    it("should include athreei-browser MCP", () => {
+      const browser = openSourceMcpServers.find((s) => s.name === "athreei-browser");
+      expect(browser).toBeDefined();
+      expect(browser?.transport).toBe("STDIO");
+      expect(browser?.command).toBe("npx");
+      expect(browser?.status).toBe("active");
+      expect(browser?.description).toContain("Privacy-focused browser automation");
     });
 
     it("should include filesystem MCP", () => {
@@ -25,6 +34,7 @@ describe("MCP Registry Seed Data", () => {
 
     it("should include all required MCP servers", () => {
       const names = openSourceMcpServers.map((s) => s.name);
+      expect(names).toContain("athreei-browser");
       expect(names).toContain("filesystem");
       expect(names).toContain("github");
       expect(names).toContain("puppeteer");
@@ -56,7 +66,7 @@ describe("MCP Registry Seed Data", () => {
       const organizationId = "test-org-123";
       const seedData = getMcpServerSeedData(organizationId);
 
-      expect(seedData).toHaveLength(5);
+      expect(seedData).toHaveLength(6);
       for (const server of seedData) {
         expect(server.id).toBeDefined();
         expect(server.organizationId).toBe(organizationId);

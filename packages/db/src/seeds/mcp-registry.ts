@@ -21,6 +21,29 @@ export type McpServerInsert = Omit<
  */
 export const openSourceMcpServers: McpServerInsert[] = [
   {
+    name: "athreei-browser",
+    description:
+      "Privacy-focused browser automation via Chrome extension. Control browser tabs, navigate pages, click elements, type text, take screenshots, and execute scripts - all with full audit logging and permission controls.",
+    transport: "STDIO",
+    command: "npx",
+    args: JSON.stringify(["-y", "@athreei/mcp-server"]),
+    status: "active",
+    version: "0.1.0",
+    capabilities: JSON.stringify([
+      "browser_list_tabs",
+      "browser_get_active_tab",
+      "browser_navigate",
+      "browser_get_content",
+      "browser_get_elements",
+      "browser_click",
+      "browser_type",
+      "browser_scroll",
+      "browser_screenshot",
+      "browser_execute_script",
+      "browser_wait",
+    ]),
+  },
+  {
     name: "filesystem",
     description:
       "Secure file operations with configurable access controls. Provides tools for reading, writing, and managing files and directories on the local filesystem.",
