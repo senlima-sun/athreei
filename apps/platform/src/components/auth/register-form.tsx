@@ -36,6 +36,7 @@ export function RegisterForm() {
         name,
         email,
         password,
+        callbackURL: "/dashboard",
       });
 
       if (result.error) {

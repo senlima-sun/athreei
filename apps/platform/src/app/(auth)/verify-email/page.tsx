@@ -41,7 +41,7 @@ export default function VerifyEmailPage() {
     try {
       await authClient.sendVerificationEmail({
         email: userEmail,
-        callbackURL: "/",
+        callbackURL: "/dashboard",
       });
       setMessage("Verification email sent! Check your inbox.");
     } catch (err) {
