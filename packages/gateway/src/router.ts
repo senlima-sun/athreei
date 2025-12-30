@@ -3,43 +3,35 @@
  *
  * Routes tool calls to the correct upstream MCP server based on
  * the prefixed tool name: {serverName}__{toolName}
+ *
+ * This module wraps gateway-core routing with gateway-specific
+ * tracing and event emission.
  */
 
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import type { GatewayState } from "./server.js";
-import type { ParsedToolName, ToolCallTrace } from "./types.js";
-import { sanitizeName, findAggregatedTool } from "./aggregator.js";
+import type { ToolCallTrace, McpServerConfig } from "./types.js";
 import { log } from "./logger.js";
 
-/**
- * Parse a prefixed tool name into server and tool components.
- * Format: {serverName}__{toolName}
- *
- * The tool name may contain "__" itself, so we split on the first occurrence only.
- */
-export function parseToolName(prefixedName: string): ParsedToolName {
-  const separatorIndex = prefixedName.indexOf("__");
+// Re-export core routing functions from gateway-core
+export {
+  parseToolName,
+  validateToolCall,
+  getRoutingInfo,
+  isServerAvailable,
+  getAvailableServers,
+  type RouteToolCallOptions,
+} from "@athreei/gateway-core";
 
-  if (separatorIndex === -1) {
-    throw new Error(
-      `Invalid tool name format: "${prefixedName}". Expected format: {serverName}__{toolName}`
-    );
-  }
-
-  const serverName = prefixedName.substring(0, separatorIndex);
-  const toolName = prefixedName.substring(separatorIndex + 2);
-
-  if (!serverName || !toolName) {
-    throw new Error(
-      `Invalid tool name format: "${prefixedName}". Both server and tool names are required.`
-    );
-  }
-
-  return { serverName, toolName };
-}
+import {
+  parseToolName,
+  findAggregatedTool,
+  routeToolCall as coreRouteToolCall,
+} from "@athreei/gateway-core";
 
 /**
- * Route a tool call to the appropriate MCP server
+ * Route a tool call to the appropriate MCP server with tracing.
+ * This wraps the core routing logic with gateway-specific tracing and events.
  */
 export async function routeToolCall(
   state: GatewayState,
@@ -52,7 +44,7 @@ export async function routeToolCall(
   // Parse the tool name
   const { serverName, toolName } = parseToolName(prefixedName);
 
-  log.info(`Routing tool call: ${prefixedName} → ${serverName}/${toolName}`);
+  log.info(`Routing tool call: ${prefixedName} -> ${serverName}/${toolName}`);
 
   // Find the aggregated tool to verify it exists
   const aggregatedTool = findAggregatedTool(state.aggregatedTools, prefixedName);
@@ -84,12 +76,11 @@ export async function routeToolCall(
   };
 
   try {
-    // Call the tool on the upstream MCP server
+    // Call the tool on the upstream MCP server using core routing
     log.debug(`Calling ${toolName} on ${mcp.config.name}`);
 
-    const result = await mcp.client.callTool({
-      name: toolName,
-      arguments: args,
+    const result = await coreRouteToolCall(state, prefixedName, args, {
+      logger: log,
     });
 
     // Update trace with success
@@ -104,7 +95,7 @@ export async function routeToolCall(
     // Emit trace event
     emitTraceEvent(state, trace);
 
-    return result as CallToolResult;
+    return result;
   } catch (error) {
     // Update trace with error
     trace.endedAt = new Date();
@@ -131,47 +122,15 @@ function emitTraceEvent(state: GatewayState, trace: ToolCallTrace): void {
 }
 
 /**
- * Validate that a tool exists and the server is connected
+ * Re-export getRoutingInfo with proper typing for gateway
  */
-export function validateToolCall(
-  state: GatewayState,
-  prefixedName: string
-): { valid: true } | { valid: false; error: string } {
-  try {
-    const { serverName } = parseToolName(prefixedName);
-
-    const aggregatedTool = findAggregatedTool(state.aggregatedTools, prefixedName);
-    if (!aggregatedTool) {
-      return { valid: false, error: `Unknown tool: "${prefixedName}"` };
-    }
-
-    const mcp = state.connectedMcps.get(serverName);
-    if (!mcp) {
-      return {
-        valid: false,
-        error: `MCP server not connected: "${serverName}"`,
-      };
-    }
-
-    return { valid: true };
-  } catch (error) {
-    return {
-      valid: false,
-      error: error instanceof Error ? error.message : String(error),
-    };
-  }
-}
-
-/**
- * Get routing information for a tool
- */
-export function getRoutingInfo(
+export function getGatewayRoutingInfo(
   state: GatewayState,
   prefixedName: string
 ): {
   serverName: string;
   toolName: string;
-  serverConfig: import("./types.js").McpServerConfig;
+  serverConfig: McpServerConfig;
   isConnected: boolean;
 } | null {
   try {

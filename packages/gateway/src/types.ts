@@ -1,12 +1,23 @@
 /**
  * Gateway Type Definitions
  *
- * Core types for the athreei Gateway - an MCP aggregation proxy that
- * lets AI apps access multiple MCP servers through a single connection.
+ * This file re-exports core types from @athreei/gateway-core and
+ * defines gateway-specific types for tracing, configuration, and events.
  */
 
-import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import type { Tool } from "@modelcontextprotocol/sdk/types.js";
+// Re-export core types
+export type {
+  McpServerConfig,
+  ConnectedMcp,
+  AggregatedTool,
+  ParsedToolName,
+  RouterState,
+  ToolCallValidation,
+  RoutingInfo,
+  Logger,
+} from "@athreei/gateway-core";
+
+export { noopLogger } from "@athreei/gateway-core";
 
 // =============================================================================
 // Local Configuration Types
@@ -31,32 +42,6 @@ export interface GatewayConfig {
 // =============================================================================
 
 /**
- * MCP server connection configuration from Platform
- */
-export interface McpServerConfig {
-  /** Server ID in the registry */
-  id: string;
-  /** Display name for the server */
-  name: string;
-  /** Optional description */
-  description?: string;
-  /** Transport type */
-  transport: "stdio" | "sse" | "streamable-http";
-  /** Command to execute (for stdio transport) */
-  command?: string;
-  /** Command arguments (for stdio transport) */
-  args?: string;
-  /** Server URL (for SSE/HTTP transport) */
-  url?: string;
-  /** Server version */
-  version?: string;
-  /** Server capabilities as JSON string */
-  capabilities?: string;
-  /** Whether the server is currently active */
-  status: "active" | "inactive" | "pending";
-}
-
-/**
  * Namespace configuration from Platform API
  * Returned by GET /api/gateway/config?endpoint={name}
  */
@@ -74,52 +59,9 @@ export interface NamespaceConfig {
   /** Organization ID */
   organizationId: string;
   /** MCP servers in this namespace */
-  servers: McpServerConfig[];
+  servers: import("@athreei/gateway-core").McpServerConfig[];
   /** Config version for change detection */
   configVersion: string;
-}
-
-// =============================================================================
-// Runtime Types
-// =============================================================================
-
-/**
- * A connected MCP server with its tools
- */
-export interface ConnectedMcp {
-  /** Server configuration */
-  config: McpServerConfig;
-  /** Sanitized name for tool prefixing (alphanumeric + underscore only) */
-  sanitizedName: string;
-  /** MCP client instance */
-  client: Client;
-  /** Tools exposed by this server */
-  tools: Tool[];
-  /** Connection timestamp */
-  connectedAt: Date;
-  /** Last successful heartbeat */
-  lastHeartbeat?: Date;
-}
-
-/**
- * Aggregated tool with server prefix
- * Format: {serverName}__{toolName}
- */
-export interface AggregatedTool extends Tool {
-  /** Original tool name (without prefix) */
-  originalName: string;
-  /** Server that provides this tool */
-  serverName: string;
-}
-
-/**
- * Parsed prefixed tool name
- */
-export interface ParsedToolName {
-  /** Server name portion */
-  serverName: string;
-  /** Original tool name */
-  toolName: string;
 }
 
 // =============================================================================
@@ -201,7 +143,7 @@ export interface EncryptedToolCallTrace {
 export type GatewayEvent =
   | { type: "config_loaded"; config: GatewayConfig }
   | { type: "namespace_synced"; namespace: NamespaceConfig }
-  | { type: "server_connected"; server: ConnectedMcp }
+  | { type: "server_connected"; server: import("@athreei/gateway-core").ConnectedMcp }
   | { type: "server_disconnected"; serverName: string; reason: string }
   | { type: "tools_aggregated"; count: number }
   | { type: "tool_call"; trace: ToolCallTrace }

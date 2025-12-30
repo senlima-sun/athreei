@@ -1,5 +1,8 @@
 /**
  * Tests for Request Routing
+ *
+ * Note: Core routing logic is now in @athreei/gateway-core.
+ * These tests verify the integration with the gateway package.
  */
 
 import { describe, it, expect } from "vitest";
@@ -7,9 +10,9 @@ import {
   parseToolName,
   validateToolCall,
   getRoutingInfo,
-} from "../router";
+  sanitizeName,
+} from "@athreei/gateway-core";
 import { createGatewayState } from "../server";
-import { sanitizeName } from "../aggregator";
 import type { ConnectedMcp, AggregatedTool } from "../types";
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 

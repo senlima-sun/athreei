@@ -11,8 +11,8 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import type { AggregatedTool, GatewayEventHandler } from "./types.js";
-import { aggregateTools } from "./aggregator.js";
+import type { AggregatedTool, GatewayEventHandler, ConnectedMcp } from "./types.js";
+import { aggregateTools } from "@athreei/gateway-core";
 import { routeToolCall } from "./router.js";
 import { log } from "./logger.js";
 
@@ -115,7 +115,7 @@ export function createServer(state: GatewayState): Server {
  */
 export function refreshAggregatedTools(state: GatewayState): void {
   const mcps = Array.from(state.connectedMcps.values());
-  state.aggregatedTools = aggregateTools(mcps);
+  state.aggregatedTools = aggregateTools(mcps, { logger: log });
 
   log.info(`Aggregated ${state.aggregatedTools.length} tools from ${mcps.length} servers`);
 

@@ -15,7 +15,8 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
-    "@athreei/shared": "workspace:*"
+    "@athreei/shared": "workspace:*",
+    "@athreei/gateway-core": "workspace:*"
   },
   "devDependencies": {
     "@types/bun": "^1.1.0",
