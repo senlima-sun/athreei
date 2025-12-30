@@ -4,6 +4,9 @@
  * Starts the Hono server with database and auth initialization.
  */
 
+// Sentry must be imported first for proper instrumentation
+import "./instrument";
+
 import app from "./app";
 import { initDatabase } from "./lib/db";
 

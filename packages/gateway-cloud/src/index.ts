@@ -14,6 +14,9 @@
  *   NODE_ENV      - Environment (development/production)
  */
 
+// Sentry must be imported first for proper instrumentation
+import "./instrument";
+
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger as honoLogger } from "hono/logger";
