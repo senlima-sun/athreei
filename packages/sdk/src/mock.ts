@@ -10,6 +10,12 @@ import type { AiiiReadyEvent, AiiiRequestEvent } from "./types"
  */
 export interface MockModeOptions {
   /**
+   * REQUIRED: Must be explicitly set to true to enable mock mode.
+   * This prevents accidental mock mode activation in production.
+   */
+  mock: true
+
+  /**
    * Simulated delay before firing events (ms)
    */
   simulateDelay?: number
@@ -42,6 +48,7 @@ export interface MockModeOptions {
 
 let mockModeEnabled = false
 let mockOptions: Required<MockModeOptions> = {
+  mock: true,
   simulateDelay: 100,
   mockResponses: {},
   version: "0.1.0-mock",
@@ -53,14 +60,38 @@ let cleanupFunctions: (() => void)[] = []
 /**
  * Enable mock mode for testing
  */
-export function enableMockMode(options: MockModeOptions = {}): void {
+export function enableMockMode(options: MockModeOptions): void {
+  // Require explicit mock: true flag
+  if (options.mock !== true) {
+    console.error(
+      "[athreei mock] Mock mode requires explicit `mock: true` flag. " +
+      "This is to prevent accidental activation in production."
+    )
+    return
+  }
+
   if (mockModeEnabled) {
     console.warn("[athreei mock] Mock mode already enabled")
     return
   }
 
+  // Production warning
+  if (typeof process !== "undefined" && process.env?.NODE_ENV === "production") {
+    console.warn(
+      "[athreei mock] WARNING: Mock mode is active in production environment! " +
+      "This should only be used for testing purposes."
+    )
+  }
+
+  console.warn(
+    "%c[athreei] MOCK MODE ACTIVE",
+    "background: #ff9800; color: white; padding: 2px 6px; border-radius: 2px;",
+    "\nMock data is being used. Remove `mock: true` for production."
+  )
+
   mockModeEnabled = true
   mockOptions = {
+    mock: true,
     simulateDelay: options.simulateDelay ?? 100,
     mockResponses: options.mockResponses ?? {},
     version: options.version ?? "0.1.0-mock",
