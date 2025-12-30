@@ -2,6 +2,7 @@ import { useState, useEffect } from "react"
 import { LegacyCard as Card } from "../components/ui/Card"
 import { Button } from "../components/ui/Button"
 import { ConnectionStatus } from "../components/ConnectionStatus"
+import { ConnectionMethodSelector, type ConnectionMethod } from "../components/ConnectionMethodSelector"
 import {
   getSettings,
   updateSettings,
@@ -22,6 +23,7 @@ export function Settings() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [mcpStatus, setMcpStatus] = useState<McpStatus | null>(null)
   const [extensionStatus, setExtensionStatus] = useState<ExtensionStatus | null>(null)
+  const [connectionMethod, setConnectionMethod] = useState<ConnectionMethod | undefined>(undefined)
 
   // Fetch settings on mount
   useEffect(() => {
@@ -220,6 +222,14 @@ export function Settings() {
           {successMessage}
         </div>
       )}
+
+      {/* Connection Method Selector */}
+      <Card title="Connection Method" className="mb-6">
+        <ConnectionMethodSelector
+          selectedMethod={connectionMethod}
+          onMethodSelect={setConnectionMethod}
+        />
+      </Card>
 
       {/* General Settings */}
       <Card title="General" className="mb-6">
