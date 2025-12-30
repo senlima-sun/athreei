@@ -35,7 +35,7 @@ describe("MCP Registry Seed Data", () => {
     it("should have valid JSON args for all servers", () => {
       for (const server of openSourceMcpServers) {
         if (server.args) {
-          expect(() => JSON.parse(server.args)).not.toThrow();
+          expect(() => JSON.parse(server.args!)).not.toThrow();
         }
       }
     });
@@ -43,7 +43,7 @@ describe("MCP Registry Seed Data", () => {
     it("should have valid JSON capabilities for all servers", () => {
       for (const server of openSourceMcpServers) {
         if (server.capabilities) {
-          expect(() => JSON.parse(server.capabilities)).not.toThrow();
+          expect(() => JSON.parse(server.capabilities!)).not.toThrow();
           const caps = JSON.parse(server.capabilities);
           expect(Array.isArray(caps)).toBe(true);
         }

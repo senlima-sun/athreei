@@ -50,8 +50,9 @@ async function main() {
     console.log(`\nInserting ${seedData.length} MCP servers...`);
 
     // Insert each server
+    // Note: Type assertion needed due to polymorphic db client (pg/sqlite union)
     for (const server of seedData) {
-      await db.insert(schema.mcpServer).values(server);
+      await (db as any).insert(schema.mcpServer).values(server);
       console.log(`  + ${server.name}`);
     }
 

@@ -17,7 +17,7 @@ describe("Gateway API Routes", () => {
       const res = await app.request("/api/gateway/config?endpoint=test");
 
       expect(res.status).toBe(401);
-      const body = await res.json();
+      const body = await res.json() as { error: string };
       expect(body.error).toBe("Authorization header required");
     });
 
@@ -40,7 +40,7 @@ describe("Gateway API Routes", () => {
       });
 
       expect(res.status).toBe(401);
-      const body = await res.json();
+      const body = await res.json() as { error: string };
       expect(body.error).toBeDefined();
     });
   });
