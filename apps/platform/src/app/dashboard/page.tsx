@@ -75,25 +75,32 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* Stats placeholder */}
+      {/* Stats - shows empty state until data is available */}
       <section>
         <h2 className="mb-4 text-lg font-semibold text-gray-900">Overview</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard label="Active MCPs" value="0" />
-          <StatCard label="Total Requests" value="0" />
-          <StatCard label="Team Members" value="1" />
-          <StatCard label="Organizations" value="0" />
+          <StatCard label="Active MCPs" value={null} />
+          <StatCard label="Total Requests" value={null} />
+          <StatCard label="Team Members" value={null} />
+          <StatCard label="Organizations" value={null} />
         </div>
+        <p className="mt-3 text-sm text-gray-500">
+          Statistics will appear here once you start using athreei.
+        </p>
       </section>
     </div>
   );
 }
 
-function StatCard({ label, value }: { label: string; value: string }) {
+function StatCard({ label, value }: { label: string; value: string | number | null }) {
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4">
       <p className="text-sm text-gray-500">{label}</p>
-      <p className="mt-1 text-2xl font-semibold text-gray-900">{value}</p>
+      {value === null ? (
+        <p className="mt-1 text-lg text-gray-400">—</p>
+      ) : (
+        <p className="mt-1 text-2xl font-semibold text-gray-900">{value}</p>
+      )}
     </div>
   );
 }

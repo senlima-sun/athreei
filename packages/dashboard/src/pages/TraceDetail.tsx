@@ -229,8 +229,8 @@ export function TraceDetail() {
     return (
       <EmptyState
         icon={<SearchIcon />}
-        title="Trace not found"
-        description="The requested trace could not be found. It may have been deleted or the ID is incorrect."
+        title={error ? "Unable to load trace" : "Trace not found"}
+        description={error || "The requested trace could not be found. It may have been deleted or the ID is incorrect."}
         action={{
           label: "Back to Traces",
           onClick: () => navigate("/traces"),
