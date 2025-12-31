@@ -17,6 +17,7 @@ import type {
 
 import { permissionManager } from "./permission-manager"
 import { PermissionDeniedError } from "./types"
+import { handlePermissionRequest } from "./permission-handler"
 
 // ============================================================================
 // Constants
@@ -587,6 +588,32 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
           error: error instanceof Error ? error.message : String(error),
         })
       })
+
+    return true // Will respond asynchronously
+  }
+
+  if (message.type === "permission_request") {
+    // Extract fields from message
+    const { origin, scope, description, aiApp } = message
+
+    // Handle permission request
+    ;(async () => {
+      const response = await handlePermissionRequest(
+        { origin, scope, description, aiApp },
+        {
+          showPermissionDialogToUser,
+          updatePermissionLevel,
+          getActiveTab: async () => {
+            const tabs = await chrome.tabs.query({
+              active: true,
+              currentWindow: true,
+            })
+            return tabs.length > 0 ? tabs[0].id : undefined
+          },
+        }
+      )
+      sendResponse(response)
+    })()
 
     return true // Will respond asynchronously
   }

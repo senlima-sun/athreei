@@ -139,7 +139,6 @@ export class WebsiteBridge {
 
   /**
    * Handle permission request from website
-   * TODO: Implement permission handling in background script
    */
   private handlePermission(event: Event): void {
     const customEvent = event as CustomEvent<AiiiPermissionEvent>
@@ -150,9 +149,58 @@ export class WebsiteBridge {
       return
     }
 
+    // Check if chrome.runtime is available
+    if (!chrome?.runtime) {
+      console.error("[athreei] chrome.runtime not available")
+      this.dispatchPermissionResponse(detail.scope, "deny", false)
+      return
+    }
+
+    // Generate requestId if not provided
+    const requestId = crypto.randomUUID()
+
     console.log("[athreei] Permission request:", detail)
-    // TODO: Forward to background script for permission handling
-    // This would show a permission dialog to the user
+
+    // Send message to background script
+    chrome.runtime
+      .sendMessage({
+        type: "permission_request",
+        requestId,
+        origin: this.origin,
+        scope: detail.scope,
+        description: detail.reason,
+        aiApp: undefined, // Will be filled by background if available
+      })
+      .then((response: { decision: string; remember: boolean }) => {
+        // Dispatch response back to website
+        this.dispatchPermissionResponse(
+          requestId,
+          response.decision as "allow" | "deny" | "allow_once",
+          response.remember
+        )
+      })
+      .catch((error) => {
+        console.error("[athreei] Permission request failed:", error)
+        this.dispatchPermissionResponse(requestId, "deny", false)
+      })
+  }
+
+  /**
+   * Dispatch permission response to website
+   */
+  private dispatchPermissionResponse(
+    requestId: string,
+    decision: "allow" | "deny" | "allow_once",
+    remember: boolean
+  ): void {
+    const event = new CustomEvent("aiii:permission-response", {
+      detail: {
+        requestId,
+        decision,
+        remember,
+      },
+    })
+    window.dispatchEvent(event)
   }
 
   /**

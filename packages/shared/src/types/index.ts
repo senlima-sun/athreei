@@ -200,3 +200,29 @@ export type AiiiActionAfterDetail = {
   timestamp: number
   duration: number
 }
+
+// ============================================================================
+// Permission Request/Response Messages
+// ============================================================================
+
+/**
+ * Message from content script to background for permission requests
+ */
+export interface PermissionRequestMessage {
+  type: "permission_request"
+  requestId: string
+  origin: string
+  scope: string
+  description?: string
+  aiApp?: string
+}
+
+/**
+ * Response from background to content script for permission requests
+ */
+export interface PermissionResponseMessage {
+  type: "permission_response"
+  requestId: string
+  decision: "allow" | "deny" | "allow_once"
+  remember: boolean
+}

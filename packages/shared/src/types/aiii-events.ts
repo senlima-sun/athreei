@@ -189,6 +189,27 @@ export const AiiiPermissionEventSchema = z.object({
 export type AiiiPermissionEvent = z.infer<typeof AiiiPermissionEventSchema>
 
 // ============================================================================
+// aiii:permission-response - Extension → Page
+// ============================================================================
+
+/**
+ * Permission response event dispatched back to website
+ */
+export const AiiiPermissionResponseEventSchema = z.object({
+  requestId: z
+    .string()
+    .optional()
+    .describe("ID from the original permission request"),
+  allowed: z.boolean().describe("Whether the permission was granted"),
+  error: z.string().optional().describe("Error message if request failed"),
+  timestamp: z.number().describe("Unix timestamp of the response"),
+})
+
+export type AiiiPermissionResponseEvent = z.infer<
+  typeof AiiiPermissionResponseEventSchema
+>
+
+// ============================================================================
 // Extension → Page Action Events (for observation/interception)
 // ============================================================================
 
@@ -246,6 +267,7 @@ export type AiiiEventPayload =
   | AiiiResponseEvent
   | AiiiRegisterEvent
   | AiiiPermissionEvent
+  | AiiiPermissionResponseEvent
   | AiiiActionBeforeEvent
   | AiiiActionAfterEvent
   | AiiiCancelEvent
@@ -259,6 +281,7 @@ export interface AiiiEventMap {
   "aiii:response": AiiiResponseEvent
   "aiii:register": AiiiRegisterEvent
   "aiii:permission": AiiiPermissionEvent
+  "aiii:permission-response": AiiiPermissionResponseEvent
   "aiii:action:before": AiiiActionBeforeEvent
   "aiii:action:after": AiiiActionAfterEvent
   "aiii:cancel": AiiiCancelEvent
@@ -273,6 +296,7 @@ export const AIII_EVENT_SCHEMAS = {
   "aiii:response": AiiiResponseEventSchema,
   "aiii:register": AiiiRegisterEventSchema,
   "aiii:permission": AiiiPermissionEventSchema,
+  "aiii:permission-response": AiiiPermissionResponseEventSchema,
   "aiii:action:before": AiiiActionBeforeEventSchema,
   "aiii:action:after": AiiiActionAfterEventSchema,
   "aiii:cancel": AiiiCancelEventSchema,
