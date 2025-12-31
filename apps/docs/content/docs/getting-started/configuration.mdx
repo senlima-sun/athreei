@@ -1,0 +1,169 @@
+---
+title: Configuration
+description: Configure athreei with your AI app
+---
+
+# Configuration
+
+Configure athreei to work with your AI application and MCP servers.
+
+## Gateway Configuration
+
+Create a configuration file at `~/.athreei/config.json`:
+
+```json
+{
+  "apiKey": "ak_your_api_key_here",
+  "endpoint": "your-endpoint-name"
+}
+```
+
+### Configuration Options
+
+| Option | Type | Required | Description |
+|--------|------|----------|-------------|
+| `apiKey` | string | Yes | API key from the Platform dashboard |
+| `endpoint` | string | Yes | Endpoint name to connect to |
+| `platformUrl` | string | No | Platform URL (default: `https://athreei.com`) |
+| `syncInterval` | number | No | Config sync interval in ms (default: 300000 / 5 min) |
+
+### Server Configuration
+
+MCP servers are configured in the Platform dashboard, not in the local config file. The gateway fetches server configuration from the Platform API using your API key and endpoint.
+
+To add or modify servers:
+1. Log in to the [Platform dashboard](https://athreei.com)
+2. Navigate to your endpoint settings
+3. Add/remove/configure MCP servers
+4. The gateway automatically syncs changes (every 5 minutes by default)
+
+### Tool Naming
+
+Tools are automatically namespaced with the server name:
+
+- `filesystem` server's `read_file` → `filesystem__read_file`
+- `github` server's `create_issue` → `github__create_issue`
+
+## AI App Configuration
+
+### Claude Desktop
+
+**Config file location:**
+
+| Platform | Path |
+|----------|------|
+| macOS | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+| Windows | `%APPDATA%\Claude\claude_desktop_config.json` |
+| Linux | `~/.config/claude/claude_desktop_config.json` |
+
+**Configuration:**
+
+```json
+{
+  "mcpServers": {
+    "athreei": {
+      "command": "athreei-gateway"
+    }
+  }
+}
+```
+
+The gateway uses `~/.athreei/config.json` by default. Restart Claude Desktop after making changes.
+
+### Cursor
+
+```json
+{
+  "mcpServers": {
+    "athreei": {
+      "command": "athreei-gateway"
+    }
+  }
+}
+```
+
+### Web Applications (SSE)
+
+For web-based AI apps that don't support stdio, use the Cloud Gateway which provides SSE transport.
+
+See [Cloud Gateway](/docs/gateway/cloud) for details.
+
+## Command Line Options
+
+```bash
+athreei-gateway [OPTIONS]
+
+Options:
+  -c, --config <PATH>   Path to config file (default: ~/.athreei/config.json)
+  -d, --debug           Enable debug logging
+  -h, --help            Show help message
+  -v, --version         Show version number
+```
+
+## Adding MCP Servers
+
+MCP servers are added and configured via the Platform dashboard. Each server configuration supports:
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `name` | string | Unique server name (used for tool namespacing) |
+| `command` | string | Executable to run |
+| `args` | string[] | Command line arguments |
+| `env` | object | Environment variables |
+
+### Popular MCP Servers
+
+Add these via your Platform endpoint settings:
+
+- **Filesystem**: `npx -y @modelcontextprotocol/server-filesystem /path/to/allowed`
+- **GitHub**: `npx -y @modelcontextprotocol/server-github` (requires `GITHUB_TOKEN` env var)
+- **PostgreSQL**: `npx -y @modelcontextprotocol/server-postgres` (requires `DATABASE_URL` env var)
+- **Brave Search**: `npx -y @modelcontextprotocol/server-brave-search` (requires `BRAVE_API_KEY` env var)
+
+### Browser Tools
+
+To use browser tools, add the browser MCP server via Platform and install the Chrome extension. See [Browser Tools](/docs/browser-tools).
+
+## Verifying Configuration
+
+1. **Test the gateway directly:**
+   ```bash
+   athreei-gateway --debug
+   ```
+
+2. **Check tool listing:**
+   Ask your AI: "What tools do you have available?"
+
+   You should see tools from all configured servers with their namespaces.
+
+3. **Test a tool:**
+   ```
+   "Read the file at /path/to/allowed/README.md"
+   "Create a GitHub issue titled 'Test'"
+   ```
+
+## Common Issues
+
+### "Server not found"
+
+- Verify the `command` path is correct
+- Check the server is installed (`npx` downloads automatically)
+- Run the command manually to see errors
+
+### "Permission denied"
+
+- Environment variables may be missing
+- Check API keys are set correctly
+- Some servers require additional setup
+
+### "Tool not found"
+
+- Tools are namespaced: use `github__create_issue` not `create_issue`
+- Verify the server is in your config
+- Restart your AI app to refresh tools
+
+### JSON syntax errors
+
+- Validate with a JSON linter
+- No trailing commas allowed in JSON
+- Check all quotes and brackets

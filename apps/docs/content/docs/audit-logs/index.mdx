@@ -1,0 +1,158 @@
+---
+title: Audit Logs
+description: Monitor and track all AI-MCP interactions
+---
+
+# Audit Logs
+
+athreei provides complete visibility into every interaction between AI apps and MCP servers. Every tool call is logged with full request/response data, enabling compliance, debugging, and analysis.
+
+## Why Audit Logging?
+
+When AI apps interact with MCP servers, you need to know:
+- **What tools were called** and with what parameters
+- **What responses were returned** to the AI
+- **When errors occur** and why
+- **Which AI app** made the request
+
+Without visibility, AI becomes a black box. athreei opens that box.
+
+## What Gets Logged
+
+Every tool call through athreei is recorded:
+
+| Field | Description |
+|-------|-------------|
+| Timestamp | When the call occurred |
+| Tool Name | Which tool was invoked (e.g., `filesystem__read_file`) |
+| Server Name | Which MCP server handled the request |
+| Status | Success, denied, or error |
+| Duration | How long the call took (ms) |
+| Request | Full input parameters (encrypted) |
+| Response | Full output data (encrypted) |
+| Endpoint | Which gateway endpoint was used |
+
+## Encrypted Storage
+
+Request and response payloads are stored with end-to-end encryption:
+
+```
+┌─────────────────────────────────────────────────┐
+│                  Trace Entry                    │
+├─────────────────────────────────────────────────┤
+│  Metadata (unencrypted)                         │
+│  - traceId, toolName, serverName                │
+│  - status, durationMs, timestamp                │
+├─────────────────────────────────────────────────┤
+│  Payload (encrypted)                            │
+│  - nonce, ciphertext, keyVersion, algorithm     │
+│  - Decrypted client-side only                   │
+└─────────────────────────────────────────────────┘
+```
+
+Only you can decrypt your audit data. athreei servers never see plaintext payloads.
+
+## Viewing Logs
+
+### Dashboard
+
+The athreei Dashboard provides a web UI for viewing audit logs:
+
+```bash
+# Start the dashboard
+athreei-dashboard
+# Opens at http://localhost:5173
+```
+
+Features:
+- Filter by tool, server, status, date range
+- View full request/response details
+- Export logs for compliance
+- Real-time updates
+
+### API
+
+Access audit logs programmatically:
+
+```bash
+# List recent logs
+GET /api/audit?limit=20
+
+# Filter by tool
+GET /api/audit?tool=filesystem__read_file
+
+# Filter by status
+GET /api/audit?status=error
+
+# Filter by date range
+GET /api/audit?dateFrom=1704067200000&dateTo=1704153600000
+```
+
+Response:
+
+```json
+{
+  "data": [
+    {
+      "id": "trace-abc123",
+      "timestamp": 1704067200000,
+      "toolName": "filesystem__read_file",
+      "serverName": "filesystem",
+      "status": "success",
+      "durationMs": 45
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 150,
+    "totalPages": 8
+  }
+}
+```
+
+## Filtering
+
+Filter audit logs by:
+
+- **Endpoint** - Which gateway endpoint (for cloud deployments)
+- **Server** - Which MCP server
+- **Tool** - Which specific tool
+- **Status** - Success, error, or denied
+- **Date Range** - From/to timestamps
+
+## Use Cases
+
+### Compliance
+
+Generate audit reports for regulatory requirements:
+- Track all AI actions for review
+- Demonstrate data handling practices
+- Export logs for external auditors
+
+### Debugging
+
+When something goes wrong:
+- See exactly what the AI sent
+- See exactly what it received
+- Identify failed requests
+- Track down errors
+
+### Analysis
+
+Understand AI usage patterns:
+- Most frequently used tools
+- Error rates by server
+- Performance metrics
+- Usage trends over time
+
+## Next Steps
+
+<Cards>
+  <Card title="Dashboard Guide" href="/docs/audit-logs/dashboard">
+    Learn to use the audit dashboard
+  </Card>
+  <Card title="Traces" href="/docs/audit-logs/traces">
+    Deep dive into trace analysis
+  </Card>
+</Cards>

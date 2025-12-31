@@ -1,0 +1,127 @@
+---
+title: Welcome to athreei
+description: One MCP connection, endless possibilities
+---
+
+# Welcome to athreei
+
+athreei is an MCP gateway platform that simplifies how AI apps connect to MCP servers while providing complete visibility into every interaction.
+
+## Why athreei?
+
+Today's AI ecosystem has a problem: each MCP server requires separate configuration, there's no visibility into what your AI is doing, and websites have no standard way to become AI-capable.
+
+athreei solves this with three core features:
+
+<Cards>
+  <Card title="One Connection, Many MCPs" href="/docs/gateway">
+    Connect athreei once to your AI app, access any MCP server through it
+  </Card>
+  <Card title="Full Audit Trail" href="/docs/audit-logs">
+    Every AI-MCP interaction is logged with encrypted payload storage
+  </Card>
+  <Card title="Website SDK" href="/docs/sdk">
+    Any website can register as an MCP server via simple event listeners
+  </Card>
+</Cards>
+
+## How It Works
+
+```
+┌─────────────┐      ┌─────────────────────────────────────────┐
+│   AI App    │      │              athreei                    │
+│  (Claude,   │ ───► │  ┌─────────┐  ┌─────────┐  ┌─────────┐  │
+│   GPT...)   │      │  │ MCP #1  │  │ MCP #2  │  │ MCP #3  │  │
+└─────────────┘      │  └─────────┘  └─────────┘  └─────────┘  │
+                     │                    │                    │
+                     │              Audit Logs                 │
+                     │         (encrypted storage)             │
+                     └─────────────────────────────────────────┘
+```
+
+Instead of configuring multiple MCP servers in your AI app, you configure **athreei once**. athreei then:
+1. **Aggregates** all your MCP servers behind a single endpoint
+2. **Logs** every tool call with full request/response data
+3. **Routes** requests to the appropriate MCP server
+
+## Core Features
+
+### MCP Gateway
+
+Add any MCP server to athreei, access all tools through one connection:
+
+```json
+{
+  "mcpServers": {
+    "athreei": {
+      "command": "athreei-gateway",
+      "args": ["--config", "gateway.json"]
+    }
+  }
+}
+```
+
+Tools from different servers are namespaced: `filesystem__read_file`, `github__create_issue`, `slack__send_message`.
+
+[Learn more about the Gateway →](/docs/gateway)
+
+### Audit Logging
+
+Every tool call is recorded with:
+- **Tool name and server** - Which tool was called on which server
+- **Request/Response** - Full payload with E2E encryption
+- **Status** - Success, denied, or error
+- **Duration** - How long the call took
+
+Filter by endpoint, server, tool, status, or date range. Export for compliance.
+
+[Learn more about Audit Logs →](/docs/audit-logs)
+
+### Website SDK
+
+Websites can register custom tools that AI apps can discover and use:
+
+```javascript
+import { athreei } from '@athreei/sdk'
+
+// Register a tool
+athreei.registerTool('search_products', {
+  description: 'Search for products',
+  parameters: { query: { type: 'string' } },
+  handler: async ({ query }) => {
+    const results = await searchProducts(query)
+    return { products: results }
+  }
+})
+```
+
+When users visit your site with athreei, your tools become available to their AI.
+
+[Learn more about the SDK →](/docs/sdk)
+
+## Getting Started
+
+1. **Install athreei** - Download the gateway binary from [releases](https://github.com/athreei/athreei/releases)
+2. **Configure your AI app** - Add athreei as an MCP server in Claude Desktop, ChatGPT, or any MCP-compatible app
+3. **Add MCP servers** - Add your favorite MCP servers to the gateway configuration
+4. **Start using** - All tools are now available through one connection with full audit logging
+
+[Detailed installation guide →](/docs/getting-started)
+
+## Documentation
+
+| Section | Description |
+|---------|-------------|
+| [Getting Started](/docs/getting-started) | Installation and configuration |
+| [Gateway](/docs/gateway) | MCP aggregation and routing |
+| [Audit Logs](/docs/audit-logs) | Monitoring and compliance |
+| [SDK](/docs/sdk) | Website integration for vendors |
+| [Concepts](/docs/concepts) | Architecture overview |
+| [Browser Tools](/docs/browser-tools) | Demo tools for testing |
+| [Development](/docs/development) | Contributing to athreei |
+
+## Demo: Browser Tools
+
+athreei includes browser automation tools for **testing and demonstration purposes**. These tools let you verify the platform is working correctly and experience the audit logging in action.
+
+[Try the browser tools demo →](/docs/browser-tools)

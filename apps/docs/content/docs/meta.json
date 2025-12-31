@@ -1,0 +1,14 @@
+{
+  "title": "Documentation",
+  "pages": [
+    "index",
+    "getting-started",
+    "gateway",
+    "audit-logs",
+    "sdk",
+    "events",
+    "concepts",
+    "browser-tools",
+    "development"
+  ]
+}

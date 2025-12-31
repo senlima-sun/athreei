@@ -1,0 +1,67 @@
+---
+title: Dashboard
+description: Using the audit dashboard to monitor AI-MCP interactions
+---
+
+# Audit Dashboard
+
+The athreei Dashboard provides a web interface for monitoring all AI-MCP interactions in real-time.
+
+## Starting the Dashboard
+
+```bash
+# Local dashboard
+cd packages/dashboard && bun run dev
+# Opens at http://localhost:5173
+```
+
+## Audit Logs View
+
+The Audit Logs page shows all tool invocations:
+
+### Columns
+
+| Column | Description |
+|--------|-------------|
+| Timestamp | When the call occurred |
+| Tool | Tool name (e.g., `browser_click`) |
+| Origin | Source website/context |
+| Status | Success (green), Denied (yellow), Error (red) |
+| Actions | View full details |
+
+### Filtering
+
+Use the filter panel to narrow results:
+
+- **Status** - Filter by success, denied, or error
+- **Tool** - Filter by specific tool name
+- **Origin** - Search by origin URL
+
+### Pagination
+
+Logs are paginated (20 per page). Navigate with Previous/Next buttons.
+
+## Log Details
+
+Click "Details" on any log entry to see:
+
+- **Basic Info** - ID, timestamp, tool, status
+- **AI App** - Which AI application made the call
+- **Origin** - Source context
+- **Arguments** - Full input parameters (JSON)
+- **Result** - Full response data (JSON)
+
+## Status Indicators
+
+| Status | Color | Meaning |
+|--------|-------|---------|
+| Success | Green | Tool executed successfully |
+| Denied | Yellow | Permission denied |
+| Error | Red | Execution failed |
+
+## Tips
+
+- **Use filters** to focus on specific issues
+- **Check errors first** when debugging
+- **Monitor denied calls** to adjust permissions
+- **Export regularly** for compliance records

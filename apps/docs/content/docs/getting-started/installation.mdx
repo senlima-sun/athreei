@@ -1,0 +1,170 @@
+---
+title: Installation
+description: Install athreei on your system
+---
+
+# Installation
+
+This guide covers installing the athreei gateway on all platforms.
+
+## Prerequisites
+
+- **AI application** with MCP support (Claude Desktop, ChatGPT, Cursor, etc.)
+- **Node.js** (optional, for npm-based MCP servers)
+
+## Gateway Installation
+
+### Option 1: Download Pre-built Binary
+
+1. Go to the [Releases page](https://github.com/athreei/athreei/releases)
+
+2. Download for your platform:
+
+   | Platform | File |
+   |----------|------|
+   | macOS (Apple Silicon) | `athreei-gateway-darwin-arm64` |
+   | macOS (Intel) | `athreei-gateway-darwin-x64` |
+   | Windows | `athreei-gateway-windows-x64.exe` |
+   | Linux | `athreei-gateway-linux-x64` |
+
+3. Install:
+
+   ```bash
+   # macOS / Linux
+   chmod +x athreei-gateway-*
+   sudo mv athreei-gateway-* /usr/local/bin/athreei-gateway
+
+   # Windows: Move to a folder in your PATH
+   ```
+
+4. Verify:
+   ```bash
+   athreei-gateway --version
+   ```
+
+### Option 2: Build from Source
+
+```bash
+# Install Bun if needed
+curl -fsSL https://bun.sh/install | bash
+
+# Clone and build
+git clone https://github.com/athreei/athreei.git
+cd athreei
+bun install
+
+# Build the gateway binary
+cd packages/gateway
+bun run build:binary
+```
+
+The binary will be in `packages/gateway/dist/`.
+
+## Dashboard Installation (Optional)
+
+The dashboard provides a web UI for viewing audit logs.
+
+```bash
+# From the athreei repository
+cd packages/dashboard
+bun run build
+```
+
+Run with:
+```bash
+cd packages/dashboard && bun run dev
+# Opens at http://localhost:5173
+```
+
+## Browser Tools Demo (Optional)
+
+<Callout type="info">
+The browser tools are for testing and demonstration only. Skip this section if you just want to use the gateway for MCP aggregation.
+</Callout>
+
+If you want to test with browser automation tools:
+
+### 1. Install Chrome Extension
+
+```bash
+cd packages/extension
+bun run build
+```
+
+Then in Chrome:
+1. Go to `chrome://extensions/`
+2. Enable "Developer mode"
+3. Click "Load unpacked"
+4. Select `packages/extension/dist/`
+
+### 2. Install Native Host
+
+```bash
+cd packages/native-host
+bun run build
+```
+
+The native host binary will be in `packages/native-host/dist/`.
+
+### 3. Register Native Messaging
+
+**macOS:**
+```bash
+mkdir -p ~/Library/Application\ Support/Google/Chrome/NativeMessagingHosts/
+cat > ~/Library/Application\ Support/Google/Chrome/NativeMessagingHosts/com.athreei.host.json << 'EOF'
+{
+  "name": "com.athreei.host",
+  "description": "athreei Native Messaging Host",
+  "path": "/usr/local/bin/athreei-host",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://YOUR_EXTENSION_ID/"
+  ]
+}
+EOF
+```
+
+**Linux:**
+```bash
+mkdir -p ~/.config/google-chrome/NativeMessagingHosts/
+# Create the same JSON file
+```
+
+**Windows:**
+Create a registry key at `HKCU\Software\Google\Chrome\NativeMessagingHosts\com.athreei.host`
+
+## Verifying Installation
+
+1. **Gateway:**
+   ```bash
+   athreei-gateway --version
+   # Should output version number
+   ```
+
+2. **Dashboard (if installed):**
+   ```bash
+   cd packages/dashboard && bun run dev
+   # Should open at http://localhost:5173
+   ```
+
+## Troubleshooting
+
+### "Permission denied" on macOS
+
+macOS may block unsigned binaries:
+
+```bash
+xattr -d com.apple.quarantine /usr/local/bin/athreei-gateway
+```
+
+### Gateway won't start
+
+1. Check the config file exists and is valid JSON
+2. Verify upstream MCP server commands work independently
+3. Run with `--debug` flag for more output
+
+### Dashboard connection issues
+
+1. Ensure the gateway is running
+2. Check firewall settings for localhost connections
+3. Verify the port isn't in use by another application

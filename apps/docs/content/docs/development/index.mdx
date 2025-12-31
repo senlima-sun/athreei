@@ -1,0 +1,108 @@
+---
+title: Development
+description: Development guide for athreei contributors
+---
+
+# Development
+
+This guide covers setting up a development environment and contributing to athreei.
+
+## Quick Start
+
+```bash
+# Install Bun
+curl -fsSL https://bun.sh/install | bash
+
+# Clone and install
+git clone https://github.com/athreei/athreei.git
+cd athreei
+bun install
+
+# Start all packages in watch mode
+bun run dev
+```
+
+## Project Structure
+
+```
+athreei/
+├── packages/
+│   ├── shared/          # Shared types and utilities
+│   ├── mcp-server/      # Local MCP server
+│   ├── extension/       # Chrome extension
+│   ├── dashboard/       # Web dashboard
+│   ├── native-host/     # Native messaging bridge
+│   ├── gateway/         # Local MCP gateway
+│   ├── gateway-cloud/   # Cloud gateway service
+│   ├── gateway-core/    # Shared gateway logic
+│   ├── sdk/             # Website integration SDK
+│   ├── sync-server/     # E2E encrypted sync
+│   ├── db/              # Database schema/client
+│   ├── auth/            # Authentication
+│   └── email/           # Email templates
+├── apps/
+│   ├── api/             # API server
+│   ├── platform/        # Auth platform (Next.js)
+│   ├── web/             # Marketing site
+│   └── docs/            # Documentation (Fumadocs)
+└── package.json         # Root workspace config
+```
+
+## Package Commands
+
+### Root
+
+```bash
+bun run dev        # All packages in watch mode
+bun run build      # Build all packages
+bun test           # Run all tests
+bun run lint       # Check linting
+bun run format     # Format code
+```
+
+### Individual Packages
+
+```bash
+cd packages/mcp-server
+bun run dev        # Watch mode
+bun run start      # Run compiled
+bun test           # Package tests
+```
+
+## Loading the Extension
+
+1. Build: `cd packages/extension && bun run build`
+2. Open `chrome://extensions/`
+3. Enable "Developer mode"
+4. Click "Load unpacked"
+5. Select `packages/extension/dist/`
+
+After changes, rebuild and click refresh on the extension card.
+
+## Tech Stack
+
+| Category | Technology |
+|----------|------------|
+| Runtime | Bun |
+| Language | TypeScript (strict mode) |
+| Backend | Hono |
+| Frontend | React, Next.js, Vite |
+| Styling | Tailwind CSS v4 |
+| Database | PostgreSQL + SQLite (Drizzle) |
+| Auth | Better Auth |
+| Validation | Zod |
+| Testing | Vitest |
+
+## Next Steps
+
+<Cards>
+  <Card title="Development Setup" href="/docs/development/setup">
+    Detailed setup instructions
+  </Card>
+  <Card title="Contributing" href="/docs/development/contributing">
+    Contribution guidelines and code style
+  </Card>
+  <Card title="Architecture" href="/docs/concepts">
+    System architecture overview
+  </Card>
+</Cards>

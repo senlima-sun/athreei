@@ -1,0 +1,149 @@
+---
+title: Local Gateway
+description: Run a local MCP gateway to aggregate multiple MCP servers
+---
+
+# Local Gateway
+
+The local gateway is a standalone binary that aggregates tools from multiple MCP servers on your machine. It runs as a single MCP server that Claude Desktop (or other MCP clients) can connect to.
+
+## Installation
+
+### Download Pre-built Binary
+
+Download the latest binary for your platform from the [releases page](https://github.com/athreei/athreei/releases).
+
+Available platforms:
+- macOS (Apple Silicon): `athreei-gateway-darwin-arm64`
+- macOS (Intel): `athreei-gateway-darwin-x64`
+- Linux (x64): `athreei-gateway-linux-x64`
+- Windows (x64): `athreei-gateway-windows-x64.exe`
+
+### Build from Source
+
+```bash
+# Clone the repository
+git clone https://github.com/athreei/athreei.git
+cd athreei
+
+# Install dependencies
+bun install
+
+# Build the gateway binary
+cd packages/gateway
+bun run build:binary
+```
+
+The binary will be created in `packages/gateway/dist/`.
+
+## Configuration
+
+Create a configuration file at `~/.athreei/config.json` with your Platform credentials:
+
+```json
+{
+  "apiKey": "ak_your_api_key_here",
+  "endpoint": "your-endpoint-name"
+}
+```
+
+### Configuration Options
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `apiKey` | string | Yes | API key from the Platform dashboard |
+| `endpoint` | string | Yes | Endpoint name to connect to |
+| `platformUrl` | string | No | Platform URL (default: `https://athreei.com`) |
+| `syncInterval` | number | No | Config sync interval in ms (default: 300000) |
+
+### Server Configuration
+
+MCP servers are configured via the [Platform dashboard](https://athreei.com), not in the local config file. The gateway fetches server configuration from the Platform API and automatically syncs changes every 5 minutes.
+
+## Usage with Claude Desktop
+
+Configure Claude Desktop to use the gateway instead of individual servers:
+
+**macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+**Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "athreei": {
+      "command": "athreei-gateway"
+    }
+  }
+}
+```
+
+The gateway uses `~/.athreei/config.json` by default.
+
+## How It Works
+
+1. **Config Fetch** - The gateway fetches server configuration from the Platform API
+2. **Startup** - It starts each configured MCP server as a subprocess
+3. **Tool Discovery** - It queries each server for available tools
+4. **Aggregation** - Tools are collected and prefixed with server names
+5. **Routing** - Tool calls are routed to the appropriate upstream server
+6. **Periodic Sync** - Configuration is re-fetched every 5 minutes for updates
+
+### Tool Prefixing
+
+All tools are prefixed with the server name to prevent collisions:
+
+```
+browser__screenshot     →  Routed to "browser" server
+github__create_issue    →  Routed to "github" server
+filesystem__read_file   →  Routed to "filesystem" server
+```
+
+The AI assistant sees all tools as a unified set and can use them naturally.
+
+## Command Line Options
+
+```bash
+athreei-gateway [options]
+
+Options:
+  -c, --config <path>   Path to config file (default: ~/.athreei/config.json)
+  -d, --debug           Enable debug logging
+  -h, --help            Show help message
+  -v, --version         Show version number
+```
+
+## Example: Aggregating Browser Tools with GitHub
+
+To aggregate browser tools with GitHub, add both servers via the Platform dashboard:
+
+1. **Browser server**: `athreei-host` command
+2. **GitHub server**: `npx -y @modelcontextprotocol/server-github` with `GITHUB_PERSONAL_ACCESS_TOKEN` env var
+
+With this configuration, the AI assistant can:
+- Read web pages using `browser__get_content`
+- Create GitHub issues using `github__create_issue`
+- All through a single MCP connection
+
+## Troubleshooting
+
+### Server fails to start
+
+Check that the command path is correct and the server is installed:
+
+```bash
+# Test the command directly
+/usr/local/bin/athreei-host --version
+npx -y @modelcontextprotocol/server-github --version
+```
+
+### Tools not appearing
+
+Enable debug logging to see aggregation details:
+
+```bash
+athreei-gateway --debug
+```
+
+### Connection issues
+
+Ensure only one MCP client is connected to the gateway at a time. Multiple connections can cause conflicts.

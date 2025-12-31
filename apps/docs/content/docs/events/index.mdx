@@ -1,0 +1,356 @@
+---
+title: Events
+description: Low-level aiii:* event system for website integration
+---
+
+# Events
+
+athreei uses custom DOM events (`aiii:*`) for communication between the Chrome extension and website JavaScript. This is the low-level API that the SDK builds upon.
+
+<Callout type="info">
+For most use cases, use the [SDK](/docs/sdk) instead of raw events. It provides a cleaner API and handles edge cases.
+</Callout>
+
+## Event Overview
+
+| Event | Direction | Purpose |
+|-------|-----------|---------|
+| `aiii:ready` | Extension → Page | Extension is ready |
+| `aiii:register` | Page → Extension | Register custom tool |
+| `aiii:request` | Extension → Page | AI is calling your tool |
+| `aiii:response` | Page → Extension | Your tool's response |
+| `aiii:permission` | Page → Extension | Request permission scope |
+| `aiii:action:before` | Extension → Page | Before built-in action |
+| `aiii:action:after` | Extension → Page | After built-in action |
+| `aiii:cancel` | Page → Extension | Cancel a pending action |
+
+## Event Flow
+
+```
+Extension                           Website
+    │                                  │
+    │──────── aiii:ready ─────────────▶│  "I'm ready"
+    │                                  │
+    │◀─────── aiii:register ───────────│  "Here's my tool"
+    │                                  │
+    │                                  │
+    │──────── aiii:request ───────────▶│  "AI wants to use your tool"
+    │                                  │
+    │◀─────── aiii:response ───────────│  "Here's the result"
+    │                                  │
+```
+
+---
+
+## aiii:ready
+
+Dispatched by the extension when it's ready. Wait for this before registering tools.
+
+**Direction:** Extension → Page
+
+```typescript
+interface AiiiReadyEvent {
+  version: string       // Extension version (e.g., "0.1.0")
+  capabilities: string[] // Built-in capabilities available
+  extensionId?: string   // Chrome extension ID
+}
+```
+
+**Usage:**
+```javascript
+document.addEventListener('aiii:ready', (event) => {
+  console.log('Extension ready:', event.detail.version)
+  console.log('Capabilities:', event.detail.capabilities)
+})
+```
+
+---
+
+## aiii:register
+
+Dispatched by the page to register a custom tool.
+
+**Direction:** Page → Extension
+
+```typescript
+interface AiiiRegisterEvent {
+  tool: string           // Tool name (unique)
+  description: string    // What the tool does
+  parameters: Record<string, AiiiToolParameter>
+  returns?: {
+    type: 'string' | 'number' | 'boolean' | 'array' | 'object' | 'void'
+    description?: string
+  }
+  examples?: Array<{
+    description: string
+    args: Record<string, unknown>
+    result?: unknown
+  }>
+  requiresPermission?: boolean  // Default: true
+}
+
+interface AiiiToolParameter {
+  type: 'string' | 'number' | 'boolean' | 'array' | 'object'
+  required?: boolean     // Default: false
+  default?: unknown
+  description?: string
+  enum?: (string | number)[]
+  items?: { type: string }  // For arrays
+}
+```
+
+**Usage:**
+```javascript
+document.dispatchEvent(new CustomEvent('aiii:register', {
+  detail: {
+    tool: 'search_products',
+    description: 'Search for products',
+    parameters: {
+      query: { type: 'string', required: true, description: 'Search query' }
+    }
+  }
+}))
+```
+
+---
+
+## aiii:request
+
+Dispatched by the extension when an AI calls a custom tool.
+
+**Direction:** Extension → Page
+
+```typescript
+interface AiiiRequestEvent {
+  requestId: string      // Unique ID (match in response)
+  tool: string           // Tool name being called
+  args: Record<string, unknown>  // Arguments from AI
+  origin: string         // Request origin
+  aiApp?: string         // AI app name (e.g., "Claude Desktop")
+  timestamp: number      // Unix timestamp
+}
+```
+
+**Usage:**
+```javascript
+document.addEventListener('aiii:request', async (event) => {
+  const { requestId, tool, args } = event.detail
+
+  if (tool === 'search_products') {
+    try {
+      const results = await searchProducts(args.query)
+      // Send response
+      document.dispatchEvent(new CustomEvent('aiii:response', {
+        detail: { requestId, success: true, result: results }
+      }))
+    } catch (error) {
+      document.dispatchEvent(new CustomEvent('aiii:response', {
+        detail: { requestId, success: false, error: error.message }
+      }))
+    }
+  }
+})
+```
+
+---
+
+## aiii:response
+
+Dispatched by the page in response to `aiii:request`.
+
+**Direction:** Page → Extension
+
+```typescript
+interface AiiiResponseEvent {
+  requestId: string      // Must match the request
+  success: boolean       // Whether operation succeeded
+  result?: unknown       // Result on success
+  error?: string         // Error message on failure
+  errorCode?: string     // Machine-readable error code
+}
+```
+
+**Usage:**
+```javascript
+document.dispatchEvent(new CustomEvent('aiii:response', {
+  detail: {
+    requestId: 'abc123',
+    success: true,
+    result: { products: [...] }
+  }
+}))
+
+// Or on error
+document.dispatchEvent(new CustomEvent('aiii:response', {
+  detail: {
+    requestId: 'abc123',
+    success: false,
+    error: 'Product not found',
+    errorCode: 'NOT_FOUND'
+  }
+}))
+```
+
+---
+
+## aiii:permission
+
+Dispatched by the page to request permission for specific actions.
+
+**Direction:** Page → Extension
+
+```typescript
+interface AiiiPermissionEvent {
+  scope: 'read' | 'interact' | 'navigate' | 'screenshot' | 'execute' | 'custom'
+  tools?: string[]       // Specific tools to request
+  reason?: string        // Why permission is needed
+  duration?: 'session' | 'persistent' | 'once'  // Default: 'session'
+}
+```
+
+**Permission Scopes:**
+| Scope | Description |
+|-------|-------------|
+| `read` | Read page content |
+| `interact` | Click, type, scroll |
+| `navigate` | Navigate to URLs |
+| `screenshot` | Take screenshots |
+| `execute` | Execute scripts |
+| `custom` | Custom tools only |
+
+**Usage:**
+```javascript
+document.dispatchEvent(new CustomEvent('aiii:permission', {
+  detail: {
+    scope: 'interact',
+    reason: 'To help you complete the checkout',
+    duration: 'session'
+  }
+}))
+```
+
+---
+
+## aiii:action:before
+
+Dispatched before the extension performs a built-in action. Can be canceled.
+
+**Direction:** Extension → Page
+
+```typescript
+interface AiiiActionBeforeEvent {
+  requestId: string
+  tool: string           // Built-in tool (e.g., 'browser_click')
+  args: Record<string, unknown>
+  timestamp: number
+  origin: string
+  aiApp?: string
+  cancellable: boolean   // Whether page can cancel
+}
+```
+
+**Usage (canceling):**
+```javascript
+document.addEventListener('aiii:action:before', (event) => {
+  const { tool, args, cancellable } = event.detail
+
+  // Cancel navigation to external sites
+  if (cancellable && tool === 'browser_navigate') {
+    const url = new URL(args.url)
+    if (url.hostname !== window.location.hostname) {
+      event.preventDefault()  // Cancel the action
+    }
+  }
+}, { capture: true })
+```
+
+---
+
+## aiii:action:after
+
+Dispatched after the extension completes a built-in action.
+
+**Direction:** Extension → Page
+
+```typescript
+interface AiiiActionAfterEvent {
+  requestId: string
+  tool: string
+  success: boolean
+  result?: unknown
+  error?: string
+  timestamp: number
+  duration: number       // Time taken in ms
+}
+```
+
+**Usage:**
+```javascript
+document.addEventListener('aiii:action:after', (event) => {
+  const { tool, success, duration } = event.detail
+  console.log(`${tool} completed in ${duration}ms, success: ${success}`)
+})
+```
+
+---
+
+## aiii:cancel
+
+Dispatched by the page to cancel a pending action.
+
+**Direction:** Page → Extension
+
+```typescript
+interface AiiiCancelEvent {
+  requestId: string      // Request to cancel
+  reason?: string        // Why it was canceled
+}
+```
+
+**Usage:**
+```javascript
+document.dispatchEvent(new CustomEvent('aiii:cancel', {
+  detail: {
+    requestId: 'abc123',
+    reason: 'User canceled the operation'
+  }
+}))
+```
+
+---
+
+## Complete Example
+
+```javascript
+// Wait for extension
+document.addEventListener('aiii:ready', (event) => {
+  console.log('athreei ready:', event.detail.version)
+
+  // Register tool
+  document.dispatchEvent(new CustomEvent('aiii:register', {
+    detail: {
+      tool: 'get_cart',
+      description: 'Get shopping cart contents',
+      parameters: {}
+    }
+  }))
+})
+
+// Handle requests
+document.addEventListener('aiii:request', async (event) => {
+  const { requestId, tool } = event.detail
+
+  if (tool === 'get_cart') {
+    const cart = await getCart()
+    document.dispatchEvent(new CustomEvent('aiii:response', {
+      detail: { requestId, success: true, result: cart }
+    }))
+  }
+})
+
+// Observe actions
+document.addEventListener('aiii:action:after', (event) => {
+  const { tool, success } = event.detail
+  analytics.track('ai_action', { tool, success })
+})
+```

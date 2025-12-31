@@ -1,0 +1,187 @@
+---
+title: Local vs Cloud
+description: Choose your athreei deployment mode
+---
+
+# Local vs Cloud Deployment
+
+athreei supports two deployment modes for different use cases and requirements.
+
+## Local Gateway
+
+Everything runs on your machine:
+
+```
+┌─────────────────────────────────────────────────┐
+│               Your Machine                       │
+│                                                  │
+│  AI App ──▶ athreei Gateway ──▶ MCP Servers     │
+│                    │                             │
+│              Audit Logs                          │
+│           (local SQLite)                         │
+└─────────────────────────────────────────────────┘
+```
+
+### Characteristics
+
+| Aspect | Local |
+|--------|-------|
+| Data location | 100% on your machine |
+| Audit logs | Local SQLite database |
+| Setup | Download binary, configure |
+| Performance | Fast - no network latency |
+| Transport | stdio |
+
+### Best For
+
+- **Maximum control** - Full ownership of the stack
+- **Desktop AI apps** - Claude Desktop, Cursor
+- **Offline use** - No internet required
+- **Personal use** - Single user, single machine
+
+### Setup
+
+```bash
+# 1. Download gateway binary
+athreei-gateway --config ~/.athreei/gateway.json
+
+# 2. Configure AI app
+# See Getting Started guide
+```
+
+## Cloud Gateway
+
+Gateway runs as a hosted service:
+
+```
+┌─────────────────┐         ┌────────────────────────────┐
+│    AI App       │   SSE   │      athreei Cloud         │
+│   (any client)  │ ◄─────► │                            │
+└─────────────────┘         │  Gateway ──▶ Your MCPs     │
+                            │        │                   │
+                            │   Audit Logs               │
+                            │  (E2E encrypted)           │
+                            └────────────────────────────┘
+```
+
+### Characteristics
+
+| Aspect | Cloud |
+|--------|-------|
+| Data location | Your MCPs remain where they are |
+| Audit logs | Cloud with E2E encryption |
+| Setup | Connect via API |
+| Performance | Network-dependent |
+| Transport | SSE |
+
+### Best For
+
+- **Web applications** - Browser-based AI tools
+- **Teams** - Shared gateway for multiple users
+- **No local binary** - Can't install software locally
+- **Centralized management** - Web dashboard for config
+
+### Setup
+
+```javascript
+// Connect via SSE
+const response = await fetch('https://gateway.athreei.com/sse', {
+  headers: { 'Authorization': 'Bearer YOUR_API_KEY' }
+})
+```
+
+## Feature Comparison
+
+| Feature | Local | Cloud |
+|---------|-------|-------|
+| Transport | stdio | SSE |
+| Binary required | Yes | No |
+| Internet required | No | Yes |
+| Audit log storage | Local SQLite | Cloud (E2E encrypted) |
+| Dashboard | Local web UI | Hosted web UI |
+| Multi-user | Single user | Team support |
+| Session management | N/A | Automatic |
+| Offline support | Full | None |
+
+## Audit Log Differences
+
+### Local Audit Logs
+
+- Stored in SQLite on your machine
+- Full access to raw data
+- No encryption needed (already local)
+- Searchable via local dashboard
+
+### Cloud Audit Logs
+
+- Stored on athreei servers
+- E2E encrypted before storage
+- Decrypted only in your browser
+- athreei never sees plaintext payloads
+
+```
+┌─────────────────────────────────────────────────────┐
+│ Your Browser                                        │
+│                                                     │
+│   1. Tool call happens                              │
+│   2. Encrypt payload with your key                  │
+│   3. Send encrypted data to cloud                   │
+│                                                     │
+│   Later:                                            │
+│   4. Fetch encrypted logs                           │
+│   5. Decrypt in browser                             │
+│   6. View plaintext                                 │
+└─────────────────────────────────────────────────────┘
+```
+
+## Choosing Your Setup
+
+```
+Start
+  │
+  ▼
+┌──────────────────────────────┐
+│ Desktop app (Claude, Cursor)?│
+└───────────────┬──────────────┘
+          ┌─────┴─────┐
+          │           │
+         Yes         No
+          │           │
+          ▼           ▼
+   ┌───────────┐ ┌────────────────┐
+   │Local      │ │Web-based AI    │
+   │Gateway    │ │app?            │
+   └───────────┘ └───────┬────────┘
+                    ┌────┴────┐
+                    │         │
+                   Yes       No
+                    │         │
+                    ▼         ▼
+             ┌───────────┐ ┌───────────┐
+             │Cloud      │ │Evaluate   │
+             │Gateway    │ │your needs │
+             └───────────┘ └───────────┘
+```
+
+### Recommendations
+
+| Scenario | Setup |
+|----------|-------|
+| Claude Desktop user | Local Gateway |
+| Web-based AI product | Cloud Gateway |
+| Team with mixed apps | Both (sync via cloud) |
+| Maximum data control | Local Gateway |
+| Quick testing | Cloud Gateway |
+
+## Mixing Modes
+
+You can use both:
+
+- **Local Gateway** for desktop AI apps
+- **Cloud Gateway** for web apps
+- Audit logs sync if configured
+- Same MCP server configs work in both
+
+Configure each AI app for its appropriate transport:
+- Desktop apps → stdio → Local Gateway
+- Web apps → SSE → Cloud Gateway

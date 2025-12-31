@@ -1,0 +1,98 @@
+---
+title: Getting Started
+description: Connect your AI app to athreei in minutes
+---
+
+# Getting Started
+
+Get up and running with athreei in three steps.
+
+## 1. Install the Gateway
+
+Download the athreei gateway for your platform:
+
+- **macOS (Apple Silicon):** `athreei-gateway-darwin-arm64`
+- **macOS (Intel):** `athreei-gateway-darwin-x64`
+- **Windows:** `athreei-gateway-windows-x64.exe`
+- **Linux:** `athreei-gateway-linux-x64`
+
+[Download from GitHub Releases →](https://github.com/athreei/athreei/releases)
+
+```bash
+# macOS/Linux
+chmod +x athreei-gateway-*
+sudo mv athreei-gateway-* /usr/local/bin/athreei-gateway
+```
+
+## 2. Configure the Gateway
+
+Create a config file at `~/.athreei/config.json` with your Platform credentials:
+
+```json
+{
+  "apiKey": "ak_your_api_key_here",
+  "endpoint": "your-endpoint-name"
+}
+```
+
+Get your API key and endpoint from the [Platform dashboard](https://athreei.com).
+
+## 3. Connect Your AI App
+
+Add athreei to your AI app's MCP configuration:
+
+**Claude Desktop** (`~/Library/Application Support/Claude/claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "athreei": {
+      "command": "athreei-gateway"
+    }
+  }
+}
+```
+
+Restart your AI app. All tools from your Platform endpoint are now available!
+
+## Try It Out
+
+Ask your AI to use tools from different servers:
+
+- "Read the file at /path/to/allowed/README.md" (filesystem)
+- "Create a GitHub issue for bug tracking" (github)
+- "List my open pull requests" (github)
+
+All calls are logged in the athreei dashboard.
+
+## View Audit Logs
+
+Start the dashboard to see all AI-MCP interactions:
+
+```bash
+athreei-dashboard
+# Opens at http://localhost:5173
+```
+
+You'll see:
+- Every tool call with request/response
+- Which server handled each request
+- Success/error status
+- Duration metrics
+
+## Next Steps
+
+<Cards>
+  <Card title="Installation Details" href="/docs/getting-started/installation">
+    Platform-specific installation guides
+  </Card>
+  <Card title="Configuration" href="/docs/getting-started/configuration">
+    AI app configuration for Claude, ChatGPT, and more
+  </Card>
+  <Card title="Gateway" href="/docs/gateway">
+    Learn about gateway features and options
+  </Card>
+  <Card title="Audit Logs" href="/docs/audit-logs">
+    Monitoring and compliance features
+  </Card>
+</Cards>

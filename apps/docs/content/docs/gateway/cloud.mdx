@@ -1,0 +1,199 @@
+---
+title: Cloud Gateway
+description: Hosted MCP gateway with SSE transport for web applications
+---
+
+# Cloud Gateway
+
+The cloud gateway is a hosted service that exposes MCP tools via Server-Sent Events (SSE) transport. This allows web-based AI applications to access browser tools without running local binaries.
+
+## Overview
+
+```
+┌───────────────────┐         ┌──────────────────┐
+│  Web AI App       │   SSE   │  athreei Cloud   │
+│  (Browser)        │ ◄─────► │  Gateway         │
+└───────────────────┘         └────────┬─────────┘
+                                       │
+                              ┌────────┴─────────┐
+                              │  MCP Servers     │
+                              │  (per session)   │
+                              └──────────────────┘
+```
+
+Each SSE connection creates a new session with its own gateway instance and connected MCP servers.
+
+## Endpoints
+
+### Root
+
+```
+GET /
+```
+
+Returns service information:
+
+```json
+{
+  "name": "athreei-gateway-cloud",
+  "version": "0.1.0",
+  "description": "Cloud-hosted MCP gateway with SSE transport",
+  "endpoints": {
+    "health": "/health",
+    "sse": "/mcp/:endpointName/sse",
+    "messages": "/mcp/messages"
+  }
+}
+```
+
+### Health Check
+
+```
+GET /health
+```
+
+Returns service health status.
+
+### SSE Connection
+
+```
+GET /mcp/:endpointName/sse
+```
+
+Establishes an SSE connection for MCP communication.
+
+**Parameters:**
+- `endpointName` - Identifier for the endpoint configuration
+
+**Response:** Server-Sent Events stream
+
+### Messages
+
+```
+POST /mcp/messages
+```
+
+Send MCP messages (tool calls, etc.) to the gateway.
+
+## Connecting from Web Apps
+
+### Basic SSE Connection
+
+```javascript
+const eventSource = new EventSource('https://gateway.athreei.com/mcp/browser/sse');
+
+eventSource.onmessage = (event) => {
+  const message = JSON.parse(event.data);
+  console.log('Received:', message);
+};
+
+eventSource.onerror = (error) => {
+  console.error('SSE error:', error);
+};
+```
+
+### Calling Tools
+
+```javascript
+async function callTool(name, args) {
+  const response = await fetch('https://gateway.athreei.com/mcp/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      jsonrpc: '2.0',
+      method: 'tools/call',
+      params: { name, arguments: args },
+      id: Date.now(),
+    }),
+  });
+
+  return response.json();
+}
+
+// Example: Get page content
+const result = await callTool('browser__get_content', {
+  format: 'markdown',
+});
+```
+
+## Session Management
+
+The cloud gateway automatically manages sessions:
+
+- **Session Creation** - New session created on SSE connection
+- **Idle Timeout** - Sessions closed after period of inactivity
+- **Cleanup** - Resources freed when session ends
+
+### Session Lifecycle
+
+1. Client establishes SSE connection
+2. Gateway creates session with unique ID
+3. MCP servers spawned for the session
+4. Tools available via the session
+5. Session cleaned up on disconnect or timeout
+
+## Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PORT` | `3001` | Port to listen on |
+| `PLATFORM_URL` | `http://localhost:3000` | Platform API URL |
+| `NODE_ENV` | `development` | Environment mode |
+| `ALLOWED_ORIGINS` | - | Comma-separated allowed CORS origins |
+
+## Self-Hosting
+
+You can deploy the cloud gateway yourself:
+
+### Using Docker
+
+```dockerfile
+FROM oven/bun:1
+WORKDIR /app
+COPY packages/gateway-cloud ./
+RUN bun install
+EXPOSE 3001
+CMD ["bun", "run", "src/index.ts"]
+```
+
+### Using Fly.io
+
+A `fly.toml` configuration is included in the repository:
+
+```bash
+cd packages/gateway-cloud
+fly deploy
+```
+
+### Environment Setup
+
+Required environment variables for production:
+
+```bash
+PORT=3001
+NODE_ENV=production
+ALLOWED_ORIGINS=https://your-app.com
+```
+
+## Security Considerations
+
+<Callout type="warning">
+The cloud gateway processes browser automation commands. Consider these security practices:
+</Callout>
+
+1. **Origin Restrictions** - Set `ALLOWED_ORIGINS` to limit which domains can connect
+2. **Authentication** - Implement authentication before production use
+3. **Rate Limiting** - Add rate limiting to prevent abuse
+4. **Audit Logging** - Enable logging for security audits
+
+## Comparison with Local Gateway
+
+| Aspect | Cloud Gateway | Local Gateway |
+|--------|---------------|---------------|
+| Transport | SSE | stdio |
+| Setup | API endpoint | Binary download |
+| Data flow | Through server | Local only |
+| Session state | Server-managed | N/A |
+| Best for | Web apps | Desktop apps |

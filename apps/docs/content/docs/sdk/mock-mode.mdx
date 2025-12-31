@@ -1,0 +1,246 @@
+---
+title: Mock Mode
+description: Test athreei integration without the browser extension
+---
+
+# Mock Mode
+
+Mock mode allows you to develop and test your athreei integration without having the browser extension installed. This is essential for:
+
+- Unit testing your tool handlers
+- Development on machines without the extension
+- CI/CD pipelines
+- Demo environments
+
+## Enabling Mock Mode
+
+<Callout type="warning">
+Mock mode requires an explicit `mock: true` flag. This is a safety feature to prevent accidental activation in production.
+</Callout>
+
+```typescript
+import { enableMockMode, athreei } from '@athreei/sdk'
+
+// REQUIRED: mock must be explicitly true
+enableMockMode({
+  mock: true,  // This is required!
+  simulateDelay: 100,
+  version: '0.1.0-test',
+  capabilities: ['click', 'type', 'navigate', 'scroll', 'screenshot'],
+})
+
+// Now athreei works without the real extension
+athreei.onReady((info) => {
+  console.log('Mock extension ready:', info.version)
+})
+```
+
+## MockModeOptions
+
+```typescript
+interface MockModeOptions {
+  // REQUIRED: Must be explicitly true
+  mock: true
+
+  // Simulated delay before events fire (ms)
+  simulateDelay?: number  // Default: 100
+
+  // Extension version to simulate
+  version?: string  // Default: '0.1.0-mock'
+
+  // Capabilities to report
+  capabilities?: string[]  // Default: ['click', 'type', 'navigate', 'scroll', 'screenshot']
+
+  // Pre-configured mock responses
+  mockResponses?: Record<string, unknown>
+
+  // Auto-trigger tools after initialization
+  autoTriggerTools?: Array<{
+    tool: string
+    args: Record<string, unknown>
+    delay?: number
+  }>
+}
+```
+
+## Mock Functions
+
+### enableMockMode(options)
+
+Enable mock mode with the specified options.
+
+```typescript
+import { enableMockMode } from '@athreei/sdk'
+
+enableMockMode({
+  mock: true,
+  simulateDelay: 50,
+  mockResponses: {
+    'search_products': { results: [{ id: '1', name: 'Test Product' }] }
+  }
+})
+```
+
+### disableMockMode()
+
+Disable mock mode and clean up.
+
+```typescript
+import { disableMockMode } from '@athreei/sdk'
+
+disableMockMode()
+```
+
+### isMockModeEnabled()
+
+Check if mock mode is currently active.
+
+```typescript
+import { isMockModeEnabled } from '@athreei/sdk'
+
+if (isMockModeEnabled()) {
+  console.log('Running in mock mode')
+}
+```
+
+### triggerMockRequest(tool, args)
+
+Manually trigger a mock tool request.
+
+```typescript
+import { triggerMockRequest } from '@athreei/sdk'
+
+// Simulate AI calling your tool
+triggerMockRequest('search_products', { query: 'laptop' })
+```
+
+### setMockResponse(tool, response)
+
+Set or update a mock response for a tool.
+
+```typescript
+import { setMockResponse } from '@athreei/sdk'
+
+setMockResponse('get_user', { id: 123, name: 'Test User' })
+```
+
+### getMockResponse(tool)
+
+Get the current mock response for a tool.
+
+```typescript
+import { getMockResponse } from '@athreei/sdk'
+
+const response = getMockResponse('get_user')
+```
+
+### clearMockResponses()
+
+Clear all mock responses.
+
+```typescript
+import { clearMockResponses } from '@athreei/sdk'
+
+clearMockResponses()
+```
+
+## Testing Example
+
+```typescript
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { enableMockMode, disableMockMode, triggerMockRequest, athreei } from '@athreei/sdk'
+
+describe('ProductSearch integration', () => {
+  beforeEach(() => {
+    enableMockMode({
+      mock: true,
+      simulateDelay: 0, // No delay in tests
+    })
+  })
+
+  afterEach(() => {
+    disableMockMode()
+  })
+
+  it('handles search_products tool', async () => {
+    const results: unknown[] = []
+
+    // Register the tool
+    athreei.registerTool({
+      name: 'search_products',
+      description: 'Search products',
+      parameters: {
+        query: { type: 'string', required: true }
+      },
+      handler: async ({ query }) => {
+        return { results: [{ name: `Product matching: ${query}` }] }
+      }
+    })
+
+    // Capture responses
+    document.addEventListener('aiii:response', (e: CustomEvent) => {
+      results.push(e.detail)
+    })
+
+    // Trigger the tool
+    triggerMockRequest('search_products', { query: 'laptop' })
+
+    // Wait for response
+    await new Promise(r => setTimeout(r, 100))
+
+    expect(results).toHaveLength(1)
+    expect(results[0].success).toBe(true)
+  })
+})
+```
+
+## Auto-Triggering Tools
+
+For demos or integration tests, you can auto-trigger tools:
+
+```typescript
+enableMockMode({
+  mock: true,
+  autoTriggerTools: [
+    {
+      tool: 'get_page_info',
+      args: {},
+      delay: 1000  // Trigger after 1 second
+    },
+    {
+      tool: 'search_products',
+      args: { query: 'demo' },
+      delay: 2000  // Trigger after 2 seconds
+    }
+  ]
+})
+```
+
+## Console Output
+
+When mock mode is active, you'll see console messages:
+
+```
+[athreei] MOCK MODE ACTIVE
+Mock data is being used. Remove `mock: true` for production.
+[athreei mock] Mock mode enabled {...}
+[athreei mock] Dispatching ready event {...}
+[athreei mock] Tool registered: search_products
+```
+
+## Production Warning
+
+<Callout type="error">
+Never enable mock mode in production! The explicit `mock: true` flag helps prevent accidents, but you should also:
+
+1. Use environment variables to conditionally enable mock mode
+2. Remove mock mode imports from production builds
+3. Add CI checks to ensure mock mode isn't enabled in production code
+</Callout>
+
+```typescript
+// Safe pattern for development
+if (process.env.NODE_ENV === 'development' && process.env.MOCK_ATHREEI === 'true') {
+  enableMockMode({ mock: true })
+}
+```
