@@ -8,13 +8,18 @@
     "dev": "bun run build.ts --watch",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "playwright test --debug"
   },
   "dependencies": {
     "@athreei/shared": "workspace:*"
   },
   "devDependencies": {
+    "@playwright/test": "^1.49.1",
     "@types/chrome": "^0.0.258",
-    "@types/node": "^22.10.2"
+    "@types/node": "^22.10.2",
+    "jsdom": "^27.4.0"
   }
 }
