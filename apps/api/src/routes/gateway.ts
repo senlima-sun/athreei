@@ -20,6 +20,7 @@ import {
   namespace,
   namespaceResource,
   mcpServer,
+  trace,
 } from "@athreei/db";
 
 const gateway = new Hono();
@@ -162,6 +163,20 @@ function generateConfigVersion(
   return `${latestServerUpdate}-${servers.length}`;
 }
 
+/**
+ * Generate a unique trace ID
+ */
+function generateTraceId(): string {
+  return `tr_${crypto.randomUUID().replace(/-/g, "")}`;
+}
+
+/**
+ * Generate a unique span ID
+ */
+function generateSpanId(): string {
+  return crypto.randomUUID().replace(/-/g, "").slice(0, 16);
+}
+
 // =============================================================================
 // Routes
 // =============================================================================
@@ -299,17 +314,78 @@ gateway.post("/traces", zValidator("json", postTracesSchema), async (c) => {
     return c.json({ error: validation.error }, 401);
   }
 
+  const { apiKeyRecord, endpointRecord } = validation;
   const { traces } = c.req.valid("json");
 
-  // For now, just log the traces. In the future, store them in the database.
-  console.log(`Received ${traces.length} traces from gateway`);
+  const now = new Date();
+  const insertedIds: string[] = [];
 
-  // TODO: Store traces in database for analytics
-  // This would involve creating a traces table and inserting the records
+  // Store each trace in the database
+  for (const traceData of traces) {
+    const id = generateTraceId();
+    const spanId = generateSpanId();
+
+    // Determine status from error presence
+    const status = traceData.error ? "error" : "success";
+    const statusMessage = traceData.error || undefined;
+
+    // Build attributes JSON with extra fields (size-limited for security)
+    const attributesObj = {
+      aggregatedToolName: traceData.aggregatedToolName,
+      serverName: traceData.serverName,
+      toolName: traceData.toolName,
+      arguments: traceData.arguments,
+      result: traceData.result,
+      endpointId: endpointRecord.id,
+      apiKeyId: apiKeyRecord.id,
+    };
+    const attributes = JSON.stringify(attributesObj);
+
+    // Prevent DoS via oversized payloads (1MB limit)
+    const MAX_ATTRIBUTES_SIZE = 1_000_000;
+    if (attributes.length > MAX_ATTRIBUTES_SIZE) {
+      console.warn(`Trace ${traceData.traceId} attributes exceed size limit, skipping`);
+      continue;
+    }
+
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (db as any).insert(trace).values({
+        id,
+        organizationId: endpointRecord.organizationId,
+        userId: null, // Gateway traces don't have a user context
+        mcpServerId: null, // Could be enhanced to look up server by name
+        traceId: traceData.traceId,
+        parentSpanId: null,
+        spanId,
+        name: traceData.aggregatedToolName || traceData.toolName,
+        kind: "server", // Gateway is acting as server
+        status,
+        statusMessage,
+        startTime: new Date(traceData.startedAt),
+        endTime: traceData.endedAt ? new Date(traceData.endedAt) : null,
+        durationMs: traceData.durationMs || null,
+        attributes,
+        events: null,
+        createdAt: now,
+      });
+
+      insertedIds.push(id);
+    } catch (error) {
+      // Sanitize error to avoid leaking sensitive information in logs
+      const errorMsg = error instanceof Error ? error.message : "Unknown error";
+      console.error(`Failed to insert trace ${traceData.traceId}: ${errorMsg}`);
+      // Continue with other traces even if one fails
+    }
+  }
+
+  console.log(`Stored ${insertedIds.length}/${traces.length} traces from gateway`);
 
   return c.json({
     received: traces.length,
-    message: "Traces received successfully",
+    stored: insertedIds.length,
+    message: "Traces processed successfully",
+    traceIds: insertedIds,
   });
 });
 
