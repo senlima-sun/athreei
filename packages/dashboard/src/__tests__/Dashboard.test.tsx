@@ -139,13 +139,13 @@ describe("Dashboard", () => {
     })
   })
 
-  it("shows mock analytics when API fails", async () => {
+  it("shows empty state when API fails", async () => {
     vi.mocked(api.get).mockRejectedValue(new Error("API error"))
     renderWithRouter(<Dashboard />)
 
-    // Should show mock analytics data
+    // Should show empty state with zero values
     await waitFor(() => {
-      expect(screen.getByText("1,234")).toBeInTheDocument()
+      expect(screen.getByText("No analytics data yet")).toBeInTheDocument()
     })
   })
 

@@ -176,14 +176,13 @@ describe("TraceDetail", () => {
     })
   })
 
-  it("shows trace not found when invalid uuid", async () => {
+  it("shows error state when API fails", async () => {
     vi.mocked(api.get).mockRejectedValue(new Error("Not found"))
     renderWithRouter("invalid-uuid")
 
-    // After mock data is applied, we should still see the trace
-    // because getMockTrace returns a default trace
+    // Should show error state instead of mock data
     await waitFor(() => {
-      expect(screen.getByText("Trace Details")).toBeInTheDocument()
+      expect(screen.getByText("Unable to load trace")).toBeInTheDocument()
     })
   })
 

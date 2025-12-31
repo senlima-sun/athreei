@@ -4,14 +4,17 @@
  * Tests the /api/gateway/config endpoint that the gateway uses
  * to fetch namespace configuration.
  *
- * Note: These tests focus on endpoint validation without database mocking.
- * Full integration tests with a real database should be run separately.
+ * Note: These tests require a running database (DATABASE_URL must be set).
+ * They are skipped when no database is configured.
  */
 
 import { describe, it, expect } from "vitest";
 import app from "../../app";
 
-describe("Gateway API Routes", () => {
+// Skip these tests if no database is configured
+const hasDatabase = !!process.env.DATABASE_URL;
+
+describe.skipIf(!hasDatabase)("Gateway API Routes", () => {
   describe("GET /api/gateway/config", () => {
     it("requires Authorization header", async () => {
       const res = await app.request("/api/gateway/config?endpoint=test");

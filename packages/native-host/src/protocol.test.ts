@@ -350,22 +350,14 @@ describe("initializeHandlers", () => {
     clearHandlers()
   })
 
-  test("registers all built-in handlers", () => {
+  test("registers ping handler (browser tools forwarded to extension via IPC)", () => {
     initializeHandlers()
 
     const methods = getRegisteredMethods()
+    // Only ping handler is registered in native-host
+    // Browser tools are forwarded to Chrome extension via IPC
     expect(methods).toContain("ping")
-    expect(methods).toContain("browser_list_tabs")
-    expect(methods).toContain("browser_get_active_tab")
-    expect(methods).toContain("browser_navigate")
-    expect(methods).toContain("browser_get_content")
-    expect(methods).toContain("browser_get_elements")
-    expect(methods).toContain("browser_click")
-    expect(methods).toContain("browser_type")
-    expect(methods).toContain("browser_scroll")
-    expect(methods).toContain("browser_screenshot")
-    expect(methods).toContain("browser_execute_script")
-    expect(methods).toContain("browser_wait")
+    expect(methods).toHaveLength(1)
   })
 
   test("ping handler returns pong with timestamp", async () => {
@@ -385,9 +377,10 @@ describe("initializeHandlers", () => {
     expect(typeof (response.payload as { timestamp: number }).timestamp).toBe("number")
   })
 
-  test("stub handlers return stub response", async () => {
+  test("unregistered browser methods return unknown method error", async () => {
     initializeHandlers()
 
+    // Browser tools are forwarded to extension, not handled in native-host
     const request: NativeRequest = {
       id: "stub-1",
       type: "request",
@@ -396,53 +389,7 @@ describe("initializeHandlers", () => {
     }
 
     const response = await handleRequest(request)
-    expect(response.success).toBe(true)
-    expect(response.payload).toHaveProperty("stub", true)
-    expect(response.payload).toHaveProperty("message")
-  })
-
-  test("browser_navigate validates URL payload", async () => {
-    initializeHandlers()
-
-    const invalidRequest: NativeRequest = {
-      id: "nav-1",
-      type: "request",
-      method: "browser_navigate",
-      payload: { url: "not-a-valid-url" },
-    }
-
-    const response = await handleRequest(invalidRequest)
     expect(response.success).toBe(false)
-    expect(response.error).toContain("Invalid payload")
-  })
-
-  test("browser_navigate accepts valid URL", async () => {
-    initializeHandlers()
-
-    const validRequest: NativeRequest = {
-      id: "nav-2",
-      type: "request",
-      method: "browser_navigate",
-      payload: { url: "https://example.com" },
-    }
-
-    const response = await handleRequest(validRequest)
-    expect(response.success).toBe(true)
-    expect(response.payload).toHaveProperty("stub", true)
-  })
-
-  test("browser_type validates required fields", async () => {
-    initializeHandlers()
-
-    const invalidRequest: NativeRequest = {
-      id: "type-1",
-      type: "request",
-      method: "browser_type",
-      payload: { selector: "#input" }, // missing 'text' field
-    }
-
-    const response = await handleRequest(invalidRequest)
-    expect(response.success).toBe(false)
-    expect(response.error).toContain("Invalid payload")
+    expect(response.error).toContain("Unknown method")
   })
 })

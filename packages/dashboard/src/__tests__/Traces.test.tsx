@@ -92,16 +92,14 @@ describe("Traces", () => {
     expect(screen.getAllByText("Error").length).toBeGreaterThanOrEqual(1)
   })
 
-  it("shows mock data when API fails", async () => {
+  it("shows empty state when API fails", async () => {
     vi.mocked(api.get).mockRejectedValue(new Error("API error"))
     renderWithRouter(<Traces />)
 
     await waitFor(() => {
-      // Should show mock data
-      expect(screen.getByText("browser__screenshot")).toBeInTheDocument()
+      // Should show empty state message
+      expect(screen.getByText(/No traces recorded yet/)).toBeInTheDocument()
     })
-    // Should show warning about mock data
-    expect(screen.getByText(/Showing mock data for development/)).toBeInTheDocument()
   })
 
   it("renders filter controls", async () => {
