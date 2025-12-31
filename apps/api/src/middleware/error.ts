@@ -2,8 +2,11 @@
  * Error handling middleware
  *
  * Provides consistent error responses across the API.
+ * - Client errors (4xx): Logged to console only
+ * - Server errors (5xx): Logged to console AND sent to Sentry
  */
 
+import * as Sentry from "@sentry/bun";
 import type { Context, ErrorHandler } from "hono";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 
@@ -56,12 +59,30 @@ export class ApiError extends Error {
 
 /**
  * Global error handler for the API
+ *
+ * - Client errors (4xx, validation): console.error only
+ * - Server errors (5xx, unexpected): console.error + Sentry
  */
 export const errorHandler: ErrorHandler = (err: Error, c: Context) => {
+  // Always log to console for debugging
   console.error("API Error:", err);
 
   // Handle known API errors
   if (err instanceof ApiError) {
+    // Only send server errors (5xx) to Sentry
+    if (err.statusCode >= 500) {
+      Sentry.captureException(err, {
+        tags: {
+          statusCode: err.statusCode,
+          errorCode: err.code,
+        },
+        extra: {
+          path: c.req.path,
+          method: c.req.method,
+        },
+      });
+    }
+
     const response: ErrorResponse = {
       error: err.message,
     };
@@ -71,7 +92,7 @@ export const errorHandler: ErrorHandler = (err: Error, c: Context) => {
     return c.json(response, err.statusCode);
   }
 
-  // Handle Zod validation errors
+  // Handle Zod validation errors (client error - no Sentry)
   if (err.name === "ZodError") {
     return c.json<ErrorResponse>(
       {
@@ -83,7 +104,17 @@ export const errorHandler: ErrorHandler = (err: Error, c: Context) => {
     );
   }
 
-  // Handle unknown errors
+  // Handle unknown errors - always send to Sentry (these are bugs)
+  Sentry.captureException(err, {
+    tags: {
+      errorType: "unhandled",
+    },
+    extra: {
+      path: c.req.path,
+      method: c.req.method,
+    },
+  });
+
   const response: ErrorResponse = {
     error: "Internal server error",
   };
