@@ -5,12 +5,19 @@
  * - Creating API keys with secure generation
  * - Listing API keys with masked values
  * - Revoking API keys
- * - Authorization checks
+ * - Authorization checks (organization membership verification)
  * - Proper response formats
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { Hono } from "hono";
+import { Hono, type Context, type ErrorHandler } from "hono";
+import type { ContentfulStatusCode } from "hono/utils/http-status";
+
+// Error handler to properly handle thrown errors
+const testErrorHandler: ErrorHandler = (err: Error, c: Context) => {
+  const statusCode = (err as Error & { statusCode?: ContentfulStatusCode }).statusCode || 500;
+  return c.json({ error: err.message }, statusCode);
+};
 
 // Mock modules before importing the routes
 vi.mock("../../lib/db", () => ({
@@ -42,28 +49,6 @@ vi.mock("../../middleware", () => ({
   },
 }));
 
-// Mock crypto for deterministic testing
-const mockRandomUUID = "test-uuid-1234-5678-90ab-cdef12345678";
-vi.stubGlobal("crypto", {
-  randomUUID: vi.fn(() => mockRandomUUID),
-  getRandomValues: vi.fn((arr: Uint8Array) => {
-    // Fill with predictable test values
-    for (let i = 0; i < arr.length; i++) {
-      arr[i] = i % 256;
-    }
-    return arr;
-  }),
-  subtle: {
-    digest: vi.fn(async () => {
-      // Return a mock hash buffer
-      return new Uint8Array(32).fill(0xab).buffer;
-    }),
-  },
-});
-
-// Mock btoa
-vi.stubGlobal("btoa", vi.fn((str: string) => Buffer.from(str).toString("base64")));
-
 // Type for test response data
 interface ApiKeyResponse {
   id: string;
@@ -85,6 +70,12 @@ interface MessageResponse {
   message: string;
 }
 
+interface ErrorResponse {
+  error: string;
+  details?: string;
+  code?: string;
+}
+
 // Mock data
 const mockAuthContext = {
   userId: "user_123",
@@ -96,6 +87,7 @@ const mockAuthContext = {
   },
 };
 
+// Mock endpoint belonging to org_123
 const mockEndpoint = {
   id: "ep_123",
   organizationId: "org_123",
@@ -108,6 +100,30 @@ const mockEndpoint = {
   status: "active",
   createdAt: new Date(),
   updatedAt: new Date(),
+};
+
+// Mock endpoint belonging to a different organization
+const mockEndpointDifferentOrg = {
+  id: "ep_456",
+  organizationId: "org_other",
+  name: "Other API",
+  description: "API endpoint in different org",
+  url: "https://athreei.com/mcp/other-api/sse",
+  method: "POST",
+  authType: "api_key",
+  rateLimit: null,
+  status: "active",
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
+
+// Mock membership record
+const mockMember = {
+  id: "member_123",
+  userId: "user_123",
+  organizationId: "org_123",
+  role: "admin",
+  createdAt: new Date(),
 };
 
 const mockApiKey = {
@@ -128,10 +144,13 @@ const mockApiKey = {
   updatedAt: new Date(),
 };
 
-// Mock database - now uses db.query.* pattern
+// Mock database - includes member query for membership verification
 const mockDb = {
   query: {
     endpoint: {
+      findFirst: vi.fn(),
+    },
+    member: {
       findFirst: vi.fn(),
     },
     apiKey: {
@@ -154,6 +173,187 @@ describe("API Keys Routes", () => {
     vi.clearAllMocks();
   });
 
+  // =========================================================================
+  // Organization Membership Verification Tests
+  // =========================================================================
+  describe("Organization Membership Verification", () => {
+    describe("GET /endpoints/:endpointId/keys", () => {
+      it("should return 403 when user is NOT a member of the endpoint's organization", async () => {
+        // Endpoint exists but user is not a member of its organization
+        mockDb.query.endpoint.findFirst.mockResolvedValue(mockEndpointDifferentOrg);
+        mockDb.query.member.findFirst.mockResolvedValue(null); // No membership
+
+        const { default: apiKeys } = await import("../../routes/api-keys");
+        const app = new Hono();
+        app.onError(testErrorHandler);
+        app.route("/api/endpoints", apiKeys);
+
+        const response = await app.request("/api/endpoints/ep_456/keys");
+        const data = (await response.json()) as ErrorResponse;
+
+        expect(response.status).toBe(403);
+        expect(data.error.toLowerCase()).toContain("access");
+      });
+
+      it("should allow access when user IS a member of the endpoint's organization", async () => {
+        mockDb.query.endpoint.findFirst.mockResolvedValue(mockEndpoint);
+        mockDb.query.member.findFirst.mockResolvedValue(mockMember); // User is a member
+        mockDb.query.apiKey.findMany.mockResolvedValue([mockApiKey]);
+
+        const { default: apiKeys } = await import("../../routes/api-keys");
+        const app = new Hono();
+        app.onError(testErrorHandler);
+        app.route("/api/endpoints", apiKeys);
+
+        const response = await app.request("/api/endpoints/ep_123/keys");
+        const data = (await response.json()) as ListKeysResponse;
+
+        expect(response.status).toBe(200);
+        expect(data.keys).toHaveLength(1);
+      });
+
+      it("should return 404 when endpoint does not exist", async () => {
+        mockDb.query.endpoint.findFirst.mockResolvedValue(null);
+
+        const { default: apiKeys } = await import("../../routes/api-keys");
+        const app = new Hono();
+        app.onError(testErrorHandler);
+        app.route("/api/endpoints", apiKeys);
+
+        const response = await app.request("/api/endpoints/ep_nonexistent/keys");
+        const data = (await response.json()) as ErrorResponse;
+
+        expect(response.status).toBe(404);
+        expect(data.error.toLowerCase()).toContain("not found");
+      });
+    });
+
+    describe("POST /endpoints/:endpointId/keys", () => {
+      it("should return 403 when user is NOT a member of the endpoint's organization", async () => {
+        // Endpoint exists but user is not a member
+        mockDb.query.endpoint.findFirst.mockResolvedValue(mockEndpointDifferentOrg);
+        mockDb.query.member.findFirst.mockResolvedValue(null);
+
+        const { default: apiKeys } = await import("../../routes/api-keys");
+        const app = new Hono();
+        app.onError(testErrorHandler);
+        app.route("/api/endpoints", apiKeys);
+
+        const response = await app.request("/api/endpoints/ep_456/keys", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: "Test Key" }),
+        });
+        const data = (await response.json()) as ErrorResponse;
+
+        expect(response.status).toBe(403);
+        expect(data.error.toLowerCase()).toContain("access");
+      });
+
+      it("should allow creating API key when user IS a member", async () => {
+        mockDb.query.endpoint.findFirst.mockResolvedValue(mockEndpoint);
+        mockDb.query.member.findFirst.mockResolvedValue(mockMember);
+
+        const { default: apiKeys } = await import("../../routes/api-keys");
+        const app = new Hono();
+        app.onError(testErrorHandler);
+        app.route("/api/endpoints", apiKeys);
+
+        const response = await app.request("/api/endpoints/ep_123/keys", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: "Production Key" }),
+        });
+
+        const data = (await response.json()) as ApiKeyResponse;
+
+        expect(response.status).toBe(201);
+        expect(data.name).toBe("Production Key");
+        expect(data.key).toBeDefined();
+      });
+
+      it("should return 404 when endpoint does not exist", async () => {
+        mockDb.query.endpoint.findFirst.mockResolvedValue(null);
+
+        const { default: apiKeys } = await import("../../routes/api-keys");
+        const app = new Hono();
+        app.onError(testErrorHandler);
+        app.route("/api/endpoints", apiKeys);
+
+        const response = await app.request("/api/endpoints/ep_nonexistent/keys", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: "Test Key" }),
+        });
+        const data = (await response.json()) as ErrorResponse;
+
+        expect(response.status).toBe(404);
+        expect(data.error.toLowerCase()).toContain("not found");
+      });
+    });
+
+    describe("DELETE /endpoints/:endpointId/keys/:keyId", () => {
+      it("should return 403 when user is NOT a member of the endpoint's organization", async () => {
+        mockDb.query.endpoint.findFirst.mockResolvedValue(mockEndpointDifferentOrg);
+        mockDb.query.member.findFirst.mockResolvedValue(null);
+
+        const { default: apiKeys } = await import("../../routes/api-keys");
+        const app = new Hono();
+        app.onError(testErrorHandler);
+        app.route("/api/endpoints", apiKeys);
+
+        const response = await app.request("/api/endpoints/ep_456/keys/key_123", {
+          method: "DELETE",
+        });
+        const data = (await response.json()) as ErrorResponse;
+
+        expect(response.status).toBe(403);
+        expect(data.error.toLowerCase()).toContain("access");
+      });
+
+      it("should allow deleting API key when user IS a member", async () => {
+        mockDb.query.endpoint.findFirst.mockResolvedValue(mockEndpoint);
+        mockDb.query.member.findFirst.mockResolvedValue(mockMember);
+        mockDb.query.apiKey.findFirst.mockResolvedValue(mockApiKey);
+
+        const { default: apiKeys } = await import("../../routes/api-keys");
+        const app = new Hono();
+        app.onError(testErrorHandler);
+        app.route("/api/endpoints", apiKeys);
+
+        const response = await app.request("/api/endpoints/ep_123/keys/key_123", {
+          method: "DELETE",
+        });
+
+        const data = (await response.json()) as MessageResponse;
+
+        expect(response.status).toBe(200);
+        expect(data.message).toBe("API key revoked successfully");
+      });
+
+      it("should return 404 when endpoint does not exist", async () => {
+        mockDb.query.endpoint.findFirst.mockResolvedValue(null);
+
+        const { default: apiKeys } = await import("../../routes/api-keys");
+        const app = new Hono();
+        app.onError(testErrorHandler);
+        app.route("/api/endpoints", apiKeys);
+
+        const response = await app.request(
+          "/api/endpoints/ep_nonexistent/keys/key_123",
+          { method: "DELETE" }
+        );
+        const data = (await response.json()) as ErrorResponse;
+
+        expect(response.status).toBe(404);
+        expect(data.error.toLowerCase()).toContain("not found");
+      });
+    });
+  });
+
+  // =========================================================================
+  // GET /endpoints/:endpointId/keys Tests
+  // =========================================================================
   describe("GET /endpoints/:endpointId/keys", () => {
     it("should return 404 when endpoint does not exist", async () => {
       mockDb.query.endpoint.findFirst.mockResolvedValue(null);
@@ -169,6 +369,7 @@ describe("API Keys Routes", () => {
 
     it("should return empty list when no API keys exist", async () => {
       mockDb.query.endpoint.findFirst.mockResolvedValue(mockEndpoint);
+      mockDb.query.member.findFirst.mockResolvedValue(mockMember);
       mockDb.query.apiKey.findMany.mockResolvedValue([]);
 
       const { default: apiKeys } = await import("../../routes/api-keys");
@@ -184,6 +385,7 @@ describe("API Keys Routes", () => {
 
     it("should return API keys with masked values", async () => {
       mockDb.query.endpoint.findFirst.mockResolvedValue(mockEndpoint);
+      mockDb.query.member.findFirst.mockResolvedValue(mockMember);
       mockDb.query.apiKey.findMany.mockResolvedValue([mockApiKey]);
 
       const { default: apiKeys } = await import("../../routes/api-keys");
@@ -202,8 +404,58 @@ describe("API Keys Routes", () => {
       // Should NOT include the full key or key hash
       expect(data.keys[0].key).toBeUndefined();
     });
+
+    it("should return multiple API keys for an endpoint", async () => {
+      const mockApiKey2 = {
+        ...mockApiKey,
+        id: "key_456",
+        name: "Second API Key",
+        keyPrefix: "ak_BBBCCCDD",
+        usageCount: 100,
+      };
+
+      mockDb.query.endpoint.findFirst.mockResolvedValue(mockEndpoint);
+      mockDb.query.member.findFirst.mockResolvedValue(mockMember);
+      mockDb.query.apiKey.findMany.mockResolvedValue([mockApiKey, mockApiKey2]);
+
+      const { default: apiKeys } = await import("../../routes/api-keys");
+      const app = new Hono();
+      app.route("/api/endpoints", apiKeys);
+
+      const response = await app.request("/api/endpoints/ep_123/keys");
+      const data = (await response.json()) as ListKeysResponse;
+
+      expect(response.status).toBe(200);
+      expect(data.keys).toHaveLength(2);
+      expect(data.keys[0].id).toBe("key_123");
+      expect(data.keys[1].id).toBe("key_456");
+    });
+
+    it("should include scopes when present on API key", async () => {
+      const mockApiKeyWithScopes = {
+        ...mockApiKey,
+        scopes: JSON.stringify(["read", "write"]),
+      };
+
+      mockDb.query.endpoint.findFirst.mockResolvedValue(mockEndpoint);
+      mockDb.query.member.findFirst.mockResolvedValue(mockMember);
+      mockDb.query.apiKey.findMany.mockResolvedValue([mockApiKeyWithScopes]);
+
+      const { default: apiKeys } = await import("../../routes/api-keys");
+      const app = new Hono();
+      app.route("/api/endpoints", apiKeys);
+
+      const response = await app.request("/api/endpoints/ep_123/keys");
+      const data = (await response.json()) as ListKeysResponse;
+
+      expect(response.status).toBe(200);
+      expect(data.keys[0].scopes).toEqual(["read", "write"]);
+    });
   });
 
+  // =========================================================================
+  // POST /endpoints/:endpointId/keys Tests
+  // =========================================================================
   describe("POST /endpoints/:endpointId/keys", () => {
     it("should validate request body requires name", async () => {
       const { default: apiKeys } = await import("../../routes/api-keys");
@@ -233,6 +485,20 @@ describe("API Keys Routes", () => {
       expect(response.status).toBe(400);
     });
 
+    it("should validate name minimum length", async () => {
+      const { default: apiKeys } = await import("../../routes/api-keys");
+      const app = new Hono();
+      app.route("/api/endpoints", apiKeys);
+
+      const response = await app.request("/api/endpoints/ep_123/keys", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: "" }), // Empty name
+      });
+
+      expect(response.status).toBe(400);
+    });
+
     it("should return 404 when endpoint does not exist", async () => {
       mockDb.query.endpoint.findFirst.mockResolvedValue(null);
 
@@ -251,6 +517,7 @@ describe("API Keys Routes", () => {
 
     it("should create API key and return plain key only once", async () => {
       mockDb.query.endpoint.findFirst.mockResolvedValue(mockEndpoint);
+      mockDb.query.member.findFirst.mockResolvedValue(mockMember);
 
       const { default: apiKeys } = await import("../../routes/api-keys");
       const app = new Hono();
@@ -276,6 +543,7 @@ describe("API Keys Routes", () => {
 
     it("should create API key with scopes", async () => {
       mockDb.query.endpoint.findFirst.mockResolvedValue(mockEndpoint);
+      mockDb.query.member.findFirst.mockResolvedValue(mockMember);
 
       const { default: apiKeys } = await import("../../routes/api-keys");
       const app = new Hono();
@@ -298,6 +566,7 @@ describe("API Keys Routes", () => {
 
     it("should create API key with expiration date", async () => {
       mockDb.query.endpoint.findFirst.mockResolvedValue(mockEndpoint);
+      mockDb.query.member.findFirst.mockResolvedValue(mockMember);
 
       const { default: apiKeys } = await import("../../routes/api-keys");
       const app = new Hono();
@@ -318,8 +587,39 @@ describe("API Keys Routes", () => {
       expect(response.status).toBe(201);
       expect(data.expiresAt).toBe(expiresAt);
     });
+
+    it("should call database insert with correct values", async () => {
+      mockDb.query.endpoint.findFirst.mockResolvedValue(mockEndpoint);
+      mockDb.query.member.findFirst.mockResolvedValue(mockMember);
+
+      const mockInsertValues = vi.fn(() => Promise.resolve());
+      mockDb.insert.mockReturnValue({ values: mockInsertValues });
+
+      const { default: apiKeys } = await import("../../routes/api-keys");
+      const app = new Hono();
+      app.route("/api/endpoints", apiKeys);
+
+      await app.request("/api/endpoints/ep_123/keys", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: "Test Key" }),
+      });
+
+      expect(mockDb.insert).toHaveBeenCalled();
+      expect(mockInsertValues).toHaveBeenCalledWith(
+        expect.objectContaining({
+          endpointId: "ep_123",
+          organizationId: "org_123",
+          createdById: "user_123",
+          name: "Test Key",
+        })
+      );
+    });
   });
 
+  // =========================================================================
+  // DELETE /endpoints/:endpointId/keys/:keyId Tests
+  // =========================================================================
   describe("DELETE /endpoints/:endpointId/keys/:keyId", () => {
     it("should return 404 when endpoint does not exist", async () => {
       mockDb.query.endpoint.findFirst.mockResolvedValue(null);
@@ -338,6 +638,7 @@ describe("API Keys Routes", () => {
 
     it("should return 404 when API key does not exist", async () => {
       mockDb.query.endpoint.findFirst.mockResolvedValue(mockEndpoint);
+      mockDb.query.member.findFirst.mockResolvedValue(mockMember);
       mockDb.query.apiKey.findFirst.mockResolvedValue(null);
 
       const { default: apiKeys } = await import("../../routes/api-keys");
@@ -354,6 +655,7 @@ describe("API Keys Routes", () => {
 
     it("should revoke API key successfully", async () => {
       mockDb.query.endpoint.findFirst.mockResolvedValue(mockEndpoint);
+      mockDb.query.member.findFirst.mockResolvedValue(mockMember);
       mockDb.query.apiKey.findFirst.mockResolvedValue(mockApiKey);
 
       const { default: apiKeys } = await import("../../routes/api-keys");
@@ -374,6 +676,7 @@ describe("API Keys Routes", () => {
     it("should not delete already revoked keys", async () => {
       // Mock endpoint exists but key not found (simulating the isNull filter)
       mockDb.query.endpoint.findFirst.mockResolvedValue(mockEndpoint);
+      mockDb.query.member.findFirst.mockResolvedValue(mockMember);
       mockDb.query.apiKey.findFirst.mockResolvedValue(null);
 
       const { default: apiKeys } = await import("../../routes/api-keys");
@@ -387,11 +690,40 @@ describe("API Keys Routes", () => {
 
       expect(response.status).toBe(500); // Error thrown for not found
     });
+
+    it("should call database update with revocation data", async () => {
+      mockDb.query.endpoint.findFirst.mockResolvedValue(mockEndpoint);
+      mockDb.query.member.findFirst.mockResolvedValue(mockMember);
+      mockDb.query.apiKey.findFirst.mockResolvedValue(mockApiKey);
+
+      const mockWhere = vi.fn(() => Promise.resolve());
+      const mockSet = vi.fn(() => ({ where: mockWhere }));
+      mockDb.update.mockReturnValue({ set: mockSet });
+
+      const { default: apiKeys } = await import("../../routes/api-keys");
+      const app = new Hono();
+      app.route("/api/endpoints", apiKeys);
+
+      await app.request("/api/endpoints/ep_123/keys/key_123", {
+        method: "DELETE",
+      });
+
+      expect(mockDb.update).toHaveBeenCalled();
+      expect(mockSet).toHaveBeenCalledWith(
+        expect.objectContaining({
+          revokedById: "user_123",
+        })
+      );
+    });
   });
 
+  // =========================================================================
+  // API Key Format Tests
+  // =========================================================================
   describe("API Key Format", () => {
     it("should generate key with ak_ prefix", async () => {
       mockDb.query.endpoint.findFirst.mockResolvedValue(mockEndpoint);
+      mockDb.query.member.findFirst.mockResolvedValue(mockMember);
 
       const { default: apiKeys } = await import("../../routes/api-keys");
       const app = new Hono();
@@ -411,6 +743,7 @@ describe("API Keys Routes", () => {
 
     it("should generate prefix with first 8 chars after ak_", async () => {
       mockDb.query.endpoint.findFirst.mockResolvedValue(mockEndpoint);
+      mockDb.query.member.findFirst.mockResolvedValue(mockMember);
 
       const { default: apiKeys } = await import("../../routes/api-keys");
       const app = new Hono();
@@ -430,6 +763,9 @@ describe("API Keys Routes", () => {
     });
   });
 
+  // =========================================================================
+  // Validation Tests
+  // =========================================================================
   describe("Validation", () => {
     it("should reject invalid expiresAt format", async () => {
       const { default: apiKeys } = await import("../../routes/api-keys");
@@ -450,6 +786,7 @@ describe("API Keys Routes", () => {
 
     it("should accept valid scopes array", async () => {
       mockDb.query.endpoint.findFirst.mockResolvedValue(mockEndpoint);
+      mockDb.query.member.findFirst.mockResolvedValue(mockMember);
 
       const { default: apiKeys } = await import("../../routes/api-keys");
       const app = new Hono();
@@ -465,6 +802,146 @@ describe("API Keys Routes", () => {
       });
 
       expect(response.status).toBe(201);
+    });
+
+    it("should accept empty scopes array", async () => {
+      mockDb.query.endpoint.findFirst.mockResolvedValue(mockEndpoint);
+      mockDb.query.member.findFirst.mockResolvedValue(mockMember);
+
+      const { default: apiKeys } = await import("../../routes/api-keys");
+      const app = new Hono();
+      app.route("/api/endpoints", apiKeys);
+
+      const response = await app.request("/api/endpoints/ep_123/keys", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: "Test Key",
+          scopes: [],
+        }),
+      });
+
+      expect(response.status).toBe(201);
+    });
+
+    it("should reject request with invalid JSON body", async () => {
+      const { default: apiKeys } = await import("../../routes/api-keys");
+      const app = new Hono();
+      app.route("/api/endpoints", apiKeys);
+
+      const response = await app.request("/api/endpoints/ep_123/keys", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "invalid json {",
+      });
+
+      expect(response.status).toBe(400);
+    });
+  });
+
+  // =========================================================================
+  // Edge Cases
+  // =========================================================================
+  describe("Edge Cases", () => {
+    it("should handle endpoint with different organization than user's membership", async () => {
+      // User is a member of org_123, but endpoint belongs to org_other
+      mockDb.query.endpoint.findFirst.mockResolvedValue(mockEndpointDifferentOrg);
+      mockDb.query.member.findFirst.mockResolvedValue(null); // Not a member of org_other
+
+      const { default: apiKeys } = await import("../../routes/api-keys");
+      const app = new Hono();
+      app.onError(testErrorHandler);
+      app.route("/api/endpoints", apiKeys);
+
+      const response = await app.request("/api/endpoints/ep_456/keys");
+      const data = (await response.json()) as ErrorResponse;
+
+      expect(response.status).toBe(403);
+      expect(data.error.toLowerCase()).toContain("access");
+    });
+
+    it("should verify membership is checked against the correct organization", async () => {
+      mockDb.query.endpoint.findFirst.mockResolvedValue(mockEndpoint);
+      mockDb.query.member.findFirst.mockResolvedValue(mockMember);
+      mockDb.query.apiKey.findMany.mockResolvedValue([]);
+
+      const { default: apiKeys } = await import("../../routes/api-keys");
+      const app = new Hono();
+      app.route("/api/endpoints", apiKeys);
+
+      await app.request("/api/endpoints/ep_123/keys");
+
+      // Verify member.findFirst was called (membership check happened)
+      expect(mockDb.query.member.findFirst).toHaveBeenCalled();
+    });
+
+    it("should handle API key with null scopes when listing", async () => {
+      const apiKeyWithNullScopes = { ...mockApiKey, scopes: null };
+      mockDb.query.endpoint.findFirst.mockResolvedValue(mockEndpoint);
+      mockDb.query.member.findFirst.mockResolvedValue(mockMember);
+      mockDb.query.apiKey.findMany.mockResolvedValue([apiKeyWithNullScopes]);
+
+      const { default: apiKeys } = await import("../../routes/api-keys");
+      const app = new Hono();
+      app.route("/api/endpoints", apiKeys);
+
+      const response = await app.request("/api/endpoints/ep_123/keys");
+      const data = (await response.json()) as ListKeysResponse;
+
+      expect(response.status).toBe(200);
+      expect(data.keys[0].scopes).toBeNull();
+    });
+
+    it("should handle API key with lastUsedAt date", async () => {
+      const lastUsedDate = new Date("2025-01-15T10:30:00.000Z");
+      const apiKeyWithLastUsed = { ...mockApiKey, lastUsedAt: lastUsedDate };
+      mockDb.query.endpoint.findFirst.mockResolvedValue(mockEndpoint);
+      mockDb.query.member.findFirst.mockResolvedValue(mockMember);
+      mockDb.query.apiKey.findMany.mockResolvedValue([apiKeyWithLastUsed]);
+
+      const { default: apiKeys } = await import("../../routes/api-keys");
+      const app = new Hono();
+      app.route("/api/endpoints", apiKeys);
+
+      const response = await app.request("/api/endpoints/ep_123/keys");
+      const data = (await response.json()) as ListKeysResponse;
+
+      expect(response.status).toBe(200);
+      expect(data.keys[0].lastUsedAt).toBe("2025-01-15T10:30:00.000Z");
+    });
+
+    it("should handle API key with null lastUsedAt", async () => {
+      mockDb.query.endpoint.findFirst.mockResolvedValue(mockEndpoint);
+      mockDb.query.member.findFirst.mockResolvedValue(mockMember);
+      mockDb.query.apiKey.findMany.mockResolvedValue([mockApiKey]);
+
+      const { default: apiKeys } = await import("../../routes/api-keys");
+      const app = new Hono();
+      app.route("/api/endpoints", apiKeys);
+
+      const response = await app.request("/api/endpoints/ep_123/keys");
+      const data = (await response.json()) as ListKeysResponse;
+
+      expect(response.status).toBe(200);
+      expect(data.keys[0].lastUsedAt).toBeNull();
+    });
+
+    it("should handle API key with expiresAt date", async () => {
+      const expiresDate = new Date("2025-12-31T23:59:59.000Z");
+      const apiKeyWithExpires = { ...mockApiKey, expiresAt: expiresDate };
+      mockDb.query.endpoint.findFirst.mockResolvedValue(mockEndpoint);
+      mockDb.query.member.findFirst.mockResolvedValue(mockMember);
+      mockDb.query.apiKey.findMany.mockResolvedValue([apiKeyWithExpires]);
+
+      const { default: apiKeys } = await import("../../routes/api-keys");
+      const app = new Hono();
+      app.route("/api/endpoints", apiKeys);
+
+      const response = await app.request("/api/endpoints/ep_123/keys");
+      const data = (await response.json()) as ListKeysResponse;
+
+      expect(response.status).toBe(200);
+      expect(data.keys[0].expiresAt).toBe("2025-12-31T23:59:59.000Z");
     });
   });
 });

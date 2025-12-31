@@ -17,7 +17,7 @@ import { eq, and, isNull } from "drizzle-orm";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import { authMiddleware, getAuthContext, ApiError } from "../middleware";
 import { getDb } from "../lib/db";
-import { apiKey, endpoint, pg } from "@athreei/db";
+import { apiKey, endpoint, member, pg } from "@athreei/db";
 
 // Type alias for the PostgreSQL database with our schema
 type PgDb = PostgresJsDatabase<typeof pg>;
@@ -75,12 +75,27 @@ function generateId(): string {
 }
 
 /**
+ * Verify user is a member of an organization
+ */
+async function verifyOrganizationMembership(
+  db: PgDb,
+  userId: string,
+  organizationId: string
+): Promise<boolean> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const membership = await (db as any).query.member.findFirst({
+    where: and(eq(member.userId, userId), eq(member.organizationId, organizationId)),
+  });
+  return !!membership;
+}
+
+/**
  * Verify user has access to the endpoint's organization
  */
 async function verifyEndpointAccess(
   db: PgDb,
   endpointId: string,
-  _userId: string
+  userId: string
 ): Promise<typeof endpoint.$inferSelect> {
   // Get the endpoint
   const ep = await db.query.endpoint.findFirst({
@@ -91,9 +106,11 @@ async function verifyEndpointAccess(
     throw ApiError.notFound("Endpoint not found");
   }
 
-  // TODO: In a full implementation, we would check if the user is a member of the
-  // organization that owns this endpoint. For now, we trust the authenticated user.
-  // This should be enhanced with proper organization membership checks.
+  // Check if user is a member of the organization that owns this endpoint
+  const isMember = await verifyOrganizationMembership(db, userId, ep.organizationId);
+  if (!isMember) {
+    throw ApiError.forbidden("You do not have access to this endpoint");
+  }
 
   return ep;
 }
