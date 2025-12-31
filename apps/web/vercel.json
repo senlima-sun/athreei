@@ -1,22 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "vite",
+  "framework": "nextjs",
   "buildCommand": "cd ../.. && bun install && bun run --filter @athreei/web build",
-  "outputDirectory": "dist",
   "installCommand": "echo 'Using root install'",
-  "rewrites": [
-    {
-      "source": "/docs/:path*",
-      "destination": "/docs/:path*"
-    },
-    {
-      "source": "/((?!assets|docs|favicon).*)",
-      "destination": "/index.html"
-    }
-  ],
   "headers": [
     {
-      "source": "/assets/(.*)",
+      "source": "/_next/static/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
