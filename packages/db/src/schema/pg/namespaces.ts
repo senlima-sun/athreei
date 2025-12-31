@@ -52,6 +52,7 @@ export const namespaceResource = pgTable(
       .references(() => namespace.id, { onDelete: "cascade" }),
     resourceType: text("resourceType").notNull(), // mcp_server, endpoint, api_key
     resourceId: text("resourceId").notNull(),
+    enabled: boolean("enabled").notNull().default(true),
     createdAt: timestamp("createdAt").notNull(),
   },
   (table) => [

@@ -38,6 +38,7 @@ interface ApiServer {
   transport: string;
   mappingId: string;
   addedAt: string;
+  enabled?: boolean;
 }
 
 export default function NamespaceDetailsPage() {
@@ -84,7 +85,7 @@ export default function NamespaceDetailsPage() {
           name: server.name,
           description: server.description,
           status: server.status === "active" ? "online" : "offline",
-          enabled: true, // Default to enabled
+          enabled: server.enabled ?? true,
         })
       );
       setServers(transformedServers);
@@ -185,11 +186,29 @@ export default function NamespaceDetailsPage() {
   };
 
   const handleToggleServer = async (serverId: string, enabled: boolean) => {
-    // For now, just update local state since toggle isn't persisted to backend
-    // TODO: Add PATCH endpoint for updating server mapping status
-    setServers((prev) =>
-      prev.map((s) => (s.serverId === serverId ? { ...s, enabled } : s))
-    );
+    try {
+      const response = await fetch(
+        `${API_URL}/api/namespaces/${namespaceId}/servers/${serverId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ enabled }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || "Failed to update server status");
+      }
+
+      // Update local state on success
+      setServers((prev) =>
+        prev.map((s) => (s.serverId === serverId ? { ...s, enabled } : s))
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update server status");
+    }
   };
 
   const handleDeleteNamespace = async () => {

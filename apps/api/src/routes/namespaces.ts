@@ -43,6 +43,10 @@ const addServerSchema = z.object({
   serverId: z.string().min(1, "Server ID is required"),
 });
 
+const updateServerMappingSchema = z.object({
+  enabled: z.boolean(),
+});
+
 // =============================================================================
 // Helper Functions
 // =============================================================================
@@ -311,6 +315,7 @@ namespaces.get("/:id", async (c) => {
         ...server,
         mappingId: mapping.id,
         addedAt: mapping.createdAt,
+        enabled: mapping.enabled ?? true,
       };
     })
   );
@@ -616,6 +621,7 @@ namespaces.get("/:id/servers", async (c) => {
         ...server,
         mappingId: mapping.id,
         addedAt: mapping.createdAt,
+        enabled: mapping.enabled ?? true,
       };
     })
   );
@@ -624,5 +630,56 @@ namespaces.get("/:id/servers", async (c) => {
     servers: servers.filter(Boolean),
   });
 });
+
+/**
+ * PATCH /api/namespaces/:id/servers/:serverId
+ * Update server mapping status (enabled/disabled) in a namespace
+ */
+namespaces.patch(
+  "/:id/servers/:serverId",
+  zValidator("json", updateServerMappingSchema),
+  async (c) => {
+    const db = getDb();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const dbQuery = (db as any).query;
+    const auth = getAuthContext(c);
+    const namespaceId = c.req.param("id");
+    const serverId = c.req.param("serverId");
+    const { enabled } = c.req.valid("json");
+
+    // Get the namespace and verify access
+    await getNamespaceWithAccess(db, namespaceId, auth.userId);
+
+    // Find the mapping
+    const mapping = (await dbQuery.namespaceResource.findFirst({
+      where: and(
+        eq(namespaceResource.namespaceId, namespaceId),
+        eq(namespaceResource.resourceType, "mcp_server"),
+        eq(namespaceResource.resourceId, serverId)
+      ),
+    })) as (typeof namespaceResource.$inferSelect) | null;
+
+    if (!mapping) {
+      throw ApiError.notFound("Server is not in this namespace");
+    }
+
+    // Update the mapping
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (db as any)
+      .update(namespaceResource)
+      .set({ enabled })
+      .where(eq(namespaceResource.id, mapping.id));
+
+    return c.json({
+      mapping: {
+        id: mapping.id,
+        namespaceId,
+        serverId,
+        enabled,
+      },
+      message: `Server ${enabled ? "enabled" : "disabled"} successfully`,
+    });
+  }
+);
 
 export default namespaces;

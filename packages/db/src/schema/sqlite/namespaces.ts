@@ -52,6 +52,7 @@ export const namespaceResource = sqliteTable(
       .references(() => namespace.id, { onDelete: "cascade" }),
     resourceType: text("resourceType").notNull(), // mcp_server, endpoint, api_key
     resourceId: text("resourceId").notNull(),
+    enabled: integer("enabled", { mode: "boolean" }).notNull().default(true),
     createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
   },
   (table) => [
