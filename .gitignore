@@ -38,6 +38,7 @@ npm-debug.log*
 
 # Testing
 coverage/
+test-results/
 
 # Compiled binaries
 packages/native-host/dist/athreei-host*
