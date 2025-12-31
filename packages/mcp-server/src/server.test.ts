@@ -5,9 +5,10 @@
  * and basic tool invocation works with stub data.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { createServer } from "./server.js";
 import { MCP_TOOL_NAMES } from "@athreei/shared";
+import { getMcpContext, clearMcpContext, getAiAppName } from "./context/index.js";
 
 describe("MCP Server", () => {
   it("should create server successfully", () => {
@@ -40,5 +41,33 @@ describe("MCP Server", () => {
     expect(server).toHaveProperty("connect");
     expect(server).toHaveProperty("close");
     expect(server).toHaveProperty("registerTool");
+  });
+
+  it("should have oninitialized handler registered", () => {
+    const server = createServer();
+    // Verify the server has the oninitialized callback set up
+    expect(server.server.oninitialized).toBeDefined();
+    expect(typeof server.server.oninitialized).toBe("function");
+  });
+
+  it("should have onclose handler registered", () => {
+    const server = createServer();
+    // Verify the server has the onclose callback set up
+    expect(server.server.onclose).toBeDefined();
+    expect(typeof server.server.onclose).toBe("function");
+  });
+});
+
+describe("MCP Server Context Integration", () => {
+  beforeEach(() => {
+    clearMcpContext();
+  });
+
+  it("should return default AI app name before client connects", () => {
+    expect(getAiAppName()).toBe("AI Assistant");
+  });
+
+  it("should have no context before client connects", () => {
+    expect(getMcpContext()).toBeNull();
   });
 });

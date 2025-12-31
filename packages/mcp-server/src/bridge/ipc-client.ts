@@ -11,6 +11,7 @@ import { homedir } from "os";
 import { join } from "path";
 import { randomUUID } from "crypto";
 import { logger } from "../utils/logger.js";
+import { getAiAppName } from "../context/index.js";
 
 function getSocketPath(): string {
   const baseDir = process.platform === "win32"
@@ -107,7 +108,9 @@ export class IPCClient {
     }
 
     const id = randomUUID();
-    const request = { id, type: "request", method, payload };
+    // Inject AI app name into payload for extension permission dialogs
+    const enrichedPayload = { ...payload, _aiApp: getAiAppName() };
+    const request = { id, type: "request", method, payload: enrichedPayload };
 
     return new Promise((resolve, reject) => {
       const timeoutId = setTimeout(() => {

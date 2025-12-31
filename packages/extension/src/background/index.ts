@@ -36,6 +36,12 @@ const HEALTH_CHECK_INTERVAL_MS = 30000
 // @ts-expect-error Reserved for future use
 const _HEALTH_CHECK_TIMEOUT_MS = 5000
 
+// Default AI app name when not provided by MCP context
+const DEFAULT_AI_APP = "AI Assistant"
+
+// Current AI app name for the active request (extracted from MCP context)
+let currentAiApp: string = DEFAULT_AI_APP
+
 // ============================================================================
 // Connection State
 // ============================================================================
@@ -265,6 +271,10 @@ function handleNativeResponse(response: NativeResponse): void {
  */
 async function handleNativeRequest(request: NativeRequest): Promise<void> {
   console.log("[Background] Handling native request:", request.method)
+
+  // Extract AI app name from payload (injected by MCP server's IPC client)
+  const payload = request.payload as Record<string, unknown>
+  currentAiApp = (payload._aiApp as string) || DEFAULT_AI_APP
 
   try {
     let result: unknown
@@ -729,7 +739,7 @@ async function showPermissionDialogToUser(
     type: "show_permission_dialog",
     tool,
     origin,
-    aiApp: "AI Assistant", // TODO: Get from MCP context when available
+    aiApp: currentAiApp, // AI app name from MCP context
     toolDescription: undefined, // Let content script use default description
   })
 

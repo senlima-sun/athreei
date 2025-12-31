@@ -7,6 +7,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { registerBrowserTools } from "./tools/browser.js";
 import { logger } from "./utils/logger.js";
+import { setMcpContext, clearMcpContext } from "./context/index.js";
 
 /**
  * Create and configure the MCP server
@@ -22,7 +23,24 @@ export function createServer() {
   // Register all browser tools
   registerBrowserTools(server);
 
-  // Log when server is initialized (error handling moved to index.ts)
+  // Capture client info when initialization completes
+  server.server.oninitialized = () => {
+    const clientVersion = server.server.getClientVersion();
+    if (clientVersion) {
+      setMcpContext({
+        clientName: clientVersion.name || "Unknown",
+        clientVersion: clientVersion.version || "0.0.0",
+        connectedAt: new Date(),
+      });
+      logger.info(`Client connected: ${clientVersion.name} v${clientVersion.version}`);
+    }
+  };
+
+  // Clear context when server closes
+  server.server.onclose = () => {
+    clearMcpContext();
+    logger.info("Client disconnected");
+  };
 
   logger.info("MCP server created successfully");
 

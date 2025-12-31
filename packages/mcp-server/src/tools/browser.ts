@@ -12,6 +12,7 @@ import { MCP_TOOL_DEFINITIONS } from "@athreei/shared";
 import { logger } from "../utils/logger.js";
 import { getIPCClient } from "../bridge/index.js";
 import { createAuditLogEntry } from "../db/repositories/audit-log.js";
+import { getAiAppName } from "../context/index.js";
 import type { AuditStatus } from "@athreei/shared";
 
 // Type definitions for tool arguments to avoid implicit any
@@ -122,7 +123,7 @@ async function logToolExecution<T = unknown>(
     createAuditLogEntry({
       id: logId,
       timestamp: startTime,
-      aiApp: undefined, // TODO: Extract from MCP context when available
+      aiApp: getAiAppName(),
       tool,
       origin,
       args,
@@ -148,7 +149,7 @@ async function logToolExecution<T = unknown>(
     createAuditLogEntry({
       id: logId,
       timestamp: startTime,
-      aiApp: undefined, // TODO: Extract from MCP context when available
+      aiApp: getAiAppName(),
       tool,
       origin,
       args,
