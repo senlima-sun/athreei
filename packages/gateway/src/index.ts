@@ -13,7 +13,11 @@
  *   --port, -p <port>      Port for SSE transport (default: 3000)
  *   --debug, -d            Enable debug logging
  *   --help, -h             Show this help message
+ *   --version, -v          Show version number
  */
+
+// Package version (imported at runtime to avoid bundling issues)
+const VERSION = "0.1.0";
 
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
@@ -46,6 +50,7 @@ interface CliArgs {
   port: number;
   debug: boolean;
   help: boolean;
+  version: boolean;
 }
 
 function parseArgs(): CliArgs {
@@ -55,6 +60,7 @@ function parseArgs(): CliArgs {
     port: 3000,
     debug: false,
     help: false,
+    version: false,
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -96,6 +102,11 @@ function parseArgs(): CliArgs {
         config.help = true;
         break;
 
+      case "--version":
+      case "-v":
+        config.version = true;
+        break;
+
       default:
         if (arg.startsWith("-")) {
           log.error(`Unknown option: ${arg}`);
@@ -119,6 +130,7 @@ Options:
   -p, --port <port>       Port for SSE transport (default: 3000)
   -d, --debug             Enable debug logging
   -h, --help              Show this help message
+  -v, --version           Show version number
 
 Examples:
   athreei-gateway                           # Start with stdio transport
@@ -307,6 +319,11 @@ async function startSSE(
 
 async function main(): Promise<void> {
   const cliArgs = parseArgs();
+
+  if (cliArgs.version) {
+    console.log(`athreei-gateway v${VERSION}`);
+    process.exit(0);
+  }
 
   if (cliArgs.help) {
     showHelp();
