@@ -22,6 +22,7 @@ import {
   mcpServer,
   trace,
 } from "@athreei/db";
+import { checkRateLimit } from "../middleware/rate-limit";
 
 const gateway = new Hono();
 
@@ -89,6 +90,7 @@ async function validateApiKey(
   valid: true;
   apiKeyRecord: typeof apiKey.$inferSelect;
   endpointRecord: typeof endpoint.$inferSelect;
+  keyHash: string;
 } | { valid: false; error: string }> {
   // Strip "ak_" prefix if present (the key is stored without it)
   const keyToHash = key.startsWith("ak_") ? key.slice(3) : key;
@@ -141,6 +143,7 @@ async function validateApiKey(
     valid: true,
     apiKeyRecord,
     endpointRecord,
+    keyHash,
   };
 }
 
@@ -177,6 +180,38 @@ function generateSpanId(): string {
   return crypto.randomUUID().replace(/-/g, "").slice(0, 16);
 }
 
+/**
+ * Rate limiting configuration
+ */
+const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
+const DEFAULT_RATE_LIMIT = 60; // requests per minute
+
+/**
+ * Apply rate limiting for an API key with optional per-endpoint override
+ * Returns rate limit info with headers to set, or null if rate limited (returns 429 response)
+ */
+function applyRateLimit(
+  c: import("hono").Context,
+  apiKeyHash: string,
+  endpointRateLimit: number | null
+): { limited: true } | { limited: false } {
+  const limit = endpointRateLimit ?? DEFAULT_RATE_LIMIT;
+  const info = checkRateLimit(apiKeyHash, limit, RATE_LIMIT_WINDOW_MS);
+
+  // Set rate limit headers
+  const now = Date.now();
+  c.header("X-RateLimit-Limit", String(limit));
+  c.header("X-RateLimit-Remaining", String(Math.max(0, limit - info.current)));
+  c.header("X-RateLimit-Reset", String(Math.ceil((now + info.resetIn) / 1000)));
+
+  if (info.limited) {
+    c.header("Retry-After", String(Math.ceil(info.resetIn / 1000)));
+    return { limited: true };
+  }
+
+  return { limited: false };
+}
+
 // =============================================================================
 // Routes
 // =============================================================================
@@ -209,7 +244,19 @@ gateway.get("/config", zValidator("query", getConfigQuerySchema), async (c) => {
     return c.json({ error: validation.error }, 401);
   }
 
-  const { endpointRecord } = validation;
+  const { endpointRecord, keyHash } = validation;
+
+  // Apply rate limiting
+  const rateLimitResult = applyRateLimit(c, keyHash, endpointRecord.rateLimit);
+  if (rateLimitResult.limited) {
+    return c.json(
+      {
+        error: "Too Many Requests",
+        message: "Rate limit exceeded. Please try again later.",
+      },
+      429
+    );
+  }
 
   // Extract slug from endpoint URL (e.g., "https://athreei.com/mcp/my-tools/sse" → "my-tools")
   const urlParts = endpointRecord.url.split("/");
@@ -314,7 +361,20 @@ gateway.post("/traces", zValidator("json", postTracesSchema), async (c) => {
     return c.json({ error: validation.error }, 401);
   }
 
-  const { apiKeyRecord, endpointRecord } = validation;
+  const { apiKeyRecord, endpointRecord, keyHash } = validation;
+
+  // Apply rate limiting
+  const rateLimitResult = applyRateLimit(c, keyHash, endpointRecord.rateLimit);
+  if (rateLimitResult.limited) {
+    return c.json(
+      {
+        error: "Too Many Requests",
+        message: "Rate limit exceeded. Please try again later.",
+      },
+      429
+    );
+  }
+
   const { traces } = c.req.valid("json");
 
   const now = new Date();
