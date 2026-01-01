@@ -8,7 +8,7 @@
  * - Returns { user: null, session: null } on failure
  */
 
-import { describe, it, expect, mock, beforeEach, afterEach, spyOn } from "bun:test";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // Mock data
 const mockUser = {
@@ -33,7 +33,7 @@ const originalFetch = global.fetch;
 let mockCookiesReturnValue = mockCookies;
 
 // Mock next/headers module
-mock.module("next/headers", () => ({
+vi.mock("next/headers", () => ({
   cookies: () => Promise.resolve({
     getAll: () => mockCookiesReturnValue,
   }),
@@ -50,7 +50,7 @@ describe("getServerSession", () => {
 
   it("returns user and session when API returns valid session", async () => {
     // @ts-expect-error - mock type doesn't match full fetch signature
-    global.fetch = mock(() =>
+    global.fetch = vi.fn(() =>
       Promise.resolve({
         ok: true,
         json: () => Promise.resolve({ user: mockUser, session: mockSession }),
@@ -66,7 +66,7 @@ describe("getServerSession", () => {
 
   it("returns null user/session when API returns 401", async () => {
     // @ts-expect-error - mock type doesn't match full fetch signature
-    global.fetch = mock(() =>
+    global.fetch = vi.fn(() =>
       Promise.resolve({
         ok: false,
         status: 401,
@@ -82,7 +82,7 @@ describe("getServerSession", () => {
 
   it("returns null user/session when API returns 500", async () => {
     // @ts-expect-error - mock type doesn't match full fetch signature
-    global.fetch = mock(() =>
+    global.fetch = vi.fn(() =>
       Promise.resolve({
         ok: false,
         status: 500,
@@ -98,10 +98,10 @@ describe("getServerSession", () => {
 
   it("returns null user/session when fetch throws network error", async () => {
     // @ts-expect-error - mock type doesn't match full fetch signature
-    global.fetch = mock(() => Promise.reject(new Error("Network error")));
+    global.fetch = vi.fn(() => Promise.reject(new Error("Network error")));
 
     const originalError = console.error;
-    console.error = mock(() => {});
+    console.error = vi.fn(() => {});
 
     const { getServerSession } = await import("./auth-server");
     const result = await getServerSession();
@@ -113,7 +113,7 @@ describe("getServerSession", () => {
   });
 
   it("properly forwards cookies to API", async () => {
-    const mockFetch = mock(() =>
+    const mockFetch = vi.fn(() =>
       Promise.resolve({
         ok: true,
         json: () => Promise.resolve({ user: mockUser, session: mockSession }),
@@ -135,7 +135,7 @@ describe("getServerSession", () => {
   });
 
   it("uses correct API URL", async () => {
-    const mockFetch = mock(() =>
+    const mockFetch = vi.fn(() =>
       Promise.resolve({
         ok: true,
         json: () => Promise.resolve({ user: mockUser, session: mockSession }),
@@ -154,7 +154,7 @@ describe("getServerSession", () => {
   it("handles empty cookies array", async () => {
     mockCookiesReturnValue = [];
 
-    const mockFetch = mock(() =>
+    const mockFetch = vi.fn(() =>
       Promise.resolve({
         ok: true,
         json: () => Promise.resolve({ user: mockUser, session: mockSession }),
@@ -173,7 +173,7 @@ describe("getServerSession", () => {
 
   it("handles malformed JSON response", async () => {
     // @ts-expect-error - mock type doesn't match full fetch signature
-    global.fetch = mock(() =>
+    global.fetch = vi.fn(() =>
       Promise.resolve({
         ok: true,
         json: () => Promise.reject(new Error("Invalid JSON")),
@@ -181,7 +181,7 @@ describe("getServerSession", () => {
     );
 
     const originalError = console.error;
-    console.error = mock(() => {});
+    console.error = vi.fn(() => {});
 
     const { getServerSession } = await import("./auth-server");
     const result = await getServerSession();

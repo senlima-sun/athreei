@@ -29,8 +29,7 @@ const mockCrypto = {
 };
 
 // Override global crypto for testing
-// @ts-expect-error - overriding global crypto for testing
-globalThis.crypto = mockCrypto;
+vi.stubGlobal("crypto", mockCrypto);
 
 // Mock modules before importing the routes
 vi.mock("../../lib/db", () => ({
