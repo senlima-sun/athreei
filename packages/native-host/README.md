@@ -29,11 +29,13 @@ bun run dev
 ### macOS
 
 1. Build the binary:
+
    ```bash
    bun run build
    ```
 
 2. Copy the binary to a permanent location:
+
    ```bash
    mkdir -p ~/Library/Application\ Support/athreei
    cp dist/athreei-host ~/Library/Application\ Support/athreei/
@@ -41,15 +43,14 @@ bun run dev
    ```
 
 3. Update `manifest.json` with the correct path and extension ID:
+
    ```json
    {
      "name": "com.athreei.host",
      "description": "athreei Native Messaging Host",
      "path": "/Users/YOUR_USERNAME/Library/Application Support/athreei/athreei-host",
      "type": "stdio",
-     "allowed_origins": [
-       "chrome-extension://YOUR_EXTENSION_ID/"
-     ]
+     "allowed_origins": ["chrome-extension://YOUR_EXTENSION_ID/"]
    }
    ```
 
@@ -62,11 +63,13 @@ bun run dev
 ### Linux
 
 1. Build the binary:
+
    ```bash
    bun run build:linux
    ```
 
 2. Copy the binary to a permanent location:
+
    ```bash
    mkdir -p ~/.local/share/athreei
    cp dist/athreei-host-linux ~/.local/share/athreei/athreei-host
@@ -82,6 +85,7 @@ bun run dev
 ### Windows
 
 1. Build the binary:
+
    ```bash
    bun run build:windows
    ```
@@ -89,15 +93,14 @@ bun run dev
 2. Copy the binary to a permanent location (e.g., `C:\Program Files\athreei\`)
 
 3. Update `manifest.json` with the Windows path (use double backslashes):
+
    ```json
    {
      "name": "com.athreei.host",
      "description": "athreei Native Messaging Host",
      "path": "C:\\Program Files\\athreei\\athreei-host-windows.exe",
      "type": "stdio",
-     "allowed_origins": [
-       "chrome-extension://YOUR_EXTENSION_ID/"
-     ]
+     "allowed_origins": ["chrome-extension://YOUR_EXTENSION_ID/"]
    }
    ```
 
@@ -118,33 +121,42 @@ The native host uses Chrome's Native Messaging protocol:
 ### Message Format
 
 **Request** (from extension):
+
 ```json
 {
   "id": "uuid",
   "type": "request",
   "method": "browser_list_tabs",
-  "payload": { /* tool arguments */ }
+  "payload": {
+    /* tool arguments */
+  }
 }
 ```
 
 **Response** (to extension):
+
 ```json
 {
   "id": "uuid",
   "type": "response",
   "success": true,
-  "payload": { /* result data */ },
+  "payload": {
+    /* result data */
+  },
   "error": "optional error message"
 }
 ```
 
 **Event** (unsolicited):
+
 ```json
 {
   "id": "uuid",
   "type": "event",
   "event": "ready",
-  "payload": { /* event data */ }
+  "payload": {
+    /* event data */
+  }
 }
 ```
 
@@ -171,6 +183,7 @@ echo -n -e '\x1a\x00\x00\x00{"id":"1","type":"request","method":"ping","payload"
 ## Logging
 
 The native host logs to stderr (Chrome redirects this to a log file):
+
 - macOS: `~/Library/Application Support/Google/Chrome/NativeMessagingHosts/com.athreei.host.log`
 - Linux: `~/.config/google-chrome/NativeMessagingHosts/com.athreei.host.log`
 - Windows: Check Chrome's extension logs
@@ -186,6 +199,7 @@ The native host is built with Bun and TypeScript. Key files:
 ## Next Steps
 
 In Phase 3, this native host will be enhanced to:
+
 1. Actually communicate with the Chrome extension (currently returns mock responses)
 2. Forward requests from the MCP server to the extension
 3. Handle events from the extension

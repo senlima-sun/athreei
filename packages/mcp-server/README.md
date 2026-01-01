@@ -33,19 +33,19 @@ This package implements a Model Context Protocol (MCP) server that exposes brows
 
 All 11 browser automation tools are registered with **stub handlers** that return mock data:
 
-| Tool                       | Description                                       | Status |
-| -------------------------- | ------------------------------------------------- | ------ |
-| `browser_list_tabs`        | List all open browser tabs                        | ✅     |
-| `browser_get_active_tab`   | Get the currently active tab                      | ✅     |
-| `browser_navigate`         | Navigate to a URL                                 | ✅     |
-| `browser_get_content`      | Get page content (a11y tree, HTML, text, markdown)| ✅     |
-| `browser_get_elements`     | List interactive elements on the page             | ✅     |
-| `browser_click`            | Click an element                                  | ✅     |
-| `browser_type`             | Type text into an input field                     | ✅     |
-| `browser_scroll`           | Scroll the page or an element                     | ✅     |
-| `browser_screenshot`       | Take a screenshot                                 | ✅     |
-| `browser_execute_script`   | Execute JavaScript code                           | ✅     |
-| `browser_wait`             | Wait for an element or condition                  | ✅     |
+| Tool                     | Description                                        | Status |
+| ------------------------ | -------------------------------------------------- | ------ |
+| `browser_list_tabs`      | List all open browser tabs                         | ✅     |
+| `browser_get_active_tab` | Get the currently active tab                       | ✅     |
+| `browser_navigate`       | Navigate to a URL                                  | ✅     |
+| `browser_get_content`    | Get page content (a11y tree, HTML, text, markdown) | ✅     |
+| `browser_get_elements`   | List interactive elements on the page              | ✅     |
+| `browser_click`          | Click an element                                   | ✅     |
+| `browser_type`           | Type text into an input field                      | ✅     |
+| `browser_scroll`         | Scroll the page or an element                      | ✅     |
+| `browser_screenshot`     | Take a screenshot                                  | ✅     |
+| `browser_execute_script` | Execute JavaScript code                            | ✅     |
+| `browser_wait`           | Wait for an element or condition                   | ✅     |
 
 **Note**: These tools currently return mock data. Phase 2.3 will connect them to the Chrome extension via Native Messaging.
 
@@ -123,11 +123,11 @@ packages/mcp-server/
 **CRITICAL**: For stdio transport, all logs go to `stderr` (via `console.error`) because `stdout` is reserved for JSON-RPC communication with the MCP client.
 
 ```typescript
-import { logger } from "./utils/logger.js";
+import { logger } from "./utils/logger.js"
 
-logger.info("This goes to stderr");
-logger.error("This also goes to stderr");
-logger.debug("Only shown if DEBUG=1"); // Set DEBUG env var
+logger.info("This goes to stderr")
+logger.error("This also goes to stderr")
+logger.debug("Only shown if DEBUG=1") // Set DEBUG env var
 ```
 
 ### Adding New Tools
@@ -148,9 +148,9 @@ server.registerTool(
     // Tool implementation
     return {
       content: [{ type: "text", text: JSON.stringify(result) }],
-    };
-  },
-);
+    }
+  }
+)
 ```
 
 ### Testing
@@ -175,7 +175,10 @@ Add this to your Claude Desktop config (`~/Library/Application Support/Claude/cl
   "mcpServers": {
     "athreei": {
       "command": "bun",
-      "args": ["run", "/absolute/path/to/athreei/packages/mcp-server/src/index.ts"]
+      "args": [
+        "run",
+        "/absolute/path/to/athreei/packages/mcp-server/src/index.ts"
+      ]
     }
   }
 }
