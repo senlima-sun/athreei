@@ -244,7 +244,7 @@ gateway.get("/config", zValidator("query", getConfigQuerySchema), async (c) => {
     return c.json({ error: validation.error }, 401);
   }
 
-  const { endpointRecord, keyHash } = validation;
+  const { apiKeyRecord, endpointRecord, keyHash } = validation;
 
   // Apply rate limiting
   const rateLimitResult = applyRateLimit(c, keyHash, endpointRecord.rateLimit);
@@ -322,6 +322,7 @@ gateway.get("/config", zValidator("query", getConfigQuerySchema), async (c) => {
     endpointId: endpointRecord.id,
     endpointName: endpointRecord.name,
     organizationId: endpointRecord.organizationId,
+    userId: apiKeyRecord.createdById,
     configVersion,
     servers: servers.map((s) => ({
       id: s.id,
