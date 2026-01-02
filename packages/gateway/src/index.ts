@@ -19,6 +19,8 @@
 // Package version (imported at runtime to avoid bundling issues)
 const VERSION = "0.1.0";
 
+import { Hono } from "hono";
+import { cors } from "hono/cors";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
   createServer,
@@ -33,6 +35,15 @@ import { TraceCollector } from "./trace-collector.js";
 import { TraceSyncClient, createTraceSyncClient } from "./trace-sync.js";
 import { log, setLogLevel } from "./logger.js";
 import type { NamespaceConfig, GatewayConfig } from "./types.js";
+import {
+  createSseApp,
+  setNamespaceConfig as setSseNamespaceConfig,
+} from "./sse.js";
+import {
+  startSessionCleanup,
+  stopSessionCleanup,
+  cleanupAllSessions,
+} from "./session.js";
 
 // Re-export for library use
 export { TraceCollector } from "./trace-collector.js";
@@ -49,6 +60,7 @@ interface CliArgs {
   transport: "stdio" | "sse";
   port: number;
   debug: boolean;
+  mock: boolean;
   help: boolean;
   version: boolean;
 }
@@ -59,6 +71,7 @@ function parseArgs(): CliArgs {
     transport: "stdio",
     port: 3000,
     debug: false,
+    mock: false,
     help: false,
     version: false,
   };
@@ -97,6 +110,11 @@ function parseArgs(): CliArgs {
         config.debug = true;
         break;
 
+      case "--mock":
+      case "-m":
+        config.mock = true;
+        break;
+
       case "--help":
       case "-h":
         config.help = true;
@@ -128,6 +146,7 @@ Options:
   -c, --config <path>     Path to config file (default: ~/.athreei/config.json)
   -t, --transport <type>  Transport type: stdio (default) or sse
   -p, --port <port>       Port for SSE transport (default: 3000)
+  -m, --mock              Run in mock mode (no Platform connection required)
   -d, --debug             Enable debug logging
   -h, --help              Show this help message
   -v, --version           Show version number
@@ -136,10 +155,11 @@ Examples:
   athreei-gateway                           # Start with stdio transport
   athreei-gateway -t sse -p 3000           # Start with SSE on port 3000
   athreei-gateway -c /path/to/config.json  # Use custom config file
+  athreei-gateway -t sse --mock            # SSE mode with mock servers (for testing)
 
 Config file format (~/.athreei/config.json):
 {
-  "apiKey": "ak_your_api_key",
+  "apiKey": "atr_your_api_key",
   "endpoint": "your-endpoint-name",
   "platformUrl": "https://athreei.com"
 }
@@ -154,7 +174,7 @@ Config file format (~/.athreei/config.json):
  * Initialize the gateway state and connect to all MCP servers
  */
 async function initializeGateway(
-  gatewayConfig: GatewayConfig,
+  _gatewayConfig: GatewayConfig | null,
   namespaceConfig: NamespaceConfig,
   state: GatewayState
 ): Promise<void> {
@@ -235,17 +255,19 @@ async function handleConfigChange(
  */
 function setupShutdownHandlers(
   state: GatewayState,
-  syncManager: ConfigSyncManager,
+  syncManager: ConfigSyncManager | null,
   traceCollector: TraceCollector,
   traceSyncClient: TraceSyncClient | null,
-  server: ReturnType<typeof createServer>
+  server: ReturnType<typeof createServer>,
+  transport: "stdio" | "sse",
+  _mock: boolean = false
 ): void {
   const shutdown = async (signal: string) => {
     log.info(`Received ${signal}, shutting down gracefully...`);
 
     try {
       // Stop sync and trace collection
-      syncManager.stopPeriodicSync();
+      syncManager?.stopPeriodicSync();
       traceCollector.stopPeriodicFlush();
       traceSyncClient?.stopPeriodicFlush();
 
@@ -253,12 +275,24 @@ function setupShutdownHandlers(
       await traceCollector.flush().catch(() => {});
       await traceSyncClient?.flushAll().catch(() => {});
 
-      // Disconnect from all MCP servers
-      const mcps = Array.from(state.connectedMcps.values());
-      await disconnectAllServers(mcps);
+      if (transport === "stdio") {
+        // Disconnect from all MCP servers (stdio mode)
+        const mcps = Array.from(state.connectedMcps.values());
+        await disconnectAllServers(mcps);
 
-      // Close the gateway server
-      await server.close();
+        // Close the gateway server
+        await server.close();
+      } else {
+        // SSE mode: cleanup sessions and stop server
+        stopSessionCleanup();
+        await cleanupAllSessions();
+
+        // Stop SSE server
+        const sseServer = (globalThis as Record<string, unknown>).__sseServer as
+          | { stop: () => void }
+          | undefined;
+        sseServer?.stop();
+      }
 
       log.info("Gateway shut down successfully");
       process.exit(0);
@@ -299,23 +333,78 @@ async function startStdio(
 
 /**
  * Start the gateway with SSE transport
- *
- * Note: SSE transport requires Node.js HTTP primitives which are not
- * compatible with Bun's native HTTP server. This will be implemented
- * in a future version using a compatibility layer.
  */
 async function startSSE(
   _server: ReturnType<typeof createServer>,
-  _port: number
+  port: number
 ): Promise<void> {
-  log.error("SSE transport is not yet implemented for the gateway");
-  log.error("Please use stdio transport for now (default)");
-  process.exit(1);
+  const sseApp = createSseApp();
+
+  // Create main app with CORS
+  const app = new Hono();
+
+  app.use(
+    "*",
+    cors({
+      origin: "*",
+      credentials: true,
+      allowHeaders: ["Content-Type", "Authorization"],
+      allowMethods: ["GET", "POST", "OPTIONS"],
+    })
+  );
+
+  // Mount SSE routes under /mcp
+  app.route("/mcp", sseApp);
+
+  // Root endpoint
+  app.get("/", (c) => {
+    return c.json({
+      name: "athreei-gateway",
+      version: VERSION,
+      transport: "sse",
+      endpoints: {
+        sse: "/mcp/sse",
+        messages: "/mcp/messages",
+        health: "/mcp/health",
+      },
+    });
+  });
+
+  // Start session cleanup
+  startSessionCleanup(60000);
+
+  // Start server
+  const server = Bun.serve({
+    port,
+    fetch: app.fetch,
+  });
+
+  log.info(`Gateway running on SSE transport at http://localhost:${port}`);
+  log.info(`SSE endpoint: http://localhost:${port}/mcp/sse`);
+
+  // Store server reference for shutdown
+  (globalThis as Record<string, unknown>).__sseServer = server;
 }
 
 // =============================================================================
 // Main Entry Point
 // =============================================================================
+
+/**
+ * Create mock namespace config for testing
+ */
+function createMockNamespaceConfig(): NamespaceConfig {
+  return {
+    namespaceId: "mock-namespace",
+    namespaceName: "Mock Namespace",
+    namespaceSlug: "mock",
+    endpointId: "mock-endpoint",
+    endpointName: "mock",
+    organizationId: "mock-org",
+    servers: [],
+    configVersion: "mock-v1",
+  };
+}
 
 async function main(): Promise<void> {
   const cliArgs = parseArgs();
@@ -336,13 +425,8 @@ async function main(): Promise<void> {
 
   log.info("Starting athreei Gateway...");
 
-  // Load local configuration
-  let gatewayConfig: GatewayConfig;
-  try {
-    gatewayConfig = loadConfig(cliArgs.configPath);
-  } catch (error) {
-    log.error("Failed to load config:", error);
-    process.exit(1);
+  if (cliArgs.mock) {
+    log.info("Running in MOCK mode (no Platform connection)");
   }
 
   // Create gateway state
@@ -351,68 +435,96 @@ async function main(): Promise<void> {
   // Create trace collector (in-memory)
   const traceCollector = new TraceCollector({
     maxTraces: 1000,
-    sendToPlatform: false, // Use TraceSyncClient instead for Platform sync
+    sendToPlatform: false,
   });
 
   // Add trace collector event handler
   addEventHandler(state, traceCollector.createEventHandler());
 
-  // Create trace sync client for Platform (if API key is configured)
+  let gatewayConfig: GatewayConfig | null = null;
   let traceSyncClient: TraceSyncClient | null = null;
-  if (gatewayConfig.apiKey) {
-    traceSyncClient = createTraceSyncClient({
-      platformUrl: gatewayConfig.platformUrl ?? "https://athreei.com",
-      apiKey: gatewayConfig.apiKey,
-      batchSize: 100,
-      flushInterval: 30000, // 30 seconds
-    });
-
-    // Forward traces to sync client
-    addEventHandler(state, (event) => {
-      if (event.type === "tool_call") {
-        traceSyncClient?.addTrace(event.trace);
-      }
-    });
-  }
-
-  // Create config sync manager
-  const syncManager = new ConfigSyncManager(gatewayConfig);
-
-  // Fetch initial namespace configuration
+  let syncManager: ConfigSyncManager | null = null;
   let namespaceConfig: NamespaceConfig;
-  try {
-    namespaceConfig = await syncManager.initialSync();
 
-    for (const handler of state.eventHandlers) {
-      handler({ type: "namespace_synced", namespace: namespaceConfig });
+  if (cliArgs.mock) {
+    // Mock mode: use mock config
+    namespaceConfig = createMockNamespaceConfig();
+    setSseNamespaceConfig(namespaceConfig);
+  } else {
+    // Production mode: load config and sync with Platform
+    try {
+      gatewayConfig = loadConfig(cliArgs.configPath);
+    } catch (error) {
+      log.error("Failed to load config:", error);
+      log.error("Use --mock flag to run without config file");
+      process.exit(1);
     }
-  } catch (error) {
-    log.error("Failed to fetch namespace config:", error);
-    process.exit(1);
+
+    // Create trace sync client for Platform
+    if (gatewayConfig.apiKey) {
+      traceSyncClient = createTraceSyncClient({
+        platformUrl: gatewayConfig.platformUrl ?? "https://athreei.com",
+        apiKey: gatewayConfig.apiKey,
+        batchSize: 100,
+        flushInterval: 30000,
+      });
+
+      addEventHandler(state, (event) => {
+        if (event.type === "tool_call") {
+          traceSyncClient?.addTrace(event.trace);
+        }
+      });
+    }
+
+    // Create config sync manager and fetch initial config
+    syncManager = new ConfigSyncManager(gatewayConfig);
+
+    try {
+      namespaceConfig = await syncManager.initialSync();
+
+      for (const handler of state.eventHandlers) {
+        handler({ type: "namespace_synced", namespace: namespaceConfig });
+      }
+
+      setSseNamespaceConfig(namespaceConfig);
+    } catch (error) {
+      log.error("Failed to fetch namespace config:", error);
+      process.exit(1);
+    }
   }
 
-  // Initialize gateway (connect to all MCP servers)
-  await initializeGateway(gatewayConfig, namespaceConfig, state);
+  // Initialize gateway (connect to all MCP servers) - only for stdio mode
+  if (cliArgs.transport === "stdio") {
+    await initializeGateway(gatewayConfig, namespaceConfig, state);
+  }
 
   // Update trace sync client with namespace config
   if (traceSyncClient) {
     traceSyncClient.setNamespaceConfig(namespaceConfig);
   }
 
-  // Setup config change handler
-  syncManager.setOnConfigChange((newConfig) => {
-    handleConfigChange(newConfig, state).catch((error) => {
-      log.error("Failed to handle config change:", error);
+  // Setup config change handler (only in production mode)
+  if (syncManager) {
+    syncManager.setOnConfigChange((newConfig) => {
+      // Update SSE namespace config
+      setSseNamespaceConfig(newConfig);
+
+      // Handle stdio mode config change
+      if (cliArgs.transport === "stdio") {
+        handleConfigChange(newConfig, state).catch((error) => {
+          log.error("Failed to handle config change:", error);
+        });
+      }
+
+      // Update trace sync client with new namespace config
+      if (traceSyncClient) {
+        traceSyncClient.setNamespaceConfig(newConfig);
+      }
     });
 
-    // Update trace sync client with new namespace config
-    if (traceSyncClient) {
-      traceSyncClient.setNamespaceConfig(newConfig);
-    }
-  });
-
-  // Start periodic config sync
-  syncManager.startPeriodicSync();
+    // Start periodic config sync
+    syncManager.startPeriodicSync();
+  }
 
   // Start periodic trace sync to Platform
   if (traceSyncClient) {
@@ -424,7 +536,7 @@ async function main(): Promise<void> {
   const server = createServer(state);
 
   // Setup shutdown handlers
-  setupShutdownHandlers(state, syncManager, traceCollector, traceSyncClient, server);
+  setupShutdownHandlers(state, syncManager, traceCollector, traceSyncClient, server, cliArgs.transport, cliArgs.mock);
 
   // Start the appropriate transport
   if (cliArgs.transport === "stdio") {

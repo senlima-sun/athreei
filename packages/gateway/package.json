@@ -8,15 +8,19 @@
     "build": "bun build ./src/index.ts --outdir ./dist --target bun",
     "build:binary": "bun run ./build.ts",
     "dev": "bun run --watch src/index.ts",
+    "dev:sse": "bun run --watch src/index.ts -- --transport sse --port 3000",
+    "dev:sse:mock": "bun run --watch src/index.ts -- --transport sse --port 3000 --mock",
     "start": "bun run dist/index.js",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:sse": "bun run scripts/test-sse.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
     "@athreei/shared": "workspace:*",
-    "@athreei/gateway-core": "workspace:*"
+    "@athreei/gateway-core": "workspace:*",
+    "hono": "^4.6.0"
   },
   "devDependencies": {
     "@types/bun": "^1.1.0",
