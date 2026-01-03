@@ -2,11 +2,20 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Agent Guidelines
+
+1. **Leverage sub-agents** for non-trivial tasks - dispatch parallel agents for implementation, testing, and review
+2. **Test coverage required** - aim for 80%+ coverage on API routes, 90%+ on business logic
+3. **Code review before commit** - use code-reviewer agent proactively
+4. **Respect code style** - Prettier (no semicolons, double quotes) and ESLint rules
+5. **Atomic commits** - one logical change per commit, conventional commit format
+
 ## Project Overview
 
 athreei is a privacy-focused platform connecting AI apps to browsers via the Model Context Protocol (MCP). Users run a local MCP server, add it to their AI apps (Claude Desktop, ChatGPT, etc.), and a Chrome extension exposes browser capabilities via Native Messaging.
 
 **Architecture flow:**
+
 ```
 AI Apps (Claude, GPT) ←→ MCP Server (stdio/SSE) ←→ Native Host ←→ Chrome Extension ←→ Websites
 ```
@@ -113,6 +122,7 @@ bun run email:dev # Email preview on :3030
 **Monorepo structure using Bun workspaces:**
 
 ### Packages (Shared Libraries)
+
 - `packages/shared` - Shared types, protocols, and crypto utilities
 - `packages/db` - Drizzle ORM with dual PostgreSQL/SQLite support
 - `packages/auth` - Better Auth configuration (server + client exports)
@@ -120,6 +130,7 @@ bun run email:dev # Email preview on :3030
 - `packages/sdk` - Official SDK for website integration
 
 ### Packages (Local/Self-hosted)
+
 - `packages/mcp-server` - Local MCP server exposing browser tools to AI apps
 - `packages/extension` - Chrome extension (Manifest V3) with content scripts
 - `packages/dashboard` - React + Vite local web dashboard
@@ -128,15 +139,18 @@ bun run email:dev # Email preview on :3030
 - `packages/gateway-core` - Shared gateway logic
 
 ### Packages (Cloud/Hosted)
+
 - `packages/sync-server` - E2E encrypted sync service (Hono + PostgreSQL)
 - `packages/gateway-cloud` - Hosted MCP gateway service (Hono)
 
 ### Apps
+
 - `apps/api` - API server (Hono + Better Auth + Drizzle)
 - `apps/platform` - Platform frontend (Next.js 15 + Turbopack)
 - `apps/web` - Marketing site (Preact + Vite)
 
 **Key communication patterns:**
+
 - AI App ↔ MCP Server: Standard MCP protocol (stdio for Claude Desktop, SSE for web apps)
 - MCP Server ↔ Extension: Chrome Native Messaging via native-host binary
 - Extension ↔ Websites: Content scripts + `aiii:*` custom events
@@ -144,54 +158,65 @@ bun run email:dev # Email preview on :3030
 ## Code Patterns
 
 ### Logging in MCP Server
+
 All logs must go to `stderr` (via `console.error` or the logger utility) because `stdout` is reserved for JSON-RPC communication:
+
 ```typescript
-import { logger } from './utils/logger';
-logger.info('message');  // Goes to stderr
+import { logger } from "./utils/logger"
+logger.info("message") // Goes to stderr
 ```
 
 ### Adding MCP Tools
+
 Define schema in `packages/shared/src/types/mcp-tools.ts`, then register in `packages/mcp-server/src/tools/browser.ts` using `server.registerTool()`.
 
 ### Native Messaging Protocol
+
 Length-prefixed JSON (4-byte little-endian length + JSON payload). Max message size: 1MB.
 
 ### Website Integration via `aiii:*` Events
+
 - `aiii:ready` - Extension → Page (extension ready)
 - `aiii:request` - Extension → Page (AI requesting action)
 - `aiii:response` - Page → Extension (website's response)
 - `aiii:register` - Page → Extension (register custom tools)
 
 ### Database Pattern
+
 `@athreei/db` auto-detects database type from URL and provides dual schema support:
+
 ```typescript
-import { createClient, getDb, getSchema, detectDatabaseType } from "@athreei/db";
+import { createClient, getDb, getSchema, detectDatabaseType } from "@athreei/db"
 
 // Auto-detect: postgres:// → PostgreSQL, anything else → SQLite
-const db = createClient(process.env.DATABASE_URL);
+const db = createClient(process.env.DATABASE_URL)
 // Or use singleton
-const db = getDb();
+const db = getDb()
 ```
 
 ### Authentication Pattern
-`@athreei/auth` wraps Better Auth with project defaults:
-```typescript
-import { createAuth } from "@athreei/auth/server";
-import { db } from "@athreei/db";
 
-export const auth = createAuth(db);
+`@athreei/auth` wraps Better Auth with project defaults:
+
+```typescript
+import { createAuth } from "@athreei/auth/server"
+import { db } from "@athreei/db"
+
+export const auth = createAuth(db)
 
 // Use with Hono
-app.on(["GET", "POST"], "/api/auth/*", (c) => auth.handler(c.req.raw));
+app.on(["GET", "POST"], "/api/auth/*", (c) => auth.handler(c.req.raw))
 ```
 
 ### Hono Server Pattern
+
 API servers use Bun's native server export:
+
 ```typescript
 export default {
   port: PORT,
   fetch: app.fetch,
-};
+}
 ```
 
 ## Testing
