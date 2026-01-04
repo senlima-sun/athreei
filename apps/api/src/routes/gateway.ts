@@ -20,6 +20,7 @@ import {
   namespace,
   namespaceResource,
   mcpServer,
+  mcpTool,
   trace,
 } from "@athreei/db";
 import { checkRateLimit } from "../middleware/rate-limit";
@@ -312,6 +313,15 @@ gateway.get("/config", zValidator("query", getConfigQuerySchema), async (c) => {
     }
   }
 
+  // Fetch tools for all servers
+  const serverTools = new Map<string, Array<typeof mcpTool.$inferSelect>>();
+  for (const server of servers) {
+    const tools = await dbQuery.mcpTool.findMany({
+      where: eq(mcpTool.serverId, server.id),
+    }) as Array<typeof mcpTool.$inferSelect>;
+    serverTools.set(server.id, tools);
+  }
+
   // Build the response
   const configVersion = generateConfigVersion(namespaceRecord, servers);
 
@@ -324,18 +334,29 @@ gateway.get("/config", zValidator("query", getConfigQuerySchema), async (c) => {
     organizationId: endpointRecord.organizationId,
     userId: apiKeyRecord.createdById,
     configVersion,
-    servers: servers.map((s) => ({
-      id: s.id,
-      name: s.name,
-      description: s.description,
-      transport: s.transport,
-      command: s.command,
-      args: s.args,
-      url: s.url,
-      version: s.version,
-      capabilities: s.capabilities,
-      status: s.status,
-    })),
+    servers: servers.map((s) => {
+      const tools = serverTools.get(s.id) ?? [];
+      return {
+        id: s.id,
+        name: s.name,
+        description: s.description,
+        transport: s.transport,
+        command: s.command,
+        args: s.args,
+        url: s.url,
+        version: s.version,
+        capabilities: s.capabilities,
+        status: s.status,
+        tools: tools
+          .filter((t) => t.isEnabled === "true")
+          .map((t) => ({
+            name: t.name,
+            description: t.customDescription ?? t.description,
+            inputSchema: t.inputSchema ? JSON.parse(t.inputSchema) : null,
+            customPrompt: t.customPrompt,
+          })),
+      };
+    }),
   });
 });
 
