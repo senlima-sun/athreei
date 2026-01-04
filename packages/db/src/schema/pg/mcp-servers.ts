@@ -33,6 +33,9 @@ export const mcpTool = pgTable("mcp_tool", {
   name: text("name").notNull(),
   description: text("description"),
   inputSchema: text("inputSchema"),
+  customDescription: text("customDescription"),
+  customPrompt: text("customPrompt"),
+  isEnabled: text("isEnabled").notNull().default("true"),
   createdAt: timestamp("createdAt").notNull(),
   updatedAt: timestamp("updatedAt").notNull(),
 });

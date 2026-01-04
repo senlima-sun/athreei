@@ -44,6 +44,9 @@ export const mcpTool = sqliteTable("mcp_tool", {
   name: text("name").notNull(),
   description: text("description"),
   inputSchema: text("inputSchema"), // JSON schema for tool input
+  customDescription: text("customDescription"),
+  customPrompt: text("customPrompt"),
+  isEnabled: text("isEnabled").notNull().default("true"),
   createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
 });

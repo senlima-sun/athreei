@@ -8,6 +8,13 @@
       "when": 1767192149860,
       "tag": "0000_burly_shadow_king",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1767535086765,
+      "tag": "0001_heavy_prowler",
+      "breakpoints": true
     }
   ]
 }
