@@ -18,11 +18,7 @@
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "verbatimModuleSyntax": true,
-    "paths": {
-      "@athreei/shared": ["./packages/shared/src"],
-      "@athreei/shared/*": ["./packages/shared/src/*"]
-    }
+    "verbatimModuleSyntax": true
   },
   "exclude": ["node_modules", "**/dist/**"]
 }

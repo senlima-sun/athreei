@@ -4,9 +4,9 @@
  * Stores registered MCP servers and their configurations.
  */
 
-import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
-import { relations } from "drizzle-orm";
-import { organization } from "./auth";
+import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core"
+import { relations } from "drizzle-orm"
+import { organization } from "./auth"
 
 /**
  * MCP Server - registered MCP server instances
@@ -29,9 +29,12 @@ export const mcpServer = sqliteTable("mcp_server", {
   // Metadata
   version: text("version"),
   capabilities: text("capabilities"), // JSON array of supported capabilities
+  // Encrypted environment variables (AES-256-GCM encrypted JSON)
+  encryptedEnv: text("encrypted_env"),
+  envKeyVersion: integer("env_key_version"),
   createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
-});
+})
 
 /**
  * MCP Tool - tools exposed by an MCP server
@@ -49,7 +52,7 @@ export const mcpTool = sqliteTable("mcp_tool", {
   isEnabled: text("isEnabled").notNull().default("true"),
   createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
-});
+})
 
 // =============================================================================
 // Relations
@@ -61,11 +64,11 @@ export const mcpServerRelations = relations(mcpServer, ({ one, many }) => ({
     references: [organization.id],
   }),
   tools: many(mcpTool),
-}));
+}))
 
 export const mcpToolRelations = relations(mcpTool, ({ one }) => ({
   server: one(mcpServer, {
     fields: [mcpTool.serverId],
     references: [mcpServer.id],
   }),
-}));
+}))
