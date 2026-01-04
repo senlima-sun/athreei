@@ -4,21 +4,33 @@
  * Sets up middleware, routes, and error handlers for the API server.
  */
 
-import { Hono } from "hono";
-import { cors } from "hono/cors";
-import { logger } from "hono/logger";
-import { healthRoutes, configRoutes, organizationsRoutes, endpointsRoutes, apiKeysRoutes, mcpServersRoutes, namespacesRoutes, gatewayRoutes, tracesRoutes, toolsRoutes } from "./routes";
-import { errorHandler, notFoundHandler } from "./middleware";
-import { getAuth } from "./lib/auth";
+import { Hono } from "hono"
+import { cors } from "hono/cors"
+import { logger } from "hono/logger"
+import {
+  healthRoutes,
+  configRoutes,
+  organizationsRoutes,
+  endpointsRoutes,
+  apiKeysRoutes,
+  mcpServersRoutes,
+  namespacesRoutes,
+  gatewayRoutes,
+  tracesRoutes,
+  toolsRoutes,
+  registryRoutes,
+} from "./routes"
+import { errorHandler, notFoundHandler } from "./middleware"
+import { getAuth } from "./lib/auth"
 
-const app = new Hono();
+const app = new Hono()
 
 // =============================================================================
 // Middleware
 // =============================================================================
 
 // Request logging
-app.use("*", logger());
+app.use("*", logger())
 
 // CORS configuration
 app.use(
@@ -27,11 +39,11 @@ app.use(
     origin: (origin) => {
       // In production, check against allowed origins
       if (process.env.NODE_ENV === "production") {
-        const allowedOrigins = process.env.CORS_ORIGINS?.split(",") || [];
-        return allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
+        const allowedOrigins = process.env.CORS_ORIGINS?.split(",") || []
+        return allowedOrigins.includes(origin) ? origin : allowedOrigins[0]
       }
       // Allow all origins in development (default)
-      return origin;
+      return origin
     },
     credentials: true,
     allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
@@ -39,56 +51,63 @@ app.use(
     exposeHeaders: ["Content-Length", "X-Request-Id"],
     maxAge: 86400, // 24 hours
   })
-);
+)
 
 // =============================================================================
 // Routes
 // =============================================================================
 
 // Health check (no /api prefix for load balancer compatibility)
-app.route("/health", healthRoutes);
+app.route("/health", healthRoutes)
 
 // Public config endpoint (feature flags)
-app.route("/api/config", configRoutes);
+app.route("/api/config", configRoutes)
+
+// Public registry endpoint (MCP server catalog)
+app.route("/api/registry", registryRoutes)
 
 // Auth routes (delegates to Better Auth directly)
-app.on(["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"], "/api/auth/*", async (c) => {
-  const auth = getAuth();
-  return auth.handler(c.req.raw);
-});
+app.on(
+  ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  "/api/auth/*",
+  async (c) => {
+    const auth = getAuth()
+    return auth.handler(c.req.raw)
+  }
+)
 
 // Organization routes (protected)
-app.route("/api/organizations", organizationsRoutes);
+app.route("/api/organizations", organizationsRoutes)
 
 // Endpoint routes (protected)
-app.route("/api/endpoints", endpointsRoutes);
+app.route("/api/endpoints", endpointsRoutes)
 
 // API Key routes (nested under endpoints - /api/endpoints/:endpointId/keys)
-app.route("/api/endpoints", apiKeysRoutes);
+app.route("/api/endpoints", apiKeysRoutes)
 
 // MCP Server routes (protected)
-app.route("/api/mcp-servers", mcpServersRoutes);
+app.route("/api/mcp-servers", mcpServersRoutes)
 
 // Namespace routes (protected)
-app.route("/api/namespaces", namespacesRoutes);
+app.route("/api/namespaces", namespacesRoutes)
 
 // Gateway routes (API key auth via Bearer token)
-app.route("/api/gateway", gatewayRoutes);
+app.route("/api/gateway", gatewayRoutes)
 
 // Traces routes (protected)
-app.route("/api/traces", tracesRoutes);
+app.route("/api/traces", tracesRoutes)
 
 // Tools routes (protected)
-app.route("/api/tools", toolsRoutes);
+app.route("/api/tools", toolsRoutes)
 
 // =============================================================================
 // Error Handling
 // =============================================================================
 
 // 404 handler
-app.notFound(notFoundHandler);
+app.notFound(notFoundHandler)
 
 // Global error handler
-app.onError(errorHandler);
+app.onError(errorHandler)
 
-export default app;
+export default app
