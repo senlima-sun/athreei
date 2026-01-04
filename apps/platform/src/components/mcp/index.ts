@@ -6,3 +6,4 @@ export {
   type McpServerStatus,
 } from "./mcp-server-card";
 export { McpServerForm, type McpServerFormData } from "./mcp-server-form";
+export { JsonImportModal } from "./json-import-modal";
