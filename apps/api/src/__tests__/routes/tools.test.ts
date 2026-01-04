@@ -81,7 +81,8 @@ const mockMcpTool = {
   serverId: "srv_123",
   name: "get_components",
   description: "Get Figma components",
-  inputSchema: '{"type": "object", "properties": {"query": {"type": "string"}}}',
+  inputSchema:
+    '{"type": "object", "properties": {"query": {"type": "string"}}}',
   customDescription: null,
   customPrompt: null,
   isEnabled: "true",
@@ -113,7 +114,10 @@ const mockDb = {
 }
 
 // Error handler for tests
-function testErrorHandler(err: Error, c: { json: (data: object, status: number) => Response }) {
+function testErrorHandler(
+  err: Error,
+  c: { json: (data: object, status: number) => Response }
+) {
   const statusCode = (err as Error & { statusCode?: number }).statusCode || 500
   return c.json({ error: err.message }, statusCode)
 }
@@ -201,6 +205,28 @@ describe("Tools Routes", () => {
         type: "object",
         properties: { query: { type: "string" } },
       })
+    })
+
+    it("should handle invalid JSON in inputSchema gracefully", async () => {
+      const toolWithBadSchema = {
+        ...mockMcpTool,
+        inputSchema: "{invalid json}",
+      }
+      mockDb.query.mcpServer.findFirst.mockResolvedValue(mockMcpServer)
+      mockDb.query.member.findFirst.mockResolvedValue(mockMember)
+      mockDb.query.mcpTool.findMany.mockResolvedValue([toolWithBadSchema])
+
+      const { default: tools } = await import("../../routes/tools")
+      const app = new Hono()
+      app.onError(testErrorHandler)
+      app.route("/api/tools", tools)
+
+      const response = await app.request("/api/tools?serverId=srv_123")
+      expect(response.status).toBe(200)
+      const data = (await response.json()) as {
+        tools: { inputSchema: null }[]
+      }
+      expect(data.tools[0].inputSchema).toBeNull()
     })
   })
 

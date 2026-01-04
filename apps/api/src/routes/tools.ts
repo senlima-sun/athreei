@@ -46,7 +46,10 @@ async function verifyOrganizationMembership(
 ): Promise<boolean> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const membership = await (db as any).query.member.findFirst({
-    where: and(eq(member.userId, userId), eq(member.organizationId, organizationId)),
+    where: and(
+      eq(member.userId, userId),
+      eq(member.organizationId, organizationId)
+    ),
   })
   return !!membership
 }
@@ -76,7 +79,11 @@ tools.get("/", zValidator("query", listToolsQuerySchema), async (c) => {
   }
 
   // Verify user has access
-  const isMember = await verifyOrganizationMembership(db, auth.userId, server.organizationId)
+  const isMember = await verifyOrganizationMembership(
+    db,
+    auth.userId,
+    server.organizationId
+  )
 
   if (!isMember) {
     throw ApiError.forbidden("Access denied")
@@ -105,7 +112,15 @@ tools.get("/", zValidator("query", listToolsQuerySchema), async (c) => {
         serverId: t.serverId,
         name: t.name,
         description: t.description,
-        inputSchema: t.inputSchema ? JSON.parse(t.inputSchema) : null,
+        inputSchema: (() => {
+          if (!t.inputSchema) return null
+          try {
+            return JSON.parse(t.inputSchema)
+          } catch {
+            console.error(`Invalid inputSchema JSON for tool ${t.id}`)
+            return null
+          }
+        })(),
         customDescription: t.customDescription,
         customPrompt: t.customPrompt,
         isEnabled: t.isEnabled === "true",
@@ -147,7 +162,11 @@ tools.patch("/:id", zValidator("json", updateToolSchema), async (c) => {
   }
 
   // Verify user has access
-  const isMember = await verifyOrganizationMembership(db, auth.userId, server.organizationId)
+  const isMember = await verifyOrganizationMembership(
+    db,
+    auth.userId,
+    server.organizationId
+  )
 
   if (!isMember) {
     throw ApiError.forbidden("Access denied")
