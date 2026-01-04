@@ -14,7 +14,6 @@ import {
   Loader2,
   ExternalLink,
   CheckCircle2,
-  AlertTriangle,
 } from "lucide-react"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
@@ -96,8 +95,21 @@ export default function RegistryDetailPage({
     setError(null)
 
     try {
-      // Note: envVars are collected in state for future use but not yet persisted to API
-      // TODO: Add envVars support to API when database schema is updated
+      // Collect environment variables from OAuth token and custom env vars
+      const env: Record<string, string> = {}
+
+      // Add OAuth token if provided
+      if (oauthProvider && oauthToken) {
+        env[oauthProvider.envVarNames[0]] = oauthToken
+      }
+
+      // Add custom env vars
+      for (const [key, value] of Object.entries(envVarValues)) {
+        if (key.trim() && value) {
+          env[key.trim()] = value
+        }
+      }
+
       const body = {
         name: server.name,
         description: server.description,
@@ -105,6 +117,7 @@ export default function RegistryDetailPage({
         command: server.command,
         args: server.args?.join(" "),
         url: server.url,
+        ...(Object.keys(env).length > 0 ? { env } : {}),
       }
 
       const response = await fetch(
@@ -211,23 +224,6 @@ export default function RegistryDetailPage({
       )}
 
       <div className="space-y-6">
-        {/* Warning about env vars not yet being persisted */}
-        {(oauthProvider || server.envVars.length > 0) && (
-          <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
-            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
-            <div>
-              <p className="text-sm font-medium text-amber-800">
-                Environment variable storage coming soon
-              </p>
-              <p className="mt-1 text-sm text-amber-700">
-                The server configuration will be saved, but environment
-                variables will need to be configured separately after
-                installation. We&apos;re working on secure credential storage.
-              </p>
-            </div>
-          </div>
-        )}
-
         {/* OAuth Setup Guide or Env Vars section */}
         {oauthProvider ? (
           <OAuthSetupGuide

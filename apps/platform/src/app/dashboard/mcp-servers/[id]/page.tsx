@@ -1,43 +1,65 @@
-"use client";
+"use client"
 
-import { useState, useEffect, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
-import { PageHeader } from "@/components/dashboard/page-header";
-import { McpServerForm, McpServerFormData, McpServer, McpTransportType, ToolList } from "@/components/mcp";
-import { useActiveOrganization } from "@/lib/auth-client";
-import { Server, ArrowLeft, Trash2, AlertTriangle, Loader2 } from "lucide-react";
+import { useState, useEffect, useCallback } from "react"
+import { useParams, useRouter } from "next/navigation"
+import Link from "next/link"
+import { PageHeader } from "@/components/dashboard/page-header"
+import {
+  McpServerForm,
+  McpServerFormData,
+  McpServer,
+  McpTransportType,
+  ToolList,
+} from "@/components/mcp"
+import { useActiveOrganization } from "@/lib/auth-client"
+import {
+  Server,
+  ArrowLeft,
+  Trash2,
+  AlertTriangle,
+  Loader2,
+  Key,
+} from "lucide-react"
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
 
 // API response type
 interface ApiMcpServer {
-  id: string;
-  name: string;
-  description?: string | null;
-  transport: "stdio" | "sse" | "streamable-http";
-  status: "active" | "inactive" | "pending";
-  command?: string | null;
-  args?: string | null;
-  url?: string | null;
-  createdAt: string;
-  updatedAt: string;
+  id: string
+  name: string
+  description?: string | null
+  transport: "stdio" | "sse" | "streamable-http"
+  status: "active" | "inactive" | "pending"
+  command?: string | null
+  args?: string | null
+  url?: string | null
+  envKeys?: string[]
+  createdAt: string
+  updatedAt: string
+}
+
+// Extended McpServer with envKeys for the form
+interface McpServerWithEnvKeys extends McpServer {
+  envKeys?: string[]
 }
 
 // Transform API response to frontend format
-function toFrontendFormat(server: ApiMcpServer): McpServer {
+function toFrontendFormat(server: ApiMcpServer): McpServerWithEnvKeys {
   return {
     id: server.id,
     name: server.name,
     description: server.description || undefined,
-    transportType: (server.transport === "streamable-http" ? "http" : server.transport) as McpTransportType,
+    transportType: (server.transport === "streamable-http"
+      ? "http"
+      : server.transport) as McpTransportType,
     status: server.status === "pending" ? "inactive" : server.status,
     command: server.command || undefined,
     args: server.args ? JSON.parse(server.args) : undefined,
     url: server.url || undefined,
+    envKeys: server.envKeys,
     createdAt: new Date(server.createdAt),
     updatedAt: new Date(server.updatedAt),
-  };
+  }
 }
 
 // Transform frontend form data to API format
@@ -45,111 +67,110 @@ function toApiFormat(data: McpServerFormData) {
   return {
     name: data.name,
     description: data.description || undefined,
-    transport: data.transportType === "http" ? "streamable-http" : data.transportType,
+    transport:
+      data.transportType === "http" ? "streamable-http" : data.transportType,
     status: data.status,
     command: data.command || undefined,
     args: data.args?.length ? JSON.stringify(data.args) : undefined,
     url: data.url || undefined,
-  };
+    ...(data.env ? { env: data.env } : {}),
+  }
 }
 
 export default function EditMcpServerPage() {
-  const params = useParams();
-  const router = useRouter();
-  const serverId = params.id as string;
-  const { data: activeOrg, isPending: isOrgPending } = useActiveOrganization();
+  const params = useParams()
+  const router = useRouter()
+  const serverId = params.id as string
+  const { data: activeOrg, isPending: isOrgPending } = useActiveOrganization()
 
-  const [server, setServer] = useState<McpServer | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [server, setServer] = useState<McpServerWithEnvKeys | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   // Load server data
   const loadServer = useCallback(async () => {
     try {
-      const response = await fetch(
-        `${API_URL}/api/mcp-servers/${serverId}`,
-        { credentials: "include" }
-      );
+      const response = await fetch(`${API_URL}/api/mcp-servers/${serverId}`, {
+        credentials: "include",
+      })
 
       if (!response.ok) {
         if (response.status === 404) {
-          setServer(null);
-          return;
+          setServer(null)
+          return
         }
-        throw new Error("Failed to fetch MCP server");
+        throw new Error("Failed to fetch MCP server")
       }
 
-      const data = await response.json();
-      setServer(toFrontendFormat(data));
+      const data = await response.json()
+      setServer(toFrontendFormat(data))
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load server");
+      setError(err instanceof Error ? err.message : "Failed to load server")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  }, [serverId]);
+  }, [serverId])
 
   useEffect(() => {
     if (!isOrgPending) {
-      loadServer();
+      loadServer()
     }
-  }, [isOrgPending, loadServer]);
+  }, [isOrgPending, loadServer])
 
   const handleSubmit = async (data: McpServerFormData) => {
-    setError(null);
+    setError(null)
 
     try {
-      const response = await fetch(
-        `${API_URL}/api/mcp-servers/${serverId}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify(toApiFormat(data)),
-        }
-      );
+      const response = await fetch(`${API_URL}/api/mcp-servers/${serverId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(toApiFormat(data)),
+      })
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.message || "Failed to update MCP server");
+        const errorData = await response.json().catch(() => null)
+        throw new Error(errorData?.message || "Failed to update MCP server")
       }
 
-      router.push("/dashboard/mcp-servers");
+      router.push("/dashboard/mcp-servers")
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update MCP server");
-      throw err;
+      setError(
+        err instanceof Error ? err.message : "Failed to update MCP server"
+      )
+      throw err
     }
-  };
+  }
 
   const handleDelete = async () => {
-    setError(null);
-    setIsDeleting(true);
+    setError(null)
+    setIsDeleting(true)
 
     try {
-      const response = await fetch(
-        `${API_URL}/api/mcp-servers/${serverId}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${API_URL}/api/mcp-servers/${serverId}`, {
+        method: "DELETE",
+        credentials: "include",
+      })
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.message || "Failed to delete MCP server");
+        const errorData = await response.json().catch(() => null)
+        throw new Error(errorData?.message || "Failed to delete MCP server")
       }
 
-      router.push("/dashboard/mcp-servers");
+      router.push("/dashboard/mcp-servers")
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete MCP server");
-      setShowDeleteConfirm(false);
+      setError(
+        err instanceof Error ? err.message : "Failed to delete MCP server"
+      )
+      setShowDeleteConfirm(false)
     } finally {
-      setIsDeleting(false);
+      setIsDeleting(false)
     }
-  };
+  }
 
   if (isOrgPending || isLoading) {
     return (
@@ -159,7 +180,7 @@ export default function EditMcpServerPage() {
           <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
         </div>
       </div>
-    );
+    )
   }
 
   if (!activeOrg) {
@@ -172,7 +193,7 @@ export default function EditMcpServerPage() {
           </p>
         </div>
       </div>
-    );
+    )
   }
 
   if (!server) {
@@ -182,7 +203,8 @@ export default function EditMcpServerPage() {
         <div className="rounded-lg border border-gray-200 bg-white p-8 text-center">
           <Server className="mx-auto h-12 w-12 text-gray-400" />
           <p className="mt-4 text-gray-500">
-            This MCP server doesn&apos;t exist or you don&apos;t have access to it.
+            This MCP server doesn&apos;t exist or you don&apos;t have access to
+            it.
           </p>
           <Link
             href="/dashboard/mcp-servers"
@@ -193,7 +215,7 @@ export default function EditMcpServerPage() {
           </Link>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -219,6 +241,34 @@ export default function EditMcpServerPage() {
       )}
 
       <div className="mx-auto max-w-2xl space-y-6">
+        {/* Server info with env vars badge */}
+        {server.envKeys && server.envKeys.length > 0 && (
+          <div className="rounded-lg border border-gray-200 bg-white p-4">
+            <div className="flex items-center gap-2">
+              <Key className="h-4 w-4 text-gray-500" />
+              <span className="text-sm font-medium text-gray-700">
+                Environment Variables Configured
+              </span>
+              <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+                {server.envKeys.length}
+              </span>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-1">
+              {server.envKeys.map((key) => (
+                <span
+                  key={key}
+                  className="rounded bg-gray-100 px-2 py-0.5 font-mono text-xs text-gray-600"
+                >
+                  {key}
+                </span>
+              ))}
+            </div>
+            <p className="mt-2 text-xs text-gray-500">
+              Values are stored securely and encrypted. Edit below to update.
+            </p>
+          </div>
+        )}
+
         {/* Edit form */}
         <div className="rounded-lg border border-gray-200 bg-white p-6">
           <McpServerForm
@@ -261,8 +311,8 @@ export default function EditMcpServerPage() {
                       Are you sure you want to delete this MCP server?
                     </p>
                     <p className="mt-1 text-sm text-red-600">
-                      This action cannot be undone. Any connected AI apps will lose
-                      access to this server.
+                      This action cannot be undone. Any connected AI apps will
+                      lose access to this server.
                     </p>
                     <div className="mt-4 flex gap-3">
                       <button
@@ -271,7 +321,9 @@ export default function EditMcpServerPage() {
                         disabled={isDeleting}
                         className="inline-flex items-center gap-2 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
                       >
-                        {isDeleting && <Loader2 className="h-4 w-4 animate-spin" />}
+                        {isDeleting && (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        )}
                         Yes, delete server
                       </button>
                       <button
@@ -290,5 +342,5 @@ export default function EditMcpServerPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }

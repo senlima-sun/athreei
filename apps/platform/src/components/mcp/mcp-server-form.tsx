@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { Loader2, Server, Plus, X } from "lucide-react"
+import { Loader2, Server, Plus, X, Key } from "lucide-react"
 import { McpTypeSelector, McpTransportType } from "./mcp-type-selector"
 import { McpServer, McpServerStatus } from "./mcp-server-card"
 import { OAuthSetupGuide } from "./oauth-setup-guide"
@@ -13,7 +13,7 @@ import {
 } from "@/lib/mcp-oauth-detection"
 
 interface McpServerFormProps {
-  server?: McpServer
+  server?: McpServer & { envKeys?: string[] }
   onSubmit: (data: McpServerFormData) => Promise<void>
   cancelHref: string
   submitLabel?: string
@@ -27,6 +27,12 @@ export interface McpServerFormData {
   command?: string
   args?: string[]
   url?: string
+  env?: Record<string, string>
+}
+
+interface EnvVarRow {
+  key: string
+  value: string
 }
 
 export function McpServerForm({
@@ -56,6 +62,15 @@ export function McpServerForm({
 
   // SSE/HTTP config
   const [url, setUrl] = useState(server?.url || "")
+
+  // Environment variables
+  // When editing, show existing keys with empty values (user can fill in new values)
+  const [envVars, setEnvVars] = useState<EnvVarRow[]>(() => {
+    if (server?.envKeys?.length) {
+      return server.envKeys.map((key) => ({ key, value: "" }))
+    }
+    return []
+  })
 
   // OAuth detection state
   const [detectedProvider, setDetectedProvider] =
@@ -96,18 +111,56 @@ export function McpServerForm({
     }
   }
 
+  // Env var handlers
+  const handleAddEnvVar = () => {
+    setEnvVars([...envVars, { key: "", value: "" }])
+  }
+
+  const handleRemoveEnvVar = (index: number) => {
+    setEnvVars(envVars.filter((_, i) => i !== index))
+  }
+
+  const handleEnvVarChange = (
+    index: number,
+    field: "key" | "value",
+    newValue: string
+  ) => {
+    setEnvVars(
+      envVars.map((row, i) =>
+        i === index ? { ...row, [field]: newValue } : row
+      )
+    )
+  }
+
+  // Convert env vars to API format
+  const getEnvForApi = (): Record<string, string> | undefined => {
+    const env = envVars.reduce(
+      (acc, { key, value }) => {
+        const trimmedKey = key.trim()
+        if (trimmedKey && value) {
+          acc[trimmedKey] = value
+        }
+        return acc
+      },
+      {} as Record<string, string>
+    )
+    return Object.keys(env).length > 0 ? env : undefined
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     setIsSubmitting(true)
 
     try {
+      const env = getEnvForApi()
       const formData: McpServerFormData = {
         name: name.trim(),
         description: description.trim(),
         transportType,
         status,
         ...(isStdio ? { command: command.trim(), args } : { url: url.trim() }),
+        ...(env ? { env } : {}),
       }
 
       await onSubmit(formData)
@@ -297,6 +350,93 @@ export function McpServerForm({
           onTokenChange={setOauthTokenValue}
         />
       )}
+
+      {/* Environment Variables */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Key className="h-4 w-4 text-gray-500" />
+            <h3 className="text-sm font-medium text-gray-900">
+              Environment Variables
+            </h3>
+            <span className="text-sm text-gray-400">(optional)</span>
+          </div>
+          <button
+            type="button"
+            onClick={handleAddEnvVar}
+            className="inline-flex items-center gap-1 rounded-md border border-gray-300 px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50"
+          >
+            <Plus className="h-3 w-3" />
+            Add Variable
+          </button>
+        </div>
+
+        {server?.envKeys &&
+          server.envKeys.length > 0 &&
+          envVars.length === 0 && (
+            <div className="rounded-md bg-gray-50 p-3 text-sm text-gray-600">
+              <p className="font-medium">Configured variables:</p>
+              <div className="mt-1 flex flex-wrap gap-1">
+                {server.envKeys.map((key) => (
+                  <span
+                    key={key}
+                    className="rounded bg-gray-200 px-2 py-0.5 font-mono text-xs"
+                  >
+                    {key}
+                  </span>
+                ))}
+              </div>
+              <p className="mt-2 text-xs text-gray-500">
+                Values are stored securely. Click &quot;Add Variable&quot; to
+                add or update variables.
+              </p>
+            </div>
+          )}
+
+        {envVars.length > 0 && (
+          <div className="space-y-3">
+            {envVars.map((envVar, index) => (
+              <div key={index} className="flex items-start gap-2">
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    value={envVar.key}
+                    onChange={(e) =>
+                      handleEnvVarChange(index, "key", e.target.value)
+                    }
+                    placeholder="VARIABLE_NAME"
+                    autoComplete="off"
+                    className="block w-full rounded-md border border-gray-300 px-3 py-2 font-mono text-sm uppercase placeholder-gray-400 focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
+                  />
+                </div>
+                <div className="flex-1">
+                  <input
+                    type="password"
+                    value={envVar.value}
+                    onChange={(e) =>
+                      handleEnvVarChange(index, "value", e.target.value)
+                    }
+                    placeholder="Value"
+                    autoComplete="new-password"
+                    className="block w-full rounded-md border border-gray-300 px-3 py-2 font-mono text-sm placeholder-gray-400 focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveEnvVar(index)}
+                  className="rounded-md p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+            <p className="text-xs text-gray-500">
+              Environment variables are stored securely and encrypted at rest.
+              Values are never displayed after saving.
+            </p>
+          </div>
+        )}
+      </div>
 
       {/* Status */}
       <div className="space-y-4">
