@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PageHeader } from "@/components/dashboard/page-header";
-import { McpServerForm, McpServerFormData } from "@/components/mcp";
+import { McpServerForm, McpServerFormData, McpServer, McpTransportType } from "@/components/mcp";
 import { useActiveOrganization } from "@/lib/auth-client";
 import { Loader2 } from "lucide-react";
 
@@ -24,8 +24,23 @@ function toApiFormat(data: McpServerFormData) {
 
 export default function NewMcpServerPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: activeOrg, isPending: isOrgPending } = useActiveOrganization();
   const [error, setError] = useState<string | null>(null);
+
+  // Build initial server from query params (from JSON import)
+  const initialServer: McpServer | undefined = searchParams.get("name")
+    ? {
+        id: "",
+        name: searchParams.get("name") || "",
+        description: searchParams.get("description") || undefined,
+        transportType: (searchParams.get("transport") || "stdio") as McpTransportType,
+        status: "active",
+        command: searchParams.get("command") || undefined,
+        args: searchParams.get("args")?.split(" ").filter(Boolean) || undefined,
+        url: searchParams.get("url") || undefined,
+      }
+    : undefined;
 
   const handleSubmit = async (data: McpServerFormData) => {
     if (!activeOrg?.id) {
@@ -106,6 +121,7 @@ export default function NewMcpServerPage() {
       <div className="mx-auto max-w-2xl">
         <div className="rounded-lg border border-gray-200 bg-white p-6">
           <McpServerForm
+            server={initialServer}
             onSubmit={handleSubmit}
             cancelHref="/dashboard/mcp-servers"
             submitLabel="Create MCP Server"
