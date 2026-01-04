@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { PageHeader } from "@/components/dashboard/page-header";
-import { McpServerForm, McpServerFormData, McpServer, McpTransportType } from "@/components/mcp";
+import { McpServerForm, McpServerFormData, McpServer, McpTransportType, ToolList } from "@/components/mcp";
 import { useActiveOrganization } from "@/lib/auth-client";
 import { Server, ArrowLeft, Trash2, AlertTriangle, Loader2 } from "lucide-react";
 
@@ -227,6 +227,12 @@ export default function EditMcpServerPage() {
             cancelHref="/dashboard/mcp-servers"
             submitLabel="Save Changes"
           />
+        </div>
+
+        {/* Tools section */}
+        <div className="rounded-lg border border-gray-200 bg-white p-6">
+          <h2 className="mb-4 text-lg font-semibold text-gray-900">Tools</h2>
+          <ToolList serverId={server.id} />
         </div>
 
         {/* Danger zone */}
