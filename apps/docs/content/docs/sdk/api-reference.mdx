@@ -12,7 +12,7 @@ Complete reference for the `@athreei/sdk` package.
 The `athreei` singleton provides a convenient API for most use cases.
 
 ```typescript
-import { athreei } from '@athreei/sdk'
+import { athreei } from "@athreei/sdk"
 ```
 
 ### athreei.onReady(callback)
@@ -21,20 +21,22 @@ Wait for the extension to be ready and receive extension info.
 
 ```typescript
 athreei.onReady((info: AthreeiInfo) => {
-  console.log('Version:', info.version)
-  console.log('Capabilities:', info.capabilities)
+  console.log("Version:", info.version)
+  console.log("Capabilities:", info.capabilities)
 })
 ```
 
 **Parameters:**
+
 - `callback: (info: AthreeiInfo) => void` - Called when extension is ready
 
 **AthreeiInfo:**
+
 ```typescript
 interface AthreeiInfo {
-  version: string       // Extension version
+  version: string // Extension version
   capabilities: string[] // Available built-in capabilities
-  extensionId?: string   // Extension ID
+  extensionId?: string // Extension ID
 }
 ```
 
@@ -46,48 +48,53 @@ Register a custom tool that AI can use.
 
 ```typescript
 athreei.registerTool({
-  name: 'search_products',
-  description: 'Search for products in the catalog',
+  name: "search_products",
+  description: "Search for products in the catalog",
   parameters: {
-    query: { type: 'string', required: true, description: 'Search query' },
-    maxResults: { type: 'number', default: 10 }
+    query: { type: "string", required: true, description: "Search query" },
+    maxResults: { type: "number", default: 10 },
   },
   handler: async ({ query, maxResults }) => {
     return await searchProducts(query, maxResults)
-  }
+  },
 })
 ```
 
 **ToolDefinition:**
+
 ```typescript
 interface ToolDefinition {
-  name: string                           // Tool identifier
-  description: string                    // What the tool does
+  name: string // Tool identifier
+  description: string // What the tool does
   parameters: Record<string, ToolParameter>
-  handler?: RequestHandler               // Function to handle requests
-  returns?: {                            // Return type info
-    type: 'string' | 'number' | 'boolean' | 'array' | 'object' | 'void'
+  handler?: RequestHandler // Function to handle requests
+  returns?: {
+    // Return type info
+    type: "string" | "number" | "boolean" | "array" | "object" | "void"
     description?: string
   }
-  examples?: Array<{                     // Usage examples
+  examples?: Array<{
+    // Usage examples
     description: string
     args: Record<string, unknown>
     result?: unknown
   }>
-  requiresPermission?: boolean           // Default: true
+  requiresPermission?: boolean // Default: true
 }
 ```
 
 **ToolParameter:**
+
 ```typescript
 interface ToolParameter {
-  type: 'string' | 'number' | 'boolean' | 'array' | 'object'
-  required?: boolean        // Default: false
-  default?: unknown         // Default value
-  description?: string      // Parameter description
+  type: "string" | "number" | "boolean" | "array" | "object"
+  required?: boolean // Default: false
+  default?: unknown // Default value
+  description?: string // Parameter description
   enum?: (string | number)[] // Allowed values
-  items?: {                 // For arrays
-    type: 'string' | 'number' | 'boolean' | 'object'
+  items?: {
+    // For arrays
+    type: "string" | "number" | "boolean" | "object"
   }
 }
 ```
@@ -99,7 +106,7 @@ interface ToolParameter {
 Register a handler for tool requests. Returns an unsubscribe function.
 
 ```typescript
-const unsubscribe = athreei.onRequest('my_tool', async (args, requestId) => {
+const unsubscribe = athreei.onRequest("my_tool", async (args, requestId) => {
   const result = await processRequest(args)
   return result
 })
@@ -109,10 +116,12 @@ unsubscribe()
 ```
 
 **Parameters:**
+
 - `toolName: string` - Name of the tool to handle
 - `handler: RequestHandler` - Handler function
 
 **RequestHandler:**
+
 ```typescript
 type RequestHandler = (
   args: Record<string, unknown>,
@@ -130,9 +139,9 @@ Request permission from the user for specific actions.
 
 ```typescript
 const granted = await athreei.requestPermission({
-  scopes: ['interact', 'read'],
-  reason: 'To help you complete your purchase',
-  duration: 'session'
+  scopes: ["interact", "read"],
+  reason: "To help you complete your purchase",
+  duration: "session",
 })
 
 if (granted) {
@@ -141,17 +150,24 @@ if (granted) {
 ```
 
 **PermissionOptions:**
+
 ```typescript
 interface PermissionOptions {
-  scopes?: PermissionScope[]    // Permission scopes to request
-  scope?: PermissionScope       // Single scope (alternative to scopes)
-  tools?: string[]              // Specific tools to request permission for
-  reason?: string               // Why permission is needed
+  scopes?: PermissionScope[] // Permission scopes to request
+  scope?: PermissionScope // Single scope (alternative to scopes)
+  tools?: string[] // Specific tools to request permission for
+  reason?: string // Why permission is needed
   duration?: PermissionDuration // How long permission should last
 }
 
-type PermissionScope = 'read' | 'interact' | 'navigate' | 'screenshot' | 'execute' | 'custom'
-type PermissionDuration = 'session' | 'persistent' | 'once'
+type PermissionScope =
+  | "read"
+  | "interact"
+  | "navigate"
+  | "screenshot"
+  | "execute"
+  | "custom"
+type PermissionDuration = "session" | "persistent" | "once"
 ```
 
 **Returns:** `Promise<boolean>` - Whether permission was granted
@@ -164,10 +180,10 @@ Listen for built-in browser actions before they execute. Return `false` to cance
 
 ```typescript
 const unsubscribe = athreei.onBeforeAction((action) => {
-  console.log('AI action:', action.tool, action.args)
+  console.log("AI action:", action.tool, action.args)
 
   // Cancel navigation to external sites
-  if (action.tool === 'browser_navigate') {
+  if (action.tool === "browser_navigate") {
     const url = new URL(action.args.url as string)
     if (url.hostname !== window.location.hostname) {
       return false // Cancel
@@ -177,6 +193,7 @@ const unsubscribe = athreei.onBeforeAction((action) => {
 ```
 
 **ActionCallback:**
+
 ```typescript
 type ActionCallback = (action: {
   requestId: string
@@ -198,14 +215,15 @@ Listen for built-in browser actions after they complete.
 
 ```typescript
 const unsubscribe = athreei.onAfterAction((result) => {
-  console.log('Action result:', result.tool, result.success)
+  console.log("Action result:", result.tool, result.success)
   if (!result.success) {
-    console.error('Error:', result.error)
+    console.error("Error:", result.error)
   }
 })
 ```
 
 **ActionResultCallback:**
+
 ```typescript
 type ActionResultCallback = (result: {
   requestId: string
@@ -214,7 +232,7 @@ type ActionResultCallback = (result: {
   result?: unknown
   error?: string
   timestamp: number
-  duration: number  // Time taken in ms
+  duration: number // Time taken in ms
 }) => void | Promise<void>
 ```
 
@@ -227,7 +245,7 @@ type ActionResultCallback = (result: {
 For advanced usage with more control.
 
 ```typescript
-import { AthreeiClient } from '@athreei/sdk'
+import { AthreeiClient } from "@athreei/sdk"
 
 const client = new AthreeiClient(options)
 ```
@@ -236,17 +254,18 @@ const client = new AthreeiClient(options)
 
 ```typescript
 const client = new AthreeiClient({
-  debug: false,      // Enable debug logging
-  timeout: 30000,    // Timeout for operations (ms)
-  mockMode: false    // Enable mock mode
+  debug: false, // Enable debug logging
+  timeout: 30000, // Timeout for operations (ms)
+  mockMode: false, // Enable mock mode
 })
 ```
 
 **AthreeiClientOptions:**
+
 ```typescript
 interface AthreeiClientOptions {
-  debug?: boolean    // Default: false
-  timeout?: number   // Default: 30000
+  debug?: boolean // Default: false
+  timeout?: number // Default: 30000
   mockMode?: boolean // Default: false
 }
 ```
@@ -257,7 +276,7 @@ Wait for the extension to be ready. Returns a promise.
 
 ```typescript
 const info = await client.waitForReady()
-console.log('Ready:', info.version)
+console.log("Ready:", info.version)
 ```
 
 **Returns:** `Promise<AthreeiInfo>`
@@ -326,7 +345,7 @@ import type {
   AiiiActionBeforeEvent,
   AiiiActionAfterEvent,
   AiiiToolParameter,
-} from '@athreei/sdk'
+} from "@athreei/sdk"
 ```
 
 ---
@@ -336,7 +355,7 @@ import type {
 Handlers should handle errors gracefully:
 
 ```typescript
-athreei.onRequest('my_tool', async (args) => {
+athreei.onRequest("my_tool", async (args) => {
   try {
     const result = await riskyOperation(args)
     return { success: true, data: result }

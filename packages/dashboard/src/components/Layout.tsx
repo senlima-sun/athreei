@@ -109,7 +109,9 @@ export function Layout({ children }: LayoutProps) {
             <Menu className="h-5 w-5" />
           </button>
 
-          <h1 className="m-0 text-xl lg:text-2xl font-semibold truncate">{getPageTitle()}</h1>
+          <h1 className="m-0 text-xl lg:text-2xl font-semibold truncate">
+            {getPageTitle()}
+          </h1>
 
           <div className="flex items-center gap-2 lg:gap-4">
             <ThemeToggle />

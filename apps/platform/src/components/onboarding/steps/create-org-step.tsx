@@ -1,41 +1,41 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { organization } from "@/lib/auth-client";
-import { Building2, Loader2 } from "lucide-react";
+import { useState } from "react"
+import { organization } from "@/lib/auth-client"
+import { Building2, Loader2 } from "lucide-react"
 
 interface CreateOrgStepProps {
-  onComplete: (orgId: string, orgName: string) => void;
+  onComplete: (orgId: string, orgName: string) => void
 }
 
 /**
  * CreateOrgStep - First step of onboarding: create an organization.
  */
 export function CreateOrgStep({ onComplete }: CreateOrgStepProps) {
-  const [name, setName] = useState("");
-  const [slug, setSlug] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [name, setName] = useState("")
+  const [slug, setSlug] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const generateSlug = (value: string) => {
     return value
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "");
-  };
+      .replace(/^-+|-+$/g, "")
+  }
 
   const handleNameChange = (value: string) => {
-    setName(value);
+    setName(value)
     // Auto-generate slug if user hasn't manually edited it
     if (!slug || slug === generateSlug(name)) {
-      setSlug(generateSlug(value));
+      setSlug(generateSlug(value))
     }
-  };
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setIsSubmitting(true);
+    e.preventDefault()
+    setError(null)
+    setIsSubmitting(true)
 
     try {
       const slugValue =
@@ -44,29 +44,29 @@ export function CreateOrgStep({ onComplete }: CreateOrgStepProps) {
           .trim()
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, "-")
-          .replace(/^-+|-+$/g, "");
+          .replace(/^-+|-+$/g, "")
 
       const result = await organization.create({
         name: name.trim(),
         slug: slugValue,
-      });
+      })
 
       if (result.error) {
-        setError(result.error.message || "Failed to create organization");
-        return;
+        setError(result.error.message || "Failed to create organization")
+        return
       }
 
       // Set as active organization
       if (result.data?.id) {
-        await organization.setActive({ organizationId: result.data.id });
-        onComplete(result.data.id, name.trim());
+        await organization.setActive({ organizationId: result.data.id })
+        onComplete(result.data.id, name.trim())
       }
     } catch {
-      setError("An unexpected error occurred");
+      setError("An unexpected error occurred")
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   return (
     <div className="rounded-lg bg-white p-8 shadow">
@@ -152,5 +152,5 @@ export function CreateOrgStep({ onComplete }: CreateOrgStepProps) {
         </button>
       </form>
     </div>
-  );
+  )
 }

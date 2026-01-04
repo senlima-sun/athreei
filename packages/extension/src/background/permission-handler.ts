@@ -18,7 +18,10 @@ export async function handlePermissionRequest(
       origin: string,
       scope: string,
       tabId?: number
-    ) => Promise<{ decision: "allow" | "deny" | "allow_once"; remember: boolean }>
+    ) => Promise<{
+      decision: "allow" | "deny" | "allow_once"
+      remember: boolean
+    }>
     updatePermissionLevel: (
       origin: string,
       scope: string,
@@ -48,7 +51,10 @@ export async function handlePermissionRequest(
           response.decision === "allow" ? "allowed" : "denied"
         )
       } catch (updateError) {
-        console.error("[Background] Failed to update permission level:", updateError)
+        console.error(
+          "[Background] Failed to update permission level:",
+          updateError
+        )
         // Continue and return the user's decision anyway
       }
     }

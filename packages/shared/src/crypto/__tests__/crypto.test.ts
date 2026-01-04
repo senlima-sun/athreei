@@ -92,7 +92,12 @@ describe("Argon2 Key Derivation", () => {
 
   it("should support custom key versions", async () => {
     const password = "versioned-password"
-    const derived = await deriveKey(password, undefined, DEFAULT_CRYPTO_CONFIG, 42)
+    const derived = await deriveKey(
+      password,
+      undefined,
+      DEFAULT_CRYPTO_CONFIG,
+      42
+    )
 
     expect(derived.version).toBe(42)
   })
@@ -184,7 +189,11 @@ describe("AES-256-GCM Encryption", () => {
       updatedAt: Date.now(),
     }
 
-    const encrypted = encryptPermission(permission, derived.key, derived.version)
+    const encrypted = encryptPermission(
+      permission,
+      derived.key,
+      derived.version
+    )
     const decrypted = decryptPermission<Permission>(encrypted, derived.key)
 
     expect(decrypted).toEqual(permission)
@@ -233,8 +242,18 @@ describe("Key Rotation", () => {
   it("should rotate a single encrypted item", async () => {
     const data = { sensitive: "information" }
 
-    const oldKey = await deriveKey("old-password", undefined, DEFAULT_CRYPTO_CONFIG, 1)
-    const newKey = await deriveKey("new-password", undefined, DEFAULT_CRYPTO_CONFIG, 2)
+    const oldKey = await deriveKey(
+      "old-password",
+      undefined,
+      DEFAULT_CRYPTO_CONFIG,
+      1
+    )
+    const newKey = await deriveKey(
+      "new-password",
+      undefined,
+      DEFAULT_CRYPTO_CONFIG,
+      2
+    )
 
     // Encrypt with old key
     const encrypted = encrypt(data, oldKey.key, oldKey.version)
@@ -259,11 +278,23 @@ describe("Key Rotation", () => {
       { id: 3, data: "item3" },
     ]
 
-    const oldKey = await deriveKey("old-password", undefined, DEFAULT_CRYPTO_CONFIG, 1)
-    const newKey = await deriveKey("new-password", undefined, DEFAULT_CRYPTO_CONFIG, 2)
+    const oldKey = await deriveKey(
+      "old-password",
+      undefined,
+      DEFAULT_CRYPTO_CONFIG,
+      1
+    )
+    const newKey = await deriveKey(
+      "new-password",
+      undefined,
+      DEFAULT_CRYPTO_CONFIG,
+      2
+    )
 
     // Encrypt all items with old key
-    const encrypted = items.map((item) => encrypt(item, oldKey.key, oldKey.version))
+    const encrypted = items.map((item) =>
+      encrypt(item, oldKey.key, oldKey.version)
+    )
 
     // Rotate all items
     const rotated = await rotateKeyBatch(encrypted, oldKey.key, newKey.key, {
@@ -373,7 +404,12 @@ describe("Key Rotation", () => {
       encrypt({ id: 2 }, key.key, 2), // Wrong version
     ]
 
-    const newKey = await deriveKey("new-password", undefined, DEFAULT_CRYPTO_CONFIG, 3)
+    const newKey = await deriveKey(
+      "new-password",
+      undefined,
+      DEFAULT_CRYPTO_CONFIG,
+      3
+    )
 
     await expect(
       rotateKeyBatch(items, key.key, newKey.key, {
@@ -408,8 +444,16 @@ describe("Integration Tests", () => {
       status: "success",
     }
 
-    const encryptedPerm = encryptPermission(permission, derived.key, derived.version)
-    const encryptedAudit = encryptAuditLog(auditLog, derived.key, derived.version)
+    const encryptedPerm = encryptPermission(
+      permission,
+      derived.key,
+      derived.version
+    )
+    const encryptedAudit = encryptAuditLog(
+      auditLog,
+      derived.key,
+      derived.version
+    )
 
     // 3. Simulate storage (convert to JSON and back)
     const storedPerm = JSON.parse(JSON.stringify(encryptedPerm))
@@ -419,8 +463,14 @@ describe("Integration Tests", () => {
     const reDerived = await reDeriveKey(password, derived.salt)
 
     // 5. Decrypt
-    const decryptedPerm = decryptPermission<Permission>(storedPerm, reDerived.key)
-    const decryptedAudit = decryptAuditLog<AuditLogEntry>(storedAudit, reDerived.key)
+    const decryptedPerm = decryptPermission<Permission>(
+      storedPerm,
+      reDerived.key
+    )
+    const decryptedAudit = decryptAuditLog<AuditLogEntry>(
+      storedAudit,
+      reDerived.key
+    )
 
     expect(decryptedPerm).toEqual(permission)
     expect(decryptedAudit).toEqual(auditLog)
@@ -429,7 +479,12 @@ describe("Integration Tests", () => {
   it("should handle complete key rotation workflow", async () => {
     // Initial setup with v1 key
     const oldPassword = "old-password"
-    const oldKey = await deriveKey(oldPassword, undefined, DEFAULT_CRYPTO_CONFIG, 1)
+    const oldKey = await deriveKey(
+      oldPassword,
+      undefined,
+      DEFAULT_CRYPTO_CONFIG,
+      1
+    )
 
     // Create and encrypt data
     const permissions: Permission[] = [
@@ -461,7 +516,12 @@ describe("Integration Tests", () => {
 
     // Generate new key
     const newPassword = "new-password"
-    const newKey = await deriveKey(newPassword, undefined, DEFAULT_CRYPTO_CONFIG, 2)
+    const newKey = await deriveKey(
+      newPassword,
+      undefined,
+      DEFAULT_CRYPTO_CONFIG,
+      2
+    )
 
     // Rotate all data
     const rotated = await rotateKeyBatch(encrypted, oldKey.key, newKey.key, {
@@ -473,7 +533,9 @@ describe("Integration Tests", () => {
     expect(verifyKeyVersion(rotated, 2)).toBe(true)
 
     // Decrypt with new key
-    const decrypted = rotated.map((r) => decryptPermission<Permission>(r, newKey.key))
+    const decrypted = rotated.map((r) =>
+      decryptPermission<Permission>(r, newKey.key)
+    )
 
     expect(decrypted).toEqual(permissions)
   })

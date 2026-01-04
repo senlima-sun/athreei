@@ -6,47 +6,49 @@
  * Also runs an HTTP API server for the dashboard on port 3001.
  */
 
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { createServer } from "./server.js";
-import { startApiServer } from "./api/index.js";
-import { logger } from "./utils/logger.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
+import { createServer } from "./server.js"
+import { startApiServer } from "./api/index.js"
+import { logger } from "./utils/logger.js"
 
 /**
  * Parse CLI arguments
  */
 function parseArgs() {
-  const args = process.argv.slice(2);
+  const args = process.argv.slice(2)
   const config = {
     transport: "stdio" as "stdio" | "sse",
     port: 3000,
     clientName: undefined as string | undefined,
-  };
+  }
 
   for (let i = 0; i < args.length; i++) {
-    const arg = args[i];
+    const arg = args[i]
     switch (arg) {
       case "--transport":
       case "-t":
-        const transport = args[++i];
+        const transport = args[++i]
         if (transport === "stdio" || transport === "sse") {
-          config.transport = transport;
+          config.transport = transport
         } else {
-          logger.error(`Invalid transport: ${transport}. Must be 'stdio' or 'sse'`);
-          process.exit(1);
+          logger.error(
+            `Invalid transport: ${transport}. Must be 'stdio' or 'sse'`
+          )
+          process.exit(1)
         }
-        break;
+        break
       case "--port":
       case "-p":
-        config.port = parseInt(args[++i], 10);
+        config.port = parseInt(args[++i], 10)
         if (isNaN(config.port)) {
-          logger.error("Invalid port number");
-          process.exit(1);
+          logger.error("Invalid port number")
+          process.exit(1)
         }
-        break;
+        break
       case "--client":
       case "-c":
-        config.clientName = args[++i];
-        break;
+        config.clientName = args[++i]
+        break
       case "--help":
       case "-h":
         console.error(`
@@ -64,35 +66,38 @@ Examples:
   bun run src/index.ts                    # Start with stdio transport
   bun run src/index.ts -t sse -p 3000    # Start with SSE transport on port 3000
   bun run src/index.ts -c work-claude    # Tag this instance as "work-claude"
-`);
-        process.exit(0);
+`)
+        process.exit(0)
       default:
         if (arg.startsWith("-")) {
-          logger.error(`Unknown option: ${arg}`);
-          process.exit(1);
+          logger.error(`Unknown option: ${arg}`)
+          process.exit(1)
         }
     }
   }
 
-  return config;
+  return config
 }
 
 /**
  * Start the MCP server with stdio transport
  */
 async function startStdio(server: ReturnType<typeof createServer>) {
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  logger.info("MCP Server running on stdio");
+  const transport = new StdioServerTransport()
+  await server.connect(transport)
+  logger.info("MCP Server running on stdio")
 }
 
 /**
  * Start the MCP server with SSE transport
  */
-async function startSSE(_server: ReturnType<typeof createServer>, _port: number) {
+async function startSSE(
+  _server: ReturnType<typeof createServer>,
+  _port: number
+) {
   // SSE transport implementation will be added in a future phase
-  logger.error("SSE transport not yet implemented");
-  process.exit(1);
+  logger.error("SSE transport not yet implemented")
+  process.exit(1)
 }
 
 /**
@@ -103,67 +108,67 @@ function setupShutdownHandlers(
   apiServer?: ReturnType<typeof Bun.serve>
 ) {
   const shutdown = async (signal: string) => {
-    logger.info(`Received ${signal}, shutting down gracefully...`);
+    logger.info(`Received ${signal}, shutting down gracefully...`)
     try {
-      await server.close();
+      await server.close()
       if (apiServer) {
-        apiServer.stop();
-        logger.info("HTTP API Server stopped");
+        apiServer.stop()
+        logger.info("HTTP API Server stopped")
       }
-      logger.info("MCP Server closed successfully");
-      process.exit(0);
+      logger.info("MCP Server closed successfully")
+      process.exit(0)
     } catch (error) {
-      logger.error("Error during shutdown:", error);
-      process.exit(1);
+      logger.error("Error during shutdown:", error)
+      process.exit(1)
     }
-  };
+  }
 
-  process.on("SIGINT", () => shutdown("SIGINT"));
-  process.on("SIGTERM", () => shutdown("SIGTERM"));
+  process.on("SIGINT", () => shutdown("SIGINT"))
+  process.on("SIGTERM", () => shutdown("SIGTERM"))
 
   // Handle uncaught errors
   process.on("uncaughtException", (error) => {
-    logger.error("Uncaught exception:", error);
-    process.exit(1);
-  });
+    logger.error("Uncaught exception:", error)
+    process.exit(1)
+  })
 
   process.on("unhandledRejection", (reason, promise) => {
-    logger.error("Unhandled rejection at:", promise, "reason:", reason);
-    process.exit(1);
-  });
+    logger.error("Unhandled rejection at:", promise, "reason:", reason)
+    process.exit(1)
+  })
 }
 
 /**
  * Main entry point
  */
 async function main() {
-  const config = parseArgs();
+  const config = parseArgs()
 
-  logger.info("Starting athreei MCP Server...");
-  logger.info(`Transport: ${config.transport}`);
+  logger.info("Starting athreei MCP Server...")
+  logger.info(`Transport: ${config.transport}`)
   if (config.clientName) {
-    logger.info(`Client name: ${config.clientName}`);
+    logger.info(`Client name: ${config.clientName}`)
   }
 
   // Start the HTTP API server for the dashboard
-  const apiServer = startApiServer();
+  const apiServer = startApiServer()
 
   // Create the MCP server
-  const server = createServer();
+  const server = createServer()
 
   // Setup graceful shutdown
-  setupShutdownHandlers(server, apiServer);
+  setupShutdownHandlers(server, apiServer)
 
   // Start the appropriate transport
   if (config.transport === "stdio") {
-    await startStdio(server);
+    await startStdio(server)
   } else {
-    await startSSE(server, config.port);
+    await startSSE(server, config.port)
   }
 }
 
 // Start the server
 main().catch((error) => {
-  logger.error("Fatal error:", error);
-  process.exit(1);
-});
+  logger.error("Fatal error:", error)
+  process.exit(1)
+})

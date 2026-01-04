@@ -11,9 +11,14 @@
  * - Granular API key scoping
  */
 
-import { sqliteTable, text, integer, uniqueIndex } from "drizzle-orm/sqlite-core";
-import { relations } from "drizzle-orm";
-import { organization } from "./auth";
+import {
+  sqliteTable,
+  text,
+  integer,
+  uniqueIndex,
+} from "drizzle-orm/sqlite-core"
+import { relations } from "drizzle-orm"
+import { organization } from "./auth"
 
 /**
  * Namespace - logical grouping within an organization
@@ -28,14 +33,16 @@ export const namespace = sqliteTable(
     name: text("name").notNull(),
     slug: text("slug").notNull(),
     description: text("description"),
-    isDefault: integer("isDefault", { mode: "boolean" }).notNull().default(false),
+    isDefault: integer("isDefault", { mode: "boolean" })
+      .notNull()
+      .default(false),
     createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
     updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
   },
   (table) => [
     uniqueIndex("namespace_org_slug_idx").on(table.organizationId, table.slug),
   ]
-);
+)
 
 /**
  * Namespace Resource Mapping - associates resources with namespaces
@@ -62,7 +69,7 @@ export const namespaceResource = sqliteTable(
       table.resourceId
     ),
   ]
-);
+)
 
 // =============================================================================
 // Relations
@@ -74,11 +81,14 @@ export const namespaceRelations = relations(namespace, ({ one, many }) => ({
     references: [organization.id],
   }),
   resources: many(namespaceResource),
-}));
+}))
 
-export const namespaceResourceRelations = relations(namespaceResource, ({ one }) => ({
-  namespace: one(namespace, {
-    fields: [namespaceResource.namespaceId],
-    references: [namespace.id],
-  }),
-}));
+export const namespaceResourceRelations = relations(
+  namespaceResource,
+  ({ one }) => ({
+    namespace: one(namespace, {
+      fields: [namespaceResource.namespaceId],
+      references: [namespace.id],
+    }),
+  })
+)

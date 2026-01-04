@@ -15,6 +15,13 @@
       "when": 1767535086765,
       "tag": "0001_heavy_prowler",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1767539981930,
+      "tag": "0002_goofy_cassandra_nova",
+      "breakpoints": true
     }
   ]
 }

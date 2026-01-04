@@ -4,9 +4,9 @@
  * Stores API endpoints and their associated API keys for authentication.
  */
 
-import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
-import { relations } from "drizzle-orm";
-import { organization, user } from "./auth";
+import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core"
+import { relations } from "drizzle-orm"
+import { organization, user } from "./auth"
 
 /**
  * Endpoint - registered API endpoints
@@ -30,7 +30,7 @@ export const endpoint = sqliteTable("endpoint", {
   // Timestamps
   createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
-});
+})
 
 /**
  * API Key - authentication keys for accessing the API
@@ -63,7 +63,7 @@ export const apiKey = sqliteTable("api_key", {
   // Timestamps
   createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
-});
+})
 
 // =============================================================================
 // Relations
@@ -75,7 +75,7 @@ export const endpointRelations = relations(endpoint, ({ one, many }) => ({
     references: [organization.id],
   }),
   apiKeys: many(apiKey),
-}));
+}))
 
 export const apiKeyRelations = relations(apiKey, ({ one }) => ({
   organization: one(organization, {
@@ -94,4 +94,4 @@ export const apiKeyRelations = relations(apiKey, ({ one }) => ({
     fields: [apiKey.revokedById],
     references: [user.id],
   }),
-}));
+}))

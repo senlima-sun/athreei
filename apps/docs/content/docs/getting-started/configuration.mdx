@@ -20,18 +20,19 @@ Create a configuration file at `~/.athreei/config.json`:
 
 ### Configuration Options
 
-| Option | Type | Required | Description |
-|--------|------|----------|-------------|
-| `apiKey` | string | Yes | API key from the Platform dashboard |
-| `endpoint` | string | Yes | Endpoint name to connect to |
-| `platformUrl` | string | No | Platform URL (default: `https://athreei.com`) |
-| `syncInterval` | number | No | Config sync interval in ms (default: 300000 / 5 min) |
+| Option         | Type   | Required | Description                                          |
+| -------------- | ------ | -------- | ---------------------------------------------------- |
+| `apiKey`       | string | Yes      | API key from the Platform dashboard                  |
+| `endpoint`     | string | Yes      | Endpoint name to connect to                          |
+| `platformUrl`  | string | No       | Platform URL (default: `https://athreei.com`)        |
+| `syncInterval` | number | No       | Config sync interval in ms (default: 300000 / 5 min) |
 
 ### Server Configuration
 
 MCP servers are configured in the Platform dashboard, not in the local config file. The gateway fetches server configuration from the Platform API using your API key and endpoint.
 
 To add or modify servers:
+
 1. Log in to the [Platform dashboard](https://athreei.com)
 2. Navigate to your endpoint settings
 3. Add/remove/configure MCP servers
@@ -50,11 +51,11 @@ Tools are automatically namespaced with the server name:
 
 **Config file location:**
 
-| Platform | Path |
-|----------|------|
-| macOS | `~/Library/Application Support/Claude/claude_desktop_config.json` |
-| Windows | `%APPDATA%\Claude\claude_desktop_config.json` |
-| Linux | `~/.config/claude/claude_desktop_config.json` |
+| Platform | Path                                                              |
+| -------- | ----------------------------------------------------------------- |
+| macOS    | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+| Windows  | `%APPDATA%\Claude\claude_desktop_config.json`                     |
+| Linux    | `~/.config/claude/claude_desktop_config.json`                     |
 
 **Configuration:**
 
@@ -104,12 +105,12 @@ Options:
 
 MCP servers are added and configured via the Platform dashboard. Each server configuration supports:
 
-| Option | Type | Description |
-|--------|------|-------------|
-| `name` | string | Unique server name (used for tool namespacing) |
-| `command` | string | Executable to run |
-| `args` | string[] | Command line arguments |
-| `env` | object | Environment variables |
+| Option    | Type     | Description                                    |
+| --------- | -------- | ---------------------------------------------- |
+| `name`    | string   | Unique server name (used for tool namespacing) |
+| `command` | string   | Executable to run                              |
+| `args`    | string[] | Command line arguments                         |
+| `env`     | object   | Environment variables                          |
 
 ### Popular MCP Servers
 
@@ -127,6 +128,7 @@ To use browser tools, add the browser MCP server via Platform and install the Ch
 ## Verifying Configuration
 
 1. **Test the gateway directly:**
+
    ```bash
    athreei-gateway --debug
    ```

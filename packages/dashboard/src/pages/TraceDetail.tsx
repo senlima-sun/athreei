@@ -55,7 +55,9 @@ export function TraceDetail() {
   const [password, setPassword] = useState("")
   const [decrypting, setDecrypting] = useState(false)
   const [decryptionError, setDecryptionError] = useState<string | null>(null)
-  const [decryptedPayload, setDecryptedPayload] = useState<TracePayload | null>(null)
+  const [decryptedPayload, setDecryptedPayload] = useState<TracePayload | null>(
+    null
+  )
   const [hasDecryptionKey, setHasDecryptionKey] = useState(false)
 
   // Check for existing decryption session
@@ -88,7 +90,9 @@ export function TraceDetail() {
         }
       } catch (err) {
         setTrace(null)
-        setError(err instanceof Error ? err.message : "Failed to load trace details")
+        setError(
+          err instanceof Error ? err.message : "Failed to load trace details"
+        )
       } finally {
         setLoading(false)
       }
@@ -112,12 +116,17 @@ export function TraceDetail() {
       // The nonce is embedded inside the JSON payload, not a separate field
       const encryptedPayloadJson = JSON.parse(atob(traceData.encryptedPayload))
 
-      const decrypted = decryptTrace(encryptedPayloadJson, decryptionSession.key) as TracePayload
+      const decrypted = decryptTrace(
+        encryptedPayloadJson,
+        decryptionSession.key
+      ) as TracePayload
 
       setDecryptedPayload(decrypted)
       setDecryptionError(null)
     } catch (err) {
-      setDecryptionError("Failed to decrypt payload. The encryption key may be incorrect.")
+      setDecryptionError(
+        "Failed to decrypt payload. The encryption key may be incorrect."
+      )
       setDecryptedPayload(null)
     }
   }, [])
@@ -137,9 +146,15 @@ export function TraceDetail() {
       // Step 1: Try to get existing salt from account
       let salt: Uint8Array | undefined
       try {
-        const saltResponse = await api.get<{ salt: string | null }>("/api/account/encryption-salt")
+        const saltResponse = await api.get<{ salt: string | null }>(
+          "/api/account/encryption-salt"
+        )
         if (saltResponse.salt) {
-          salt = new Uint8Array(atob(saltResponse.salt).split("").map(c => c.charCodeAt(0)))
+          salt = new Uint8Array(
+            atob(saltResponse.salt)
+              .split("")
+              .map((c) => c.charCodeAt(0))
+          )
         }
       } catch {
         // Salt endpoint not available, will generate new salt
@@ -164,7 +179,10 @@ export function TraceDetail() {
         // Parse the encrypted payload (base64-encoded JSON with nonce, ciphertext, etc.)
         const encryptedPayloadJson = JSON.parse(atob(trace.encryptedPayload))
 
-        const decrypted = decryptTrace(encryptedPayloadJson, derived.key) as TracePayload
+        const decrypted = decryptTrace(
+          encryptedPayloadJson,
+          derived.key
+        ) as TracePayload
 
         setDecryptedPayload(decrypted)
 
@@ -230,7 +248,10 @@ export function TraceDetail() {
       <EmptyState
         icon={<SearchIcon />}
         title={error ? "Unable to load trace" : "Trace not found"}
-        description={error || "The requested trace could not be found. It may have been deleted or the ID is incorrect."}
+        description={
+          error ||
+          "The requested trace could not be found. It may have been deleted or the ID is incorrect."
+        }
         action={{
           label: "Back to Traces",
           onClick: () => navigate("/traces"),
@@ -251,27 +272,67 @@ export function TraceDetail() {
               size="sm"
               onClick={() => navigate("/traces")}
             >
-              <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <svg
+                className="w-4 h-4 mr-1"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
               </svg>
               Back
             </Button>
           </div>
           <h2 className="text-2xl font-semibold mb-1">Trace Details</h2>
-          <p className="text-muted-foreground font-mono text-sm">{trace.traceId}</p>
+          <p className="text-muted-foreground font-mono text-sm">
+            {trace.traceId}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           {hasDecryptionKey ? (
-            <Button variant="secondary" size="sm" onClick={clearDecryptionSession}>
-              <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={clearDecryptionSession}
+            >
+              <svg
+                className="w-4 h-4 mr-1"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                />
               </svg>
               Lock Payload
             </Button>
           ) : trace.encryptedPayload ? (
-            <Button variant="primary" size="sm" onClick={() => setShowPasswordDialog(true)}>
-              <svg className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => setShowPasswordDialog(true)}
+            >
+              <svg
+                className="w-4 h-4 mr-1"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"
+                />
               </svg>
               Decrypt Payload
             </Button>
@@ -279,23 +340,30 @@ export function TraceDetail() {
         </div>
       </div>
 
-
       {/* Metadata */}
       <Card className="mb-6">
         <h3 className="text-lg font-medium mb-4">Metadata</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           <div>
-            <label className="text-sm font-medium text-muted-foreground">Tool</label>
+            <label className="text-sm font-medium text-muted-foreground">
+              Tool
+            </label>
             <p className="mt-1">
-              <code className="bg-muted px-2 py-1 rounded text-sm">{trace.toolName}</code>
+              <code className="bg-muted px-2 py-1 rounded text-sm">
+                {trace.toolName}
+              </code>
             </p>
           </div>
           <div>
-            <label className="text-sm font-medium text-muted-foreground">Server</label>
+            <label className="text-sm font-medium text-muted-foreground">
+              Server
+            </label>
             <p className="mt-1 text-sm">{trace.serverName}</p>
           </div>
           <div>
-            <label className="text-sm font-medium text-muted-foreground">Status</label>
+            <label className="text-sm font-medium text-muted-foreground">
+              Status
+            </label>
             <p className="mt-1">
               <span
                 className={cn(
@@ -306,12 +374,32 @@ export function TraceDetail() {
                 )}
               >
                 {trace.status === "success" ? (
-                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <svg
+                    className="w-3 h-3"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                 ) : (
-                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  <svg
+                    className="w-3 h-3"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
                   </svg>
                 )}
                 {trace.status === "success" ? "Success" : "Error"}
@@ -319,28 +407,40 @@ export function TraceDetail() {
             </p>
           </div>
           <div>
-            <label className="text-sm font-medium text-muted-foreground">Duration</label>
-            <p className="mt-1 font-mono text-sm">{formatDuration(trace.durationMs)}</p>
+            <label className="text-sm font-medium text-muted-foreground">
+              Duration
+            </label>
+            <p className="mt-1 font-mono text-sm">
+              {formatDuration(trace.durationMs)}
+            </p>
           </div>
           <div>
-            <label className="text-sm font-medium text-muted-foreground">Start Time</label>
+            <label className="text-sm font-medium text-muted-foreground">
+              Start Time
+            </label>
             <p className="mt-1 text-sm">{formatTimestamp(trace.startTime)}</p>
           </div>
           {trace.endTime && (
             <div>
-              <label className="text-sm font-medium text-muted-foreground">End Time</label>
+              <label className="text-sm font-medium text-muted-foreground">
+                End Time
+              </label>
               <p className="mt-1 text-sm">{formatTimestamp(trace.endTime)}</p>
             </div>
           )}
           {trace.endpointId && (
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Endpoint</label>
+              <label className="text-sm font-medium text-muted-foreground">
+                Endpoint
+              </label>
               <p className="mt-1 text-sm">{trace.endpointId}</p>
             </div>
           )}
           {trace.keyVersion && (
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Key Version</label>
+              <label className="text-sm font-medium text-muted-foreground">
+                Key Version
+              </label>
               <p className="mt-1 text-sm">v{trace.keyVersion}</p>
             </div>
           )}
@@ -368,21 +468,37 @@ export function TraceDetail() {
         ) : !hasDecryptionKey ? (
           <div className="text-center py-8">
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-muted mb-4">
-              <svg className="w-6 h-6 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              <svg
+                className="w-6 h-6 text-muted-foreground"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                />
               </svg>
             </div>
             <p className="text-muted-foreground mb-4">
               Payload is encrypted. Enter your decryption password to view.
             </p>
-            <Button variant="primary" onClick={() => setShowPasswordDialog(true)}>
+            <Button
+              variant="primary"
+              onClick={() => setShowPasswordDialog(true)}
+            >
               Enter Password
             </Button>
           </div>
         ) : decryptionError ? (
           <div className="text-center py-8">
             <div className="text-error mb-4">{decryptionError}</div>
-            <Button variant="secondary" onClick={() => setShowPasswordDialog(true)}>
+            <Button
+              variant="secondary"
+              onClick={() => setShowPasswordDialog(true)}
+            >
               Try Again
             </Button>
           </div>
@@ -391,7 +507,9 @@ export function TraceDetail() {
             {/* Request */}
             {decryptedPayload.request && (
               <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-2">Request</h4>
+                <h4 className="text-sm font-medium text-muted-foreground mb-2">
+                  Request
+                </h4>
                 <pre className="bg-muted rounded-md p-4 text-sm overflow-x-auto">
                   {JSON.stringify(decryptedPayload.request, null, 2)}
                 </pre>
@@ -401,7 +519,9 @@ export function TraceDetail() {
             {/* Response */}
             {decryptedPayload.response && (
               <div>
-                <h4 className="text-sm font-medium text-muted-foreground mb-2">Response</h4>
+                <h4 className="text-sm font-medium text-muted-foreground mb-2">
+                  Response
+                </h4>
                 <pre className="bg-muted rounded-md p-4 text-sm overflow-x-auto">
                   {JSON.stringify(decryptedPayload.response, null, 2)}
                 </pre>
@@ -428,7 +548,9 @@ export function TraceDetail() {
 
           <div className="space-y-4 py-4">
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Password</label>
+              <label className="text-sm font-medium text-muted-foreground">
+                Password
+              </label>
               <Input
                 type="password"
                 value={password}
@@ -471,4 +593,3 @@ export function TraceDetail() {
     </div>
   )
 }
-

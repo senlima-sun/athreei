@@ -1,66 +1,66 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { PageHeader } from "@/components/dashboard/page-header";
-import { Server, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { PageHeader } from "@/components/dashboard/page-header"
+import { Server, Loader2 } from "lucide-react"
 
 interface Namespace {
-  id: string;
-  name: string;
+  id: string
+  name: string
 }
 
 export default function NewEndpointPage() {
-  const router = useRouter();
-  const [name, setName] = useState("");
-  const [slug, setSlug] = useState("");
-  const [namespaceId, setNamespaceId] = useState("");
-  const [status, setStatus] = useState<"active" | "inactive">("active");
-  const [namespaces, setNamespaces] = useState<Namespace[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoadingNamespaces, setIsLoadingNamespaces] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const router = useRouter()
+  const [name, setName] = useState("")
+  const [slug, setSlug] = useState("")
+  const [namespaceId, setNamespaceId] = useState("")
+  const [status, setStatus] = useState<"active" | "inactive">("active")
+  const [namespaces, setNamespaces] = useState<Namespace[]>([])
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isLoadingNamespaces, setIsLoadingNamespaces] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   // Fetch available namespaces
   useEffect(() => {
     const fetchNamespaces = async () => {
       try {
-        const response = await fetch("/api/namespaces");
+        const response = await fetch("/api/namespaces")
         if (response.ok) {
-          const data = await response.json();
-          setNamespaces(data.namespaces || []);
+          const data = await response.json()
+          setNamespaces(data.namespaces || [])
         }
       } catch (err) {
-        console.error("Failed to fetch namespaces:", err);
+        console.error("Failed to fetch namespaces:", err)
       } finally {
-        setIsLoadingNamespaces(false);
+        setIsLoadingNamespaces(false)
       }
-    };
+    }
 
-    fetchNamespaces();
-  }, []);
+    fetchNamespaces()
+  }, [])
 
   // Auto-generate slug from name
   const handleNameChange = (value: string) => {
-    setName(value);
+    setName(value)
     // Only auto-generate if user hasn't manually edited slug
     if (!slug || slug === generateSlug(name)) {
-      setSlug(generateSlug(value));
+      setSlug(generateSlug(value))
     }
-  };
+  }
 
   const generateSlug = (value: string) => {
     return value
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "");
-  };
+      .replace(/^-+|-+$/g, "")
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setIsSubmitting(true);
+    e.preventDefault()
+    setError(null)
+    setIsSubmitting(true)
 
     try {
       const response = await fetch("/api/endpoints", {
@@ -72,21 +72,23 @@ export default function NewEndpointPage() {
           namespaceId: namespaceId || undefined,
           status,
         }),
-      });
+      })
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Failed to create endpoint");
+        const data = await response.json()
+        throw new Error(data.error || "Failed to create endpoint")
       }
 
-      const data = await response.json();
-      router.push(`/dashboard/endpoints/${data.endpoint.id}`);
+      const data = await response.json()
+      router.push(`/dashboard/endpoints/${data.endpoint.id}`)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An unexpected error occurred");
+      setError(
+        err instanceof Error ? err.message : "An unexpected error occurred"
+      )
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   return (
     <div>
@@ -139,13 +141,18 @@ export default function NewEndpointPage() {
                 type="text"
                 id="slug"
                 value={slug}
-                onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+                onChange={(e) =>
+                  setSlug(
+                    e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "")
+                  )
+                }
                 placeholder="my-endpoint"
                 className="block w-full rounded-none rounded-r-md border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
               />
             </div>
             <p className="mt-1 text-xs text-gray-500">
-              This will be used in the connection URL and cannot be changed later.
+              This will be used in the connection URL and cannot be changed
+              later.
             </p>
           </div>
 
@@ -234,5 +241,5 @@ export default function NewEndpointPage() {
         </form>
       </div>
     </div>
-  );
+  )
 }

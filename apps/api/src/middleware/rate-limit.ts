@@ -5,18 +5,18 @@
  * Tracks request timestamps and rejects requests when the limit is exceeded.
  */
 
-import type { Context, Next } from "hono";
+import type { Context, Next } from "hono"
 
 /**
  * Rate limiter configuration
  */
 export interface RateLimitConfig {
   /** Window size in milliseconds (default: 60000 = 1 minute) */
-  windowMs?: number;
+  windowMs?: number
   /** Default requests per window if not specified per-key (default: 60) */
-  defaultLimit?: number;
+  defaultLimit?: number
   /** Interval to clean up stale entries in milliseconds (default: 300000 = 5 minutes) */
-  cleanupIntervalMs?: number;
+  cleanupIntervalMs?: number
 }
 
 /**
@@ -24,46 +24,46 @@ export interface RateLimitConfig {
  */
 export interface RateLimitInfo {
   /** Current request count in window */
-  current: number;
+  current: number
   /** Limit for this key */
-  limit: number;
+  limit: number
   /** Time until window resets (ms) */
-  resetIn: number;
+  resetIn: number
   /** Whether rate limited */
-  limited: boolean;
+  limited: boolean
 }
 
 /**
  * Context variables for rate limiting
  */
 export type RateLimitVariables = {
-  rateLimit: RateLimitInfo;
-};
+  rateLimit: RateLimitInfo
+}
 
 /**
  * Sliding window rate limiter store
  * Map<keyHash, timestamp[]>
  */
-const requestStore = new Map<string, number[]>();
+const requestStore = new Map<string, number[]>()
 
 /**
  * Track last cleanup time
  */
-let lastCleanup = Date.now();
+let lastCleanup = Date.now()
 
 /**
  * Clean up old entries from the store
  */
 function cleanup(windowMs: number): void {
-  const now = Date.now();
-  const cutoff = now - windowMs;
+  const now = Date.now()
+  const cutoff = now - windowMs
 
   for (const [key, timestamps] of requestStore.entries()) {
-    const filtered = timestamps.filter((t) => t > cutoff);
+    const filtered = timestamps.filter((t) => t > cutoff)
     if (filtered.length === 0) {
-      requestStore.delete(key);
+      requestStore.delete(key)
     } else {
-      requestStore.set(key, filtered);
+      requestStore.set(key, filtered)
     }
   }
 }
@@ -76,27 +76,27 @@ export function checkRateLimit(
   limit: number,
   windowMs: number
 ): RateLimitInfo {
-  const now = Date.now();
-  const cutoff = now - windowMs;
+  const now = Date.now()
+  const cutoff = now - windowMs
 
   // Get existing timestamps and filter out expired ones
-  const timestamps = (requestStore.get(keyHash) || []).filter((t) => t > cutoff);
+  const timestamps = (requestStore.get(keyHash) || []).filter((t) => t > cutoff)
 
   const info: RateLimitInfo = {
     current: timestamps.length,
     limit,
     resetIn: timestamps.length > 0 ? timestamps[0] + windowMs - now : windowMs,
     limited: timestamps.length >= limit,
-  };
+  }
 
   if (!info.limited) {
     // Add current request timestamp
-    timestamps.push(now);
-    requestStore.set(keyHash, timestamps);
-    info.current = timestamps.length;
+    timestamps.push(now)
+    requestStore.set(keyHash, timestamps)
+    info.current = timestamps.length
   }
 
-  return info;
+  return info
 }
 
 /**
@@ -107,46 +107,54 @@ export function checkRateLimit(
  *   Returns { keyHash, limit } where limit is requests per window.
  */
 export function createRateLimiter(
-  getKeyAndLimit: (c: Context) => Promise<{ keyHash: string; limit: number } | null>,
+  getKeyAndLimit: (
+    c: Context
+  ) => Promise<{ keyHash: string; limit: number } | null>,
   config: RateLimitConfig = {}
 ) {
   const {
     windowMs = 60_000, // 1 minute
     defaultLimit = 60,
     cleanupIntervalMs = 300_000, // 5 minutes
-  } = config;
+  } = config
 
   return async function rateLimitMiddleware(c: Context, next: Next) {
     // Periodic cleanup
-    const now = Date.now();
+    const now = Date.now()
     if (now - lastCleanup > cleanupIntervalMs) {
-      cleanup(windowMs);
-      lastCleanup = now;
+      cleanup(windowMs)
+      lastCleanup = now
     }
 
     // Get key and limit for this request
-    const keyInfo = await getKeyAndLimit(c);
+    const keyInfo = await getKeyAndLimit(c)
     if (!keyInfo) {
       // Skip rate limiting for this request
-      return next();
+      return next()
     }
 
-    const { keyHash, limit } = keyInfo;
-    const effectiveLimit = limit || defaultLimit;
+    const { keyHash, limit } = keyInfo
+    const effectiveLimit = limit || defaultLimit
 
     // Check rate limit
-    const info = checkRateLimit(keyHash, effectiveLimit, windowMs);
+    const info = checkRateLimit(keyHash, effectiveLimit, windowMs)
 
     // Attach info to context
-    c.set("rateLimit", info);
+    c.set("rateLimit", info)
 
     // Set rate limit headers
-    c.header("X-RateLimit-Limit", String(effectiveLimit));
-    c.header("X-RateLimit-Remaining", String(Math.max(0, effectiveLimit - info.current)));
-    c.header("X-RateLimit-Reset", String(Math.ceil((now + info.resetIn) / 1000)));
+    c.header("X-RateLimit-Limit", String(effectiveLimit))
+    c.header(
+      "X-RateLimit-Remaining",
+      String(Math.max(0, effectiveLimit - info.current))
+    )
+    c.header(
+      "X-RateLimit-Reset",
+      String(Math.ceil((now + info.resetIn) / 1000))
+    )
 
     if (info.limited) {
-      c.header("Retry-After", String(Math.ceil(info.resetIn / 1000)));
+      c.header("Retry-After", String(Math.ceil(info.resetIn / 1000)))
       return c.json(
         {
           error: "Too Many Requests",
@@ -154,30 +162,30 @@ export function createRateLimiter(
           retryAfter: Math.ceil(info.resetIn / 1000),
         },
         429
-      );
+      )
     }
 
-    return next();
-  };
+    return next()
+  }
 }
 
 /**
  * Get rate limit info from context
  */
 export function getRateLimitInfo(c: Context): RateLimitInfo | undefined {
-  return c.get("rateLimit") as RateLimitInfo | undefined;
+  return c.get("rateLimit") as RateLimitInfo | undefined
 }
 
 /**
  * Reset rate limit for a specific key (for testing)
  */
 export function resetRateLimit(keyHash: string): void {
-  requestStore.delete(keyHash);
+  requestStore.delete(keyHash)
 }
 
 /**
  * Clear all rate limits (for testing)
  */
 export function clearAllRateLimits(): void {
-  requestStore.clear();
+  requestStore.clear()
 }

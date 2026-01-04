@@ -10,8 +10,20 @@
  *   Communication happens automatically via stdin/stdout.
  */
 
-import { readMessage, writeMessage, isRequest, isResponse, createEvent, resetStdinReader } from "./protocol.js"
-import { handleRequest, initializeHandlers, getRegisteredMethods, clearHandlers } from "./handlers.js"
+import {
+  readMessage,
+  writeMessage,
+  isRequest,
+  isResponse,
+  createEvent,
+  resetStdinReader,
+} from "./protocol.js"
+import {
+  handleRequest,
+  initializeHandlers,
+  getRegisteredMethods,
+  clearHandlers,
+} from "./handlers.js"
 import { IPCServer } from "./ipc/index.js"
 
 export const HOST_NAME = "com.athreei.host"
@@ -78,7 +90,9 @@ async function main() {
 
   // Initialize handlers
   initializeHandlers()
-  console.error(`[native-host] Registered methods: ${getRegisteredMethods().join(", ")}`)
+  console.error(
+    `[native-host] Registered methods: ${getRegisteredMethods().join(", ")}`
+  )
 
   // Start IPC server
   try {
@@ -87,7 +101,9 @@ async function main() {
 
     // Set up handler for IPC requests - forward to Chrome extension
     ipcServer.onRequest = (request, clientId) => {
-      console.error(`[native-host] IPC request from ${clientId}: ${request.type} (id: ${request.id})`)
+      console.error(
+        `[native-host] IPC request from ${clientId}: ${request.type} (id: ${request.id})`
+      )
       pendingIPCRequests.set(request.id, clientId)
       writeMessage(request)
     }
@@ -115,24 +131,33 @@ async function main() {
         break
       }
 
-      console.error(`[native-host] Received message: ${message.type} (id: ${message.id})`)
+      console.error(
+        `[native-host] Received message: ${message.type} (id: ${message.id})`
+      )
 
       // Check if this is a response to an IPC request
       if (isResponse(message) && pendingIPCRequests.has(message.id)) {
         const clientId = pendingIPCRequests.get(message.id)!
         pendingIPCRequests.delete(message.id)
-        console.error(`[native-host] Routing response to IPC client ${clientId}`)
+        console.error(
+          `[native-host] Routing response to IPC client ${clientId}`
+        )
         ipcServer.sendResponse(clientId, message)
       } else if (isRequest(message)) {
         // Handle request and send response
         const response = await handleRequest(message)
         writeMessage(response)
-        console.error(`[native-host] Sent response: ${response.success ? "success" : "error"} (id: ${response.id})`)
+        console.error(
+          `[native-host] Sent response: ${response.success ? "success" : "error"} (id: ${response.id})`
+        )
       } else {
-        console.error(`[native-host] Ignoring non-request message type: ${message.type}`)
+        console.error(
+          `[native-host] Ignoring non-request message type: ${message.type}`
+        )
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error)
+      const errorMessage =
+        error instanceof Error ? error.message : String(error)
       console.error(`[native-host] Error in main loop: ${errorMessage}`)
 
       // Don't crash on individual message errors, continue processing

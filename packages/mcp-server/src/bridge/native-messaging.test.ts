@@ -3,7 +3,11 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from "vitest"
-import type { NativeRequest, NativeResponse, NativeEvent } from "@athreei/shared"
+import type {
+  NativeRequest,
+  NativeResponse,
+  NativeEvent,
+} from "@athreei/shared"
 
 describe("NativeMessagingClient", () => {
   describe("Message Correlation", () => {
@@ -46,7 +50,11 @@ describe("NativeMessagingClient", () => {
       >()
 
       // Simulate 3 concurrent requests
-      const ids = [crypto.randomUUID(), crypto.randomUUID(), crypto.randomUUID()]
+      const ids = [
+        crypto.randomUUID(),
+        crypto.randomUUID(),
+        crypto.randomUUID(),
+      ]
 
       ids.forEach((id) => {
         pendingRequests.set(id, {
@@ -111,7 +119,12 @@ describe("NativeMessagingClient", () => {
 
   describe("Message Protocol", () => {
     test("encodes length prefix as little-endian uint32", () => {
-      const message = JSON.stringify({ id: "test", type: "request", method: "ping", payload: {} })
+      const message = JSON.stringify({
+        id: "test",
+        type: "request",
+        method: "ping",
+        payload: {},
+      })
       const messageBytes = Buffer.from(message, "utf-8")
       const messageLength = messageBytes.length
 
@@ -135,7 +148,12 @@ describe("NativeMessagingClient", () => {
     })
 
     test("handles partial message reads", () => {
-      const message = JSON.stringify({ id: "test", type: "request", method: "ping", payload: {} })
+      const message = JSON.stringify({
+        id: "test",
+        type: "request",
+        method: "ping",
+        payload: {},
+      })
       const messageBytes = Buffer.from(message, "utf-8")
       const messageLength = messageBytes.length
 
@@ -159,8 +177,18 @@ describe("NativeMessagingClient", () => {
 
     test("processes multiple messages from buffer", () => {
       // Create two messages
-      const msg1 = JSON.stringify({ id: "1", type: "response", success: true, payload: {} })
-      const msg2 = JSON.stringify({ id: "2", type: "response", success: true, payload: {} })
+      const msg1 = JSON.stringify({
+        id: "1",
+        type: "response",
+        success: true,
+        payload: {},
+      })
+      const msg2 = JSON.stringify({
+        id: "2",
+        type: "response",
+        success: true,
+        payload: {},
+      })
 
       const msg1Bytes = Buffer.from(msg1, "utf-8")
       const msg2Bytes = Buffer.from(msg2, "utf-8")
@@ -171,13 +199,20 @@ describe("NativeMessagingClient", () => {
       len2Buffer.writeUInt32LE(msg2Bytes.length, 0)
 
       // Concatenate both messages
-      const buffer = Buffer.concat([len1Buffer, msg1Bytes, len2Buffer, msg2Bytes])
+      const buffer = Buffer.concat([
+        len1Buffer,
+        msg1Bytes,
+        len2Buffer,
+        msg2Bytes,
+      ])
 
       // Process first message
       let offset = 0
       const length1 = buffer.readUInt32LE(offset)
       offset += 4
-      const message1 = buffer.subarray(offset, offset + length1).toString("utf-8")
+      const message1 = buffer
+        .subarray(offset, offset + length1)
+        .toString("utf-8")
       offset += length1
 
       expect(JSON.parse(message1).id).toBe("1")
@@ -185,7 +220,9 @@ describe("NativeMessagingClient", () => {
       // Process second message
       const length2 = buffer.readUInt32LE(offset)
       offset += 4
-      const message2 = buffer.subarray(offset, offset + length2).toString("utf-8")
+      const message2 = buffer
+        .subarray(offset, offset + length2)
+        .toString("utf-8")
       offset += length2
 
       expect(JSON.parse(message2).id).toBe("2")

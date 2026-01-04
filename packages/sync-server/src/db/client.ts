@@ -1,7 +1,7 @@
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
-import { eq, and, gt, desc, sql as drizzleSql } from 'drizzle-orm';
-import * as schema from './schema';
+import { drizzle } from "drizzle-orm/postgres-js"
+import postgres from "postgres"
+import { eq, and, gt, desc, sql as drizzleSql } from "drizzle-orm"
+import * as schema from "./schema"
 import type {
   Account,
   Device,
@@ -10,32 +10,32 @@ import type {
   SyncSettings,
   ItemType,
   NewSyncSettings,
-} from './schema';
+} from "./schema"
 
-let client: ReturnType<typeof postgres>;
-let db: ReturnType<typeof drizzle<typeof schema>>;
+let client: ReturnType<typeof postgres>
+let db: ReturnType<typeof drizzle<typeof schema>>
 
 export function initDatabase(connectionString: string) {
-  client = postgres(connectionString);
-  db = drizzle(client, { schema });
-  return client;
+  client = postgres(connectionString)
+  db = drizzle(client, { schema })
+  return client
 }
 
 export function getDb() {
   if (!db) {
-    const connectionString = process.env.DATABASE_URL;
+    const connectionString = process.env.DATABASE_URL
     if (!connectionString) {
-      throw new Error('DATABASE_URL environment variable is not set');
+      throw new Error("DATABASE_URL environment variable is not set")
     }
-    client = postgres(connectionString);
-    db = drizzle(client, { schema });
+    client = postgres(connectionString)
+    db = drizzle(client, { schema })
   }
-  return db;
+  return db
 }
 
 export async function closeDatabase() {
   if (client) {
-    await client.end();
+    await client.end()
   }
 }
 
@@ -44,36 +44,38 @@ export async function createAccount(
   email: string,
   passwordHash: string
 ): Promise<Account> {
-  const database = getDb();
+  const database = getDb()
   const [account] = await database
     .insert(schema.accounts)
     .values({
       email,
       password_hash: passwordHash,
     })
-    .returning();
-  return account;
+    .returning()
+  return account
 }
 
-export async function findAccountByEmail(email: string): Promise<Account | null> {
-  const database = getDb();
+export async function findAccountByEmail(
+  email: string
+): Promise<Account | null> {
+  const database = getDb()
   const account = await database.query.accounts.findFirst({
     where: eq(schema.accounts.email, email),
-  });
-  return account || null;
+  })
+  return account || null
 }
 
 export async function findAccountById(id: string): Promise<Account | null> {
-  const database = getDb();
+  const database = getDb()
   const account = await database.query.accounts.findFirst({
     where: eq(schema.accounts.id, id),
-  });
-  return account || null;
+  })
+  return account || null
 }
 
 export async function deleteAccount(id: string): Promise<void> {
-  const database = getDb();
-  await database.delete(schema.accounts).where(eq(schema.accounts.id, id));
+  const database = getDb()
+  await database.delete(schema.accounts).where(eq(schema.accounts.id, id))
 }
 
 // Device operations
@@ -82,7 +84,7 @@ export async function createDevice(
   name: string,
   publicKey: string
 ): Promise<Device> {
-  const database = getDb();
+  const database = getDb()
   const [device] = await database
     .insert(schema.devices)
     .values({
@@ -91,40 +93,47 @@ export async function createDevice(
       public_key: publicKey,
       last_seen: new Date(),
     })
-    .returning();
-  return device;
+    .returning()
+  return device
 }
 
-export async function findDevicesByAccountId(accountId: string): Promise<Device[]> {
-  const database = getDb();
+export async function findDevicesByAccountId(
+  accountId: string
+): Promise<Device[]> {
+  const database = getDb()
   const devices = await database.query.devices.findMany({
     where: eq(schema.devices.account_id, accountId),
     orderBy: [desc(schema.devices.created_at)],
-  });
-  return devices;
+  })
+  return devices
 }
 
 export async function findDeviceById(id: string): Promise<Device | null> {
-  const database = getDb();
+  const database = getDb()
   const device = await database.query.devices.findFirst({
     where: eq(schema.devices.id, id),
-  });
-  return device || null;
+  })
+  return device || null
 }
 
 export async function updateDeviceLastSeen(id: string): Promise<void> {
-  const database = getDb();
+  const database = getDb()
   await database
     .update(schema.devices)
     .set({ last_seen: new Date() })
-    .where(eq(schema.devices.id, id));
+    .where(eq(schema.devices.id, id))
 }
 
-export async function deleteDevice(id: string, accountId: string): Promise<void> {
-  const database = getDb();
+export async function deleteDevice(
+  id: string,
+  accountId: string
+): Promise<void> {
+  const database = getDb()
   await database
     .delete(schema.devices)
-    .where(and(eq(schema.devices.id, id), eq(schema.devices.account_id, accountId)));
+    .where(
+      and(eq(schema.devices.id, id), eq(schema.devices.account_id, accountId))
+    )
 }
 
 // Sync items operations
@@ -134,7 +143,7 @@ export async function createSyncItem(
   itemType: ItemType,
   encryptedData: string
 ): Promise<SyncItem> {
-  const database = getDb();
+  const database = getDb()
   const [item] = await database
     .insert(schema.syncItems)
     .values({
@@ -143,8 +152,8 @@ export async function createSyncItem(
       item_type: itemType,
       encrypted_data: encryptedData,
     })
-    .returning();
-  return item;
+    .returning()
+  return item
 }
 
 export async function updateSyncItem(
@@ -153,7 +162,7 @@ export async function updateSyncItem(
   encryptedData: string,
   version: number
 ): Promise<SyncItem | null> {
-  const database = getDb();
+  const database = getDb()
   const [item] = await database
     .update(schema.syncItems)
     .set({
@@ -168,8 +177,8 @@ export async function updateSyncItem(
         eq(schema.syncItems.version, version)
       )
     )
-    .returning();
-  return item || null;
+    .returning()
+  return item || null
 }
 
 export async function softDeleteSyncItem(
@@ -177,7 +186,7 @@ export async function softDeleteSyncItem(
   accountId: string,
   version: number
 ): Promise<SyncItem | null> {
-  const database = getDb();
+  const database = getDb()
   const [item] = await database
     .update(schema.syncItems)
     .set({
@@ -191,8 +200,8 @@ export async function softDeleteSyncItem(
         eq(schema.syncItems.version, version)
       )
     )
-    .returning();
-  return item || null;
+    .returning()
+  return item || null
 }
 
 export async function findSyncItemsByAccountId(
@@ -200,34 +209,37 @@ export async function findSyncItemsByAccountId(
   cursor?: string,
   limit = 100
 ): Promise<SyncItem[]> {
-  const database = getDb();
+  const database = getDb()
 
   const conditions = cursor
     ? and(
         eq(schema.syncItems.account_id, accountId),
         gt(schema.syncItems.updated_at, new Date(cursor))
       )
-    : eq(schema.syncItems.account_id, accountId);
+    : eq(schema.syncItems.account_id, accountId)
 
   const items = await database
     .select()
     .from(schema.syncItems)
     .where(conditions)
     .orderBy(schema.syncItems.updated_at)
-    .limit(limit);
+    .limit(limit)
 
-  return items;
+  return items
 }
 
 export async function findSyncItemById(
   id: string,
   accountId: string
 ): Promise<SyncItem | null> {
-  const database = getDb();
+  const database = getDb()
   const item = await database.query.syncItems.findFirst({
-    where: and(eq(schema.syncItems.id, id), eq(schema.syncItems.account_id, accountId)),
-  });
-  return item || null;
+    where: and(
+      eq(schema.syncItems.id, id),
+      eq(schema.syncItems.account_id, accountId)
+    ),
+  })
+  return item || null
 }
 
 // Sync state operations
@@ -235,14 +247,14 @@ export async function getSyncState(
   accountId: string,
   deviceId: string
 ): Promise<SyncState | null> {
-  const database = getDb();
+  const database = getDb()
   const state = await database.query.syncState.findFirst({
     where: and(
       eq(schema.syncState.account_id, accountId),
       eq(schema.syncState.device_id, deviceId)
     ),
-  });
-  return state || null;
+  })
+  return state || null
 }
 
 export async function updateSyncState(
@@ -250,7 +262,7 @@ export async function updateSyncState(
   deviceId: string,
   cursor: string
 ): Promise<void> {
-  const database = getDb();
+  const database = getDb()
   await database
     .insert(schema.syncState)
     .values({
@@ -265,48 +277,50 @@ export async function updateSyncState(
         last_sync: new Date(),
         sync_cursor: cursor,
       },
-    });
+    })
 }
 
 // Sync settings operations
-export async function getSyncSettings(accountId: string): Promise<SyncSettings | null> {
-  const database = getDb();
+export async function getSyncSettings(
+  accountId: string
+): Promise<SyncSettings | null> {
+  const database = getDb()
   const settings = await database.query.syncSettings.findFirst({
     where: eq(schema.syncSettings.account_id, accountId),
-  });
-  return settings || null;
+  })
+  return settings || null
 }
 
 export async function updateSyncSettings(
   accountId: string,
-  settings: Partial<Omit<SyncSettings, 'account_id'>>
+  settings: Partial<Omit<SyncSettings, "account_id">>
 ): Promise<SyncSettings> {
-  const database = getDb();
+  const database = getDb()
 
   // Build the update object with only the fields that were provided
-  const updateValues: Partial<Omit<NewSyncSettings, 'account_id'>> = {};
+  const updateValues: Partial<Omit<NewSyncSettings, "account_id">> = {}
 
   if (settings.sync_permissions !== undefined) {
-    updateValues.sync_permissions = settings.sync_permissions;
+    updateValues.sync_permissions = settings.sync_permissions
   }
   if (settings.sync_audit_log !== undefined) {
-    updateValues.sync_audit_log = settings.sync_audit_log;
+    updateValues.sync_audit_log = settings.sync_audit_log
   }
   if (settings.sync_sessions !== undefined) {
-    updateValues.sync_sessions = settings.sync_sessions;
+    updateValues.sync_sessions = settings.sync_sessions
   }
   if (settings.sync_settings !== undefined) {
-    updateValues.sync_settings = settings.sync_settings;
+    updateValues.sync_settings = settings.sync_settings
   }
   if (settings.audit_log_retention_days !== undefined) {
-    updateValues.audit_log_retention_days = settings.audit_log_retention_days;
+    updateValues.audit_log_retention_days = settings.audit_log_retention_days
   }
 
   const [updated] = await database
     .update(schema.syncSettings)
     .set(updateValues)
     .where(eq(schema.syncSettings.account_id, accountId))
-    .returning();
+    .returning()
 
-  return updated;
+  return updated
 }

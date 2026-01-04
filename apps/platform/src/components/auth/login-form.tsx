@@ -1,49 +1,49 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { authClient } from "@/lib/auth-client";
-import { getConfig } from "@/lib/api";
+import { useState, useEffect } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { authClient } from "@/lib/auth-client"
+import { getConfig } from "@/lib/api"
 
 export function LoginForm() {
-  const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [passwordResetEnabled, setPasswordResetEnabled] = useState(false);
+  const router = useRouter()
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [passwordResetEnabled, setPasswordResetEnabled] = useState(false)
 
   useEffect(() => {
     getConfig().then((config) => {
-      setPasswordResetEnabled(config.features.passwordReset);
-    });
-  }, []);
+      setPasswordResetEnabled(config.features.passwordReset)
+    })
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError(null);
+    e.preventDefault()
+    setIsLoading(true)
+    setError(null)
 
     try {
       const result = await authClient.signIn.email({
         email,
         password,
-      });
+      })
 
       if (result.error) {
-        setError(result.error.message || "Failed to sign in");
-        return;
+        setError(result.error.message || "Failed to sign in")
+        return
       }
 
-      router.push("/");
-      router.refresh();
+      router.push("/")
+      router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to sign in");
+      setError(err instanceof Error ? err.message : "Failed to sign in")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -119,5 +119,5 @@ export function LoginForm() {
         </Link>
       </p>
     </form>
-  );
+  )
 }

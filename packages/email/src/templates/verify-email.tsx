@@ -1,9 +1,9 @@
-import { Button, Heading, Section, Text } from "@react-email/components";
-import { BaseLayout } from "./base-layout";
+import { Button, Heading, Section, Text } from "@react-email/components"
+import { BaseLayout } from "./base-layout"
 
 interface VerifyEmailProps {
-  url: string;
-  userName?: string;
+  url: string
+  userName?: string
 }
 
 export function VerifyEmail({ url, userName }: VerifyEmailProps) {
@@ -28,12 +28,12 @@ export function VerifyEmail({ url, userName }: VerifyEmailProps) {
         </Text>
       </Section>
     </BaseLayout>
-  );
+  )
 }
 
 const content = {
   padding: "0",
-};
+}
 
 const heading = {
   fontSize: "24px",
@@ -41,19 +41,19 @@ const heading = {
   color: "#1a1a1a",
   margin: "0 0 24px 0",
   textAlign: "center" as const,
-};
+}
 
 const text = {
   fontSize: "14px",
   color: "#525f7f",
   lineHeight: "24px",
   margin: "0 0 16px 0",
-};
+}
 
 const buttonContainer = {
   textAlign: "center" as const,
   margin: "32px 0",
-};
+}
 
 const button = {
   backgroundColor: "#1a1a1a",
@@ -65,16 +65,16 @@ const button = {
   textAlign: "center" as const,
   display: "inline-block",
   padding: "12px 24px",
-};
+}
 
 const linkText = {
   fontSize: "12px",
   color: "#8898aa",
   lineHeight: "20px",
   margin: "24px 0 0 0",
-};
+}
 
 const urlStyle = {
   color: "#525f7f",
   wordBreak: "break-all" as const,
-};
+}

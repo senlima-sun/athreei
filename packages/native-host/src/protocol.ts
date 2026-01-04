@@ -8,7 +8,12 @@
  */
 
 import { z } from "zod"
-import type { NativeMessage, NativeRequest, NativeResponse, NativeEvent } from "@athreei/shared"
+import type {
+  NativeMessage,
+  NativeRequest,
+  NativeResponse,
+  NativeEvent,
+} from "@athreei/shared"
 
 const MAX_MESSAGE_SIZE = 1024 * 1024 // 1MB
 
@@ -79,7 +84,9 @@ class StdinReader {
         if (this.buffer.length === 0) {
           return null // Clean EOF
         }
-        throw new Error(`Unexpected EOF: got ${this.buffer.length} bytes, expected ${count}`)
+        throw new Error(
+          `Unexpected EOF: got ${this.buffer.length} bytes, expected ${count}`
+        )
       }
 
       const chunk = result.value
@@ -133,11 +140,17 @@ export async function readMessage(): Promise<NativeMessage | null> {
     }
 
     // Parse length as little-endian uint32
-    const dataView = new DataView(lengthBuffer.buffer, lengthBuffer.byteOffset, lengthBuffer.byteLength)
+    const dataView = new DataView(
+      lengthBuffer.buffer,
+      lengthBuffer.byteOffset,
+      lengthBuffer.byteLength
+    )
     const messageLength = dataView.getUint32(0, true) // true = little-endian
 
     if (messageLength > MAX_MESSAGE_SIZE) {
-      throw new Error(`Message too large: ${messageLength} bytes (max: ${MAX_MESSAGE_SIZE})`)
+      throw new Error(
+        `Message too large: ${messageLength} bytes (max: ${MAX_MESSAGE_SIZE})`
+      )
     }
 
     if (messageLength === 0) {
@@ -157,7 +170,9 @@ export async function readMessage(): Promise<NativeMessage | null> {
     const result = NativeMessageSchema.safeParse(parsed)
 
     if (!result.success) {
-      const issues = result.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join(", ")
+      const issues = result.error.issues
+        .map((i) => `${i.path.join(".")}: ${i.message}`)
+        .join(", ")
       throw new Error(`Invalid message format: ${issues}`)
     }
 
@@ -182,7 +197,9 @@ export function writeMessage(message: NativeMessage): void {
     const messageLength = messageBytes.length
 
     if (messageLength > MAX_MESSAGE_SIZE) {
-      throw new Error(`Message too large: ${messageLength} bytes (max: ${MAX_MESSAGE_SIZE})`)
+      throw new Error(
+        `Message too large: ${messageLength} bytes (max: ${MAX_MESSAGE_SIZE})`
+      )
     }
 
     // Create 4-byte length prefix (little-endian)
@@ -206,7 +223,11 @@ export function writeMessage(message: NativeMessage): void {
 /**
  * Create a typed request message
  */
-export function createRequest(id: string, method: string, payload: Record<string, unknown>): NativeRequest {
+export function createRequest(
+  id: string,
+  method: string,
+  payload: Record<string, unknown>
+): NativeRequest {
   return {
     id,
     type: "request",
@@ -218,7 +239,12 @@ export function createRequest(id: string, method: string, payload: Record<string
 /**
  * Create a typed response message
  */
-export function createResponse(id: string, success: boolean, payload: unknown, error?: string): NativeResponse {
+export function createResponse(
+  id: string,
+  success: boolean,
+  payload: unknown,
+  error?: string
+): NativeResponse {
   return {
     id,
     type: "response",
@@ -231,7 +257,11 @@ export function createResponse(id: string, success: boolean, payload: unknown, e
 /**
  * Create a typed event message
  */
-export function createEvent(id: string, event: string, payload: unknown): NativeEvent {
+export function createEvent(
+  id: string,
+  event: string,
+  payload: unknown
+): NativeEvent {
   return {
     id,
     type: "event",

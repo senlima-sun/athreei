@@ -25,6 +25,7 @@ Run the setup script for a guided installation:
 ```
 
 The script will:
+
 1. Check prerequisites
 2. Install dependencies
 3. Build all packages
@@ -78,6 +79,7 @@ Replace `YOUR_EXTENSION_ID` with the ID you copied from step 2.
 To use athreei with Claude Desktop, add the following to your config file:
 
 **Config file locations:**
+
 - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 - Linux: `~/.config/Claude/claude_desktop_config.json`
@@ -95,6 +97,7 @@ To use athreei with Claude Desktop, add the following to your config file:
 ```
 
 **Binary locations:**
+
 - macOS: `~/Library/Application Support/athreei/athreei-host`
 - Windows: `%APPDATA%\athreei\athreei-host.exe`
 - Linux: `~/.local/share/athreei/athreei-host`
@@ -127,6 +130,7 @@ If you see "athreei-host cannot be opened because the developer cannot be verifi
 #### Antivirus False Positive
 
 Some antivirus software may flag the native host. If this happens:
+
 1. Add an exception for `%APPDATA%\athreei\`
 2. Or temporarily disable real-time protection during installation
 
@@ -209,6 +213,7 @@ To remove athreei from your system:
 Add `--all` (bash) or `-All` (PowerShell) to also remove user data.
 
 **Manual removal:**
+
 1. Remove the extension from `chrome://extensions`
 2. Delete the native host:
    - macOS: `~/Library/Application Support/athreei/`
@@ -227,12 +232,14 @@ Add `--all` (bash) or `-All` (PowerShell) to also remove user data.
 ## Next Steps
 
 Once installed:
+
 1. Open Chrome with the extension enabled
 2. Navigate to any website
 3. Open Claude Desktop (or your MCP-compatible AI app)
 4. Ask Claude to interact with the page!
 
 Try commands like:
+
 - "What tabs do I have open?"
 - "Navigate to github.com"
 - "Click the search button"

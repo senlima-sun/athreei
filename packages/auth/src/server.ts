@@ -1,10 +1,10 @@
-import { betterAuth } from "better-auth";
-import { createAuthConfig, type AuthConfigOptions } from "./config.ts";
+import { betterAuth } from "better-auth"
+import { createAuthConfig, type AuthConfigOptions } from "./config.ts"
 
 /**
  * Server-side auth instance type
  */
-export type Auth = ReturnType<typeof betterAuth>;
+export type Auth = ReturnType<typeof betterAuth>
 
 /**
  * Create a server-side Better Auth instance
@@ -30,11 +30,11 @@ export function createAuth(
   db: Parameters<typeof createAuthConfig>[0],
   options: AuthConfigOptions = {}
 ): Auth {
-  const config = createAuthConfig(db, options);
-  return betterAuth(config);
+  const config = createAuthConfig(db, options)
+  return betterAuth(config)
 }
 
 /**
  * Re-export config creator for advanced use cases
  */
-export { createAuthConfig } from "./config.ts";
+export { createAuthConfig } from "./config.ts"

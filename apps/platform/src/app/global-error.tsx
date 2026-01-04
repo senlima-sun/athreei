@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 /**
  * Global Error Boundary
@@ -7,18 +7,18 @@
  * This component is rendered when an error occurs anywhere in the App Router.
  */
 
-import * as Sentry from "@sentry/nextjs";
-import NextError from "next/error";
-import { useEffect } from "react";
+import * as Sentry from "@sentry/nextjs"
+import NextError from "next/error"
+import { useEffect } from "react"
 
 export default function GlobalError({
   error,
 }: {
-  error: Error & { digest?: string };
+  error: Error & { digest?: string }
 }) {
   useEffect(() => {
-    Sentry.captureException(error);
-  }, [error]);
+    Sentry.captureException(error)
+  }, [error])
 
   return (
     <html lang="en">
@@ -27,5 +27,5 @@ export default function GlobalError({
         <NextError statusCode={0} />
       </body>
     </html>
-  );
+  )
 }

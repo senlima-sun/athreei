@@ -5,7 +5,10 @@
 import { describe, it, expect } from "vitest"
 import { Hono } from "hono"
 import registry from "../../routes/registry"
-import { REGISTRY_SERVERS, type RegistryMcpServer } from "../../data/mcp-registry"
+import {
+  REGISTRY_SERVERS,
+  type RegistryMcpServer,
+} from "../../data/mcp-registry"
 
 interface RegistryListResponse {
   servers: RegistryMcpServer[]
@@ -39,9 +42,9 @@ describe("Registry Routes", () => {
       expect(res.status).toBe(200)
 
       const data = (await res.json()) as RegistryListResponse
-      expect(data.servers.every((s) =>
-        s.categories.includes("developer-tools")
-      )).toBe(true)
+      expect(
+        data.servers.every((s) => s.categories.includes("developer-tools"))
+      ).toBe(true)
     })
 
     it("should filter by search term (name)", async () => {
@@ -50,9 +53,9 @@ describe("Registry Routes", () => {
 
       const data = (await res.json()) as RegistryListResponse
       expect(data.servers.length).toBeGreaterThanOrEqual(1)
-      expect(data.servers.some((s) =>
-        s.name.toLowerCase().includes("figma")
-      )).toBe(true)
+      expect(
+        data.servers.some((s) => s.name.toLowerCase().includes("figma"))
+      ).toBe(true)
     })
 
     it("should filter by search term (case-insensitive)", async () => {
@@ -80,17 +83,23 @@ describe("Registry Routes", () => {
     })
 
     it("should combine multiple filters", async () => {
-      const res = await app.request("/api/registry?category=developer-tools&verified=true")
+      const res = await app.request(
+        "/api/registry?category=developer-tools&verified=true"
+      )
       expect(res.status).toBe(200)
 
       const data = (await res.json()) as RegistryListResponse
-      expect(data.servers.every((s) =>
-        s.categories.includes("developer-tools") && s.verified === true
-      )).toBe(true)
+      expect(
+        data.servers.every(
+          (s) => s.categories.includes("developer-tools") && s.verified === true
+        )
+      ).toBe(true)
     })
 
     it("should return empty array for non-existent category", async () => {
-      const res = await app.request("/api/registry?category=nonexistent-category")
+      const res = await app.request(
+        "/api/registry?category=nonexistent-category"
+      )
       expect(res.status).toBe(200)
 
       const data = (await res.json()) as RegistryListResponse

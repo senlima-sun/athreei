@@ -22,11 +22,7 @@ export async function executeWait(args: AiiiWaitArgs): Promise<WaitResult> {
   try {
     if (args.selector) {
       // Wait for selector
-      await waitForSelector(
-        args.selector,
-        args.state ?? "visible",
-        timeout
-      )
+      await waitForSelector(args.selector, args.state ?? "visible", timeout)
     } else if (args.text) {
       // Wait for text content
       await waitForText(args.text, timeout)
@@ -34,9 +30,7 @@ export async function executeWait(args: AiiiWaitArgs): Promise<WaitResult> {
       // Wait for custom condition (JavaScript expression)
       await waitForCondition(args.condition, timeout)
     } else {
-      throw new Error(
-        "Wait requires either selector, text, or condition"
-      )
+      throw new Error("Wait requires either selector, text, or condition")
     }
 
     return {

@@ -1,92 +1,92 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { PageHeader } from "@/components/dashboard/page-header";
-import { useListOrganizations, organization } from "@/lib/auth-client";
-import { Building2, Loader2, Trash2, AlertTriangle } from "lucide-react";
-import Link from "next/link";
+import { useState, useEffect } from "react"
+import { useParams, useRouter } from "next/navigation"
+import { PageHeader } from "@/components/dashboard/page-header"
+import { useListOrganizations, organization } from "@/lib/auth-client"
+import { Building2, Loader2, Trash2, AlertTriangle } from "lucide-react"
+import Link from "next/link"
 
 interface Organization {
-  id: string;
-  name: string;
-  slug?: string | null;
-  logo?: string | null;
-  createdAt: Date;
+  id: string
+  name: string
+  slug?: string | null
+  logo?: string | null
+  createdAt: Date
 }
 
 export default function OrganizationSettingsPage() {
-  const params = useParams();
-  const router = useRouter();
-  const orgId = params.id as string;
+  const params = useParams()
+  const router = useRouter()
+  const orgId = params.id as string
 
-  const { data: orgList, isPending } = useListOrganizations();
+  const { data: orgList, isPending } = useListOrganizations()
   const currentOrg = (orgList as Organization[] | undefined)?.find(
     (o: Organization) => o.id === orgId
-  );
+  )
 
-  const [name, setName] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [name, setName] = useState("")
+  const [isSaving, setIsSaving] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
 
   // Initialize form with org data
   useEffect(() => {
     if (currentOrg) {
-      setName(currentOrg.name);
+      setName(currentOrg.name)
     }
-  }, [currentOrg]);
+  }, [currentOrg])
 
   const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setSuccess(null);
-    setIsSaving(true);
+    e.preventDefault()
+    setError(null)
+    setSuccess(null)
+    setIsSaving(true)
 
     try {
       const result = await organization.update({
         organizationId: orgId,
         data: { name: name.trim() },
-      });
+      })
 
       if (result.error) {
-        setError(result.error.message || "Failed to update organization");
-        return;
+        setError(result.error.message || "Failed to update organization")
+        return
       }
 
-      setSuccess("Organization updated successfully");
+      setSuccess("Organization updated successfully")
     } catch (err) {
-      setError("An unexpected error occurred");
+      setError("An unexpected error occurred")
     } finally {
-      setIsSaving(false);
+      setIsSaving(false)
     }
-  };
+  }
 
   const handleDelete = async () => {
-    setError(null);
-    setIsDeleting(true);
+    setError(null)
+    setIsDeleting(true)
 
     try {
       const result = await organization.delete({
         organizationId: orgId,
-      });
+      })
 
       if (result.error) {
-        setError(result.error.message || "Failed to delete organization");
-        setShowDeleteConfirm(false);
-        return;
+        setError(result.error.message || "Failed to delete organization")
+        setShowDeleteConfirm(false)
+        return
       }
 
-      router.push("/dashboard/organizations");
+      router.push("/dashboard/organizations")
     } catch (err) {
-      setError("An unexpected error occurred");
-      setShowDeleteConfirm(false);
+      setError("An unexpected error occurred")
+      setShowDeleteConfirm(false)
     } finally {
-      setIsDeleting(false);
+      setIsDeleting(false)
     }
-  };
+  }
 
   if (isPending) {
     return (
@@ -96,7 +96,7 @@ export default function OrganizationSettingsPage() {
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-gray-600" />
         </div>
       </div>
-    );
+    )
   }
 
   if (!currentOrg) {
@@ -105,7 +105,8 @@ export default function OrganizationSettingsPage() {
         <PageHeader title="Organization not found" />
         <div className="rounded-lg border border-gray-200 bg-white p-8 text-center">
           <p className="text-gray-500">
-            This organization doesn&apos;t exist or you don&apos;t have access to it.
+            This organization doesn&apos;t exist or you don&apos;t have access
+            to it.
           </p>
           <Link
             href="/dashboard/organizations"
@@ -115,7 +116,7 @@ export default function OrganizationSettingsPage() {
           </Link>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -143,9 +144,7 @@ export default function OrganizationSettingsPage() {
                 <p className="text-sm font-medium text-gray-700">
                   Organization logo
                 </p>
-                <p className="text-xs text-gray-500">
-                  Logo upload coming soon
-                </p>
+                <p className="text-xs text-gray-500">Logo upload coming soon</p>
               </div>
             </div>
 
@@ -226,7 +225,8 @@ export default function OrganizationSettingsPage() {
                       Are you sure you want to delete this organization?
                     </p>
                     <p className="mt-1 text-sm text-red-600">
-                      This action cannot be undone. All members will lose access.
+                      This action cannot be undone. All members will lose
+                      access.
                     </p>
                     <div className="mt-4 flex gap-3">
                       <button
@@ -235,7 +235,9 @@ export default function OrganizationSettingsPage() {
                         disabled={isDeleting}
                         className="inline-flex items-center gap-2 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
                       >
-                        {isDeleting && <Loader2 className="h-4 w-4 animate-spin" />}
+                        {isDeleting && (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        )}
                         Yes, delete organization
                       </button>
                       <button
@@ -254,5 +256,5 @@ export default function OrganizationSettingsPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }

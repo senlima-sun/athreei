@@ -95,7 +95,8 @@ export function Traces() {
       if (serverFilter) params.set("server", serverFilter)
       if (toolFilter) params.set("tool", toolFilter)
       if (statusFilter) params.set("status", statusFilter)
-      if (dateFrom) params.set("dateFrom", new Date(dateFrom).getTime().toString())
+      if (dateFrom)
+        params.set("dateFrom", new Date(dateFrom).getTime().toString())
       if (dateTo) params.set("dateTo", new Date(dateTo).getTime().toString())
 
       const response = await api.get<TracesResponse>(
@@ -108,7 +109,8 @@ export function Traces() {
       // Update filter options from data
       updateFilterOptions(response.data || [])
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to fetch traces"
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to fetch traces"
       setError(errorMessage)
       setTraces([])
       setTotal(0)
@@ -119,16 +121,26 @@ export function Traces() {
 
   // Update filter options from traces data
   const updateFilterOptions = (data: TraceEntry[]) => {
-    const endpoints = [...new Set(data.filter(t => t.endpointId).map(t => t.endpointId!))]
-    const servers = [...new Set(data.map(t => t.serverName))]
-    const tools = [...new Set(data.map(t => t.toolName))]
+    const endpoints = [
+      ...new Set(data.filter((t) => t.endpointId).map((t) => t.endpointId!)),
+    ]
+    const servers = [...new Set(data.map((t) => t.serverName))]
+    const tools = [...new Set(data.map((t) => t.toolName))]
     setFilterOptions({ endpoints, servers, tools })
   }
 
   // Fetch traces on mount and when filters/page change
   useEffect(() => {
     fetchTraces()
-  }, [page, endpointFilter, serverFilter, toolFilter, statusFilter, dateFrom, dateTo])
+  }, [
+    page,
+    endpointFilter,
+    serverFilter,
+    toolFilter,
+    statusFilter,
+    dateFrom,
+    dateTo,
+  ])
 
   // Reset to page 1 when filters change
   useEffect(() => {
@@ -163,7 +175,11 @@ export function Traces() {
     {
       accessor: "toolName",
       header: "Tool",
-      cell: (value) => <code className="text-sm bg-muted px-1.5 py-0.5 rounded">{value as string}</code>,
+      cell: (value) => (
+        <code className="text-sm bg-muted px-1.5 py-0.5 rounded">
+          {value as string}
+        </code>
+      ),
     },
     {
       accessor: "serverName",
@@ -187,12 +203,32 @@ export function Traces() {
             )}
           >
             {status === "success" ? (
-              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              <svg
+                className="w-3 h-3"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
             ) : (
-              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="w-3 h-3"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             )}
             {status === "success" ? "Success" : "Error"}
@@ -235,7 +271,13 @@ export function Traces() {
     setDateTo("")
   }
 
-  const hasActiveFilters = endpointFilter || serverFilter || toolFilter || statusFilter || dateFrom || dateTo
+  const hasActiveFilters =
+    endpointFilter ||
+    serverFilter ||
+    toolFilter ||
+    statusFilter ||
+    dateFrom ||
+    dateTo
 
   return (
     <div>
@@ -362,9 +404,7 @@ export function Traces() {
       {/* Error Message */}
       {error && (
         <Card className="mb-6">
-          <div className="text-warning text-center text-sm">
-            {error}
-          </div>
+          <div className="text-warning text-center text-sm">{error}</div>
         </Card>
       )}
 

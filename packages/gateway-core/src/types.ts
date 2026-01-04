@@ -5,8 +5,8 @@
  * for MCP server aggregation and request routing.
  */
 
-import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import type { Tool } from "@modelcontextprotocol/sdk/types.js";
+import type { Client } from "@modelcontextprotocol/sdk/client/index.js"
+import type { Tool } from "@modelcontextprotocol/sdk/types.js"
 
 // =============================================================================
 // MCP Server Configuration Types
@@ -17,25 +17,25 @@ import type { Tool } from "@modelcontextprotocol/sdk/types.js";
  */
 export interface McpServerConfig {
   /** Server ID in the registry */
-  id: string;
+  id: string
   /** Display name for the server */
-  name: string;
+  name: string
   /** Optional description */
-  description?: string;
+  description?: string
   /** Transport type */
-  transport: "stdio" | "sse" | "streamable-http";
+  transport: "stdio" | "sse" | "streamable-http"
   /** Command to execute (for stdio transport) */
-  command?: string;
+  command?: string
   /** Command arguments (for stdio transport) */
-  args?: string;
+  args?: string
   /** Server URL (for SSE/HTTP transport) */
-  url?: string;
+  url?: string
   /** Server version */
-  version?: string;
+  version?: string
   /** Server capabilities as JSON string */
-  capabilities?: string;
+  capabilities?: string
   /** Whether the server is currently active */
-  status: "active" | "inactive" | "pending";
+  status: "active" | "inactive" | "pending"
 }
 
 // =============================================================================
@@ -47,17 +47,17 @@ export interface McpServerConfig {
  */
 export interface ConnectedMcp {
   /** Server configuration */
-  config: McpServerConfig;
+  config: McpServerConfig
   /** Sanitized name for tool prefixing (alphanumeric + underscore only) */
-  sanitizedName: string;
+  sanitizedName: string
   /** MCP client instance */
-  client: Client;
+  client: Client
   /** Tools exposed by this server */
-  tools: Tool[];
+  tools: Tool[]
   /** Connection timestamp */
-  connectedAt: Date;
+  connectedAt: Date
   /** Last successful heartbeat */
-  lastHeartbeat?: Date;
+  lastHeartbeat?: Date
 }
 
 // =============================================================================
@@ -70,9 +70,9 @@ export interface ConnectedMcp {
  */
 export interface AggregatedTool extends Tool {
   /** Original tool name (without prefix) */
-  originalName: string;
+  originalName: string
   /** Server that provides this tool */
-  serverName: string;
+  serverName: string
 }
 
 /**
@@ -80,9 +80,9 @@ export interface AggregatedTool extends Tool {
  */
 export interface ParsedToolName {
   /** Server name portion */
-  serverName: string;
+  serverName: string
   /** Original tool name */
-  toolName: string;
+  toolName: string
 }
 
 // =============================================================================
@@ -95,9 +95,9 @@ export interface ParsedToolName {
  */
 export interface RouterState {
   /** Map of connected MCP servers by sanitized name */
-  connectedMcps: Map<string, ConnectedMcp>;
+  connectedMcps: Map<string, ConnectedMcp>
   /** List of aggregated tools from all servers */
-  aggregatedTools: AggregatedTool[];
+  aggregatedTools: AggregatedTool[]
 }
 
 /**
@@ -105,20 +105,20 @@ export interface RouterState {
  */
 export type ToolCallValidation =
   | { valid: true }
-  | { valid: false; error: string };
+  | { valid: false; error: string }
 
 /**
  * Routing information for a tool
  */
 export interface RoutingInfo {
   /** Parsed server name */
-  serverName: string;
+  serverName: string
   /** Original tool name */
-  toolName: string;
+  toolName: string
   /** Server configuration */
-  serverConfig: McpServerConfig;
+  serverConfig: McpServerConfig
   /** Whether the server is connected */
-  isConnected: boolean;
+  isConnected: boolean
 }
 
 // =============================================================================
@@ -130,10 +130,10 @@ export interface RoutingInfo {
  * Allows consumers to provide their own logging implementation.
  */
 export interface Logger {
-  debug: (message: string, ...args: unknown[]) => void;
-  info: (message: string, ...args: unknown[]) => void;
-  warn: (message: string, ...args: unknown[]) => void;
-  error: (message: string, ...args: unknown[]) => void;
+  debug: (message: string, ...args: unknown[]) => void
+  info: (message: string, ...args: unknown[]) => void
+  warn: (message: string, ...args: unknown[]) => void
+  error: (message: string, ...args: unknown[]) => void
 }
 
 /**
@@ -144,4 +144,4 @@ export const noopLogger: Logger = {
   info: () => {},
   warn: () => {},
   error: () => {},
-};
+}

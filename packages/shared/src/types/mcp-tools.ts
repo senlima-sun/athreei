@@ -157,10 +157,7 @@ export type ElementInfo = z.infer<typeof ElementInfoSchema>
 
 export const BrowserClickInputSchema = z.object({
   tabId: z.number().optional().describe("Tab ID (defaults to active tab)"),
-  selector: z
-    .string()
-    .optional()
-    .describe("CSS selector of element to click"),
+  selector: z.string().optional().describe("CSS selector of element to click"),
   index: z
     .number()
     .optional()

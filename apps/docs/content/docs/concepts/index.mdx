@@ -52,15 +52,15 @@ The gateway can run locally (binary) or hosted (cloud service).
 
 Every tool call is recorded:
 
-| Field | Description |
-|-------|-------------|
-| Trace ID | Unique identifier for the call |
+| Field     | Description                      |
+| --------- | -------------------------------- |
+| Trace ID  | Unique identifier for the call   |
 | Tool Name | Namespaced tool (`server__tool`) |
-| Server | Which MCP server handled it |
-| Request | Input parameters (encrypted) |
-| Response | Output data (encrypted) |
-| Status | Success or error |
-| Duration | Execution time |
+| Server    | Which MCP server handled it      |
+| Request   | Input parameters (encrypted)     |
+| Response  | Output data (encrypted)          |
+| Status    | Success or error                 |
+| Duration  | Execution time                   |
 
 Payloads are stored with end-to-end encryption. Only you can decrypt them.
 
@@ -69,14 +69,14 @@ Payloads are stored with end-to-end encryption. Only you can decrypt them.
 Enables websites to become MCP servers:
 
 ```typescript
-import { athreei } from '@athreei/sdk'
+import { athreei } from "@athreei/sdk"
 
 athreei.registerTool({
-  name: 'search_products',
-  description: 'Search catalog',
+  name: "search_products",
+  description: "Search catalog",
   handler: async ({ query }) => {
     return await yourAPI.search(query)
-  }
+  },
 })
 ```
 
@@ -180,6 +180,7 @@ This prevents naming collisions and clarifies which server provides each tool.
 ### Audit Trail
 
 Complete visibility into AI-MCP interactions:
+
 - Every tool call logged
 - Request/response captured
 - Searchable and filterable
@@ -188,6 +189,7 @@ Complete visibility into AI-MCP interactions:
 ### Encryption
 
 Cloud audit logs use E2E encryption:
+
 - Payloads encrypted before storage
 - Decryption only in your browser
 - athreei servers never see plaintext

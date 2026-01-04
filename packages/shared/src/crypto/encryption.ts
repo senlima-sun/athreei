@@ -113,7 +113,10 @@ export function encrypt(
  * const decrypted = decrypt(encrypted, key.key)
  * ```
  */
-export function decrypt<T = unknown>(encryptedData: EncryptedData, key: Uint8Array): T {
+export function decrypt<T = unknown>(
+  encryptedData: EncryptedData,
+  key: Uint8Array
+): T {
   if (key.length !== 32) {
     throw new Error("Key must be 32 bytes (256 bits) for AES-256")
   }
@@ -187,7 +190,10 @@ export function encryptAuditLog(
  * Decrypt audit log entry
  * Convenience wrapper for decrypting AuditLogEntry objects
  */
-export function decryptAuditLog<T = unknown>(encryptedData: EncryptedData, key: Uint8Array): T {
+export function decryptAuditLog<T = unknown>(
+  encryptedData: EncryptedData,
+  key: Uint8Array
+): T {
   return decrypt<T>(encryptedData, key)
 }
 
@@ -207,6 +213,9 @@ export function encryptSession(
  * Decrypt session data
  * Convenience wrapper for decrypting Session objects
  */
-export function decryptSession<T = unknown>(encryptedData: EncryptedData, key: Uint8Array): T {
+export function decryptSession<T = unknown>(
+  encryptedData: EncryptedData,
+  key: Uint8Array
+): T {
   return decrypt<T>(encryptedData, key)
 }

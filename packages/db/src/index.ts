@@ -5,5 +5,5 @@
  * to either PostgreSQL (for platform hosting) or SQLite (for self-hosting).
  */
 
-export * from "./schema";
-export * from "./client";
+export * from "./schema"
+export * from "./client"

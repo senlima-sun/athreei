@@ -1,29 +1,34 @@
-"use client";
+"use client"
 
-import { X, Key, AlertTriangle, Check } from "lucide-react";
-import { CopyButton } from "./copy-button";
-import { useState } from "react";
+import { X, Key, AlertTriangle, Check } from "lucide-react"
+import { CopyButton } from "./copy-button"
+import { useState } from "react"
 
 interface ApiKeyCreatedModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  apiKey: string;
-  keyName: string;
+  isOpen: boolean
+  onClose: () => void
+  apiKey: string
+  keyName: string
 }
 
-export function ApiKeyCreatedModal({ isOpen, onClose, apiKey, keyName }: ApiKeyCreatedModalProps) {
-  const [hasCopied, setHasCopied] = useState(false);
+export function ApiKeyCreatedModal({
+  isOpen,
+  onClose,
+  apiKey,
+  keyName,
+}: ApiKeyCreatedModalProps) {
+  const [hasCopied, setHasCopied] = useState(false)
 
-  if (!isOpen) return null;
+  if (!isOpen) return null
 
   const handleCopySuccess = () => {
-    setHasCopied(true);
-  };
+    setHasCopied(true)
+  }
 
   const handleClose = () => {
-    setHasCopied(false);
-    onClose();
-  };
+    setHasCopied(false)
+    onClose()
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -56,7 +61,8 @@ export function ApiKeyCreatedModal({ isOpen, onClose, apiKey, keyName }: ApiKeyC
               <div className="text-sm text-red-700">
                 <p className="font-medium">Copy your API key now</p>
                 <p className="mt-1">
-                  This is the only time the full API key will be shown. Store it securely - you will not be able to see it again.
+                  This is the only time the full API key will be shown. Store it
+                  securely - you will not be able to see it again.
                 </p>
               </div>
             </div>
@@ -88,7 +94,7 @@ export function ApiKeyCreatedModal({ isOpen, onClose, apiKey, keyName }: ApiKeyC
           <div className="rounded-md bg-gray-50 p-3 text-sm text-gray-600">
             <p className="font-medium">Usage example:</p>
             <pre className="mt-2 overflow-x-auto text-xs">
-{`curl -X POST https://athreei.com/mcp/your-endpoint/sse \\
+              {`curl -X POST https://athreei.com/mcp/your-endpoint/sse \\
   -H "Authorization: Bearer ${apiKey.substring(0, 8)}..."`}
             </pre>
           </div>
@@ -105,5 +111,5 @@ export function ApiKeyCreatedModal({ isOpen, onClose, apiKey, keyName }: ApiKeyC
         </div>
       </div>
     </div>
-  );
+  )
 }

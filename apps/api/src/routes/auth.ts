@@ -4,10 +4,10 @@
  * Delegates all auth requests to Better Auth handler.
  */
 
-import { Hono } from "hono";
-import { getAuth } from "../lib/auth";
+import { Hono } from "hono"
+import { getAuth } from "../lib/auth"
 
-const auth = new Hono();
+const auth = new Hono()
 
 /**
  * ALL /api/auth/*
@@ -24,14 +24,14 @@ const auth = new Hono();
  * - And all organization-related endpoints
  */
 auth.all("/:path{.*}", async (c) => {
-  const authInstance = getAuth();
-  return authInstance.handler(c.req.raw);
-});
+  const authInstance = getAuth()
+  return authInstance.handler(c.req.raw)
+})
 
 // Also match the root path
 auth.all("/", async (c) => {
-  const authInstance = getAuth();
-  return authInstance.handler(c.req.raw);
-});
+  const authInstance = getAuth()
+  return authInstance.handler(c.req.raw)
+})
 
-export default auth;
+export default auth

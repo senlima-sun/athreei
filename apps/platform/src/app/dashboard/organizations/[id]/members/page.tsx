@@ -1,144 +1,158 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
-import { PageHeader } from "@/components/dashboard/page-header";
-import { useListOrganizations, organization, useSession } from "@/lib/auth-client";
-import { Users, Plus, Mail, Crown, Shield, User, Loader2, X, Trash2 } from "lucide-react";
-import Link from "next/link";
+import { useState, useEffect } from "react"
+import { useParams } from "next/navigation"
+import { PageHeader } from "@/components/dashboard/page-header"
+import {
+  useListOrganizations,
+  organization,
+  useSession,
+} from "@/lib/auth-client"
+import {
+  Users,
+  Plus,
+  Mail,
+  Crown,
+  Shield,
+  User,
+  Loader2,
+  X,
+  Trash2,
+} from "lucide-react"
+import Link from "next/link"
 
 interface Member {
-  id: string;
-  userId: string;
-  role: string;
+  id: string
+  userId: string
+  role: string
   user: {
-    id: string;
-    name: string | null;
-    email: string;
-    image: string | null;
-  };
+    id: string
+    name: string | null
+    email: string
+    image: string | null
+  }
 }
 
 interface Organization {
-  id: string;
-  name: string;
-  slug?: string | null;
-  logo?: string | null;
-  createdAt: Date;
+  id: string
+  name: string
+  slug?: string | null
+  logo?: string | null
+  createdAt: Date
 }
 
 export default function OrganizationMembersPage() {
-  const params = useParams();
-  const orgId = params.id as string;
+  const params = useParams()
+  const orgId = params.id as string
 
-  const { data: session } = useSession();
-  const { data: orgList, isPending: isOrgListPending } = useListOrganizations();
+  const { data: session } = useSession()
+  const { data: orgList, isPending: isOrgListPending } = useListOrganizations()
   const currentOrg = (orgList as Organization[] | undefined)?.find(
     (o: Organization) => o.id === orgId
-  );
+  )
 
-  const [members, setMembers] = useState<Member[]>([]);
-  const [isLoadingMembers, setIsLoadingMembers] = useState(true);
-  const [showInviteModal, setShowInviteModal] = useState(false);
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteRole, setInviteRole] = useState("member");
-  const [isInviting, setIsInviting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [members, setMembers] = useState<Member[]>([])
+  const [isLoadingMembers, setIsLoadingMembers] = useState(true)
+  const [showInviteModal, setShowInviteModal] = useState(false)
+  const [inviteEmail, setInviteEmail] = useState("")
+  const [inviteRole, setInviteRole] = useState("member")
+  const [isInviting, setIsInviting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   // Load members
   useEffect(() => {
     async function loadMembers() {
-      if (!orgId) return;
+      if (!orgId) return
 
       try {
         const result = await organization.listMembers({
           query: { organizationId: orgId },
-        });
+        })
 
         if (result.data && "members" in result.data) {
-          setMembers(result.data.members as Member[]);
+          setMembers(result.data.members as Member[])
         }
       } catch (err) {
-        console.error("Failed to load members:", err);
+        console.error("Failed to load members:", err)
       } finally {
-        setIsLoadingMembers(false);
+        setIsLoadingMembers(false)
       }
     }
 
-    loadMembers();
-  }, [orgId]);
+    loadMembers()
+  }, [orgId])
 
   const handleInvite = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setIsInviting(true);
+    e.preventDefault()
+    setError(null)
+    setIsInviting(true)
 
     try {
       const result = await organization.inviteMember({
         organizationId: orgId,
         email: inviteEmail.trim(),
         role: inviteRole as "admin" | "member",
-      });
+      })
 
       if (result.error) {
-        setError(result.error.message || "Failed to send invitation");
-        return;
+        setError(result.error.message || "Failed to send invitation")
+        return
       }
 
       // Refresh members list
       const membersResult = await organization.listMembers({
         query: { organizationId: orgId },
-      });
+      })
       if (membersResult.data && "members" in membersResult.data) {
-        setMembers(membersResult.data.members as Member[]);
+        setMembers(membersResult.data.members as Member[])
       }
 
-      setShowInviteModal(false);
-      setInviteEmail("");
-      setInviteRole("member");
+      setShowInviteModal(false)
+      setInviteEmail("")
+      setInviteRole("member")
     } catch (err) {
-      setError("An unexpected error occurred");
+      setError("An unexpected error occurred")
     } finally {
-      setIsInviting(false);
+      setIsInviting(false)
     }
-  };
+  }
 
   const handleRemoveMember = async (memberId: string) => {
-    if (!confirm("Are you sure you want to remove this member?")) return;
+    if (!confirm("Are you sure you want to remove this member?")) return
 
     try {
       await organization.removeMember({
         organizationId: orgId,
         memberIdOrEmail: memberId,
-      });
+      })
 
-      setMembers(members.filter((m) => m.id !== memberId));
+      setMembers(members.filter((m) => m.id !== memberId))
     } catch (err) {
-      console.error("Failed to remove member:", err);
+      console.error("Failed to remove member:", err)
     }
-  };
+  }
 
   const getRoleIcon = (role: string) => {
     switch (role) {
       case "owner":
-        return <Crown className="h-4 w-4 text-amber-500" />;
+        return <Crown className="h-4 w-4 text-amber-500" />
       case "admin":
-        return <Shield className="h-4 w-4 text-blue-500" />;
+        return <Shield className="h-4 w-4 text-blue-500" />
       default:
-        return <User className="h-4 w-4 text-gray-400" />;
+        return <User className="h-4 w-4 text-gray-400" />
     }
-  };
+  }
 
   const getRoleLabel = (role: string) => {
     switch (role) {
       case "owner":
-        return "Owner";
+        return "Owner"
       case "admin":
-        return "Admin";
+        return "Admin"
       default:
-        return "Member";
+        return "Member"
     }
-  };
+  }
 
   if (isOrgListPending) {
     return (
@@ -148,7 +162,7 @@ export default function OrganizationMembersPage() {
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-gray-600" />
         </div>
       </div>
-    );
+    )
   }
 
   if (!currentOrg) {
@@ -157,7 +171,8 @@ export default function OrganizationMembersPage() {
         <PageHeader title="Organization not found" />
         <div className="rounded-lg border border-gray-200 bg-white p-8 text-center">
           <p className="text-gray-500">
-            This organization doesn&apos;t exist or you don&apos;t have access to it.
+            This organization doesn&apos;t exist or you don&apos;t have access
+            to it.
           </p>
           <Link
             href="/dashboard/organizations"
@@ -167,7 +182,7 @@ export default function OrganizationMembersPage() {
           </Link>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -196,7 +211,9 @@ export default function OrganizationMembersPage() {
         ) : members.length === 0 ? (
           <div className="p-8 text-center">
             <Users className="mx-auto h-12 w-12 text-gray-400" />
-            <h3 className="mt-4 text-lg font-medium text-gray-900">No members yet</h3>
+            <h3 className="mt-4 text-lg font-medium text-gray-900">
+              No members yet
+            </h3>
             <p className="mt-2 text-sm text-gray-500">
               Invite team members to collaborate on this organization.
             </p>
@@ -224,7 +241,9 @@ export default function OrganizationMembersPage() {
                     <p className="font-medium text-gray-900">
                       {member.user.name || member.user.email}
                       {member.userId === session?.user?.id && (
-                        <span className="ml-2 text-xs text-gray-500">(you)</span>
+                        <span className="ml-2 text-xs text-gray-500">
+                          (you)
+                        </span>
                       )}
                     </p>
                     <p className="text-sm text-gray-500">{member.user.email}</p>
@@ -239,16 +258,17 @@ export default function OrganizationMembersPage() {
                     </span>
                   </div>
 
-                  {member.role !== "owner" && member.userId !== session?.user?.id && (
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveMember(member.id)}
-                      className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-red-600"
-                      title="Remove member"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  )}
+                  {member.role !== "owner" &&
+                    member.userId !== session?.user?.id && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveMember(member.id)}
+                        className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-red-600"
+                        title="Remove member"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
                 </div>
               </li>
             ))}
@@ -344,5 +364,5 @@ export default function OrganizationMembersPage() {
         </div>
       )}
     </div>
-  );
+  )
 }

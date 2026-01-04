@@ -1,10 +1,10 @@
-"use client";
+"use client"
 
-import { useMemo } from "react";
-import { useParams } from "next/navigation";
-import Link from "next/link";
-import { PageHeader } from "@/components/dashboard/page-header";
-import { McpTransportType } from "@/components/mcp";
+import { useMemo } from "react"
+import { useParams } from "next/navigation"
+import Link from "next/link"
+import { PageHeader } from "@/components/dashboard/page-header"
+import { McpTransportType } from "@/components/mcp"
 import {
   Server,
   Terminal,
@@ -14,8 +14,8 @@ import {
   Copy,
   Check,
   Download,
-} from "lucide-react";
-import { useState } from "react";
+} from "lucide-react"
+import { useState } from "react"
 
 // Mock data - same as registry page
 const mockRegistryServers = [
@@ -71,28 +71,28 @@ const mockRegistryServers = [
       { name: "list_channels", description: "List available channels" },
     ],
   },
-];
+]
 
 const transportIcons = {
   stdio: Terminal,
   sse: Radio,
   http: Globe,
-};
+}
 
 const transportLabels = {
   stdio: "STDIO",
   sse: "SSE",
   http: "HTTP",
-};
+}
 
 export default function RegistryDetailPage() {
-  const params = useParams();
-  const id = params.id as string;
-  const [copied, setCopied] = useState(false);
+  const params = useParams()
+  const id = params.id as string
+  const [copied, setCopied] = useState(false)
 
   const server = useMemo(() => {
-    return mockRegistryServers.find((s) => s.id === id);
-  }, [id]);
+    return mockRegistryServers.find((s) => s.id === id)
+  }, [id])
 
   if (!server) {
     return (
@@ -112,10 +112,10 @@ export default function RegistryDetailPage() {
           </Link>
         </div>
       </div>
-    );
+    )
   }
 
-  const TransportIcon = transportIcons[server.transportType];
+  const TransportIcon = transportIcons[server.transportType]
 
   const configSnippet =
     server.transportType === "stdio"
@@ -141,13 +141,13 @@ export default function RegistryDetailPage() {
           },
           null,
           2
-        );
+        )
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(configSnippet);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+    await navigator.clipboard.writeText(configSnippet)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   return (
     <div>
@@ -183,11 +183,15 @@ export default function RegistryDetailPage() {
               </div>
               <div>
                 <p className="text-sm text-gray-500">Version</p>
-                <p className="mt-1 font-medium text-gray-900">{server.version}</p>
+                <p className="mt-1 font-medium text-gray-900">
+                  {server.version}
+                </p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Author</p>
-                <p className="mt-1 font-medium text-gray-900">{server.author}</p>
+                <p className="mt-1 font-medium text-gray-900">
+                  {server.author}
+                </p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Status</p>
@@ -201,7 +205,9 @@ export default function RegistryDetailPage() {
 
           {/* Available tools */}
           <div className="rounded-lg border border-gray-200 bg-white p-6">
-            <h2 className="text-lg font-medium text-gray-900">Available Tools</h2>
+            <h2 className="text-lg font-medium text-gray-900">
+              Available Tools
+            </h2>
             <p className="mt-1 text-sm text-gray-500">
               These tools will be available to AI apps when connected.
             </p>
@@ -214,7 +220,9 @@ export default function RegistryDetailPage() {
                   <p className="font-mono text-sm font-medium text-gray-900">
                     {tool.name}
                   </p>
-                  <p className="mt-0.5 text-sm text-gray-500">{tool.description}</p>
+                  <p className="mt-0.5 text-sm text-gray-500">
+                    {tool.description}
+                  </p>
                 </div>
               ))}
             </div>
@@ -266,5 +274,5 @@ export default function RegistryDetailPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }

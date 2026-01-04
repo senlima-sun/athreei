@@ -1,61 +1,61 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { AuthLayout } from "@/components/auth/auth-layout";
-import { authClient, useSession } from "@/lib/auth-client";
-import { isEmailVerificationEnabled } from "@/lib/api";
+import { useState, useEffect } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { AuthLayout } from "@/components/auth/auth-layout"
+import { authClient, useSession } from "@/lib/auth-client"
+import { isEmailVerificationEnabled } from "@/lib/api"
 
 export default function VerifyEmailPage() {
-  const router = useRouter();
-  const { data: session, isPending: isSessionLoading } = useSession();
-  const [isResending, setIsResending] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [isCheckingFeature, setIsCheckingFeature] = useState(true);
+  const router = useRouter()
+  const { data: session, isPending: isSessionLoading } = useSession()
+  const [isResending, setIsResending] = useState(false)
+  const [message, setMessage] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [isCheckingFeature, setIsCheckingFeature] = useState(true)
 
-  const userEmail = session?.user?.email;
+  const userEmail = session?.user?.email
 
   useEffect(() => {
     // Redirect if email verification is not enabled
     isEmailVerificationEnabled().then((enabled) => {
       if (!enabled) {
-        router.replace("/");
+        router.replace("/")
       } else {
-        setIsCheckingFeature(false);
+        setIsCheckingFeature(false)
       }
-    });
-  }, [router]);
+    })
+  }, [router])
 
   const handleResend = async () => {
     if (!userEmail) {
-      setError("No email found. Please sign in again.");
-      return;
+      setError("No email found. Please sign in again.")
+      return
     }
 
-    setIsResending(true);
-    setError(null);
-    setMessage(null);
+    setIsResending(true)
+    setError(null)
+    setMessage(null)
 
     try {
       await authClient.sendVerificationEmail({
         email: userEmail,
         callbackURL: "/dashboard",
-      });
-      setMessage("Verification email sent! Check your inbox.");
+      })
+      setMessage("Verification email sent! Check your inbox.")
     } catch (err) {
       setError(
         err instanceof Error
           ? err.message
           : "Failed to resend verification email"
-      );
+      )
     } finally {
-      setIsResending(false);
+      setIsResending(false)
     }
-  };
+  }
 
-  const isLoading = isCheckingFeature || isSessionLoading;
+  const isLoading = isCheckingFeature || isSessionLoading
 
   if (isLoading) {
     return (
@@ -64,7 +64,7 @@ export default function VerifyEmailPage() {
           <div className="animate-spin inline-block w-6 h-6 border-2 border-gray-300 border-t-gray-900 rounded-full" />
         </div>
       </AuthLayout>
-    );
+    )
   }
 
   return (
@@ -105,5 +105,5 @@ export default function VerifyEmailPage() {
         </div>
       </div>
     </AuthLayout>
-  );
+  )
 }

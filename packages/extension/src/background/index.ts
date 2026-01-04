@@ -46,7 +46,11 @@ let currentAiApp: string = DEFAULT_AI_APP
 // Connection State
 // ============================================================================
 
-type ConnectionState = "disconnected" | "connecting" | "connected" | "reconnecting"
+type ConnectionState =
+  | "disconnected"
+  | "connecting"
+  | "connected"
+  | "reconnecting"
 
 interface ConnectionManager {
   state: ConnectionState
@@ -139,7 +143,10 @@ function _disconnectFromNativeHost(): void {
  */
 function handleNativeDisconnect(): void {
   const error = chrome.runtime.lastError
-  console.log("[Background] Native host disconnected:", error?.message || "Unknown reason")
+  console.log(
+    "[Background] Native host disconnected:",
+    error?.message || "Unknown reason"
+  )
 
   connection.port = null
   connection.state = "disconnected"
@@ -166,14 +173,17 @@ function scheduleReconnect(): void {
   }
 
   const delay = Math.min(
-    INITIAL_RETRY_DELAY_MS * Math.pow(RETRY_BACKOFF_MULTIPLIER, connection.retryCount),
+    INITIAL_RETRY_DELAY_MS *
+      Math.pow(RETRY_BACKOFF_MULTIPLIER, connection.retryCount),
     MAX_RETRY_DELAY_MS
   )
 
   connection.retryCount++
   connection.state = "reconnecting"
 
-  console.log(`[Background] Scheduling reconnect in ${delay}ms (attempt ${connection.retryCount})`)
+  console.log(
+    `[Background] Scheduling reconnect in ${delay}ms (attempt ${connection.retryCount})`
+  )
 
   connection.retryTimeoutId = setTimeout(() => {
     connection.retryTimeoutId = null
@@ -222,12 +232,14 @@ function broadcastConnectionStatus(connected: boolean): void {
   chrome.tabs.query({}, (tabs) => {
     for (const tab of tabs) {
       if (tab.id) {
-        chrome.tabs.sendMessage(tab.id, {
-          type: "connection_status",
-          connected,
-        }).catch(() => {
-          // Ignore errors (tab might not have content script)
-        })
+        chrome.tabs
+          .sendMessage(tab.id, {
+            type: "connection_status",
+            connected,
+          })
+          .catch(() => {
+            // Ignore errors (tab might not have content script)
+          })
       }
     }
   })
@@ -262,7 +274,10 @@ function handleNativeResponse(response: NativeResponse): void {
     connection.pendingRequests.delete(response.id)
     pending.resolve(response)
   } else {
-    console.warn("[Background] Received response for unknown request:", response.id)
+    console.warn(
+      "[Background] Received response for unknown request:",
+      response.id
+    )
   }
 }
 
@@ -343,7 +358,9 @@ function handleNativeEvent(message: NativeMessage): void {
 /**
  * Send message to native host
  */
-async function sendToNativeHost(message: NativeRequest): Promise<NativeResponse> {
+async function sendToNativeHost(
+  message: NativeRequest
+): Promise<NativeResponse> {
   if (!connection.port || connection.state !== "connected") {
     throw new Error("Not connected to native host")
   }
@@ -379,7 +396,9 @@ async function sendToNativeHost(message: NativeRequest): Promise<NativeResponse>
 /**
  * Send response to native host
  */
-async function sendResponseToNativeHost(response: NativeResponse): Promise<void> {
+async function sendResponseToNativeHost(
+  response: NativeResponse
+): Promise<void> {
   if (!connection.port || connection.state !== "connected") {
     throw new Error("Not connected to native host")
   }
@@ -394,7 +413,9 @@ async function sendResponseToNativeHost(response: NativeResponse): Promise<void>
 /**
  * List all tabs
  */
-async function handleListTabs(_payload: Record<string, unknown>): Promise<unknown> {
+async function handleListTabs(
+  _payload: Record<string, unknown>
+): Promise<unknown> {
   const tabs = await chrome.tabs.query({})
 
   return {
@@ -411,7 +432,9 @@ async function handleListTabs(_payload: Record<string, unknown>): Promise<unknow
 /**
  * Get active tab
  */
-async function handleGetActiveTab(_payload: Record<string, unknown>): Promise<unknown> {
+async function handleGetActiveTab(
+  _payload: Record<string, unknown>
+): Promise<unknown> {
   const tabs = await chrome.tabs.query({ active: true, currentWindow: true })
 
   if (tabs.length === 0) {
@@ -430,7 +453,9 @@ async function handleGetActiveTab(_payload: Record<string, unknown>): Promise<un
 /**
  * Navigate to URL
  */
-async function handleNavigate(payload: Record<string, unknown>): Promise<unknown> {
+async function handleNavigate(
+  payload: Record<string, unknown>
+): Promise<unknown> {
   const url = payload.url as string
   const tabId = payload.tabId as number | undefined
 
@@ -470,7 +495,9 @@ async function handleNavigate(payload: Record<string, unknown>): Promise<unknown
 /**
  * Take screenshot
  */
-async function handleScreenshot(payload: Record<string, unknown>): Promise<unknown> {
+async function handleScreenshot(
+  payload: Record<string, unknown>
+): Promise<unknown> {
   const tabId = payload.tabId as number | undefined
   const format = (payload.format as "png" | "jpeg") || "png"
   const quality = (payload.quality as number) || undefined
@@ -528,7 +555,9 @@ async function handleScreenshot(payload: Record<string, unknown>): Promise<unkno
 /**
  * Forward request to content script
  */
-async function forwardToContentScript(request: NativeRequest): Promise<unknown> {
+async function forwardToContentScript(
+  request: NativeRequest
+): Promise<unknown> {
   const payload = request.payload
   const tabId = payload.tabId as number | undefined
 
@@ -785,7 +814,9 @@ async function updatePermissionLevel(
     // Invalidate cache so next check gets fresh data
     await permissionManager.invalidateCache(origin, tool)
 
-    console.log(`[Background] Permission updated: ${origin} / ${tool} -> ${level}`)
+    console.log(
+      `[Background] Permission updated: ${origin} / ${tool} -> ${level}`
+    )
   } catch (error) {
     console.error("[Background] Error updating permission:", error)
   }
@@ -807,7 +838,10 @@ chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === "install") {
     console.log("[Background] First install")
   } else if (details.reason === "update") {
-    console.log("[Background] Updated to version:", chrome.runtime.getManifest().version)
+    console.log(
+      "[Background] Updated to version:",
+      chrome.runtime.getManifest().version
+    )
   }
 })
 
@@ -819,6 +853,6 @@ chrome.runtime.onStartup.addListener(() => {
 
 // Expose connection state for debugging
 if (typeof globalThis !== "undefined") {
-  (globalThis as any).__athreei_connection = connection;
-  (globalThis as any).__athreei_disconnect = _disconnectFromNativeHost
+  ;(globalThis as any).__athreei_connection = connection
+  ;(globalThis as any).__athreei_disconnect = _disconnectFromNativeHost
 }

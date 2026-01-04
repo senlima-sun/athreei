@@ -58,7 +58,9 @@ export default function TraceDetailPage({ params }: PageProps) {
         }
 
         if (response.status === 403) {
-          setError("Access denied. You don't have permission to view this trace.")
+          setError(
+            "Access denied. You don't have permission to view this trace."
+          )
           return
         }
 

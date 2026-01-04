@@ -2,9 +2,9 @@
  * Health check endpoint
  */
 
-import { Hono } from "hono";
+import { Hono } from "hono"
 
-const health = new Hono();
+const health = new Hono()
 
 /**
  * GET /health
@@ -15,7 +15,7 @@ health.get("/", (c) => {
     status: "ok",
     timestamp: new Date().toISOString(),
     version: process.env.npm_package_version || "0.1.0",
-  });
-});
+  })
+})
 
-export default health;
+export default health

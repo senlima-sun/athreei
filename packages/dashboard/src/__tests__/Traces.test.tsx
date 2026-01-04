@@ -73,9 +73,13 @@ describe("Traces", () => {
 
     await waitFor(() => {
       // Tools appear in the table (may also appear in filter dropdown)
-      expect(screen.getAllByText("browser__screenshot").length).toBeGreaterThanOrEqual(1)
+      expect(
+        screen.getAllByText("browser__screenshot").length
+      ).toBeGreaterThanOrEqual(1)
     })
-    expect(screen.getAllByText("github__create_issue").length).toBeGreaterThanOrEqual(1)
+    expect(
+      screen.getAllByText("github__create_issue").length
+    ).toBeGreaterThanOrEqual(1)
     // Servers appear in both table and filter dropdown
     expect(screen.getAllByText("browser-mcp").length).toBeGreaterThanOrEqual(1)
     expect(screen.getAllByText("github-mcp").length).toBeGreaterThanOrEqual(1)
@@ -188,9 +192,7 @@ describe("Traces", () => {
     renderWithRouter(<Traces />)
 
     await waitFor(() => {
-      expect(
-        screen.getByText(/No traces recorded yet/i)
-      ).toBeInTheDocument()
+      expect(screen.getByText(/No traces recorded yet/i)).toBeInTheDocument()
     })
   })
 })

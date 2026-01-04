@@ -16,9 +16,9 @@ export type {
   ToolCallValidation,
   RoutingInfo,
   Logger,
-} from "./types.js";
+} from "./types.js"
 
-export { noopLogger } from "./types.js";
+export { noopLogger } from "./types.js"
 
 // Re-export aggregator functions
 export {
@@ -29,7 +29,7 @@ export {
   getToolsForServer,
   getAggregationSummary,
   type AggregateToolsOptions,
-} from "./aggregator.js";
+} from "./aggregator.js"
 
 // Re-export router functions
 export {
@@ -40,4 +40,4 @@ export {
   isServerAvailable,
   getAvailableServers,
   type RouteToolCallOptions,
-} from "./router.js";
+} from "./router.js"

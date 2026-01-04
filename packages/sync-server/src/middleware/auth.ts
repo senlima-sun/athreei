@@ -1,150 +1,148 @@
-import { Context, Next } from 'hono';
-import type { JwtPayload, AuthContext } from '../types';
+import { Context, Next } from "hono"
+import type { JwtPayload, AuthContext } from "../types"
 
 function getJwtSecret(): string {
-  const secret = process.env.JWT_SECRET;
+  const secret = process.env.JWT_SECRET
   if (!secret) {
-    if (process.env.NODE_ENV === 'production') {
-      throw new Error('JWT_SECRET environment variable is required in production');
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(
+        "JWT_SECRET environment variable is required in production"
+      )
     }
-    return 'development-secret-do-not-use-in-production';
+    return "development-secret-do-not-use-in-production"
   }
-  return secret;
+  return secret
 }
 
-const JWT_SECRET = getJwtSecret();
+const JWT_SECRET = getJwtSecret()
 
 // Simple JWT encode/decode for Bun (without external dependencies)
 function base64urlEncode(str: string): string {
-  return btoa(str)
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=/g, '');
+  return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "")
 }
 
 function base64urlDecode(str: string): string {
-  const base64 = str.replace(/-/g, '+').replace(/_/g, '/');
-  return atob(base64);
+  const base64 = str.replace(/-/g, "+").replace(/_/g, "/")
+  return atob(base64)
 }
 
 export async function signJwt(payload: JwtPayload): Promise<string> {
   const header = {
-    alg: 'HS256',
-    typ: 'JWT',
-  };
+    alg: "HS256",
+    typ: "JWT",
+  }
 
-  const now = Math.floor(Date.now() / 1000);
+  const now = Math.floor(Date.now() / 1000)
   const tokenPayload = {
     ...payload,
     iat: now,
     exp: now + 60 * 60 * 24 * 7, // 7 days
-  };
+  }
 
-  const encodedHeader = base64urlEncode(JSON.stringify(header));
-  const encodedPayload = base64urlEncode(JSON.stringify(tokenPayload));
-  const signatureInput = `${encodedHeader}.${encodedPayload}`;
+  const encodedHeader = base64urlEncode(JSON.stringify(header))
+  const encodedPayload = base64urlEncode(JSON.stringify(tokenPayload))
+  const signatureInput = `${encodedHeader}.${encodedPayload}`
 
   // Use Web Crypto API for HMAC
-  const encoder = new TextEncoder();
+  const encoder = new TextEncoder()
   const key = await crypto.subtle.importKey(
-    'raw',
+    "raw",
     encoder.encode(JWT_SECRET),
-    { name: 'HMAC', hash: 'SHA-256' },
+    { name: "HMAC", hash: "SHA-256" },
     false,
-    ['sign']
-  );
+    ["sign"]
+  )
 
   const signature = await crypto.subtle.sign(
-    'HMAC',
+    "HMAC",
     key,
     encoder.encode(signatureInput)
-  );
+  )
 
   const encodedSignature = base64urlEncode(
     String.fromCharCode(...new Uint8Array(signature))
-  );
+  )
 
-  return `${signatureInput}.${encodedSignature}`;
+  return `${signatureInput}.${encodedSignature}`
 }
 
 export async function verifyJwt(token: string): Promise<JwtPayload | null> {
   try {
-    const [encodedHeader, encodedPayload, encodedSignature] = token.split('.');
+    const [encodedHeader, encodedPayload, encodedSignature] = token.split(".")
 
     if (!encodedHeader || !encodedPayload || !encodedSignature) {
-      return null;
+      return null
     }
 
     // Verify signature
-    const signatureInput = `${encodedHeader}.${encodedPayload}`;
-    const encoder = new TextEncoder();
+    const signatureInput = `${encodedHeader}.${encodedPayload}`
+    const encoder = new TextEncoder()
     const key = await crypto.subtle.importKey(
-      'raw',
+      "raw",
       encoder.encode(JWT_SECRET),
-      { name: 'HMAC', hash: 'SHA-256' },
+      { name: "HMAC", hash: "SHA-256" },
       false,
-      ['verify']
-    );
+      ["verify"]
+    )
 
-    const signature = Uint8Array.from(
-      base64urlDecode(encodedSignature),
-      (c) => c.charCodeAt(0)
-    );
+    const signature = Uint8Array.from(base64urlDecode(encodedSignature), (c) =>
+      c.charCodeAt(0)
+    )
 
     const isValid = await crypto.subtle.verify(
-      'HMAC',
+      "HMAC",
       key,
       signature,
       encoder.encode(signatureInput)
-    );
+    )
 
     if (!isValid) {
-      return null;
+      return null
     }
 
     // Decode payload
-    const payload = JSON.parse(base64urlDecode(encodedPayload)) as JwtPayload;
+    const payload = JSON.parse(base64urlDecode(encodedPayload)) as JwtPayload
 
     // Check expiration
     if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
-      return null;
+      return null
     }
 
-    return payload;
+    return payload
   } catch (error) {
-    return null;
+    return null
   }
 }
 
 // Middleware to protect routes
 export async function authMiddleware(c: Context, next: Next) {
-  const authHeader = c.req.header('Authorization');
+  const authHeader = c.req.header("Authorization")
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return c.json({ error: 'Unauthorized' }, 401);
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return c.json({ error: "Unauthorized" }, 401)
   }
 
-  const token = authHeader.substring(7);
-  const payload = await verifyJwt(token);
+  const token = authHeader.substring(7)
+  const payload = await verifyJwt(token)
 
   if (!payload) {
-    return c.json({ error: 'Invalid or expired token' }, 401);
+    return c.json({ error: "Invalid or expired token" }, 401)
   }
 
   // Add user info to context
-  c.set('auth', {
+  c.set("auth", {
     accountId: payload.accountId,
     email: payload.email,
-  } as AuthContext);
+  } as AuthContext)
 
-  await next();
+  await next()
 }
 
 // Helper to get auth context
 export function getAuthContext(c: Context): AuthContext {
-  const auth = c.get('auth');
+  const auth = c.get("auth")
   if (!auth) {
-    throw new Error('Auth context not found');
+    throw new Error("Auth context not found")
   }
-  return auth as AuthContext;
+  return auth as AuthContext
 }

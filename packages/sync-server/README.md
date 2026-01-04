@@ -14,26 +14,31 @@ Privacy-focused E2E encrypted sync server for athreei platform.
 ## Setup
 
 1. Copy environment variables:
+
 ```bash
 cp .env.example .env
 ```
 
 2. Configure your database URL in `.env`:
+
 ```
 DATABASE_URL=postgresql://user:password@localhost:5432/athreei_sync
 ```
 
 3. Install dependencies:
+
 ```bash
 bun install
 ```
 
 4. Run migrations:
+
 ```bash
 bun run migrate
 ```
 
 5. Start the server:
+
 ```bash
 bun run dev
 ```

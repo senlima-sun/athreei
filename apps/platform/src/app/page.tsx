@@ -6,5 +6,5 @@ export default function Home() {
         Privacy-focused platform connecting AI apps to browsers via MCP
       </p>
     </main>
-  );
+  )
 }

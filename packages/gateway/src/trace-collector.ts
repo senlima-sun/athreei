@@ -15,35 +15,35 @@ import type {
   EncryptedToolCallTrace,
   GatewayEvent,
   GatewayEventHandler,
-} from "./types.js";
-import { log } from "./logger.js";
+} from "./types.js"
+import { log } from "./logger.js"
 import {
   encryptTrace,
   decryptTrace,
   type TracePayload,
   type EncryptedTrace,
-} from "@athreei/shared";
+} from "@athreei/shared"
 
 /**
  * Trace collector configuration
  */
 export interface TraceCollectorConfig {
   /** Maximum number of traces to keep in memory */
-  maxTraces?: number;
+  maxTraces?: number
   /** Whether to send traces to Platform API */
-  sendToPlatform?: boolean;
+  sendToPlatform?: boolean
   /** Platform API URL */
-  platformUrl?: string;
+  platformUrl?: string
   /** API key for Platform authentication */
-  apiKey?: string;
+  apiKey?: string
   /** Batch size for sending traces */
-  batchSize?: number;
+  batchSize?: number
   /** Flush interval in ms */
-  flushInterval?: number;
+  flushInterval?: number
   /** Encryption key for E2E encryption (32 bytes) */
-  encryptionKey?: Uint8Array;
+  encryptionKey?: Uint8Array
   /** Key version for encryption */
-  encryptionKeyVersion?: number;
+  encryptionKeyVersion?: number
 }
 
 const DEFAULT_CONFIG: Required<TraceCollectorConfig> = {
@@ -55,25 +55,25 @@ const DEFAULT_CONFIG: Required<TraceCollectorConfig> = {
   flushInterval: 30000, // 30 seconds
   encryptionKey: new Uint8Array(0),
   encryptionKeyVersion: 1,
-};
+}
 
 /**
  * Trace statistics
  */
 export interface TraceStats {
-  totalCalls: number;
-  successfulCalls: number;
-  failedCalls: number;
-  averageDurationMs: number;
-  callsByServer: Map<string, number>;
-  callsByTool: Map<string, number>;
+  totalCalls: number
+  successfulCalls: number
+  failedCalls: number
+  averageDurationMs: number
+  callsByServer: Map<string, number>
+  callsByTool: Map<string, number>
 }
 
 /**
  * Generate a unique request ID
  */
 export function generateRequestId(): string {
-  return crypto.randomUUID();
+  return crypto.randomUUID()
 }
 
 /**
@@ -84,7 +84,7 @@ export function extractTracePayload(trace: ToolCallTrace): TracePayload {
     request: trace.arguments,
     response: trace.result,
     error: trace.error,
-  };
+  }
 }
 
 /**
@@ -100,8 +100,8 @@ export function encryptTracePayload(
   key: Uint8Array,
   keyVersion: number = 1
 ): EncryptedToolCallTrace {
-  const payload = extractTracePayload(trace);
-  const encrypted = encryptTrace(payload, key, keyVersion);
+  const payload = extractTracePayload(trace)
+  const encrypted = encryptTrace(payload, key, keyVersion)
 
   return {
     traceId: trace.traceId,
@@ -119,7 +119,7 @@ export function encryptTracePayload(
       keyVersion: encrypted.keyVersion,
       algorithm: encrypted.algorithm,
     },
-  };
+  }
 }
 
 /**
@@ -138,9 +138,9 @@ export function decryptTracePayload(
     ciphertext: encryptedTrace.encryptedPayload.ciphertext,
     keyVersion: encryptedTrace.encryptedPayload.keyVersion,
     algorithm: encryptedTrace.encryptedPayload.algorithm,
-  };
+  }
 
-  const payload = decryptTrace(encrypted, key);
+  const payload = decryptTrace(encrypted, key)
 
   return {
     traceId: encryptedTrace.traceId,
@@ -155,22 +155,22 @@ export function decryptTracePayload(
     endedAt: encryptedTrace.endedAt,
     durationMs: encryptedTrace.durationMs,
     status: encryptedTrace.status,
-  };
+  }
 }
 
 /**
  * Trace Collector for monitoring tool calls
  */
 export class TraceCollector {
-  private config: Required<TraceCollectorConfig>;
-  private traces: ToolCallTrace[] = [];
-  private pendingTraces: ToolCallTrace[] = [];
-  private flushTimer: ReturnType<typeof setInterval> | null = null;
-  private stats: TraceStats;
+  private config: Required<TraceCollectorConfig>
+  private traces: ToolCallTrace[] = []
+  private pendingTraces: ToolCallTrace[] = []
+  private flushTimer: ReturnType<typeof setInterval> | null = null
+  private stats: TraceStats
 
   constructor(config: TraceCollectorConfig = {}) {
-    this.config = { ...DEFAULT_CONFIG, ...config };
-    this.stats = this.createEmptyStats();
+    this.config = { ...DEFAULT_CONFIG, ...config }
+    this.stats = this.createEmptyStats()
   }
 
   private createEmptyStats(): TraceStats {
@@ -181,14 +181,14 @@ export class TraceCollector {
       averageDurationMs: 0,
       callsByServer: new Map(),
       callsByTool: new Map(),
-    };
+    }
   }
 
   /**
    * Check if encryption is enabled
    */
   isEncryptionEnabled(): boolean {
-    return this.config.encryptionKey.length === 32;
+    return this.config.encryptionKey.length === 32
   }
 
   /**
@@ -196,20 +196,20 @@ export class TraceCollector {
    */
   setEncryptionKey(key: Uint8Array, version: number = 1): void {
     if (key.length !== 32) {
-      throw new Error("Encryption key must be 32 bytes (256 bits)");
+      throw new Error("Encryption key must be 32 bytes (256 bits)")
     }
-    this.config.encryptionKey = key;
-    this.config.encryptionKeyVersion = version;
-    log.info(`Encryption key set (version ${version})`);
+    this.config.encryptionKey = key
+    this.config.encryptionKeyVersion = version
+    log.info(`Encryption key set (version ${version})`)
   }
 
   /**
    * Clear the encryption key
    */
   clearEncryptionKey(): void {
-    this.config.encryptionKey = new Uint8Array(0);
-    this.config.encryptionKeyVersion = 1;
-    log.info("Encryption key cleared");
+    this.config.encryptionKey = new Uint8Array(0)
+    this.config.encryptionKeyVersion = 1
+    log.info("Encryption key cleared")
   }
 
   /**
@@ -218,9 +218,9 @@ export class TraceCollector {
   createEventHandler(): GatewayEventHandler {
     return (event: GatewayEvent) => {
       if (event.type === "tool_call") {
-        this.addTrace(event.trace);
+        this.addTrace(event.trace)
       }
-    };
+    }
   }
 
   /**
@@ -228,91 +228,90 @@ export class TraceCollector {
    */
   addTrace(trace: ToolCallTrace): void {
     // Add to in-memory traces (with size limit)
-    this.traces.push(trace);
+    this.traces.push(trace)
     if (this.traces.length > this.config.maxTraces) {
-      this.traces.shift(); // Remove oldest
+      this.traces.shift() // Remove oldest
     }
 
     // Update statistics
-    this.updateStats(trace);
+    this.updateStats(trace)
 
     // Add to pending for Platform sync
     if (this.config.sendToPlatform) {
-      this.pendingTraces.push(trace);
+      this.pendingTraces.push(trace)
     }
 
     log.debug(
       `Trace collected: ${trace.aggregatedToolName} (${trace.durationMs}ms, ${trace.status})`
-    );
+    )
   }
 
   private updateStats(trace: ToolCallTrace): void {
-    this.stats.totalCalls++;
+    this.stats.totalCalls++
 
     if (trace.status === "error") {
-      this.stats.failedCalls++;
+      this.stats.failedCalls++
     } else {
-      this.stats.successfulCalls++;
+      this.stats.successfulCalls++
     }
 
     // Update average duration
     if (trace.durationMs !== undefined) {
       const totalDuration =
         this.stats.averageDurationMs * (this.stats.totalCalls - 1) +
-        trace.durationMs;
-      this.stats.averageDurationMs = totalDuration / this.stats.totalCalls;
+        trace.durationMs
+      this.stats.averageDurationMs = totalDuration / this.stats.totalCalls
     }
 
     // Update calls by server
-    const serverCount = this.stats.callsByServer.get(trace.serverName) || 0;
-    this.stats.callsByServer.set(trace.serverName, serverCount + 1);
+    const serverCount = this.stats.callsByServer.get(trace.serverName) || 0
+    this.stats.callsByServer.set(trace.serverName, serverCount + 1)
 
     // Update calls by tool
-    const toolCount =
-      this.stats.callsByTool.get(trace.aggregatedToolName) || 0;
-    this.stats.callsByTool.set(trace.aggregatedToolName, toolCount + 1);
+    const toolCount = this.stats.callsByTool.get(trace.aggregatedToolName) || 0
+    this.stats.callsByTool.set(trace.aggregatedToolName, toolCount + 1)
   }
 
   /**
    * Get all traces
    */
   getTraces(): ToolCallTrace[] {
-    return [...this.traces];
+    return [...this.traces]
   }
 
   /**
    * Get recent traces
    */
   getRecentTraces(count: number = 10): ToolCallTrace[] {
-    return this.traces.slice(-count);
+    return this.traces.slice(-count)
   }
 
   /**
    * Get traces for a specific server
    */
   getTracesForServer(serverName: string): ToolCallTrace[] {
-    return this.traces.filter((t) => t.serverName === serverName);
+    return this.traces.filter((t) => t.serverName === serverName)
   }
 
   /**
    * Get traces for a specific tool
    */
   getTracesForTool(toolName: string): ToolCallTrace[] {
-    return this.traces.filter((t) => t.aggregatedToolName === toolName);
+    return this.traces.filter((t) => t.aggregatedToolName === toolName)
   }
 
   /**
    * Get traces by request ID
    */
   getTraceByRequestId(requestId: string): ToolCallTrace | undefined {
-    return this.traces.find((t) => t.requestId === requestId);
+    return this.traces.find((t) => t.requestId === requestId)
   }
 
   /**
    * Get failed traces
    */
   getFailedTraces(): ToolCallTrace[] {
-    return this.traces.filter((t) => t.status === "error");
+    return this.traces.filter((t) => t.status === "error")
   }
 
   /**
@@ -323,17 +322,17 @@ export class TraceCollector {
       ...this.stats,
       callsByServer: new Map(this.stats.callsByServer),
       callsByTool: new Map(this.stats.callsByTool),
-    };
+    }
   }
 
   /**
    * Clear all traces and reset statistics
    */
   clear(): void {
-    this.traces = [];
-    this.pendingTraces = [];
-    this.stats = this.createEmptyStats();
-    log.info("Trace collector cleared");
+    this.traces = []
+    this.pendingTraces = []
+    this.stats = this.createEmptyStats()
+    log.info("Trace collector cleared")
   }
 
   /**
@@ -341,25 +340,25 @@ export class TraceCollector {
    */
   startPeriodicFlush(): void {
     if (!this.config.sendToPlatform) {
-      log.debug("Platform trace sync disabled");
-      return;
+      log.debug("Platform trace sync disabled")
+      return
     }
 
     if (this.flushTimer) {
-      return; // Already running
+      return // Already running
     }
 
     log.info(
       `Starting periodic trace flush (every ${this.config.flushInterval / 1000}s)`
-    );
+    )
 
     this.flushTimer = setInterval(async () => {
       try {
-        await this.flush();
+        await this.flush()
       } catch (error) {
-        log.error("Trace flush failed:", error);
+        log.error("Trace flush failed:", error)
       }
-    }, this.config.flushInterval);
+    }, this.config.flushInterval)
   }
 
   /**
@@ -367,9 +366,9 @@ export class TraceCollector {
    */
   stopPeriodicFlush(): void {
     if (this.flushTimer) {
-      clearInterval(this.flushTimer);
-      this.flushTimer = null;
-      log.info("Periodic trace flush stopped");
+      clearInterval(this.flushTimer)
+      this.flushTimer = null
+      log.info("Periodic trace flush stopped")
     }
   }
 
@@ -381,7 +380,7 @@ export class TraceCollector {
     traces: ToolCallTrace[]
   ): EncryptedToolCallTrace[] | null {
     if (!this.isEncryptionEnabled()) {
-      return null;
+      return null
     }
 
     return traces.map((trace) =>
@@ -390,7 +389,7 @@ export class TraceCollector {
         this.config.encryptionKey,
         this.config.encryptionKeyVersion
       )
-    );
+    )
   }
 
   /**
@@ -398,15 +397,15 @@ export class TraceCollector {
    */
   async flush(): Promise<void> {
     if (!this.config.sendToPlatform || this.pendingTraces.length === 0) {
-      return;
+      return
     }
 
-    const tracesToSend = this.pendingTraces.splice(0, this.config.batchSize);
+    const tracesToSend = this.pendingTraces.splice(0, this.config.batchSize)
 
-    log.debug(`Flushing ${tracesToSend.length} traces to Platform`);
+    log.debug(`Flushing ${tracesToSend.length} traces to Platform`)
 
     // Encrypt traces if encryption is enabled
-    const encryptedTraces = this.encryptTracesForSync(tracesToSend);
+    const encryptedTraces = this.encryptTracesForSync(tracesToSend)
 
     try {
       const response = await fetch(
@@ -422,21 +421,21 @@ export class TraceCollector {
             encrypted: encryptedTraces !== null,
           }),
         }
-      );
+      )
 
       if (!response.ok) {
         // Put traces back for retry
-        this.pendingTraces.unshift(...tracesToSend);
-        throw new Error(`Trace flush failed: ${response.status}`);
+        this.pendingTraces.unshift(...tracesToSend)
+        throw new Error(`Trace flush failed: ${response.status}`)
       }
 
       log.debug(
         `Successfully flushed ${tracesToSend.length} traces (encrypted: ${encryptedTraces !== null})`
-      );
+      )
     } catch (error) {
       // Put traces back for retry
-      this.pendingTraces.unshift(...tracesToSend);
-      throw error;
+      this.pendingTraces.unshift(...tracesToSend)
+      throw error
     }
   }
 
@@ -456,7 +455,7 @@ export class TraceCollector {
       },
       null,
       2
-    );
+    )
   }
 
   /**
@@ -465,8 +464,8 @@ export class TraceCollector {
    */
   exportEncryptedTraces(): EncryptedToolCallTrace[] | null {
     if (!this.isEncryptionEnabled()) {
-      log.warn("Encryption not enabled, cannot export encrypted traces");
-      return null;
+      log.warn("Encryption not enabled, cannot export encrypted traces")
+      return null
     }
 
     return this.traces.map((trace) =>
@@ -475,7 +474,7 @@ export class TraceCollector {
         this.config.encryptionKey,
         this.config.encryptionKeyVersion
       )
-    );
+    )
   }
 
   /**
@@ -487,13 +486,13 @@ export class TraceCollector {
     key: Uint8Array
   ): void {
     for (const encrypted of encryptedTraces) {
-      const trace = decryptTracePayload(encrypted, key);
-      this.addTrace(trace);
+      const trace = decryptTracePayload(encrypted, key)
+      this.addTrace(trace)
     }
-    log.info(`Imported ${encryptedTraces.length} encrypted traces`);
+    log.info(`Imported ${encryptedTraces.length} encrypted traces`)
   }
 }
 
 // Re-export encryption utilities for convenience
-export { encryptTrace, decryptTrace } from "@athreei/shared";
-export type { TracePayload, EncryptedTrace } from "@athreei/shared";
+export { encryptTrace, decryptTrace } from "@athreei/shared"
+export type { TracePayload, EncryptedTrace } from "@athreei/shared"

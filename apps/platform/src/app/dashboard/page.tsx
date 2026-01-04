@@ -1,18 +1,23 @@
-"use client";
+"use client"
 
-import { PageHeader } from "@/components/dashboard/page-header";
-import { useSession } from "@/lib/auth-client";
-import { Server, Activity, Users, ArrowRight } from "lucide-react";
-import Link from "next/link";
+import { PageHeader } from "@/components/dashboard/page-header"
+import { useSession } from "@/lib/auth-client"
+import { Server, Activity, Users, ArrowRight } from "lucide-react"
+import Link from "next/link"
 
 interface QuickActionProps {
-  title: string;
-  description: string;
-  href: string;
-  icon: React.ComponentType<{ className?: string }>;
+  title: string
+  description: string
+  href: string
+  icon: React.ComponentType<{ className?: string }>
 }
 
-function QuickAction({ title, description, href, icon: Icon }: QuickActionProps) {
+function QuickAction({
+  title,
+  description,
+  href,
+  icon: Icon,
+}: QuickActionProps) {
   return (
     <Link
       href={href}
@@ -27,21 +32,21 @@ function QuickAction({ title, description, href, icon: Icon }: QuickActionProps)
       </div>
       <ArrowRight className="h-5 w-5 text-gray-400 opacity-0 transition-opacity group-hover:opacity-100" />
     </Link>
-  );
+  )
 }
 
 export default function DashboardPage() {
-  const { data: session, isPending } = useSession();
+  const { data: session, isPending } = useSession()
 
   if (isPending) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-gray-600" />
       </div>
-    );
+    )
   }
 
-  const userName = session?.user?.name || "there";
+  const userName = session?.user?.name || "there"
 
   return (
     <div>
@@ -52,7 +57,9 @@ export default function DashboardPage() {
 
       {/* Quick actions */}
       <section className="mb-8">
-        <h2 className="mb-4 text-lg font-semibold text-gray-900">Quick actions</h2>
+        <h2 className="mb-4 text-lg font-semibold text-gray-900">
+          Quick actions
+        </h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <QuickAction
             title="View MCPs"
@@ -89,10 +96,16 @@ export default function DashboardPage() {
         </p>
       </section>
     </div>
-  );
+  )
 }
 
-function StatCard({ label, value }: { label: string; value: string | number | null }) {
+function StatCard({
+  label,
+  value,
+}: {
+  label: string
+  value: string | number | null
+}) {
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4">
       <p className="text-sm text-gray-500">{label}</p>
@@ -102,5 +115,5 @@ function StatCard({ label, value }: { label: string; value: string | number | nu
         <p className="mt-1 text-2xl font-semibold text-gray-900">{value}</p>
       )}
     </div>
-  );
+  )
 }

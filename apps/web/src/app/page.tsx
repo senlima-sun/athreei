@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Link from "next/link"
 import {
   Lock,
   GitMerge,
@@ -8,13 +8,13 @@ import {
   Shield,
   Github,
   ExternalLink,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Accordion, AccordionItem } from "@/components/ui/accordion";
+} from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Accordion, AccordionItem } from "@/components/ui/accordion"
 
-const DOCS_URL = "https://docs.athreei.com";
+const DOCS_URL = "https://docs.athreei.com"
 
 // Feature data
 const features = [
@@ -54,7 +54,7 @@ const features = [
     description:
       "Audit the code yourself. Contribute improvements. No vendor lock-in, ever.",
   },
-];
+]
 
 // FAQ data
 const faqs = [
@@ -88,7 +88,7 @@ const faqs = [
     answer:
       "Any AI assistant that supports MCP works with athreei. This includes Claude Desktop, ChatGPT (with MCP plugins), Cursor, and many other developer tools. Check our documentation for specific setup guides.",
   },
-];
+]
 
 // Security features
 const securityFeatures = [
@@ -112,7 +112,7 @@ const securityFeatures = [
     description:
       "Every line of code is auditable. Security researchers welcome. Bug bounty program available.",
   },
-];
+]
 
 export default function HomePage() {
   return (
@@ -193,7 +193,10 @@ export default function HomePage() {
       </section>
 
       {/* How it Works Section */}
-      <section className="bg-secondary/50 px-6 py-20 lg:py-28" id="how-it-works">
+      <section
+        className="bg-secondary/50 px-6 py-20 lg:py-28"
+        id="how-it-works"
+      >
         <div className="mx-auto max-w-6xl">
           <div className="mb-12 text-center">
             <h2 className="mb-4 text-3xl font-bold lg:text-4xl">
@@ -478,5 +481,5 @@ export default function HomePage() {
         </div>
       </footer>
     </main>
-  );
+  )
 }

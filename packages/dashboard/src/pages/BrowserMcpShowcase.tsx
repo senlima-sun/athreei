@@ -92,7 +92,8 @@ const browserTools: BrowserTool[] = [
   },
   {
     name: "browser_wait",
-    description: "Wait for elements to appear, disappear, or conditions to be met",
+    description:
+      "Wait for elements to appear, disappear, or conditions to be met",
     example: "Wait for the loading spinner to disappear",
   },
 ]
@@ -134,8 +135,7 @@ const examplePrompts: ExamplePrompt[] = [
   },
   {
     title: "Data Extraction",
-    prompt:
-      "Extract all links from this page and organize them by category",
+    prompt: "Extract all links from this page and organize them by category",
     description: "Shows content extraction and data organization",
   },
 ]
@@ -351,7 +351,9 @@ export function BrowserMcpShowcase() {
                           {example.description}
                         </p>
                         <div className="bg-muted rounded-md p-3">
-                          <p className="text-sm font-mono">"{example.prompt}"</p>
+                          <p className="text-sm font-mono">
+                            "{example.prompt}"
+                          </p>
                         </div>
                       </div>
                       <Button
@@ -385,9 +387,15 @@ export function BrowserMcpShowcase() {
             <div className="flex flex-col md:flex-row items-center justify-center gap-4 text-center">
               <ArchitectureBox label="AI App" sublabel="Claude, ChatGPT" />
               <Arrow />
-              <ArchitectureBox label="MCP Server" sublabel="@athreei/mcp-server" />
+              <ArchitectureBox
+                label="MCP Server"
+                sublabel="@athreei/mcp-server"
+              />
               <Arrow />
-              <ArchitectureBox label="Native Host" sublabel="Native Messaging" />
+              <ArchitectureBox
+                label="Native Host"
+                sublabel="Native Messaging"
+              />
               <Arrow />
               <ArchitectureBox label="Extension" sublabel="Chrome Extension" />
               <Arrow />
@@ -408,7 +416,8 @@ export function BrowserMcpShowcase() {
             <div>
               <h3 className="font-semibold text-lg">Ready to Get Started?</h3>
               <p className="text-muted-foreground">
-                Install the Browser MCP and start controlling your browser with AI
+                Install the Browser MCP and start controlling your browser with
+                AI
               </p>
             </div>
             <div className="flex gap-3">
@@ -423,13 +432,12 @@ export function BrowserMcpShowcase() {
               <Button
                 variant="primary"
                 onClick={() =>
-                  copyToClipboard(
-                    'npx -y @athreei/mcp-server',
-                    "quick-install"
-                  )
+                  copyToClipboard("npx -y @athreei/mcp-server", "quick-install")
                 }
               >
-                {copiedCode === "quick-install" ? "Copied!" : "Copy Install Command"}
+                {copiedCode === "quick-install"
+                  ? "Copied!"
+                  : "Copy Install Command"}
               </Button>
             </div>
           </div>
@@ -538,7 +546,12 @@ function ArchitectureBox({
 function Arrow() {
   return (
     <div className="text-muted-foreground hidden md:block">
-      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg
+        className="w-6 h-6"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
         <path
           strokeLinecap="round"
           strokeLinejoin="round"

@@ -17,9 +17,7 @@ export interface ScrollResult {
 export async function executeScroll(
   args: AiiiScrollArgs
 ): Promise<ScrollResult> {
-  const target = args.selector
-    ? document.querySelector(args.selector)
-    : window
+  const target = args.selector ? document.querySelector(args.selector) : window
 
   if (args.selector && !target) {
     throw new Error(`Element not found: ${args.selector}`)
@@ -93,9 +91,10 @@ export async function executeScroll(
 /**
  * Get current scroll position of window or element
  */
-function getCurrentScrollPosition(
-  target: Window | Element | null
-): { x: number; y: number } {
+function getCurrentScrollPosition(target: Window | Element | null): {
+  x: number
+  y: number
+} {
   if (target === window || !target) {
     return {
       x: window.scrollX || window.pageXOffset,
@@ -112,9 +111,10 @@ function getCurrentScrollPosition(
 /**
  * Get viewport size
  */
-function getViewportSize(
-  target: Window | Element | null
-): { width: number; height: number } {
+function getViewportSize(target: Window | Element | null): {
+  width: number
+  height: number
+} {
   if (target === window || !target) {
     return {
       width: window.innerWidth,

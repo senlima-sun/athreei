@@ -34,7 +34,11 @@ async function clean() {
 /**
  * Bundle a TypeScript file using Bun
  */
-async function bundle(entrypoint: string, outfile: string, format: "esm" | "iife" = "esm") {
+async function bundle(
+  entrypoint: string,
+  outfile: string,
+  format: "esm" | "iife" = "esm"
+) {
   const relativePath = entrypoint.replace(SRC_DIR + "/", "")
   console.log(`📦 Bundling ${relativePath}...`)
 
@@ -86,7 +90,8 @@ async function copyManifest() {
 
   // Adjust paths for dist folder (remove dist/ prefix since dist is the root)
   if (manifest.background?.service_worker) {
-    manifest.background.service_worker = manifest.background.service_worker.replace("dist/", "")
+    manifest.background.service_worker =
+      manifest.background.service_worker.replace("dist/", "")
   }
   if (manifest.content_scripts) {
     for (const script of manifest.content_scripts) {
@@ -151,10 +156,7 @@ async function build() {
     )
 
     // Bundle popup script
-    await bundle(
-      join(SRC_DIR, "popup/index.ts"),
-      join(DIST_DIR, "popup.js")
-    )
+    await bundle(join(SRC_DIR, "popup/index.ts"), join(DIST_DIR, "popup.js"))
 
     // Copy manifest and static assets
     await copyManifest()

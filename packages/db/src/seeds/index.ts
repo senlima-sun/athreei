@@ -2,4 +2,4 @@
  * Seeds module exports
  */
 
-export * from "./mcp-registry";
+export * from "./mcp-registry"

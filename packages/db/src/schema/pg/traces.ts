@@ -2,10 +2,10 @@
  * Traces & Observability Schema (PostgreSQL)
  */
 
-import { pgTable, text, timestamp, doublePrecision } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
-import { organization, user } from "./auth";
-import { mcpServer } from "./mcp-servers";
+import { pgTable, text, timestamp, doublePrecision } from "drizzle-orm/pg-core"
+import { relations } from "drizzle-orm"
+import { organization, user } from "./auth"
+import { mcpServer } from "./mcp-servers"
 
 export const trace = pgTable("trace", {
   id: text("id").primaryKey(),
@@ -13,7 +13,9 @@ export const trace = pgTable("trace", {
     .notNull()
     .references(() => organization.id, { onDelete: "cascade" }),
   userId: text("userId").references(() => user.id, { onDelete: "set null" }),
-  mcpServerId: text("mcpServerId").references(() => mcpServer.id, { onDelete: "set null" }),
+  mcpServerId: text("mcpServerId").references(() => mcpServer.id, {
+    onDelete: "set null",
+  }),
   traceId: text("traceId").notNull(),
   parentSpanId: text("parentSpanId"),
   spanId: text("spanId").notNull(),
@@ -27,7 +29,7 @@ export const trace = pgTable("trace", {
   attributes: text("attributes"),
   events: text("events"),
   createdAt: timestamp("createdAt").notNull(),
-});
+})
 
 export const log = pgTable("log", {
   id: text("id").primaryKey(),
@@ -42,7 +44,7 @@ export const log = pgTable("log", {
   source: text("source"),
   timestamp: timestamp("timestamp").notNull(),
   createdAt: timestamp("createdAt").notNull(),
-});
+})
 
 export const metric = pgTable("metric", {
   id: text("id").primaryKey(),
@@ -55,7 +57,7 @@ export const metric = pgTable("metric", {
   dimensions: text("dimensions"),
   timestamp: timestamp("timestamp").notNull(),
   createdAt: timestamp("createdAt").notNull(),
-});
+})
 
 export const traceRelations = relations(trace, ({ one }) => ({
   organization: one(organization, {
@@ -70,7 +72,7 @@ export const traceRelations = relations(trace, ({ one }) => ({
     fields: [trace.mcpServerId],
     references: [mcpServer.id],
   }),
-}));
+}))
 
 export const logRelations = relations(log, ({ one }) => ({
   organization: one(organization, {
@@ -81,11 +83,11 @@ export const logRelations = relations(log, ({ one }) => ({
     fields: [log.userId],
     references: [user.id],
   }),
-}));
+}))
 
 export const metricRelations = relations(metric, ({ one }) => ({
   organization: one(organization, {
     fields: [metric.organizationId],
     references: [organization.id],
   }),
-}));
+}))

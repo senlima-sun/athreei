@@ -96,9 +96,15 @@ describe("Dashboard", () => {
       expect(screen.getByText("Tool Usage (Last 7 days)")).toBeInTheDocument()
     })
     // Tools appear in multiple places (chart and recent activity) - just check they exist
-    expect(screen.getAllByText("browser__screenshot").length).toBeGreaterThanOrEqual(1)
-    expect(screen.getAllByText("github__create_issue").length).toBeGreaterThanOrEqual(1)
-    expect(screen.getAllByText("filesystem__read").length).toBeGreaterThanOrEqual(1)
+    expect(
+      screen.getAllByText("browser__screenshot").length
+    ).toBeGreaterThanOrEqual(1)
+    expect(
+      screen.getAllByText("github__create_issue").length
+    ).toBeGreaterThanOrEqual(1)
+    expect(
+      screen.getAllByText("filesystem__read").length
+    ).toBeGreaterThanOrEqual(1)
   })
 
   it("renders tool usage percentages", async () => {

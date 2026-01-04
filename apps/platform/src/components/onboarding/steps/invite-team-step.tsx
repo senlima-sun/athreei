@@ -1,18 +1,18 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { organization } from "@/lib/auth-client";
-import { Mail, Plus, Loader2, X, Users } from "lucide-react";
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { organization } from "@/lib/auth-client"
+import { Mail, Plus, Loader2, X, Users } from "lucide-react"
 
 interface PendingInvite {
-  email: string;
-  role: "admin" | "member";
+  email: string
+  role: "admin" | "member"
 }
 
 interface InviteTeamStepProps {
-  organizationId: string;
-  organizationName: string;
+  organizationId: string
+  organizationName: string
 }
 
 /**
@@ -22,45 +22,45 @@ export function InviteTeamStep({
   organizationId,
   organizationName,
 }: InviteTeamStepProps) {
-  const router = useRouter();
-  const [invites, setInvites] = useState<PendingInvite[]>([]);
-  const [email, setEmail] = useState("");
-  const [role, setRole] = useState<"admin" | "member">("member");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const router = useRouter()
+  const [invites, setInvites] = useState<PendingInvite[]>([])
+  const [email, setEmail] = useState("")
+  const [role, setRole] = useState<"admin" | "member">("member")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const addInvite = () => {
-    const trimmedEmail = email.trim().toLowerCase();
+    const trimmedEmail = email.trim().toLowerCase()
 
     // Validate email format
     if (!trimmedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
-      setError("Please enter a valid email address");
-      return;
+      setError("Please enter a valid email address")
+      return
     }
 
     // Check for duplicates
     if (invites.some((inv) => inv.email === trimmedEmail)) {
-      setError("This email is already in the list");
-      return;
+      setError("This email is already in the list")
+      return
     }
 
-    setInvites([...invites, { email: trimmedEmail, role }]);
-    setEmail("");
-    setRole("member");
-    setError(null);
-  };
+    setInvites([...invites, { email: trimmedEmail, role }])
+    setEmail("")
+    setRole("member")
+    setError(null)
+  }
 
   const removeInvite = (emailToRemove: string) => {
-    setInvites(invites.filter((inv) => inv.email !== emailToRemove));
-  };
+    setInvites(invites.filter((inv) => inv.email !== emailToRemove))
+  }
 
   const handleSkip = () => {
-    router.push("/dashboard");
-  };
+    router.push("/dashboard")
+  }
 
   const handleComplete = async () => {
-    setError(null);
-    setIsSubmitting(true);
+    setError(null)
+    setIsSubmitting(true)
 
     try {
       // Send all invitations
@@ -72,32 +72,33 @@ export function InviteTeamStep({
             role: invite.role,
           })
         )
-      );
+      )
 
       // Check for any failures
       const failures = results.filter(
-        (r) => r.status === "rejected" || (r.status === "fulfilled" && r.value.error)
-      );
+        (r) =>
+          r.status === "rejected" || (r.status === "fulfilled" && r.value.error)
+      )
 
       if (failures.length > 0) {
-        console.error("Some invitations failed:", failures);
+        console.error("Some invitations failed:", failures)
         // Continue anyway - partial success is okay for onboarding
       }
 
-      router.push("/dashboard");
+      router.push("/dashboard")
     } catch {
-      setError("Failed to send invitations. Please try again.");
+      setError("Failed to send invitations. Please try again.")
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
-      e.preventDefault();
-      addInvite();
+      e.preventDefault()
+      addInvite()
     }
-  };
+  }
 
   return (
     <div className="rounded-lg bg-white p-8 shadow">
@@ -106,7 +107,8 @@ export function InviteTeamStep({
           Invite your team
         </h2>
         <p className="mt-2 text-sm text-gray-600">
-          Add team members to <span className="font-medium">{organizationName}</span>
+          Add team members to{" "}
+          <span className="font-medium">{organizationName}</span>
         </p>
       </div>
 
@@ -165,7 +167,9 @@ export function InviteTeamStep({
                   className="flex items-center justify-between px-3 py-2"
                 >
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-900">{invite.email}</span>
+                    <span className="text-sm text-gray-900">
+                      {invite.email}
+                    </span>
                     <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600">
                       {invite.role}
                     </span>
@@ -224,5 +228,5 @@ export function InviteTeamStep({
         </div>
       </div>
     </div>
-  );
+  )
 }

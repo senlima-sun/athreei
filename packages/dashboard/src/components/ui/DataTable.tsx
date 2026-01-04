@@ -50,7 +50,9 @@ export function DataTable<T extends object>({
       columns.map((col, idx) => ({
         id: typeof col.accessor === "string" ? col.accessor : `col_${idx}`,
         accessorFn: (row: T) =>
-          typeof col.accessor === "function" ? col.accessor(row) : row[col.accessor],
+          typeof col.accessor === "function"
+            ? col.accessor(row)
+            : row[col.accessor],
         header: ({ column }) => {
           if (col.sortable === false) {
             return <span>{col.header}</span>
@@ -60,7 +62,9 @@ export function DataTable<T extends object>({
               variant="ghost"
               size="sm"
               className="-ml-3 h-8 data-[state=open]:bg-accent"
-              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
             >
               {col.header}
               <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -111,7 +115,9 @@ export function DataTable<T extends object>({
 
   if (data.length === 0) {
     return (
-      <div className="p-8 text-center text-muted-foreground">{emptyMessage}</div>
+      <div className="p-8 text-center text-muted-foreground">
+        {emptyMessage}
+      </div>
     )
   }
 
@@ -167,9 +173,7 @@ export function DataTable<T extends object>({
             variant="secondary"
             size="sm"
             onClick={() =>
-              isPaginated
-                ? onPageChange(page - 1)
-                : table.previousPage()
+              isPaginated ? onPageChange(page - 1) : table.previousPage()
             }
             disabled={isPaginated ? page <= 1 : !table.getCanPreviousPage()}
           >
@@ -177,7 +181,8 @@ export function DataTable<T extends object>({
             Previous
           </Button>
           <span className="text-sm text-muted-foreground">
-            Page {isPaginated ? page : table.getState().pagination.pageIndex + 1} of{" "}
+            Page{" "}
+            {isPaginated ? page : table.getState().pagination.pageIndex + 1} of{" "}
             {totalPages}
           </span>
           <Button

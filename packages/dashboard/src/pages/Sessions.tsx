@@ -65,7 +65,9 @@ export function Sessions() {
     {
       accessor: "id",
       header: "Session ID",
-      cell: (value) => <code className="text-sm">{(value as string).substring(0, 8)}...</code>,
+      cell: (value) => (
+        <code className="text-sm">{(value as string).substring(0, 8)}...</code>
+      ),
     },
     {
       accessor: "origin",
@@ -85,7 +87,9 @@ export function Sessions() {
       accessor: (row) => Date.now() - row.startedAt,
       header: "Duration",
       cell: (value) => (
-        <span className="text-muted-foreground">{formatDuration(value as number)}</span>
+        <span className="text-muted-foreground">
+          {formatDuration(value as number)}
+        </span>
       ),
       sortable: false,
     },
@@ -94,7 +98,11 @@ export function Sessions() {
       header: "Actions",
       sortable: false,
       cell: (_, row) => (
-        <Button variant="danger" size="sm" onClick={() => handleEndSession(row)}>
+        <Button
+          variant="danger"
+          size="sm"
+          onClick={() => handleEndSession(row)}
+        >
           End Session
         </Button>
       ),
@@ -106,7 +114,9 @@ export function Sessions() {
     {
       accessor: "id",
       header: "Session ID",
-      cell: (value) => <code className="text-sm">{(value as string).substring(0, 8)}...</code>,
+      cell: (value) => (
+        <code className="text-sm">{(value as string).substring(0, 8)}...</code>
+      ),
     },
     {
       accessor: "origin",
@@ -164,7 +174,10 @@ export function Sessions() {
       <Card>
         <Tabs
           tabs={[
-            { id: "active", label: `Active Sessions (${activeSessions.length})` },
+            {
+              id: "active",
+              label: `Active Sessions (${activeSessions.length})`,
+            },
             { id: "past", label: `Past Sessions (${pastSessions.length})` },
           ]}
           activeTab={activeTab}

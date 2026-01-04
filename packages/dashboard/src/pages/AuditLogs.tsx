@@ -62,7 +62,9 @@ export function AuditLogs() {
       setLogs(response.data || [])
       setTotal(response.pagination?.total || 0)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch audit logs")
+      setError(
+        err instanceof Error ? err.message : "Failed to fetch audit logs"
+      )
     } finally {
       setLoading(false)
     }
@@ -97,7 +99,9 @@ export function AuditLogs() {
       accessor: "origin",
       header: "Origin",
       cell: (value) => (
-        <span className="text-muted-foreground">{(value as string) || "N/A"}</span>
+        <span className="text-muted-foreground">
+          {(value as string) || "N/A"}
+        </span>
       ),
     },
     {
@@ -128,7 +132,11 @@ export function AuditLogs() {
       header: "Actions",
       sortable: false,
       cell: (_value, row) => (
-        <Button variant="secondary" size="sm" onClick={() => setSelectedLog(row)}>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => setSelectedLog(row)}
+        >
           Details
         </Button>
       ),
@@ -216,7 +224,10 @@ export function AuditLogs() {
       </Card>
 
       {/* Log Details Dialog */}
-      <Dialog open={!!selectedLog} onOpenChange={(open) => !open && setSelectedLog(null)}>
+      <Dialog
+        open={!!selectedLog}
+        onOpenChange={(open) => !open && setSelectedLog(null)}
+      >
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Audit Log Details</DialogTitle>
@@ -230,19 +241,33 @@ export function AuditLogs() {
               {/* Basic Info */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">ID</label>
-                  <p className="text-sm font-mono break-all">{selectedLog.id}</p>
+                  <label className="text-sm font-medium text-muted-foreground">
+                    ID
+                  </label>
+                  <p className="text-sm font-mono break-all">
+                    {selectedLog.id}
+                  </p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Timestamp</label>
-                  <p className="text-sm">{new Date(selectedLog.timestamp).toLocaleString()}</p>
+                  <label className="text-sm font-medium text-muted-foreground">
+                    Timestamp
+                  </label>
+                  <p className="text-sm">
+                    {new Date(selectedLog.timestamp).toLocaleString()}
+                  </p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Tool</label>
-                  <p className="text-sm"><code>{selectedLog.tool}</code></p>
+                  <label className="text-sm font-medium text-muted-foreground">
+                    Tool
+                  </label>
+                  <p className="text-sm">
+                    <code>{selectedLog.tool}</code>
+                  </p>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Status</label>
+                  <label className="text-sm font-medium text-muted-foreground">
+                    Status
+                  </label>
                   <p className="text-sm">
                     <span
                       className={cn(
@@ -260,13 +285,17 @@ export function AuditLogs() {
                 </div>
                 {selectedLog.aiApp && (
                   <div>
-                    <label className="text-sm font-medium text-muted-foreground">AI App</label>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      AI App
+                    </label>
                     <p className="text-sm">{selectedLog.aiApp}</p>
                   </div>
                 )}
                 {selectedLog.origin && (
                   <div>
-                    <label className="text-sm font-medium text-muted-foreground">Origin</label>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Origin
+                    </label>
                     <p className="text-sm">{selectedLog.origin}</p>
                   </div>
                 )}
@@ -275,7 +304,9 @@ export function AuditLogs() {
               {/* Arguments */}
               {selectedLog.args && Object.keys(selectedLog.args).length > 0 && (
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Arguments</label>
+                  <label className="text-sm font-medium text-muted-foreground">
+                    Arguments
+                  </label>
                   <pre className="mt-1 p-3 bg-muted rounded-md text-xs overflow-x-auto">
                     {JSON.stringify(selectedLog.args, null, 2)}
                   </pre>
@@ -285,7 +316,9 @@ export function AuditLogs() {
               {/* Result */}
               {selectedLog.result !== undefined && (
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground">Result</label>
+                  <label className="text-sm font-medium text-muted-foreground">
+                    Result
+                  </label>
                   <pre className="mt-1 p-3 bg-muted rounded-md text-xs overflow-x-auto">
                     {JSON.stringify(selectedLog.result, null, 2)}
                   </pre>

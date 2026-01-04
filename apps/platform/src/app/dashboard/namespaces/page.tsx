@@ -1,46 +1,46 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { PageHeader } from "@/components/dashboard/page-header";
-import { NamespaceCard, type Namespace } from "@/components/namespaces";
-import { useActiveOrganization } from "@/lib/auth-client";
-import { Boxes, Plus, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react"
+import Link from "next/link"
+import { PageHeader } from "@/components/dashboard/page-header"
+import { NamespaceCard, type Namespace } from "@/components/namespaces"
+import { useActiveOrganization } from "@/lib/auth-client"
+import { Boxes, Plus, Loader2 } from "lucide-react"
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
 
 export default function NamespacesPage() {
-  const { data: activeOrg, isPending: isOrgPending } = useActiveOrganization();
-  const [namespaces, setNamespaces] = useState<Namespace[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data: activeOrg, isPending: isOrgPending } = useActiveOrganization()
+  const [namespaces, setNamespaces] = useState<Namespace[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const loadNamespaces = async () => {
-      if (!activeOrg?.id) return;
+      if (!activeOrg?.id) return
 
-      setIsLoading(true);
-      setError(null);
+      setIsLoading(true)
+      setError(null)
 
       try {
         const response = await fetch(
           `${API_URL}/api/namespaces?organizationId=${activeOrg.id}`,
           { credentials: "include" }
-        );
+        )
 
         if (!response.ok) {
-          throw new Error("Failed to fetch namespaces");
+          throw new Error("Failed to fetch namespaces")
         }
 
-        const data = await response.json();
+        const data = await response.json()
         // Transform API response to match Namespace type
         const transformedNamespaces: Namespace[] = (data.namespaces || []).map(
           (ns: {
-            id: string;
-            name: string;
-            description?: string | null;
-            serverCount: number;
-            createdAt: string;
+            id: string
+            name: string
+            description?: string | null
+            serverCount: number
+            createdAt: string
           }) => ({
             id: ns.id,
             name: ns.name,
@@ -48,21 +48,21 @@ export default function NamespacesPage() {
             serverCount: ns.serverCount,
             createdAt: new Date(ns.createdAt),
           })
-        );
-        setNamespaces(transformedNamespaces);
+        )
+        setNamespaces(transformedNamespaces)
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Failed to load namespaces"
-        );
+        )
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
-    };
+    }
 
     if (!isOrgPending) {
-      loadNamespaces();
+      loadNamespaces()
     }
-  }, [activeOrg?.id, isOrgPending]);
+  }, [activeOrg?.id, isOrgPending])
 
   if (isOrgPending || isLoading) {
     return (
@@ -75,7 +75,7 @@ export default function NamespacesPage() {
           <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
         </div>
       </div>
-    );
+    )
   }
 
   if (!activeOrg) {
@@ -91,7 +91,7 @@ export default function NamespacesPage() {
           </p>
         </div>
       </div>
-    );
+    )
   }
 
   if (error) {
@@ -112,7 +112,7 @@ export default function NamespacesPage() {
           </button>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -157,5 +157,5 @@ export default function NamespacesPage() {
         </div>
       )}
     </div>
-  );
+  )
 }

@@ -7,13 +7,13 @@
  * @ts-nocheck - MCP SDK has excessively deep type instantiation issues with Zod schemas
  */
 
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { MCP_TOOL_DEFINITIONS } from "@athreei/shared";
-import { logger } from "../utils/logger.js";
-import { getIPCClient } from "../bridge/index.js";
-import { createAuditLogEntry } from "../db/repositories/audit-log.js";
-import { getAiAppName } from "../context/index.js";
-import type { AuditStatus } from "@athreei/shared";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
+import { MCP_TOOL_DEFINITIONS } from "@athreei/shared"
+import { logger } from "../utils/logger.js"
+import { getIPCClient } from "../bridge/index.js"
+import { createAuditLogEntry } from "../db/repositories/audit-log.js"
+import { getAiAppName } from "../context/index.js"
+import type { AuditStatus } from "@athreei/shared"
 
 // Type definitions for tool arguments to avoid implicit any
 interface NavigateArgs {
@@ -101,19 +101,19 @@ async function logToolExecution<T = unknown>(
   args: Record<string, unknown>,
   executor: () => Promise<T>
 ): Promise<T> {
-  const startTime = Date.now();
-  const logId = crypto.randomUUID();
+  const startTime = Date.now()
+  const logId = crypto.randomUUID()
 
   try {
     // Execute the tool
-    const result = await executor();
+    const result = await executor()
 
     // Extract origin from result if available (most tools return a url field)
-    const resultObj = result as Record<string, unknown>;
-    let origin: string | undefined;
-    if (typeof resultObj.url === 'string') {
+    const resultObj = result as Record<string, unknown>
+    let origin: string | undefined
+    if (typeof resultObj.url === "string") {
       try {
-        origin = new URL(resultObj.url).origin;
+        origin = new URL(resultObj.url).origin
       } catch {
         // Invalid URL, leave origin undefined
       }
@@ -129,17 +129,19 @@ async function logToolExecution<T = unknown>(
       args,
       result,
       status: "success" as AuditStatus,
-    });
+    })
 
-    logger.debug(`Audit log created for ${tool}: success (${Date.now() - startTime}ms)`);
+    logger.debug(
+      `Audit log created for ${tool}: success (${Date.now() - startTime}ms)`
+    )
 
-    return result;
+    return result
   } catch (error) {
     // Extract origin from args if available (e.g., browser_navigate has url in args)
-    let origin: string | undefined;
-    if (typeof args.url === 'string') {
+    let origin: string | undefined
+    if (typeof args.url === "string") {
       try {
-        origin = new URL(args.url).origin;
+        origin = new URL(args.url).origin
       } catch {
         // Invalid URL, leave origin undefined
       }
@@ -154,15 +156,17 @@ async function logToolExecution<T = unknown>(
       origin,
       args,
       result: {
-        error: error instanceof Error ? error.message : String(error)
+        error: error instanceof Error ? error.message : String(error),
       },
       status: "error" as AuditStatus,
-    });
+    })
 
-    logger.debug(`Audit log created for ${tool}: error (${Date.now() - startTime}ms)`);
+    logger.debug(
+      `Audit log created for ${tool}: error (${Date.now() - startTime}ms)`
+    )
 
     // Re-throw the error to maintain normal error handling
-    throw error;
+    throw error
   }
 }
 
@@ -170,7 +174,7 @@ async function logToolExecution<T = unknown>(
  * Register all browser tools with the MCP server
  */
 export function registerBrowserTools(server: McpServer) {
-  logger.info("Registering browser tools...");
+  logger.info("Registering browser tools...")
 
   // browser_list_tabs
   server.tool(
@@ -178,28 +182,33 @@ export function registerBrowserTools(server: McpServer) {
     MCP_TOOL_DEFINITIONS.browser_list_tabs.description,
     {},
     async () => {
-      logger.debug("browser_list_tabs called");
+      logger.debug("browser_list_tabs called")
       try {
         const result = await logToolExecution(
           "browser_list_tabs",
           {},
           async () => {
-            const client = getIPCClient();
-            return await client.sendRequest("browser_list_tabs", {});
+            const client = getIPCClient()
+            return await client.sendRequest("browser_list_tabs", {})
           }
-        );
+        )
         return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
-        };
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        }
       } catch (error) {
-        logger.error("browser_list_tabs error", error);
+        logger.error("browser_list_tabs error", error)
         return {
-          content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }],
-          isError: true
-        };
+          content: [
+            {
+              type: "text",
+              text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+          isError: true,
+        }
       }
-    },
-  );
+    }
+  )
 
   // browser_get_active_tab
   server.tool(
@@ -207,28 +216,33 @@ export function registerBrowserTools(server: McpServer) {
     MCP_TOOL_DEFINITIONS.browser_get_active_tab.description,
     {},
     async () => {
-      logger.debug("browser_get_active_tab called");
+      logger.debug("browser_get_active_tab called")
       try {
         const result = await logToolExecution(
           "browser_get_active_tab",
           {},
           async () => {
-            const client = getIPCClient();
-            return await client.sendRequest("browser_get_active_tab", {});
+            const client = getIPCClient()
+            return await client.sendRequest("browser_get_active_tab", {})
           }
-        );
+        )
         return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
-        };
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        }
       } catch (error) {
-        logger.error("browser_get_active_tab error", error);
+        logger.error("browser_get_active_tab error", error)
         return {
-          content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }],
-          isError: true
-        };
+          content: [
+            {
+              type: "text",
+              text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+          isError: true,
+        }
       }
-    },
-  );
+    }
+  )
 
   // browser_navigate
   server.tool(
@@ -238,28 +252,39 @@ export function registerBrowserTools(server: McpServer) {
     // @ts-ignore - Type instantiation too deep
     async (args: NavigateArgs) => {
       const { url, tabId, waitUntil } = args
-      logger.debug(`browser_navigate called: ${url} (tabId: ${tabId}, waitUntil: ${waitUntil})`);
+      logger.debug(
+        `browser_navigate called: ${url} (tabId: ${tabId}, waitUntil: ${waitUntil})`
+      )
       try {
         const result = await logToolExecution(
           "browser_navigate",
           { url, tabId, waitUntil },
           async () => {
-            const client = getIPCClient();
-            return await client.sendRequest("browser_navigate", { url, tabId, waitUntil });
+            const client = getIPCClient()
+            return await client.sendRequest("browser_navigate", {
+              url,
+              tabId,
+              waitUntil,
+            })
           }
-        );
+        )
         return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
-        };
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        }
       } catch (error) {
-        logger.error("browser_navigate error", error);
+        logger.error("browser_navigate error", error)
         return {
-          content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }],
-          isError: true
-        };
+          content: [
+            {
+              type: "text",
+              text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+          isError: true,
+        }
       }
-    },
-  );
+    }
+  )
 
   // browser_get_content
   server.tool(
@@ -268,28 +293,39 @@ export function registerBrowserTools(server: McpServer) {
     MCP_TOOL_DEFINITIONS.browser_get_content.inputSchema.shape,
     async (args: ContentArgs) => {
       const { tabId, format, selector } = args
-      logger.debug(`browser_get_content called: tabId=${tabId}, format=${format}, selector=${selector}`);
+      logger.debug(
+        `browser_get_content called: tabId=${tabId}, format=${format}, selector=${selector}`
+      )
       try {
         const result = await logToolExecution(
           "browser_get_content",
           { tabId, format, selector },
           async () => {
-            const client = getIPCClient();
-            return await client.sendRequest("browser_get_content", { tabId, format, selector });
+            const client = getIPCClient()
+            return await client.sendRequest("browser_get_content", {
+              tabId,
+              format,
+              selector,
+            })
           }
-        );
+        )
         return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
-        };
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        }
       } catch (error) {
-        logger.error("browser_get_content error", error);
+        logger.error("browser_get_content error", error)
         return {
-          content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }],
-          isError: true
-        };
+          content: [
+            {
+              type: "text",
+              text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+          isError: true,
+        }
       }
-    },
-  );
+    }
+  )
 
   // browser_get_elements
   server.tool(
@@ -298,28 +334,40 @@ export function registerBrowserTools(server: McpServer) {
     MCP_TOOL_DEFINITIONS.browser_get_elements.inputSchema.shape,
     async (args: ElementsArgs) => {
       const { tabId, selector, roles, interactiveOnly } = args
-      logger.debug(`browser_get_elements called: tabId=${tabId}, selector=${selector}, roles=${roles}, interactiveOnly=${interactiveOnly}`);
+      logger.debug(
+        `browser_get_elements called: tabId=${tabId}, selector=${selector}, roles=${roles}, interactiveOnly=${interactiveOnly}`
+      )
       try {
         const result = await logToolExecution(
           "browser_get_elements",
           { tabId, selector, roles, interactiveOnly },
           async () => {
-            const client = getIPCClient();
-            return await client.sendRequest("browser_get_elements", { tabId, selector, roles, interactiveOnly });
+            const client = getIPCClient()
+            return await client.sendRequest("browser_get_elements", {
+              tabId,
+              selector,
+              roles,
+              interactiveOnly,
+            })
           }
-        );
+        )
         return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
-        };
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        }
       } catch (error) {
-        logger.error("browser_get_elements error", error);
+        logger.error("browser_get_elements error", error)
         return {
-          content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }],
-          isError: true
-        };
+          content: [
+            {
+              type: "text",
+              text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+          isError: true,
+        }
       }
-    },
-  );
+    }
+  )
 
   // browser_click
   server.tool(
@@ -328,28 +376,42 @@ export function registerBrowserTools(server: McpServer) {
     MCP_TOOL_DEFINITIONS.browser_click.inputSchema.shape,
     async (args: ClickArgs) => {
       const { tabId, selector, index, button, clickCount, modifiers } = args
-      logger.debug(`browser_click called: tabId=${tabId}, selector=${selector}, index=${index}, button=${button}, clickCount=${clickCount}, modifiers=${modifiers}`);
+      logger.debug(
+        `browser_click called: tabId=${tabId}, selector=${selector}, index=${index}, button=${button}, clickCount=${clickCount}, modifiers=${modifiers}`
+      )
       try {
         const result = await logToolExecution(
           "browser_click",
           { tabId, selector, index, button, clickCount, modifiers },
           async () => {
-            const client = getIPCClient();
-            return await client.sendRequest("browser_click", { tabId, selector, index, button, clickCount, modifiers });
+            const client = getIPCClient()
+            return await client.sendRequest("browser_click", {
+              tabId,
+              selector,
+              index,
+              button,
+              clickCount,
+              modifiers,
+            })
           }
-        );
+        )
         return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
-        };
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        }
       } catch (error) {
-        logger.error("browser_click error", error);
+        logger.error("browser_click error", error)
         return {
-          content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }],
-          isError: true
-        };
+          content: [
+            {
+              type: "text",
+              text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+          isError: true,
+        }
       }
-    },
-  );
+    }
+  )
 
   // browser_type
   server.tool(
@@ -358,28 +420,43 @@ export function registerBrowserTools(server: McpServer) {
     MCP_TOOL_DEFINITIONS.browser_type.inputSchema.shape,
     async (args: TypeArgs) => {
       const { tabId, selector, index, text, clear, delay, submit } = args
-      logger.debug(`browser_type called: tabId=${tabId}, selector=${selector}, index=${index}, text=${text}, clear=${clear}, delay=${delay}, submit=${submit}`);
+      logger.debug(
+        `browser_type called: tabId=${tabId}, selector=${selector}, index=${index}, text=${text}, clear=${clear}, delay=${delay}, submit=${submit}`
+      )
       try {
         const result = await logToolExecution(
           "browser_type",
           { tabId, selector, index, text, clear, delay, submit },
           async () => {
-            const client = getIPCClient();
-            return await client.sendRequest("browser_type", { tabId, selector, index, text, clear, delay, submit });
+            const client = getIPCClient()
+            return await client.sendRequest("browser_type", {
+              tabId,
+              selector,
+              index,
+              text,
+              clear,
+              delay,
+              submit,
+            })
           }
-        );
+        )
         return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
-        };
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        }
       } catch (error) {
-        logger.error("browser_type error", error);
+        logger.error("browser_type error", error)
         return {
-          content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }],
-          isError: true
-        };
+          content: [
+            {
+              type: "text",
+              text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+          isError: true,
+        }
       }
-    },
-  );
+    }
+  )
 
   // browser_scroll
   server.tool(
@@ -388,28 +465,43 @@ export function registerBrowserTools(server: McpServer) {
     MCP_TOOL_DEFINITIONS.browser_scroll.inputSchema.shape,
     async (args: ScrollArgs) => {
       const { tabId, selector, direction, amount, x, y, behavior } = args
-      logger.debug(`browser_scroll called: tabId=${tabId}, selector=${selector}, direction=${direction}, amount=${amount}, x=${x}, y=${y}, behavior=${behavior}`);
+      logger.debug(
+        `browser_scroll called: tabId=${tabId}, selector=${selector}, direction=${direction}, amount=${amount}, x=${x}, y=${y}, behavior=${behavior}`
+      )
       try {
         const result = await logToolExecution(
           "browser_scroll",
           { tabId, selector, direction, amount, x, y, behavior },
           async () => {
-            const client = getIPCClient();
-            return await client.sendRequest("browser_scroll", { tabId, selector, direction, amount, x, y, behavior });
+            const client = getIPCClient()
+            return await client.sendRequest("browser_scroll", {
+              tabId,
+              selector,
+              direction,
+              amount,
+              x,
+              y,
+              behavior,
+            })
           }
-        );
+        )
         return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
-        };
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        }
       } catch (error) {
-        logger.error("browser_scroll error", error);
+        logger.error("browser_scroll error", error)
         return {
-          content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }],
-          isError: true
-        };
+          content: [
+            {
+              type: "text",
+              text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+          isError: true,
+        }
       }
-    },
-  );
+    }
+  )
 
   // browser_screenshot
   server.tool(
@@ -418,28 +510,41 @@ export function registerBrowserTools(server: McpServer) {
     MCP_TOOL_DEFINITIONS.browser_screenshot.inputSchema.shape,
     async (args: ScreenshotArgs) => {
       const { tabId, selector, fullPage, format, quality } = args
-      logger.debug(`browser_screenshot called: tabId=${tabId}, selector=${selector}, fullPage=${fullPage}, format=${format}, quality=${quality}`);
+      logger.debug(
+        `browser_screenshot called: tabId=${tabId}, selector=${selector}, fullPage=${fullPage}, format=${format}, quality=${quality}`
+      )
       try {
         const result = await logToolExecution(
           "browser_screenshot",
           { tabId, selector, fullPage, format, quality },
           async () => {
-            const client = getIPCClient();
-            return await client.sendRequest("browser_screenshot", { tabId, selector, fullPage, format, quality });
+            const client = getIPCClient()
+            return await client.sendRequest("browser_screenshot", {
+              tabId,
+              selector,
+              fullPage,
+              format,
+              quality,
+            })
           }
-        );
+        )
         return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
-        };
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        }
       } catch (error) {
-        logger.error("browser_screenshot error", error);
+        logger.error("browser_screenshot error", error)
         return {
-          content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }],
-          isError: true
-        };
+          content: [
+            {
+              type: "text",
+              text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+          isError: true,
+        }
       }
-    },
-  );
+    }
+  )
 
   // browser_execute_script
   server.tool(
@@ -448,28 +553,39 @@ export function registerBrowserTools(server: McpServer) {
     MCP_TOOL_DEFINITIONS.browser_execute_script.inputSchema.shape,
     async (handlerArgs: ExecuteScriptArgs) => {
       const { tabId, script, args } = handlerArgs
-      logger.debug(`browser_execute_script called: tabId=${tabId}, script=${script.substring(0, 50)}...`);
+      logger.debug(
+        `browser_execute_script called: tabId=${tabId}, script=${script.substring(0, 50)}...`
+      )
       try {
         const result = await logToolExecution(
           "browser_execute_script",
           { tabId, script, args },
           async () => {
-            const client = getIPCClient();
-            return await client.sendRequest("browser_execute_script", { tabId, script, args });
+            const client = getIPCClient()
+            return await client.sendRequest("browser_execute_script", {
+              tabId,
+              script,
+              args,
+            })
           }
-        );
+        )
         return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
-        };
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        }
       } catch (error) {
-        logger.error("browser_execute_script error", error);
+        logger.error("browser_execute_script error", error)
         return {
-          content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }],
-          isError: true
-        };
+          content: [
+            {
+              type: "text",
+              text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+          isError: true,
+        }
       }
-    },
-  );
+    }
+  )
 
   // browser_wait
   server.tool(
@@ -478,28 +594,41 @@ export function registerBrowserTools(server: McpServer) {
     MCP_TOOL_DEFINITIONS.browser_wait.inputSchema.shape,
     async (args: WaitArgs) => {
       const { tabId, selector, state, timeout, condition } = args
-      logger.debug(`browser_wait called: tabId=${tabId}, selector=${selector}, state=${state}, timeout=${timeout}`);
+      logger.debug(
+        `browser_wait called: tabId=${tabId}, selector=${selector}, state=${state}, timeout=${timeout}`
+      )
       try {
         const result = await logToolExecution(
           "browser_wait",
           { tabId, selector, state, timeout, condition },
           async () => {
-            const client = getIPCClient();
-            return await client.sendRequest("browser_wait", { tabId, selector, state, timeout, condition });
+            const client = getIPCClient()
+            return await client.sendRequest("browser_wait", {
+              tabId,
+              selector,
+              state,
+              timeout,
+              condition,
+            })
           }
-        );
+        )
         return {
-          content: [{ type: "text", text: JSON.stringify(result, null, 2) }]
-        };
+          content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+        }
       } catch (error) {
-        logger.error("browser_wait error", error);
+        logger.error("browser_wait error", error)
         return {
-          content: [{ type: "text", text: `Error: ${error instanceof Error ? error.message : String(error)}` }],
-          isError: true
-        };
+          content: [
+            {
+              type: "text",
+              text: `Error: ${error instanceof Error ? error.message : String(error)}`,
+            },
+          ],
+          isError: true,
+        }
       }
-    },
-  );
+    }
+  )
 
-  logger.info("Successfully registered 11 browser tools with audit logging");
+  logger.info("Successfully registered 11 browser tools with audit logging")
 }

@@ -10,7 +10,9 @@ import { DEFAULT_CRYPTO_CONFIG } from "./types.js"
 /**
  * Generate a random salt for key derivation
  */
-export function generateSalt(length: number = DEFAULT_CRYPTO_CONFIG.saltLength): Uint8Array {
+export function generateSalt(
+  length: number = DEFAULT_CRYPTO_CONFIG.saltLength
+): Uint8Array {
   // Use crypto.getRandomValues for secure random generation
   const salt = new Uint8Array(length)
 

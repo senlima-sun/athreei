@@ -522,12 +522,30 @@ describe("Trace Encryption", () => {
       const payload: TracePayload = { request: { data: "sensitive" } }
 
       // Encrypt with old key (version 1)
-      const oldDerived = await deriveTraceKey("password", undefined, undefined, 1)
-      const encryptedV1 = encryptTrace(payload, oldDerived.key, oldDerived.version)
+      const oldDerived = await deriveTraceKey(
+        "password",
+        undefined,
+        undefined,
+        1
+      )
+      const encryptedV1 = encryptTrace(
+        payload,
+        oldDerived.key,
+        oldDerived.version
+      )
 
       // Encrypt with new key (version 2)
-      const newDerived = await deriveTraceKey("new-password", undefined, undefined, 2)
-      const encryptedV2 = encryptTrace(payload, newDerived.key, newDerived.version)
+      const newDerived = await deriveTraceKey(
+        "new-password",
+        undefined,
+        undefined,
+        2
+      )
+      const encryptedV2 = encryptTrace(
+        payload,
+        newDerived.key,
+        newDerived.version
+      )
 
       // Both can be decrypted with their respective keys
       expect(decryptTrace(encryptedV1, oldDerived.key)).toEqual(payload)

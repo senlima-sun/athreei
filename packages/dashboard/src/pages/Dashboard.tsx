@@ -35,7 +35,9 @@ export function Dashboard() {
   const [recentActivity, setRecentActivity] = useState<AuditLogEntry[]>([])
 
   // Trace analytics state
-  const [traceAnalytics, setTraceAnalytics] = useState<TraceAnalytics | null>(null)
+  const [traceAnalytics, setTraceAnalytics] = useState<TraceAnalytics | null>(
+    null
+  )
   const [analyticsLoading, setAnalyticsLoading] = useState(true)
 
   useEffect(() => {
@@ -77,7 +79,9 @@ export function Dashboard() {
         setAnalyticsLoading(true)
 
         // Try to fetch from API
-        const analytics = await api.get<TraceAnalytics>("/api/traces/analytics?days=7")
+        const analytics = await api.get<TraceAnalytics>(
+          "/api/traces/analytics?days=7"
+        )
         setTraceAnalytics(analytics)
       } catch (error) {
         setTraceAnalytics(null)
@@ -156,13 +160,21 @@ export function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-8">
         <AnalyticsCard
           title="Total Traces"
-          value={analyticsLoading ? "..." : traceAnalytics?.totalTraces.toLocaleString() || "0"}
+          value={
+            analyticsLoading
+              ? "..."
+              : traceAnalytics?.totalTraces.toLocaleString() || "0"
+          }
           subtitle="Last 7 days"
           loading={analyticsLoading}
         />
         <AnalyticsCard
           title="Success Rate"
-          value={analyticsLoading ? "..." : `${traceAnalytics?.successRate.toFixed(1) || "0"}%`}
+          value={
+            analyticsLoading
+              ? "..."
+              : `${traceAnalytics?.successRate.toFixed(1) || "0"}%`
+          }
           subtitle="Tool call success"
           loading={analyticsLoading}
           variant={
@@ -175,13 +187,21 @@ export function Dashboard() {
         />
         <AnalyticsCard
           title="Avg Duration"
-          value={analyticsLoading ? "..." : formatDuration(traceAnalytics?.averageDurationMs || 0)}
+          value={
+            analyticsLoading
+              ? "..."
+              : formatDuration(traceAnalytics?.averageDurationMs || 0)
+          }
           subtitle="Per tool call"
           loading={analyticsLoading}
         />
         <AnalyticsCard
           title="Active MCPs"
-          value={analyticsLoading ? "..." : String(traceAnalytics?.activeMcpServers || 0)}
+          value={
+            analyticsLoading
+              ? "..."
+              : String(traceAnalytics?.activeMcpServers || 0)
+          }
           subtitle="Connected servers"
           loading={analyticsLoading}
         />
@@ -192,7 +212,9 @@ export function Dashboard() {
         <Card className="mt-6">
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <ActivityIcon />
-            <h3 className="mt-4 text-lg font-medium text-foreground">No analytics data yet</h3>
+            <h3 className="mt-4 text-lg font-medium text-foreground">
+              No analytics data yet
+            </h3>
             <p className="mt-1 text-sm text-muted-foreground">
               Start using your MCP tools to see analytics
             </p>
@@ -214,7 +236,11 @@ export function Dashboard() {
             ))}
           </div>
           <div className="mt-4 pt-4 border-t border-border">
-            <Button variant="ghost" size="sm" onClick={() => navigate("/traces")}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate("/traces")}
+            >
               View all traces
             </Button>
           </div>
@@ -324,9 +350,9 @@ export function Dashboard() {
         <div className="flex flex-col md:flex-row gap-6 items-start">
           <div className="flex-1">
             <p className="text-muted-foreground mb-4">
-              Control your browser with AI using natural language. Navigate pages,
-              click elements, fill forms, take screenshots, and automate workflows
-              - all with full privacy controls and audit logging.
+              Control your browser with AI using natural language. Navigate
+              pages, click elements, fill forms, take screenshots, and automate
+              workflows - all with full privacy controls and audit logging.
             </p>
             <div className="flex flex-wrap gap-2 mb-4">
               <span className="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">
@@ -339,7 +365,10 @@ export function Dashboard() {
                 Works with Claude
               </span>
             </div>
-            <Button variant="primary" onClick={() => navigate("/showcase/browser")}>
+            <Button
+              variant="primary"
+              onClick={() => navigate("/showcase/browser")}
+            >
               Learn More
             </Button>
           </div>
@@ -396,7 +425,13 @@ interface AnalyticsCardProps {
   variant?: "default" | "success" | "warning" | "error"
 }
 
-function AnalyticsCard({ title, value, subtitle, loading, variant = "default" }: AnalyticsCardProps) {
+function AnalyticsCard({
+  title,
+  value,
+  subtitle,
+  loading,
+  variant = "default",
+}: AnalyticsCardProps) {
   const valueColor = {
     default: "text-foreground",
     success: "text-success",
@@ -432,7 +467,9 @@ function ToolUsageBar({ toolName, count, percentage }: ToolUsageBarProps) {
   return (
     <div>
       <div className="flex items-center justify-between mb-1">
-        <code className="text-sm bg-muted px-1.5 py-0.5 rounded">{toolName}</code>
+        <code className="text-sm bg-muted px-1.5 py-0.5 rounded">
+          {toolName}
+        </code>
         <span className="text-sm text-muted-foreground">
           {count.toLocaleString()} ({percentage.toFixed(0)}%)
         </span>

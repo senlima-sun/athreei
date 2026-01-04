@@ -1,36 +1,38 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { PageHeader } from "@/components/dashboard/page-header";
-import { EndpointCard } from "@/components/endpoints/endpoint-card";
-import { Server, Plus, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react"
+import Link from "next/link"
+import { PageHeader } from "@/components/dashboard/page-header"
+import { EndpointCard } from "@/components/endpoints/endpoint-card"
+import { Server, Plus, Loader2 } from "lucide-react"
 
-import { Endpoint } from "@/components/endpoints/endpoint-card";
+import { Endpoint } from "@/components/endpoints/endpoint-card"
 
 export default function EndpointsPage() {
-  const [endpoints, setEndpoints] = useState<Endpoint[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [endpoints, setEndpoints] = useState<Endpoint[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchEndpoints = async () => {
       try {
-        const response = await fetch("/api/endpoints");
+        const response = await fetch("/api/endpoints")
         if (!response.ok) {
-          throw new Error("Failed to fetch endpoints");
+          throw new Error("Failed to fetch endpoints")
         }
-        const data = await response.json();
-        setEndpoints(data.endpoints || []);
+        const data = await response.json()
+        setEndpoints(data.endpoints || [])
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load endpoints");
+        setError(
+          err instanceof Error ? err.message : "Failed to load endpoints"
+        )
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
-    };
+    }
 
-    fetchEndpoints();
-  }, []);
+    fetchEndpoints()
+  }, [])
 
   if (isLoading) {
     return (
@@ -43,7 +45,7 @@ export default function EndpointsPage() {
           <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
         </div>
       </div>
-    );
+    )
   }
 
   if (error) {
@@ -64,7 +66,7 @@ export default function EndpointsPage() {
           </button>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -108,5 +110,5 @@ export default function EndpointsPage() {
         </div>
       )}
     </div>
-  );
+  )
 }

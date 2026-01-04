@@ -12,6 +12,7 @@ This directory contains Playwright end-to-end tests for the athreei Chrome exten
 ### Prerequisites
 
 1. Build the extension first:
+
    ```bash
    bun run build
    ```
@@ -81,22 +82,26 @@ The permission flow works like this:
 ## Troubleshooting
 
 ### Extension not loading
+
 - Make sure you built the extension first: `bun run build`
 - Check that `dist/` directory exists and contains manifest.json
 - Verify the extension path in the test matches your directory structure
 
 ### Permission dialog not appearing
+
 - Check browser console for errors
 - Verify content script is injected (check Chrome DevTools > Sources)
 - Ensure background service worker is running (check chrome://extensions/)
 
 ### Tests timing out
+
 - Increase timeout in playwright.config.ts
 - Check if extension is actually loaded by inspecting chrome://extensions in the test browser
 
 ## CI/CD
 
 These tests are designed to work in CI environments:
+
 - Set `CI=true` environment variable
 - Tests will retry twice on failure
 - GitHub Actions reporter will be used

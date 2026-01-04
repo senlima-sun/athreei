@@ -21,7 +21,12 @@ export function EmptyState({
   className,
 }: EmptyStateProps) {
   return (
-    <div className={cn("flex flex-col items-center justify-center py-12 px-4", className)}>
+    <div
+      className={cn(
+        "flex flex-col items-center justify-center py-12 px-4",
+        className
+      )}
+    >
       {icon && (
         <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-muted mb-4">
           {icon}
@@ -29,7 +34,9 @@ export function EmptyState({
       )}
       <h3 className="text-lg font-medium mb-1">{title}</h3>
       {description && (
-        <p className="text-muted-foreground text-center max-w-md mb-4">{description}</p>
+        <p className="text-muted-foreground text-center max-w-md mb-4">
+          {description}
+        </p>
       )}
       {action && (
         <Button variant="primary" onClick={action.onClick}>

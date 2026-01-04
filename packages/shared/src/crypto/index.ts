@@ -33,12 +33,7 @@ export type {
 export { DEFAULT_CRYPTO_CONFIG } from "./types.js"
 
 // Export key derivation functions
-export {
-  deriveKey,
-  reDeriveKey,
-  generateSalt,
-  verifyKeys,
-} from "./argon2.js"
+export { deriveKey, reDeriveKey, generateSalt, verifyKeys } from "./argon2.js"
 
 // Export encryption functions
 export {

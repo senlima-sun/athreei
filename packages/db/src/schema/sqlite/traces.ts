@@ -4,10 +4,10 @@
  * Stores request traces and logs for debugging and monitoring.
  */
 
-import { sqliteTable, text, integer, real } from "drizzle-orm/sqlite-core";
-import { relations } from "drizzle-orm";
-import { organization, user } from "./auth";
-import { mcpServer } from "./mcp-servers";
+import { sqliteTable, text, integer, real } from "drizzle-orm/sqlite-core"
+import { relations } from "drizzle-orm"
+import { organization, user } from "./auth"
+import { mcpServer } from "./mcp-servers"
 
 /**
  * Trace - a single request/response trace
@@ -19,7 +19,9 @@ export const trace = sqliteTable("trace", {
     .references(() => organization.id, { onDelete: "cascade" }),
   // Optional associations
   userId: text("userId").references(() => user.id, { onDelete: "set null" }),
-  mcpServerId: text("mcpServerId").references(() => mcpServer.id, { onDelete: "set null" }),
+  mcpServerId: text("mcpServerId").references(() => mcpServer.id, {
+    onDelete: "set null",
+  }),
   // Trace metadata
   traceId: text("traceId").notNull(), // For distributed tracing correlation
   parentSpanId: text("parentSpanId"), // Parent span for nested traces
@@ -39,7 +41,7 @@ export const trace = sqliteTable("trace", {
   events: text("events"), // JSON array of trace events
   // Timestamps
   createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
-});
+})
 
 /**
  * Log - structured log entries
@@ -61,7 +63,7 @@ export const log = sqliteTable("log", {
   // Timestamp
   timestamp: integer("timestamp", { mode: "timestamp" }).notNull(),
   createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
-});
+})
 
 /**
  * Metric - time-series metrics for monitoring
@@ -81,7 +83,7 @@ export const metric = sqliteTable("metric", {
   // Timestamp
   timestamp: integer("timestamp", { mode: "timestamp" }).notNull(),
   createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
-});
+})
 
 // =============================================================================
 // Relations
@@ -100,7 +102,7 @@ export const traceRelations = relations(trace, ({ one }) => ({
     fields: [trace.mcpServerId],
     references: [mcpServer.id],
   }),
-}));
+}))
 
 export const logRelations = relations(log, ({ one }) => ({
   organization: one(organization, {
@@ -111,11 +113,11 @@ export const logRelations = relations(log, ({ one }) => ({
     fields: [log.userId],
     references: [user.id],
   }),
-}));
+}))
 
 export const metricRelations = relations(metric, ({ one }) => ({
   organization: one(organization, {
     fields: [metric.organizationId],
     references: [organization.id],
   }),
-}));
+}))

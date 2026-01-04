@@ -1,15 +1,15 @@
-import { drizzle as drizzlePostgres } from "drizzle-orm/postgres-js";
-import { drizzle as drizzleSqlite } from "drizzle-orm/better-sqlite3";
-import postgres from "postgres";
-import Database from "better-sqlite3";
-import * as pgSchema from "./schema/pg";
-import * as sqliteSchema from "./schema/sqlite";
+import { drizzle as drizzlePostgres } from "drizzle-orm/postgres-js"
+import { drizzle as drizzleSqlite } from "drizzle-orm/better-sqlite3"
+import postgres from "postgres"
+import Database from "better-sqlite3"
+import * as pgSchema from "./schema/pg"
+import * as sqliteSchema from "./schema/sqlite"
 
 export type DatabaseClient =
   | ReturnType<typeof drizzlePostgres<typeof pgSchema>>
-  | ReturnType<typeof drizzleSqlite<typeof sqliteSchema>>;
+  | ReturnType<typeof drizzleSqlite<typeof sqliteSchema>>
 
-export type DatabaseType = "postgresql" | "sqlite";
+export type DatabaseType = "postgresql" | "sqlite"
 
 /**
  * Detects the database type from the connection URL.
@@ -19,16 +19,16 @@ export type DatabaseType = "postgresql" | "sqlite";
  */
 export function detectDatabaseType(url: string): DatabaseType {
   if (url.startsWith("postgres://") || url.startsWith("postgresql://")) {
-    return "postgresql";
+    return "postgresql"
   }
-  return "sqlite";
+  return "sqlite"
 }
 
 /**
  * Get the schema for the current database type
  */
 export function getSchema(dbType: DatabaseType) {
-  return dbType === "postgresql" ? pgSchema : sqliteSchema;
+  return dbType === "postgresql" ? pgSchema : sqliteSchema
 }
 
 /**
@@ -39,32 +39,32 @@ export function getSchema(dbType: DatabaseType) {
  * - SQLite: file:./path/to/db.sqlite or ./path/to/db.sqlite
  */
 export function createClient(databaseUrl?: string): DatabaseClient {
-  const url = databaseUrl ?? process.env.DATABASE_URL;
+  const url = databaseUrl ?? process.env.DATABASE_URL
 
   if (!url) {
     throw new Error(
       "DATABASE_URL environment variable is required or must be passed as argument"
-    );
+    )
   }
 
-  const dbType = detectDatabaseType(url);
+  const dbType = detectDatabaseType(url)
 
   if (dbType === "postgresql") {
-    const client = postgres(url);
-    return drizzlePostgres(client, { schema: pgSchema });
+    const client = postgres(url)
+    return drizzlePostgres(client, { schema: pgSchema })
   }
 
   // SQLite: strip file: prefix if present
-  const sqlitePath = url.replace(/^file:/, "");
-  const sqlite = new Database(sqlitePath);
-  return drizzleSqlite(sqlite, { schema: sqliteSchema });
+  const sqlitePath = url.replace(/^file:/, "")
+  const sqlite = new Database(sqlitePath)
+  return drizzleSqlite(sqlite, { schema: sqliteSchema })
 }
 
 /**
  * Global database client instance.
  * Lazily initialized on first access.
  */
-let _db: DatabaseClient | null = null;
+let _db: DatabaseClient | null = null
 
 /**
  * Gets the shared database client instance.
@@ -72,9 +72,9 @@ let _db: DatabaseClient | null = null;
  */
 export function getDb(): DatabaseClient {
   if (!_db) {
-    _db = createClient();
+    _db = createClient()
   }
-  return _db;
+  return _db
 }
 
 /**
@@ -82,5 +82,5 @@ export function getDb(): DatabaseClient {
  * Useful for testing or when switching databases.
  */
 export function resetDb(): void {
-  _db = null;
+  _db = null
 }

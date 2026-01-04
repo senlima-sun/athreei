@@ -62,7 +62,10 @@ export function dispatchAiiiEvent<T extends AiiiEventType>(
  */
 export function listenForAiiiEvent<T extends AiiiEventType>(
   type: T,
-  callback: (detail: AiiiEventMap[T], event: CustomEvent<AiiiEventMap[T]>) => void
+  callback: (
+    detail: AiiiEventMap[T],
+    event: CustomEvent<AiiiEventMap[T]>
+  ) => void
 ): () => void {
   const listener = (event: Event) => {
     const customEvent = event as CustomEvent<AiiiEventMap[T]>

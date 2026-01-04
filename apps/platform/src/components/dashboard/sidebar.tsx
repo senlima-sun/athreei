@@ -1,7 +1,7 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import {
   Home,
   Server,
@@ -13,26 +13,24 @@ import {
   X,
   Globe,
   HardDrive,
-} from "lucide-react";
-import { useState } from "react";
-import { OrgSwitcher } from "./org-switcher";
+} from "lucide-react"
+import { useState } from "react"
+import { OrgSwitcher } from "./org-switcher"
 
 interface NavItem {
-  label: string;
-  href: string;
-  icon: React.ComponentType<{ className?: string }>;
+  label: string
+  href: string
+  icon: React.ComponentType<{ className?: string }>
 }
 
 interface NavSection {
-  title?: string;
-  items: NavItem[];
+  title?: string
+  items: NavItem[]
 }
 
 const navSections: NavSection[] = [
   {
-    items: [
-      { label: "Home", href: "/dashboard", icon: Home },
-    ],
+    items: [{ label: "Home", href: "/dashboard", icon: Home }],
   },
   {
     title: "MCP",
@@ -50,22 +48,22 @@ const navSections: NavSection[] = [
       { label: "Settings", href: "/dashboard/settings", icon: Settings },
     ],
   },
-];
+]
 
 export function Sidebar() {
-  const pathname = usePathname();
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname()
+  const [mobileOpen, setMobileOpen] = useState(false)
 
   const isActive = (href: string) => {
     if (href === "/dashboard") {
-      return pathname === "/dashboard";
+      return pathname === "/dashboard"
     }
-    return pathname.startsWith(href);
-  };
+    return pathname.startsWith(href)
+  }
 
   const NavLink = ({ item }: { item: NavItem }) => {
-    const Icon = item.icon;
-    const active = isActive(item.href);
+    const Icon = item.icon
+    const active = isActive(item.href)
 
     return (
       <Link
@@ -80,8 +78,8 @@ export function Sidebar() {
         <Icon className="h-5 w-5" />
         {item.label}
       </Link>
-    );
-  };
+    )
+  }
 
   return (
     <>
@@ -152,5 +150,5 @@ export function Sidebar() {
         </div>
       </aside>
     </>
-  );
+  )
 }

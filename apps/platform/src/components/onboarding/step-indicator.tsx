@@ -1,29 +1,29 @@
-"use client";
+"use client"
 
-import { Check } from "lucide-react";
+import { Check } from "lucide-react"
 
 interface Step {
-  id: string;
-  label: string;
+  id: string
+  label: string
 }
 
 interface StepIndicatorProps {
-  steps: Step[];
-  currentStep: string;
+  steps: Step[]
+  currentStep: string
 }
 
 /**
  * StepIndicator - Visual progress indicator for multi-step wizard.
  */
 export function StepIndicator({ steps, currentStep }: StepIndicatorProps) {
-  const currentIndex = steps.findIndex((s) => s.id === currentStep);
+  const currentIndex = steps.findIndex((s) => s.id === currentStep)
 
   return (
     <div className="mb-8">
       <div className="flex items-center justify-center">
         {steps.map((step, index) => {
-          const isCompleted = index < currentIndex;
-          const isCurrent = step.id === currentStep;
+          const isCompleted = index < currentIndex
+          const isCurrent = step.id === currentStep
 
           return (
             <div key={step.id} className="flex items-center">
@@ -62,9 +62,9 @@ export function StepIndicator({ steps, currentStep }: StepIndicatorProps) {
                 />
               )}
             </div>
-          );
+          )
         })}
       </div>
     </div>
-  );
+  )
 }

@@ -171,7 +171,9 @@ export function decryptTrace(
 
   // Validate algorithm
   if (encryptedTrace.algorithm !== "xchacha20poly1305") {
-    throw new Error(`Unsupported encryption algorithm: ${encryptedTrace.algorithm}`)
+    throw new Error(
+      `Unsupported encryption algorithm: ${encryptedTrace.algorithm}`
+    )
   }
 
   // Decode from base64
@@ -180,7 +182,9 @@ export function decryptTrace(
 
   // Validate nonce length
   if (nonce.length !== XCHACHA_NONCE_LENGTH) {
-    throw new Error(`Invalid nonce length: expected ${XCHACHA_NONCE_LENGTH}, got ${nonce.length}`)
+    throw new Error(
+      `Invalid nonce length: expected ${XCHACHA_NONCE_LENGTH}, got ${nonce.length}`
+    )
   }
 
   // Create cipher and decrypt
@@ -252,7 +256,9 @@ export function decryptTraceFromBytes(
   }
 
   if (encryptedBytes.length <= XCHACHA_NONCE_LENGTH) {
-    throw new Error("Encrypted data too short: must contain nonce and ciphertext")
+    throw new Error(
+      "Encrypted data too short: must contain nonce and ciphertext"
+    )
   }
 
   // Extract nonce and ciphertext
@@ -301,7 +307,12 @@ export async function deriveTraceKey(
   config?: CryptoConfig,
   keyVersion?: number
 ): Promise<DerivedKey> {
-  return deriveKey(password, salt, config || DEFAULT_CRYPTO_CONFIG, keyVersion || 1)
+  return deriveKey(
+    password,
+    salt,
+    config || DEFAULT_CRYPTO_CONFIG,
+    keyVersion || 1
+  )
 }
 
 /**

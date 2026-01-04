@@ -1,16 +1,16 @@
-"use client";
+"use client"
 
-import * as React from "react";
-import { ChevronDown } from "lucide-react";
-import { cn } from "@/lib/utils";
+import * as React from "react"
+import { ChevronDown } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface AccordionItemProps {
-  question: string;
-  answer: string;
+  question: string
+  answer: string
 }
 
 export function AccordionItem({ question, answer }: AccordionItemProps) {
-  const [isOpen, setIsOpen] = React.useState(false);
+  const [isOpen, setIsOpen] = React.useState(false)
 
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden">
@@ -37,9 +37,9 @@ export function AccordionItem({ question, answer }: AccordionItemProps) {
         </p>
       </div>
     </div>
-  );
+  )
 }
 
 export function Accordion({ children }: { children: React.ReactNode }) {
-  return <div className="space-y-3">{children}</div>;
+  return <div className="space-y-3">{children}</div>
 }

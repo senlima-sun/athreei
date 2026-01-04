@@ -16,15 +16,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Core Value Proposition
 
-| Audience | Value |
-|----------|-------|
-| **End Users** | One MCP config for all AI apps. See what AI actually did. Stop guessing, start iterating with data. |
-| **Developers** | Build MCP servers once, work with any AI app. Not locked to OpenAI/Anthropic ecosystems. |
-| **Businesses** | Observability, data retention, compliance. Better DX for MCP development and inspection. |
+| Audience       | Value                                                                                               |
+| -------------- | --------------------------------------------------------------------------------------------------- |
+| **End Users**  | One MCP config for all AI apps. See what AI actually did. Stop guessing, start iterating with data. |
+| **Developers** | Build MCP servers once, work with any AI app. Not locked to OpenAI/Anthropic ecosystems.            |
+| **Businesses** | Observability, data retention, compliance. Better DX for MCP development and inspection.            |
 
 ### The Problem We Solve
 
 Today, context ownership is controlled by AI app providers. If you use Claude Desktop, Anthropic controls your MCP connections. If you use ChatGPT, OpenAI controls it. Users can't:
+
 - See what tools AI actually called or what data was returned
 - Iterate on tool prompts with real data (forced to blind prompt engineering)
 - Use the same MCP setup across different AI apps
@@ -61,16 +62,19 @@ Today, context ownership is controlled by AI app providers. If you use Claude De
 ### Key User Journeys
 
 **1. MCP Aggregation (connect once, access many)**
+
 ```
 User → Install athreei → Add MCP servers (JSON or one-click) → Connect AI app to athreei → Done
 ```
 
 **2. Observability (see what AI did)**
+
 ```
 User → Uses AI app → Opens athreei dashboard → Views trace timeline → Sees tool calls + inputs + outputs
 ```
 
 **3. Iteration Loop (improve with data, not guesswork)**
+
 ```
 User → Spots issue in trace → Edits tool description/prompt → Retries → Validates improvement
 ```

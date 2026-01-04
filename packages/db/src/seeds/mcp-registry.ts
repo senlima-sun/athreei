@@ -5,13 +5,13 @@
  * that can be used as templates in the registry.
  */
 
-import type { InferInsertModel } from "drizzle-orm";
-import type { mcpServer as pgMcpServer } from "../schema/pg/mcp-servers";
+import type { InferInsertModel } from "drizzle-orm"
+import type { mcpServer as pgMcpServer } from "../schema/pg/mcp-servers"
 
 export type McpServerInsert = Omit<
   InferInsertModel<typeof pgMcpServer>,
   "id" | "organizationId" | "createdAt" | "updatedAt"
->;
+>
 
 /**
  * Open source MCP server definitions
@@ -141,7 +141,7 @@ export const openSourceMcpServers: McpServerInsert[] = [
     version: "0.6.2",
     capabilities: JSON.stringify(["fetch"]),
   },
-];
+]
 
 /**
  * Get seed data with generated IDs and timestamps
@@ -154,7 +154,7 @@ export function getMcpServerSeedData(
   organizationId: string,
   idGenerator: () => string = () => crypto.randomUUID()
 ): Array<InferInsertModel<typeof pgMcpServer>> {
-  const now = new Date();
+  const now = new Date()
 
   return openSourceMcpServers.map((server) => ({
     id: idGenerator(),
@@ -162,7 +162,7 @@ export function getMcpServerSeedData(
     ...server,
     createdAt: now,
     updatedAt: now,
-  }));
+  }))
 }
 
 /**
@@ -170,55 +170,66 @@ export function getMcpServerSeedData(
  *
  * Ensures all required fields are present and valid
  */
-export function validateSeedData(
-  data: McpServerInsert[]
-): { valid: boolean; errors: string[] } {
-  const errors: string[] = [];
-  const requiredFields = ["name", "transport", "status"] as const;
+export function validateSeedData(data: McpServerInsert[]): {
+  valid: boolean
+  errors: string[]
+} {
+  const errors: string[] = []
+  const requiredFields = ["name", "transport", "status"] as const
 
   for (const [index, server] of data.entries()) {
     for (const field of requiredFields) {
       if (!server[field]) {
-        errors.push(`Server at index ${index} is missing required field: ${field}`);
+        errors.push(
+          `Server at index ${index} is missing required field: ${field}`
+        )
       }
     }
 
     // Validate transport type
-    if (server.transport && !["STDIO", "SSE", "HTTP"].includes(server.transport)) {
+    if (
+      server.transport &&
+      !["STDIO", "SSE", "HTTP"].includes(server.transport)
+    ) {
       errors.push(
         `Server "${server.name}" has invalid transport: ${server.transport}. Expected STDIO, SSE, or HTTP.`
-      );
+      )
     }
 
     // Validate status
-    if (server.status && !["active", "inactive", "error"].includes(server.status)) {
+    if (
+      server.status &&
+      !["active", "inactive", "error"].includes(server.status)
+    ) {
       errors.push(
         `Server "${server.name}" has invalid status: ${server.status}. Expected active, inactive, or error.`
-      );
+      )
     }
 
     // Validate args is valid JSON if present
     if (server.args) {
       try {
-        JSON.parse(server.args);
+        JSON.parse(server.args)
       } catch {
-        errors.push(`Server "${server.name}" has invalid args JSON: ${server.args}`);
+        errors.push(
+          `Server "${server.name}" has invalid args JSON: ${server.args}`
+        )
       }
     }
 
     // Validate capabilities is valid JSON if present
     if (server.capabilities) {
       try {
-        const caps = JSON.parse(server.capabilities);
+        const caps = JSON.parse(server.capabilities)
         if (!Array.isArray(caps)) {
           errors.push(
             `Server "${server.name}" capabilities must be a JSON array`
-          );
+          )
         }
       } catch {
         errors.push(
           `Server "${server.name}" has invalid capabilities JSON: ${server.capabilities}`
-        );
+        )
       }
     }
   }
@@ -226,5 +237,5 @@ export function validateSeedData(
   return {
     valid: errors.length === 0,
     errors,
-  };
+  }
 }

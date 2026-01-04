@@ -22,7 +22,8 @@ const toastVariants = cva(
 )
 
 export interface ToastProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends
+    React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof toastVariants> {
   id: string
   title?: string
@@ -41,17 +42,10 @@ export function Toast({
   ...props
 }: ToastProps) {
   return (
-    <div
-      className={cn(toastVariants({ variant }), className)}
-      {...props}
-    >
+    <div className={cn(toastVariants({ variant }), className)} {...props}>
       <div className="flex-1 space-y-1">
-        {title && (
-          <div className="text-sm font-semibold">{title}</div>
-        )}
-        {description && (
-          <div className="text-sm opacity-90">{description}</div>
-        )}
+        {title && <div className="text-sm font-semibold">{title}</div>}
+        {description && <div className="text-sm opacity-90">{description}</div>}
       </div>
       {action && <div className="shrink-0">{action}</div>}
       {onClose && (

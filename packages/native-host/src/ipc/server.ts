@@ -6,7 +6,11 @@
  */
 
 import { createServer, Server, Socket } from "net"
-import { getSocketPath, cleanupStaleSocket, ensureSocketDir } from "./protocol.js"
+import {
+  getSocketPath,
+  cleanupStaleSocket,
+  ensureSocketDir,
+} from "./protocol.js"
 
 /**
  * Connected IPC client state
@@ -106,14 +110,19 @@ export class IPCServer {
       // Parse and handle message
       try {
         const message = JSON.parse(jsonStr)
-        console.error(`[ipc-server] Received from ${client.id}: ${message.type} (id: ${message.id})`)
+        console.error(
+          `[ipc-server] Received from ${client.id}: ${message.type} (id: ${message.id})`
+        )
 
         if (this.onRequest) {
           this.onRequest(message, client.id)
         }
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error)
-        console.error(`[ipc-server] Failed to parse message from ${client.id}: ${errorMessage}`)
+        const errorMessage =
+          error instanceof Error ? error.message : String(error)
+        console.error(
+          `[ipc-server] Failed to parse message from ${client.id}: ${errorMessage}`
+        )
       }
     }
   }
@@ -124,7 +133,9 @@ export class IPCServer {
   sendResponse(clientId: string, response: any): void {
     const client = this.clients.get(clientId)
     if (!client) {
-      console.error(`[ipc-server] Cannot send response, client not found: ${clientId}`)
+      console.error(
+        `[ipc-server] Cannot send response, client not found: ${clientId}`
+      )
       return
     }
 
@@ -134,10 +145,15 @@ export class IPCServer {
       buf.writeUInt32LE(Buffer.byteLength(json), 0)
       buf.write(json, 4)
       client.socket.write(buf)
-      console.error(`[ipc-server] Sent response to ${clientId}: ${response.type} (id: ${response.id})`)
+      console.error(
+        `[ipc-server] Sent response to ${clientId}: ${response.type} (id: ${response.id})`
+      )
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error)
-      console.error(`[ipc-server] Failed to send response to ${clientId}: ${errorMessage}`)
+      const errorMessage =
+        error instanceof Error ? error.message : String(error)
+      console.error(
+        `[ipc-server] Failed to send response to ${clientId}: ${errorMessage}`
+      )
     }
   }
 
@@ -152,8 +168,11 @@ export class IPCServer {
       try {
         client.socket.destroy()
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error)
-        console.error(`[ipc-server] Error closing client ${client.id}: ${errorMessage}`)
+        const errorMessage =
+          error instanceof Error ? error.message : String(error)
+        console.error(
+          `[ipc-server] Error closing client ${client.id}: ${errorMessage}`
+        )
       }
     }
     this.clients.clear()

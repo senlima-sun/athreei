@@ -1,10 +1,10 @@
-import { createAuthClient } from "better-auth/react";
-import { organizationClient } from "better-auth/client/plugins";
+import { createAuthClient } from "better-auth/react"
+import { organizationClient } from "better-auth/client/plugins"
 
 /**
  * Auth client type
  */
-export type AuthClient = ReturnType<typeof createAuthClient>;
+export type AuthClient = ReturnType<typeof createAuthClient>
 
 /**
  * Create a client-side auth instance for React applications
@@ -37,14 +37,12 @@ export type AuthClient = ReturnType<typeof createAuthClient>;
 export function createClient(baseURL: string): AuthClient {
   return createAuthClient({
     baseURL,
-    plugins: [
-      organizationClient(),
-    ],
-  });
+    plugins: [organizationClient()],
+  })
 }
 
 /**
  * Re-export createAuthClient for advanced use cases
  */
-export { createAuthClient } from "better-auth/react";
-export { organizationClient } from "better-auth/client/plugins";
+export { createAuthClient } from "better-auth/react"
+export { organizationClient } from "better-auth/client/plugins"

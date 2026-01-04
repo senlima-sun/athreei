@@ -10,6 +10,7 @@ athreei provides complete visibility into every interaction between AI apps and 
 ## Why Audit Logging?
 
 When AI apps interact with MCP servers, you need to know:
+
 - **What tools were called** and with what parameters
 - **What responses were returned** to the AI
 - **When errors occur** and why
@@ -21,16 +22,16 @@ Without visibility, AI becomes a black box. athreei opens that box.
 
 Every tool call through athreei is recorded:
 
-| Field | Description |
-|-------|-------------|
-| Timestamp | When the call occurred |
-| Tool Name | Which tool was invoked (e.g., `filesystem__read_file`) |
-| Server Name | Which MCP server handled the request |
-| Status | Success, denied, or error |
-| Duration | How long the call took (ms) |
-| Request | Full input parameters (encrypted) |
-| Response | Full output data (encrypted) |
-| Endpoint | Which gateway endpoint was used |
+| Field       | Description                                            |
+| ----------- | ------------------------------------------------------ |
+| Timestamp   | When the call occurred                                 |
+| Tool Name   | Which tool was invoked (e.g., `filesystem__read_file`) |
+| Server Name | Which MCP server handled the request                   |
+| Status      | Success, denied, or error                              |
+| Duration    | How long the call took (ms)                            |
+| Request     | Full input parameters (encrypted)                      |
+| Response    | Full output data (encrypted)                           |
+| Endpoint    | Which gateway endpoint was used                        |
 
 ## Encrypted Storage
 
@@ -65,6 +66,7 @@ athreei-dashboard
 ```
 
 Features:
+
 - Filter by tool, server, status, date range
 - View full request/response details
 - Export logs for compliance
@@ -126,6 +128,7 @@ Filter audit logs by:
 ### Compliance
 
 Generate audit reports for regulatory requirements:
+
 - Track all AI actions for review
 - Demonstrate data handling practices
 - Export logs for external auditors
@@ -133,6 +136,7 @@ Generate audit reports for regulatory requirements:
 ### Debugging
 
 When something goes wrong:
+
 - See exactly what the AI sent
 - See exactly what it received
 - Identify failed requests
@@ -141,6 +145,7 @@ When something goes wrong:
 ### Analysis
 
 Understand AI usage patterns:
+
 - Most frequently used tools
 - Error rates by server
 - Performance metrics

@@ -1,45 +1,46 @@
-"use client";
+"use client"
 
-import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { User, LogOut, Settings, ChevronDown } from "lucide-react";
-import { useSession, signOut } from "@/lib/auth-client";
+import { useState, useRef, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { User, LogOut, Settings, ChevronDown } from "lucide-react"
+import { useSession, signOut } from "@/lib/auth-client"
 
 export function UserMenu() {
-  const router = useRouter();
-  const [open, setOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const router = useRouter()
+  const [open, setOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
-  const { data: session, isPending } = useSession();
+  const { data: session, isPending } = useSession()
 
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setOpen(false);
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setOpen(false)
       }
     }
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
 
   const handleSignOut = async () => {
-    await signOut();
-    router.push("/login");
-  };
+    await signOut()
+    router.push("/login")
+  }
 
   if (isPending) {
-    return (
-      <div className="h-10 w-10 animate-pulse rounded-full bg-gray-100" />
-    );
+    return <div className="h-10 w-10 animate-pulse rounded-full bg-gray-100" />
   }
 
   if (!session?.user) {
-    return null;
+    return null
   }
 
-  const user = session.user;
+  const user = session.user
   const initials = user.name
     ? user.name
         .split(" ")
@@ -47,7 +48,7 @@ export function UserMenu() {
         .join("")
         .toUpperCase()
         .slice(0, 2)
-    : user.email?.[0]?.toUpperCase() || "U";
+    : user.email?.[0]?.toUpperCase() || "U"
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -85,8 +86,8 @@ export function UserMenu() {
             <button
               type="button"
               onClick={() => {
-                setOpen(false);
-                router.push("/dashboard/settings");
+                setOpen(false)
+                router.push("/dashboard/settings")
               }}
               className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
             >
@@ -96,8 +97,8 @@ export function UserMenu() {
             <button
               type="button"
               onClick={() => {
-                setOpen(false);
-                router.push("/dashboard/settings/profile");
+                setOpen(false)
+                router.push("/dashboard/settings/profile")
               }}
               className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
             >
@@ -120,5 +121,5 @@ export function UserMenu() {
         </div>
       )}
     </div>
-  );
+  )
 }

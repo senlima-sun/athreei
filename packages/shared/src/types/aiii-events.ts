@@ -35,9 +35,7 @@ export type AiiiEventName = (typeof AIII_EVENT_NAMES)[number]
  */
 export const AiiiReadyEventSchema = z.object({
   version: z.string().describe("Extension version"),
-  capabilities: z
-    .array(z.string())
-    .describe("Available built-in capabilities"),
+  capabilities: z.array(z.string()).describe("Available built-in capabilities"),
   extensionId: z.string().optional().describe("Extension ID"),
 })
 
@@ -53,15 +51,14 @@ export type AiiiReadyEvent = z.infer<typeof AiiiReadyEventSchema>
  * this and respond with aiii:response.
  */
 export const AiiiRequestEventSchema = z.object({
-  requestId: z
-    .string()
-    .describe("Unique ID for correlating request/response"),
+  requestId: z.string().describe("Unique ID for correlating request/response"),
   tool: z.string().describe("Name of the tool being called"),
-  args: z
-    .record(z.unknown())
-    .describe("Arguments passed to the tool"),
+  args: z.record(z.unknown()).describe("Arguments passed to the tool"),
   origin: z.string().describe("Origin of the AI request"),
-  aiApp: z.string().optional().describe("Name of the AI app making the request"),
+  aiApp: z
+    .string()
+    .optional()
+    .describe("Name of the AI app making the request"),
   timestamp: z.number().describe("Unix timestamp of the request"),
 })
 
@@ -103,10 +100,7 @@ export const AiiiToolParameterSchema = z.object({
     .default(false)
     .describe("Whether parameter is required"),
   default: z.unknown().optional().describe("Default value if not provided"),
-  description: z
-    .string()
-    .optional()
-    .describe("Human-readable description"),
+  description: z.string().optional().describe("Human-readable description"),
   enum: z
     .array(z.union([z.string(), z.number()]))
     .optional()
@@ -121,7 +115,9 @@ export const AiiiToolParameterSchema = z.object({
 
 export const AiiiRegisterEventSchema = z.object({
   tool: z.string().describe("Unique tool name (will be prefixed with origin)"),
-  description: z.string().describe("Human-readable description of what the tool does"),
+  description: z
+    .string()
+    .describe("Human-readable description of what the tool does"),
   parameters: z
     .record(AiiiToolParameterSchema)
     .describe("Tool parameters schema"),
@@ -163,12 +159,12 @@ export type AiiiToolParameter = z.infer<typeof AiiiToolParameterSchema>
 export const AiiiPermissionEventSchema = z.object({
   scope: z
     .enum([
-      "read",      // Read page content
-      "interact",  // Click, type, scroll
-      "navigate",  // Navigate to URLs
+      "read", // Read page content
+      "interact", // Click, type, scroll
+      "navigate", // Navigate to URLs
       "screenshot", // Take screenshots
-      "execute",   // Execute scripts
-      "custom",    // Custom tools only
+      "execute", // Execute scripts
+      "custom", // Custom tools only
     ])
     .describe("Permission scope being requested"),
   tools: z
@@ -224,7 +220,9 @@ export const AiiiActionBeforeEventSchema = z.object({
   timestamp: z.number(),
   origin: z.string(),
   aiApp: z.string().optional(),
-  cancellable: z.boolean().describe("Whether the website can cancel this action"),
+  cancellable: z
+    .boolean()
+    .describe("Whether the website can cancel this action"),
 })
 
 export type AiiiActionBeforeEvent = z.infer<typeof AiiiActionBeforeEventSchema>

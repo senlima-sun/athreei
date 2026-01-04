@@ -2,8 +2,8 @@
  * Better Auth database schema (PostgreSQL)
  */
 
-import { pgTable, text, boolean, timestamp } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { pgTable, text, boolean, timestamp } from "drizzle-orm/pg-core"
+import { relations } from "drizzle-orm"
 
 // =============================================================================
 // Core Authentication Tables
@@ -17,7 +17,7 @@ export const user = pgTable("user", {
   image: text("image"),
   createdAt: timestamp("createdAt").notNull(),
   updatedAt: timestamp("updatedAt").notNull(),
-});
+})
 
 export const session = pgTable("session", {
   id: text("id").primaryKey(),
@@ -34,7 +34,7 @@ export const session = pgTable("session", {
   ),
   createdAt: timestamp("createdAt").notNull(),
   updatedAt: timestamp("updatedAt").notNull(),
-});
+})
 
 export const account = pgTable("account", {
   id: text("id").primaryKey(),
@@ -52,7 +52,7 @@ export const account = pgTable("account", {
   password: text("password"),
   createdAt: timestamp("createdAt").notNull(),
   updatedAt: timestamp("updatedAt").notNull(),
-});
+})
 
 export const verification = pgTable("verification", {
   id: text("id").primaryKey(),
@@ -61,7 +61,7 @@ export const verification = pgTable("verification", {
   expiresAt: timestamp("expiresAt").notNull(),
   createdAt: timestamp("createdAt").notNull(),
   updatedAt: timestamp("updatedAt").notNull(),
-});
+})
 
 // =============================================================================
 // Organization Plugin Tables
@@ -74,7 +74,7 @@ export const organization = pgTable("organization", {
   logo: text("logo"),
   metadata: text("metadata"),
   createdAt: timestamp("createdAt").notNull(),
-});
+})
 
 export const member = pgTable("member", {
   id: text("id").primaryKey(),
@@ -86,7 +86,7 @@ export const member = pgTable("member", {
     .references(() => organization.id, { onDelete: "cascade" }),
   role: text("role").notNull(),
   createdAt: timestamp("createdAt").notNull(),
-});
+})
 
 export const invitation = pgTable("invitation", {
   id: text("id").primaryKey(),
@@ -101,7 +101,7 @@ export const invitation = pgTable("invitation", {
   status: text("status").notNull(),
   expiresAt: timestamp("expiresAt").notNull(),
   createdAt: timestamp("createdAt").notNull(),
-});
+})
 
 // =============================================================================
 // Relations
@@ -112,7 +112,7 @@ export const userRelations = relations(user, ({ many }) => ({
   accounts: many(account),
   memberships: many(member),
   invitations: many(invitation),
-}));
+}))
 
 export const sessionRelations = relations(session, ({ one }) => ({
   user: one(user, {
@@ -123,19 +123,19 @@ export const sessionRelations = relations(session, ({ one }) => ({
     fields: [session.activeOrganizationId],
     references: [organization.id],
   }),
-}));
+}))
 
 export const accountRelations = relations(account, ({ one }) => ({
   user: one(user, {
     fields: [account.userId],
     references: [user.id],
   }),
-}));
+}))
 
 export const organizationRelations = relations(organization, ({ many }) => ({
   members: many(member),
   invitations: many(invitation),
-}));
+}))
 
 export const memberRelations = relations(member, ({ one }) => ({
   user: one(user, {
@@ -146,7 +146,7 @@ export const memberRelations = relations(member, ({ one }) => ({
     fields: [member.organizationId],
     references: [organization.id],
   }),
-}));
+}))
 
 export const invitationRelations = relations(invitation, ({ one }) => ({
   inviter: one(user, {
@@ -157,4 +157,4 @@ export const invitationRelations = relations(invitation, ({ one }) => ({
     fields: [invitation.organizationId],
     references: [organization.id],
   }),
-}));
+}))

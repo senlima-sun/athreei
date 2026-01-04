@@ -6,26 +6,30 @@
  * and exposes them through a single connection point.
  */
 
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { Server } from "@modelcontextprotocol/sdk/server/index.js"
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
-} from "@modelcontextprotocol/sdk/types.js";
-import type { AggregatedTool, GatewayEventHandler, ConnectedMcp } from "./types.js";
-import { aggregateTools } from "@athreei/gateway-core";
-import { routeToolCall } from "./router.js";
-import { log } from "./logger.js";
+} from "@modelcontextprotocol/sdk/types.js"
+import type {
+  AggregatedTool,
+  GatewayEventHandler,
+  ConnectedMcp,
+} from "./types.js"
+import { aggregateTools } from "@athreei/gateway-core"
+import { routeToolCall } from "./router.js"
+import { log } from "./logger.js"
 
 /**
  * Gateway state managed by the server
  */
 export interface GatewayState {
   /** All connected MCP servers */
-  connectedMcps: Map<string, import("./types.js").ConnectedMcp>;
+  connectedMcps: Map<string, import("./types.js").ConnectedMcp>
   /** Aggregated tools from all servers */
-  aggregatedTools: AggregatedTool[];
+  aggregatedTools: AggregatedTool[]
   /** Event handlers */
-  eventHandlers: GatewayEventHandler[];
+  eventHandlers: GatewayEventHandler[]
 }
 
 /**
@@ -36,14 +40,14 @@ export function createGatewayState(): GatewayState {
     connectedMcps: new Map(),
     aggregatedTools: [],
     eventHandlers: [],
-  };
+  }
 }
 
 /**
  * Create and configure the MCP Gateway Server
  */
 export function createServer(state: GatewayState): Server {
-  log.info("Creating athreei Gateway server...");
+  log.info("Creating athreei Gateway server...")
 
   const server = new Server(
     {
@@ -58,32 +62,32 @@ export function createServer(state: GatewayState): Server {
         // resources: {},
       },
     }
-  );
+  )
 
   // Register the tools/list handler
   server.setRequestHandler(ListToolsRequestSchema, async () => {
-    log.debug(`Listing ${state.aggregatedTools.length} aggregated tools`);
+    log.debug(`Listing ${state.aggregatedTools.length} aggregated tools`)
     return {
       tools: state.aggregatedTools.map((tool) => ({
         name: tool.name,
         description: tool.description,
         inputSchema: tool.inputSchema,
       })),
-    };
-  });
+    }
+  })
 
   // Register the tools/call handler
   server.setRequestHandler(CallToolRequestSchema, async (request) => {
-    const { name, arguments: args } = request.params;
+    const { name, arguments: args } = request.params
 
-    log.info(`Tool call received: ${name}`);
+    log.info(`Tool call received: ${name}`)
 
     try {
-      const result = await routeToolCall(state, name, args);
-      return result;
+      const result = await routeToolCall(state, name, args)
+      return result
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      log.error(`Tool call failed: ${name}`, error);
+      const message = error instanceof Error ? error.message : String(error)
+      log.error(`Tool call failed: ${name}`, error)
 
       // Emit error event
       for (const handler of state.eventHandlers) {
@@ -91,7 +95,7 @@ export function createServer(state: GatewayState): Server {
           type: "error",
           message: `Tool call failed: ${message}`,
           details: { toolName: name, error },
-        });
+        })
       }
 
       return {
@@ -102,29 +106,31 @@ export function createServer(state: GatewayState): Server {
           },
         ],
         isError: true,
-      };
+      }
     }
-  });
+  })
 
-  log.info("Gateway server created successfully");
-  return server;
+  log.info("Gateway server created successfully")
+  return server
 }
 
 /**
  * Refresh the aggregated tools from all connected MCPs
  */
 export function refreshAggregatedTools(state: GatewayState): void {
-  const mcps = Array.from(state.connectedMcps.values());
-  state.aggregatedTools = aggregateTools(mcps, { logger: log });
+  const mcps = Array.from(state.connectedMcps.values())
+  state.aggregatedTools = aggregateTools(mcps, { logger: log })
 
-  log.info(`Aggregated ${state.aggregatedTools.length} tools from ${mcps.length} servers`);
+  log.info(
+    `Aggregated ${state.aggregatedTools.length} tools from ${mcps.length} servers`
+  )
 
   // Emit event
   for (const handler of state.eventHandlers) {
     handler({
       type: "tools_aggregated",
       count: state.aggregatedTools.length,
-    });
+    })
   }
 }
 
@@ -135,7 +141,7 @@ export function addEventHandler(
   state: GatewayState,
   handler: GatewayEventHandler
 ): void {
-  state.eventHandlers.push(handler);
+  state.eventHandlers.push(handler)
 }
 
 /**
@@ -145,8 +151,8 @@ export function removeEventHandler(
   state: GatewayState,
   handler: GatewayEventHandler
 ): void {
-  const index = state.eventHandlers.indexOf(handler);
+  const index = state.eventHandlers.indexOf(handler)
   if (index !== -1) {
-    state.eventHandlers.splice(index, 1);
+    state.eventHandlers.splice(index, 1)
   }
 }

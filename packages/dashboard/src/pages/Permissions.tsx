@@ -19,7 +19,9 @@ export function Permissions() {
   const [error, setError] = useState<string | null>(null)
 
   // Modal state
-  const [editingPermission, setEditingPermission] = useState<Permission | null>(null)
+  const [editingPermission, setEditingPermission] = useState<Permission | null>(
+    null
+  )
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [editLevel, setEditLevel] = useState<PermissionLevel>("ask")
   const [isSaving, setIsSaving] = useState(false)
@@ -33,7 +35,9 @@ export function Permissions() {
       const response = await api.get<PermissionsResponse>("/api/permissions")
       setPermissions(response.data)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch permissions")
+      setError(
+        err instanceof Error ? err.message : "Failed to fetch permissions"
+      )
     } finally {
       setLoading(false)
     }
@@ -68,7 +72,9 @@ export function Permissions() {
       setIsEditModalOpen(false)
       setEditingPermission(null)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update permission")
+      setError(
+        err instanceof Error ? err.message : "Failed to update permission"
+      )
     } finally {
       setIsSaving(false)
     }
@@ -76,7 +82,11 @@ export function Permissions() {
 
   // Handle delete permission
   const handleDelete = async (permission: Permission) => {
-    if (!confirm(`Delete permission for ${permission.origin} → ${permission.tool}?`)) {
+    if (
+      !confirm(
+        `Delete permission for ${permission.origin} → ${permission.tool}?`
+      )
+    ) {
       return
     }
 
@@ -87,7 +97,9 @@ export function Permissions() {
       // Refresh permissions list
       await fetchPermissions()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete permission")
+      setError(
+        err instanceof Error ? err.message : "Failed to delete permission"
+      )
     }
   }
 
@@ -201,10 +213,17 @@ export function Permissions() {
         title="Edit Permission"
         footer={
           <>
-            <Button variant="secondary" onClick={() => setIsEditModalOpen(false)}>
+            <Button
+              variant="secondary"
+              onClick={() => setIsEditModalOpen(false)}
+            >
               Cancel
             </Button>
-            <Button variant="primary" onClick={handleSaveEdit} loading={isSaving}>
+            <Button
+              variant="primary"
+              onClick={handleSaveEdit}
+              loading={isSaving}
+            >
               Save
             </Button>
           </>
@@ -226,7 +245,9 @@ export function Permissions() {
               </label>
               <select
                 value={editLevel}
-                onChange={(e) => setEditLevel(e.target.value as PermissionLevel)}
+                onChange={(e) =>
+                  setEditLevel(e.target.value as PermissionLevel)
+                }
                 className="w-full p-2 bg-secondary border border-border rounded-md text-foreground"
               >
                 <option value="allowed">Allowed</option>

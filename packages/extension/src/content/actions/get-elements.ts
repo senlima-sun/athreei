@@ -96,7 +96,13 @@ function getSelectorsForFilter(filter?: string): string[] {
   // Filter-specific selectors
   switch (filter) {
     case "button":
-      return ["button", 'input[type="button"]', 'input[type="submit"]', 'input[type="reset"]', '[role="button"]']
+      return [
+        "button",
+        'input[type="button"]',
+        'input[type="submit"]',
+        'input[type="reset"]',
+        '[role="button"]',
+      ]
 
     case "link":
       return ["a[href]", '[role="link"]']
@@ -143,8 +149,7 @@ function extractElementInfo(element: Element): ElementInfo {
   const href = element.getAttribute("href") || undefined
 
   // Get type for inputs
-  const type =
-    element instanceof HTMLInputElement ? element.type : undefined
+  const type = element instanceof HTMLInputElement ? element.type : undefined
 
   // Get id
   const id = element.id || undefined

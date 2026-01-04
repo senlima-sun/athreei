@@ -1,18 +1,18 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { Boxes, Server, Settings } from "lucide-react";
+import Link from "next/link"
+import { Boxes, Server, Settings } from "lucide-react"
 
 export interface Namespace {
-  id: string;
-  name: string;
-  description?: string | null;
-  serverCount: number;
-  createdAt: Date;
+  id: string
+  name: string
+  description?: string | null
+  serverCount: number
+  createdAt: Date
 }
 
 interface NamespaceCardProps {
-  namespace: Namespace;
+  namespace: Namespace
 }
 
 export function NamespaceCard({ namespace }: NamespaceCardProps) {
@@ -49,5 +49,5 @@ export function NamespaceCard({ namespace }: NamespaceCardProps) {
         </div>
       </div>
     </div>
-  );
+  )
 }

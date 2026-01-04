@@ -1,6 +1,6 @@
-import { AuthLayout } from "@/components/auth/auth-layout";
-import { LoginForm } from "@/components/auth/login-form";
-import { OAuthButtons } from "@/components/auth/oauth-buttons";
+import { AuthLayout } from "@/components/auth/auth-layout"
+import { LoginForm } from "@/components/auth/login-form"
+import { OAuthButtons } from "@/components/auth/oauth-buttons"
 
 export default function LoginPage() {
   return (
@@ -19,5 +19,5 @@ export default function LoginPage() {
       </div>
       <LoginForm />
     </AuthLayout>
-  );
+  )
 }

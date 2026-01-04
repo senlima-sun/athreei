@@ -5,4 +5,8 @@
  */
 
 export { IPCServer } from "./server.js"
-export { getSocketPath, cleanupStaleSocket, ensureSocketDir } from "./protocol.js"
+export {
+  getSocketPath,
+  cleanupStaleSocket,
+  ensureSocketDir,
+} from "./protocol.js"

@@ -1,128 +1,143 @@
-"use client";
+"use client"
 
-import { useState, useEffect, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
-import { PageHeader } from "@/components/dashboard/page-header";
-import { ConnectionConfig } from "@/components/endpoints/connection-config";
-import { ApiKeyList, ApiKey } from "@/components/endpoints/api-key-list";
-import { CreateApiKeyModal } from "@/components/endpoints/create-api-key-modal";
-import { ApiKeyCreatedModal } from "@/components/endpoints/api-key-created-modal";
-import { Server, Plus, Loader2, Trash2, AlertTriangle, ArrowLeft } from "lucide-react";
+import { useState, useEffect, useCallback } from "react"
+import { useParams, useRouter } from "next/navigation"
+import Link from "next/link"
+import { PageHeader } from "@/components/dashboard/page-header"
+import { ConnectionConfig } from "@/components/endpoints/connection-config"
+import { ApiKeyList, ApiKey } from "@/components/endpoints/api-key-list"
+import { CreateApiKeyModal } from "@/components/endpoints/create-api-key-modal"
+import { ApiKeyCreatedModal } from "@/components/endpoints/api-key-created-modal"
+import {
+  Server,
+  Plus,
+  Loader2,
+  Trash2,
+  AlertTriangle,
+  ArrowLeft,
+} from "lucide-react"
 
 interface Endpoint {
-  id: string;
-  name: string;
-  slug: string;
-  status: "active" | "inactive";
+  id: string
+  name: string
+  slug: string
+  status: "active" | "inactive"
   namespace?: {
-    id: string;
-    name: string;
-  };
-  createdAt: Date;
+    id: string
+    name: string
+  }
+  createdAt: Date
 }
 
 export default function EndpointDetailPage() {
-  const params = useParams();
-  const router = useRouter();
-  const endpointId = params.id as string;
+  const params = useParams()
+  const router = useRouter()
+  const endpointId = params.id as string
 
-  const [endpoint, setEndpoint] = useState<Endpoint | null>(null);
-  const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [endpoint, setEndpoint] = useState<Endpoint | null>(null)
+  const [apiKeys, setApiKeys] = useState<ApiKey[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   // Modal states
-  const [showCreateKeyModal, setShowCreateKeyModal] = useState(false);
-  const [showKeyCreatedModal, setShowKeyCreatedModal] = useState(false);
-  const [createdKey, setCreatedKey] = useState<{ key: string; name: string } | null>(null);
+  const [showCreateKeyModal, setShowCreateKeyModal] = useState(false)
+  const [showKeyCreatedModal, setShowKeyCreatedModal] = useState(false)
+  const [createdKey, setCreatedKey] = useState<{
+    key: string
+    name: string
+  } | null>(null)
 
   // Delete states
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const fetchEndpoint = useCallback(async () => {
     try {
-      const response = await fetch(`/api/endpoints/${endpointId}`);
+      const response = await fetch(`/api/endpoints/${endpointId}`)
       if (!response.ok) {
-        throw new Error("Failed to fetch endpoint");
+        throw new Error("Failed to fetch endpoint")
       }
-      const data = await response.json();
-      setEndpoint(data.endpoint);
-      setApiKeys(data.apiKeys || []);
+      const data = await response.json()
+      setEndpoint(data.endpoint)
+      setApiKeys(data.apiKeys || [])
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load endpoint");
+      setError(err instanceof Error ? err.message : "Failed to load endpoint")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  }, [endpointId]);
+  }, [endpointId])
 
   useEffect(() => {
-    fetchEndpoint();
-  }, [fetchEndpoint]);
+    fetchEndpoint()
+  }, [fetchEndpoint])
 
-  const handleCreateApiKey = async (name: string): Promise<{ key?: string; error?: string }> => {
+  const handleCreateApiKey = async (
+    name: string
+  ): Promise<{ key?: string; error?: string }> => {
     try {
       const response = await fetch(`/api/endpoints/${endpointId}/api-keys`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name }),
-      });
+      })
 
       if (!response.ok) {
-        const data = await response.json();
-        return { error: data.error || "Failed to create API key" };
+        const data = await response.json()
+        return { error: data.error || "Failed to create API key" }
       }
 
-      const data = await response.json();
-      setCreatedKey({ key: data.key, name });
-      setShowKeyCreatedModal(true);
+      const data = await response.json()
+      setCreatedKey({ key: data.key, name })
+      setShowKeyCreatedModal(true)
 
       // Refresh the API keys list
-      await fetchEndpoint();
+      await fetchEndpoint()
 
-      return { key: data.key };
+      return { key: data.key }
     } catch (err) {
-      return { error: "An unexpected error occurred" };
+      return { error: "An unexpected error occurred" }
     }
-  };
+  }
 
   const handleRevokeApiKey = async (keyId: string) => {
     try {
-      const response = await fetch(`/api/endpoints/${endpointId}/api-keys/${keyId}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `/api/endpoints/${endpointId}/api-keys/${keyId}`,
+        {
+          method: "DELETE",
+        }
+      )
 
       if (!response.ok) {
-        throw new Error("Failed to revoke API key");
+        throw new Error("Failed to revoke API key")
       }
 
       // Refresh the API keys list
-      await fetchEndpoint();
+      await fetchEndpoint()
     } catch (err) {
-      console.error("Failed to revoke API key:", err);
+      console.error("Failed to revoke API key:", err)
     }
-  };
+  }
 
   const handleDeleteEndpoint = async () => {
-    setIsDeleting(true);
+    setIsDeleting(true)
     try {
       const response = await fetch(`/api/endpoints/${endpointId}`, {
         method: "DELETE",
-      });
+      })
 
       if (!response.ok) {
-        throw new Error("Failed to delete endpoint");
+        throw new Error("Failed to delete endpoint")
       }
 
-      router.push("/dashboard/endpoints");
+      router.push("/dashboard/endpoints")
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete endpoint");
-      setShowDeleteConfirm(false);
+      setError(err instanceof Error ? err.message : "Failed to delete endpoint")
+      setShowDeleteConfirm(false)
     } finally {
-      setIsDeleting(false);
+      setIsDeleting(false)
     }
-  };
+  }
 
   if (isLoading) {
     return (
@@ -132,7 +147,7 @@ export default function EndpointDetailPage() {
           <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
         </div>
       </div>
-    );
+    )
   }
 
   if (error || !endpoint) {
@@ -141,7 +156,8 @@ export default function EndpointDetailPage() {
         <PageHeader title="Endpoint not found" />
         <div className="rounded-lg border border-gray-200 bg-white p-8 text-center">
           <p className="text-gray-500">
-            {error || "This endpoint doesn't exist or you don't have access to it."}
+            {error ||
+              "This endpoint doesn't exist or you don't have access to it."}
           </p>
           <Link
             href="/dashboard/endpoints"
@@ -152,7 +168,7 @@ export default function EndpointDetailPage() {
           </Link>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -244,7 +260,8 @@ export default function EndpointDetailPage() {
                       Are you sure you want to delete this endpoint?
                     </p>
                     <p className="mt-1 text-sm text-red-600">
-                      This action cannot be undone. All API keys will be revoked and connections will stop working.
+                      This action cannot be undone. All API keys will be revoked
+                      and connections will stop working.
                     </p>
                     <div className="mt-4 flex gap-3">
                       <button
@@ -253,7 +270,9 @@ export default function EndpointDetailPage() {
                         disabled={isDeleting}
                         className="inline-flex items-center gap-2 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
                       >
-                        {isDeleting && <Loader2 className="h-4 w-4 animate-spin" />}
+                        {isDeleting && (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        )}
                         Yes, delete endpoint
                       </button>
                       <button
@@ -283,13 +302,13 @@ export default function EndpointDetailPage() {
         <ApiKeyCreatedModal
           isOpen={showKeyCreatedModal}
           onClose={() => {
-            setShowKeyCreatedModal(false);
-            setCreatedKey(null);
+            setShowKeyCreatedModal(false)
+            setCreatedKey(null)
           }}
           apiKey={createdKey.key}
           keyName={createdKey.name}
         />
       )}
     </div>
-  );
+  )
 }

@@ -213,9 +213,7 @@ async function typeCharacter(element: Element, char: string): Promise<void> {
     const start = element.selectionStart ?? element.value.length
     const end = element.selectionEnd ?? element.value.length
     const newValue =
-      element.value.substring(0, start) +
-      char +
-      element.value.substring(end)
+      element.value.substring(0, start) + char + element.value.substring(end)
     element.value = newValue
     element.setSelectionRange(start + 1, start + 1)
   } else {
@@ -229,7 +227,10 @@ async function typeCharacter(element: Element, char: string): Promise<void> {
 /**
  * Type a special key
  */
-async function typeSpecialKey(element: Element, keyName: string): Promise<void> {
+async function typeSpecialKey(
+  element: Element,
+  keyName: string
+): Promise<void> {
   const keyInfo = SPECIAL_KEYS[keyName]
   if (!keyInfo) {
     throw new Error(`Unknown special key: ${keyName}`)
@@ -275,8 +276,7 @@ async function typeSpecialKey(element: Element, keyName: string): Promise<void> 
       case "Backspace":
         if (start === end && start > 0) {
           element.value =
-            element.value.substring(0, start - 1) +
-            element.value.substring(end)
+            element.value.substring(0, start - 1) + element.value.substring(end)
           element.setSelectionRange(start - 1, start - 1)
         } else if (start !== end) {
           element.value =
@@ -288,8 +288,7 @@ async function typeSpecialKey(element: Element, keyName: string): Promise<void> 
       case "Delete":
         if (start === end && start < element.value.length) {
           element.value =
-            element.value.substring(0, start) +
-            element.value.substring(end + 1)
+            element.value.substring(0, start) + element.value.substring(end + 1)
           element.setSelectionRange(start, start)
         } else if (start !== end) {
           element.value =

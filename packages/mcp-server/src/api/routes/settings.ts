@@ -76,10 +76,7 @@ settingsRoutes.put("/", async (c) => {
     saveSettings(newSettings)
     return c.json({ success: true, settings: newSettings })
   } catch (error) {
-    return c.json(
-      { success: false, error: String(error) },
-      500
-    )
+    return c.json({ success: false, error: String(error) }, 500)
   }
 })
 
@@ -91,10 +88,7 @@ settingsRoutes.post("/reset", async (c) => {
     saveSettings(DEFAULT_SETTINGS)
     return c.json({ success: true, settings: DEFAULT_SETTINGS })
   } catch (error) {
-    return c.json(
-      { success: false, error: String(error) },
-      500
-    )
+    return c.json({ success: false, error: String(error) }, 500)
   }
 })
 
@@ -103,9 +97,11 @@ settingsRoutes.post("/reset", async (c) => {
  */
 settingsRoutes.post("/export", async (c) => {
   // Import repositories inline to avoid circular dependencies
-  const { listAuditLogEntries } = await import("../../db/repositories/audit-log.js")
+  const { listAuditLogEntries } =
+    await import("../../db/repositories/audit-log.js")
   const { listSessions } = await import("../../db/repositories/sessions.js")
-  const { listPermissions } = await import("../../db/repositories/permissions.js")
+  const { listPermissions } =
+    await import("../../db/repositories/permissions.js")
 
   const settings = loadSettings()
   const auditLogs = listAuditLogEntries({ limit: 10000 })
@@ -135,9 +131,6 @@ settingsRoutes.delete("/data", async (c) => {
     clearSessions()
     return c.json({ success: true, message: "All data cleared" })
   } catch (error) {
-    return c.json(
-      { success: false, error: String(error) },
-      500
-    )
+    return c.json({ success: false, error: String(error) }, 500)
   }
 })

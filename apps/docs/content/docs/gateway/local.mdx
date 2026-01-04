@@ -14,6 +14,7 @@ The local gateway is a standalone binary that aggregates tools from multiple MCP
 Download the latest binary for your platform from the [releases page](https://github.com/athreei/athreei/releases).
 
 Available platforms:
+
 - macOS (Apple Silicon): `athreei-gateway-darwin-arm64`
 - macOS (Intel): `athreei-gateway-darwin-x64`
 - Linux (x64): `athreei-gateway-linux-x64`
@@ -49,12 +50,12 @@ Create a configuration file at `~/.athreei/config.json` with your Platform crede
 
 ### Configuration Options
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `apiKey` | string | Yes | API key from the Platform dashboard |
-| `endpoint` | string | Yes | Endpoint name to connect to |
-| `platformUrl` | string | No | Platform URL (default: `https://athreei.com`) |
-| `syncInterval` | number | No | Config sync interval in ms (default: 300000) |
+| Field          | Type   | Required | Description                                   |
+| -------------- | ------ | -------- | --------------------------------------------- |
+| `apiKey`       | string | Yes      | API key from the Platform dashboard           |
+| `endpoint`     | string | Yes      | Endpoint name to connect to                   |
+| `platformUrl`  | string | No       | Platform URL (default: `https://athreei.com`) |
+| `syncInterval` | number | No       | Config sync interval in ms (default: 300000)  |
 
 ### Server Configuration
 
@@ -120,6 +121,7 @@ To aggregate browser tools with GitHub, add both servers via the Platform dashbo
 2. **GitHub server**: `npx -y @modelcontextprotocol/server-github` with `GITHUB_PERSONAL_ACCESS_TOKEN` env var
 
 With this configuration, the AI assistant can:
+
 - Read web pages using `browser__get_content`
 - Create GitHub issues using `github__create_issue`
 - All through a single MCP connection

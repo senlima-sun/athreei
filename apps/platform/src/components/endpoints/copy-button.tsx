@@ -1,26 +1,26 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { Copy, Check } from "lucide-react";
+import { useState } from "react"
+import { Copy, Check } from "lucide-react"
 
 interface CopyButtonProps {
-  text: string;
-  label?: string;
-  className?: string;
+  text: string
+  label?: string
+  className?: string
 }
 
 export function CopyButton({ text, label, className = "" }: CopyButtonProps) {
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState(false)
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
     } catch (err) {
-      console.error("Failed to copy:", err);
+      console.error("Failed to copy:", err)
     }
-  };
+  }
 
   return (
     <button
@@ -40,5 +40,5 @@ export function CopyButton({ text, label, className = "" }: CopyButtonProps) {
         </>
       )}
     </button>
-  );
+  )
 }

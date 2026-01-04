@@ -14,7 +14,10 @@ import { executeForm, executeSelect } from "./actions/form"
 import { executeGetContent } from "./actions/get-content"
 import { executeGetElements } from "./actions/get-elements"
 import { executeScript } from "./actions/execute-script"
-import { showPermissionDialog, type PermissionResponse } from "./permission-dialog"
+import {
+  showPermissionDialog,
+  type PermissionResponse,
+} from "./permission-dialog"
 import type {
   AiiiToolType,
   AiiiClickArgs,
@@ -82,11 +85,7 @@ export async function executeAction(
       return bridge.executeAction(tool, args as AiiiScrollArgs, executeScroll)
 
     case "select":
-      return bridge.executeAction(
-        tool,
-        args as AiiiSelectArgs,
-        executeSelect
-      )
+      return bridge.executeAction(tool, args as AiiiSelectArgs, executeSelect)
 
     case "wait":
       return bridge.executeAction(tool, args as AiiiWaitArgs, executeWait)

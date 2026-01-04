@@ -6,12 +6,12 @@ import {
   Preview,
   Section,
   Text,
-} from "@react-email/components";
-import type { ReactNode } from "react";
+} from "@react-email/components"
+import type { ReactNode } from "react"
 
 interface BaseLayoutProps {
-  preview: string;
-  children: ReactNode;
+  preview: string
+  children: ReactNode
 }
 
 export function BaseLayout({ preview, children }: BaseLayoutProps) {
@@ -34,14 +34,14 @@ export function BaseLayout({ preview, children }: BaseLayoutProps) {
         </Container>
       </Body>
     </Html>
-  );
+  )
 }
 
 const main = {
   backgroundColor: "#f6f9fc",
   fontFamily:
     '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Ubuntu, sans-serif',
-};
+}
 
 const container = {
   backgroundColor: "#ffffff",
@@ -50,25 +50,25 @@ const container = {
   marginBottom: "64px",
   borderRadius: "8px",
   maxWidth: "480px",
-};
+}
 
 const logoSection = {
   padding: "0 0 32px 0",
   textAlign: "center" as const,
-};
+}
 
 const logo = {
   fontSize: "24px",
   fontWeight: "700",
   color: "#1a1a1a",
   margin: "0",
-};
+}
 
 const footer = {
   padding: "32px 0 0 0",
   borderTop: "1px solid #e6e6e6",
   marginTop: "32px",
-};
+}
 
 const footerText = {
   fontSize: "12px",
@@ -76,4 +76,4 @@ const footerText = {
   lineHeight: "16px",
   textAlign: "center" as const,
   margin: "0",
-};
+}

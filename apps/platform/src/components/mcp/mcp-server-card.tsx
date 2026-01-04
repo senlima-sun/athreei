@@ -1,45 +1,58 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { Server, Terminal, Radio, Globe, Settings, ExternalLink } from "lucide-react";
-import { McpTransportType } from "./mcp-type-selector";
+import Link from "next/link"
+import {
+  Server,
+  Terminal,
+  Radio,
+  Globe,
+  Settings,
+  ExternalLink,
+} from "lucide-react"
+import { McpTransportType } from "./mcp-type-selector"
 
-export type McpServerStatus = "active" | "inactive" | "error";
+export type McpServerStatus = "active" | "inactive" | "error"
 
 export interface McpServer {
-  id: string;
-  name: string;
-  description?: string;
-  transportType: McpTransportType;
-  status: McpServerStatus;
+  id: string
+  name: string
+  description?: string
+  transportType: McpTransportType
+  status: McpServerStatus
   // STDIO config
-  command?: string;
-  args?: string[];
+  command?: string
+  args?: string[]
   // SSE/HTTP config
-  url?: string;
-  createdAt?: Date;
-  updatedAt?: Date;
+  url?: string
+  createdAt?: Date
+  updatedAt?: Date
 }
 
 interface McpServerCardProps {
-  server: McpServer;
-  href?: string;
-  showActions?: boolean;
+  server: McpServer
+  href?: string
+  showActions?: boolean
 }
 
-const transportIcons: Record<McpTransportType, React.ComponentType<{ className?: string }>> = {
+const transportIcons: Record<
+  McpTransportType,
+  React.ComponentType<{ className?: string }>
+> = {
   stdio: Terminal,
   sse: Radio,
   http: Globe,
-};
+}
 
 const transportLabels: Record<McpTransportType, string> = {
   stdio: "STDIO",
   sse: "SSE",
   http: "HTTP",
-};
+}
 
-const statusStyles: Record<McpServerStatus, { bg: string; text: string; dot: string }> = {
+const statusStyles: Record<
+  McpServerStatus,
+  { bg: string; text: string; dot: string }
+> = {
   active: {
     bg: "bg-green-100",
     text: "text-green-700",
@@ -55,11 +68,15 @@ const statusStyles: Record<McpServerStatus, { bg: string; text: string; dot: str
     text: "text-red-700",
     dot: "bg-red-500",
   },
-};
+}
 
-export function McpServerCard({ server, href, showActions = true }: McpServerCardProps) {
-  const TransportIcon = transportIcons[server.transportType];
-  const statusStyle = statusStyles[server.status];
+export function McpServerCard({
+  server,
+  href,
+  showActions = true,
+}: McpServerCardProps) {
+  const TransportIcon = transportIcons[server.transportType]
+  const statusStyle = statusStyles[server.status]
 
   const CardContent = () => (
     <>
@@ -100,7 +117,9 @@ export function McpServerCard({ server, href, showActions = true }: McpServerCar
         {server.transportType === "stdio" ? (
           <span>
             {server.command}
-            {server.args && server.args.length > 0 && ` ${server.args.join(" ")}`}
+            {server.args &&
+              server.args.length > 0 &&
+              ` ${server.args.join(" ")}`}
           </span>
         ) : (
           <span>{server.url}</span>
@@ -121,7 +140,7 @@ export function McpServerCard({ server, href, showActions = true }: McpServerCar
         </div>
       )}
     </>
-  );
+  )
 
   if (href && !showActions) {
     return (
@@ -131,20 +150,20 @@ export function McpServerCard({ server, href, showActions = true }: McpServerCar
       >
         <CardContent />
       </Link>
-    );
+    )
   }
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4">
       <CardContent />
     </div>
-  );
+  )
 }
 
 interface McpServerCardGridProps {
-  servers: McpServer[];
-  baseHref?: string;
-  showActions?: boolean;
+  servers: McpServer[]
+  baseHref?: string
+  showActions?: boolean
 }
 
 export function McpServerCardGrid({
@@ -156,12 +175,14 @@ export function McpServerCardGrid({
     return (
       <div className="rounded-lg border-2 border-dashed border-gray-200 p-12 text-center">
         <Server className="mx-auto h-12 w-12 text-gray-400" />
-        <h3 className="mt-4 text-lg font-medium text-gray-900">No MCP servers</h3>
+        <h3 className="mt-4 text-lg font-medium text-gray-900">
+          No MCP servers
+        </h3>
         <p className="mt-2 text-sm text-gray-500">
           Get started by adding your first MCP server.
         </p>
       </div>
-    );
+    )
   }
 
   return (
@@ -175,5 +196,5 @@ export function McpServerCardGrid({
         />
       ))}
     </div>
-  );
+  )
 }

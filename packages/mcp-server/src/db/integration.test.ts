@@ -25,9 +25,10 @@ describe("Database Integration", () => {
   it("should create and migrate database successfully", () => {
     // Check that all tables exist
     const tables = db
-      .query<{ name: string }, []>(
-        "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
-      )
+      .query<
+        { name: string },
+        []
+      >("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name")
       .all()
 
     const tableNames = tables.map((t) => t.name)
@@ -40,9 +41,10 @@ describe("Database Integration", () => {
 
   it("should have correct indexes on permissions table", () => {
     const indexes = db
-      .query<{ name: string }, []>(
-        "SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='permissions'"
-      )
+      .query<
+        { name: string },
+        []
+      >("SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='permissions'")
       .all()
 
     const indexNames = indexes.map((i) => i.name)
@@ -54,9 +56,10 @@ describe("Database Integration", () => {
 
   it("should have correct indexes on audit_log table", () => {
     const indexes = db
-      .query<{ name: string }, []>(
-        "SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='audit_log'"
-      )
+      .query<
+        { name: string },
+        []
+      >("SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='audit_log'")
       .all()
 
     const indexNames = indexes.map((i) => i.name)
@@ -70,9 +73,10 @@ describe("Database Integration", () => {
 
   it("should have correct indexes on sessions table", () => {
     const indexes = db
-      .query<{ name: string }, []>(
-        "SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='sessions'"
-      )
+      .query<
+        { name: string },
+        []
+      >("SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='sessions'")
       .all()
 
     const indexNames = indexes.map((i) => i.name)
@@ -152,9 +156,21 @@ describe("Database Integration", () => {
 
     // Create multiple permissions
     const permissions = [
-      { origin: "https://site1.com", tool: "tool1", allowed: "allowed" as PermissionLevel },
-      { origin: "https://site2.com", tool: "tool2", allowed: "denied" as PermissionLevel },
-      { origin: "https://site3.com", tool: "tool3", allowed: "ask" as PermissionLevel },
+      {
+        origin: "https://site1.com",
+        tool: "tool1",
+        allowed: "allowed" as PermissionLevel,
+      },
+      {
+        origin: "https://site2.com",
+        tool: "tool2",
+        allowed: "denied" as PermissionLevel,
+      },
+      {
+        origin: "https://site3.com",
+        tool: "tool3",
+        allowed: "ask" as PermissionLevel,
+      },
     ]
 
     for (const perm of permissions) {
@@ -178,7 +194,10 @@ describe("Database Integration", () => {
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
     )
 
-    const complexArgs = { url: "https://example.com", options: { timeout: 5000 } }
+    const complexArgs = {
+      url: "https://example.com",
+      options: { timeout: 5000 },
+    }
     const complexResult = { success: true, data: [1, 2, 3] }
 
     auditLog.run(
@@ -208,7 +227,10 @@ describe("Database Integration", () => {
   })
 
   it("should handle session metadata correctly", () => {
-    const metadata = { userAgent: "Chrome", viewport: { width: 1920, height: 1080 } }
+    const metadata = {
+      userAgent: "Chrome",
+      viewport: { width: 1920, height: 1080 },
+    }
 
     db.query(
       `INSERT INTO sessions (id, tab_id, origin, started_at, metadata)

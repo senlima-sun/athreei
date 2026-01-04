@@ -1,6 +1,6 @@
-import { AuthLayout } from "@/components/auth/auth-layout";
-import { RegisterForm } from "@/components/auth/register-form";
-import { OAuthButtons } from "@/components/auth/oauth-buttons";
+import { AuthLayout } from "@/components/auth/auth-layout"
+import { RegisterForm } from "@/components/auth/register-form"
+import { OAuthButtons } from "@/components/auth/oauth-buttons"
 
 export default function RegisterPage() {
   return (
@@ -19,5 +19,5 @@ export default function RegisterPage() {
       </div>
       <RegisterForm />
     </AuthLayout>
-  );
+  )
 }

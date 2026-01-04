@@ -1,64 +1,70 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { PageHeader } from "@/components/dashboard/page-header";
-import { organization } from "@/lib/auth-client";
-import { Building2, Loader2 } from "lucide-react";
-import Link from "next/link";
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { PageHeader } from "@/components/dashboard/page-header"
+import { organization } from "@/lib/auth-client"
+import { Building2, Loader2 } from "lucide-react"
+import Link from "next/link"
 
 export default function NewOrganizationPage() {
-  const router = useRouter();
-  const [name, setName] = useState("");
-  const [slug, setSlug] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const router = useRouter()
+  const [name, setName] = useState("")
+  const [slug, setSlug] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   // Auto-generate slug from name
   const handleNameChange = (value: string) => {
-    setName(value);
+    setName(value)
     // Only auto-generate if user hasn't manually edited slug
     if (!slug || slug === generateSlug(name)) {
-      setSlug(generateSlug(value));
+      setSlug(generateSlug(value))
     }
-  };
+  }
 
   const generateSlug = (value: string) => {
     return value
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "");
-  };
+      .replace(/^-+|-+$/g, "")
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setIsSubmitting(true);
+    e.preventDefault()
+    setError(null)
+    setIsSubmitting(true)
 
     try {
-      const slugValue = slug.trim();
+      const slugValue = slug.trim()
       const result = await organization.create({
         name: name.trim(),
-        slug: slugValue || name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""),
-      });
+        slug:
+          slugValue ||
+          name
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-+|-+$/g, ""),
+      })
 
       if (result.error) {
-        setError(result.error.message || "Failed to create organization");
-        return;
+        setError(result.error.message || "Failed to create organization")
+        return
       }
 
       // Set as active organization
       if (result.data?.id) {
-        await organization.setActive({ organizationId: result.data.id });
+        await organization.setActive({ organizationId: result.data.id })
       }
 
-      router.push("/dashboard/organizations");
+      router.push("/dashboard/organizations")
     } catch (err) {
-      setError("An unexpected error occurred");
+      setError("An unexpected error occurred")
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   return (
     <div>
@@ -111,7 +117,11 @@ export default function NewOrganizationPage() {
                 type="text"
                 id="slug"
                 value={slug}
-                onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+                onChange={(e) =>
+                  setSlug(
+                    e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "")
+                  )
+                }
                 placeholder="my-organization"
                 className="block w-full rounded-none rounded-r-md border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
               />
@@ -148,5 +158,5 @@ export default function NewOrganizationPage() {
         </form>
       </div>
     </div>
-  );
+  )
 }

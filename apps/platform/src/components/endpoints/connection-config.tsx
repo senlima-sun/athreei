@@ -1,32 +1,41 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { CopyButton } from "./copy-button";
-import { Terminal, FileJson } from "lucide-react";
+import { useState } from "react"
+import { CopyButton } from "./copy-button"
+import { Terminal, FileJson } from "lucide-react"
 
 interface ConnectionConfigProps {
-  endpointName: string;
-  endpointSlug: string;
+  endpointName: string
+  endpointSlug: string
 }
 
-export function ConnectionConfig({ endpointName, endpointSlug }: ConnectionConfigProps) {
-  const connectionUrl = `https://athreei.com/mcp/${endpointSlug}/sse`;
+export function ConnectionConfig({
+  endpointName,
+  endpointSlug,
+}: ConnectionConfigProps) {
+  const connectionUrl = `https://athreei.com/mcp/${endpointSlug}/sse`
 
-  const claudeDesktopConfig = JSON.stringify({
-    mcpServers: {
-      [endpointSlug]: {
-        url: connectionUrl,
-        transport: "sse",
+  const claudeDesktopConfig = JSON.stringify(
+    {
+      mcpServers: {
+        [endpointSlug]: {
+          url: connectionUrl,
+          transport: "sse",
+        },
       },
     },
-  }, null, 2);
+    null,
+    2
+  )
 
-  const [activeTab, setActiveTab] = useState<"url" | "config">("url");
+  const [activeTab, setActiveTab] = useState<"url" | "config">("url")
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white">
       <div className="border-b border-gray-200 px-4 py-3">
-        <h3 className="text-lg font-medium text-gray-900">Connection Details</h3>
+        <h3 className="text-lg font-medium text-gray-900">
+          Connection Details
+        </h3>
         <p className="mt-1 text-sm text-gray-500">
           Use these details to connect your AI app to this endpoint.
         </p>
@@ -76,7 +85,8 @@ export function ConnectionConfig({ endpointName, endpointSlug }: ConnectionConfi
               </div>
             </div>
             <p className="text-xs text-gray-500">
-              Use this URL in any MCP-compatible client that supports SSE transport.
+              Use this URL in any MCP-compatible client that supports SSE
+              transport.
             </p>
           </div>
         ) : (
@@ -107,5 +117,5 @@ export function ConnectionConfig({ endpointName, endpointSlug }: ConnectionConfi
         )}
       </div>
     </div>
-  );
+  )
 }

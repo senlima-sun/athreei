@@ -50,9 +50,12 @@ export class AthreeiClient {
 
   private initialize() {
     // Listen for requests from extension
-    const unsubRequest = listenForAiiiEvent(AIII_EVENT_NAMES.REQUEST, (detail) => {
-      this.handleRequest(detail)
-    })
+    const unsubRequest = listenForAiiiEvent(
+      AIII_EVENT_NAMES.REQUEST,
+      (detail) => {
+        this.handleRequest(detail)
+      }
+    )
     this.unsubscribers.push(unsubRequest)
 
     this.log("AthreeiClient initialized")
@@ -87,7 +90,8 @@ export class AthreeiClient {
         result,
       })
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error)
+      const errorMessage =
+        error instanceof Error ? error.message : String(error)
       this.log(`Handler error for ${request.tool}:`, error)
       this.sendResponse({
         requestId: request.requestId,
@@ -111,7 +115,10 @@ export class AthreeiClient {
       return this.readyPromise
     }
 
-    this.readyPromise = waitForEvent(AIII_EVENT_NAMES.READY, this.options.timeout)
+    this.readyPromise = waitForEvent(
+      AIII_EVENT_NAMES.READY,
+      this.options.timeout
+    )
       .then((info) => {
         this.log("Extension ready:", info)
         return info
@@ -128,7 +135,15 @@ export class AthreeiClient {
    * Register a custom tool
    */
   registerTool(definition: ToolDefinition): void {
-    const { name, description, parameters, handler, returns, examples, requiresPermission } = definition
+    const {
+      name,
+      description,
+      parameters,
+      handler,
+      returns,
+      examples,
+      requiresPermission,
+    } = definition
 
     // Store handler if provided
     if (handler) {
@@ -136,14 +151,17 @@ export class AthreeiClient {
     }
 
     // Convert parameters to match AiiiToolParameter format
-    const convertedParams: Record<string, {
-      type: "string" | "number" | "boolean" | "object" | "array"
-      required: boolean
-      default?: unknown
-      description?: string
-      enum?: (string | number)[]
-      items?: { type: "string" | "number" | "boolean" | "object" }
-    }> = {}
+    const convertedParams: Record<
+      string,
+      {
+        type: "string" | "number" | "boolean" | "object" | "array"
+        required: boolean
+        default?: unknown
+        description?: string
+        enum?: (string | number)[]
+        items?: { type: "string" | "number" | "boolean" | "object" }
+      }
+    > = {}
 
     for (const [key, param] of Object.entries(parameters)) {
       convertedParams[key] = {
@@ -184,10 +202,13 @@ export class AthreeiClient {
    * Request permission from the user
    */
   async requestPermission(options: PermissionOptions): Promise<boolean> {
-    console.warn("[athreei SDK] Permission system not yet fully implemented - returning true by default")
+    console.warn(
+      "[athreei SDK] Permission system not yet fully implemented - returning true by default"
+    )
 
     // Normalize scopes
-    const scopes = options.scopes || (options.scope ? [options.scope] : undefined)
+    const scopes =
+      options.scopes || (options.scope ? [options.scope] : undefined)
 
     const permissionEvent: AiiiPermissionEvent = {
       scope: scopes?.[0] || "custom",
@@ -212,21 +233,24 @@ export class AthreeiClient {
    * Listen for actions before they are executed
    */
   onBeforeAction(callback: ActionCallback): Unsubscribe {
-    const unsubscribe = listenForAiiiEvent(AIII_EVENT_NAMES.ACTION_BEFORE, (detail, event) => {
-      const result = callback({
-        requestId: detail.requestId,
-        tool: detail.tool,
-        args: detail.args,
-        timestamp: detail.timestamp,
-        origin: detail.origin,
-        aiApp: detail.aiApp,
-      })
+    const unsubscribe = listenForAiiiEvent(
+      AIII_EVENT_NAMES.ACTION_BEFORE,
+      (detail, event) => {
+        const result = callback({
+          requestId: detail.requestId,
+          tool: detail.tool,
+          args: detail.args,
+          timestamp: detail.timestamp,
+          origin: detail.origin,
+          aiApp: detail.aiApp,
+        })
 
-      // If callback returns false, prevent default
-      if (result === false && event.cancelable) {
-        event.preventDefault()
+        // If callback returns false, prevent default
+        if (result === false && event.cancelable) {
+          event.preventDefault()
+        }
       }
-    })
+    )
 
     this.unsubscribers.push(unsubscribe)
     return unsubscribe
@@ -236,17 +260,20 @@ export class AthreeiClient {
    * Listen for actions after they are executed
    */
   onAfterAction(callback: ActionResultCallback): Unsubscribe {
-    const unsubscribe = listenForAiiiEvent(AIII_EVENT_NAMES.ACTION_AFTER, (detail) => {
-      callback({
-        requestId: detail.requestId,
-        tool: detail.tool,
-        success: detail.success,
-        result: detail.result,
-        error: detail.error,
-        timestamp: detail.timestamp,
-        duration: detail.duration,
-      })
-    })
+    const unsubscribe = listenForAiiiEvent(
+      AIII_EVENT_NAMES.ACTION_AFTER,
+      (detail) => {
+        callback({
+          requestId: detail.requestId,
+          tool: detail.tool,
+          success: detail.success,
+          result: detail.result,
+          error: detail.error,
+          timestamp: detail.timestamp,
+          duration: detail.duration,
+        })
+      }
+    )
 
     this.unsubscribers.push(unsubscribe)
     return unsubscribe

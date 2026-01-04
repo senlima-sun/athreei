@@ -1,7 +1,7 @@
 interface AuthLayoutProps {
-  children: React.ReactNode;
-  title: string;
-  description?: string;
+  children: React.ReactNode
+  title: string
+  description?: string
 }
 
 export function AuthLayout({ children, title, description }: AuthLayoutProps) {
@@ -17,5 +17,5 @@ export function AuthLayout({ children, title, description }: AuthLayoutProps) {
         <div className="bg-white py-8 px-6 shadow rounded-lg">{children}</div>
       </div>
     </div>
-  );
+  )
 }

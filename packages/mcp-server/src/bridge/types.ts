@@ -7,7 +7,12 @@
 /**
  * Bridge connection state
  */
-export type BridgeState = "disconnected" | "connecting" | "connected" | "reconnecting" | "error"
+export type BridgeState =
+  | "disconnected"
+  | "connecting"
+  | "connected"
+  | "reconnecting"
+  | "error"
 
 /**
  * Bridge configuration

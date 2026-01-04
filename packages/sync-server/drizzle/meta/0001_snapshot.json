@@ -65,9 +65,7 @@
         "accounts_email_unique": {
           "name": "accounts_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -146,12 +144,8 @@
           "name": "devices_account_id_accounts_id_fk",
           "tableFrom": "devices",
           "tableTo": "accounts",
-          "columnsFrom": [
-            "account_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["account_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -301,12 +295,8 @@
           "name": "sync_items_account_id_accounts_id_fk",
           "tableFrom": "sync_items",
           "tableTo": "accounts",
-          "columnsFrom": [
-            "account_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["account_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -314,12 +304,8 @@
           "name": "sync_items_device_id_devices_id_fk",
           "tableFrom": "sync_items",
           "tableTo": "devices",
-          "columnsFrom": [
-            "device_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["device_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -396,12 +382,8 @@
           "name": "sync_settings_account_id_accounts_id_fk",
           "tableFrom": "sync_settings",
           "tableTo": "accounts",
-          "columnsFrom": [
-            "account_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["account_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -461,12 +443,8 @@
           "name": "sync_state_account_id_accounts_id_fk",
           "tableFrom": "sync_state",
           "tableTo": "accounts",
-          "columnsFrom": [
-            "account_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["account_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -474,12 +452,8 @@
           "name": "sync_state_device_id_devices_id_fk",
           "tableFrom": "sync_state",
           "tableTo": "devices",
-          "columnsFrom": [
-            "device_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["device_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -487,10 +461,7 @@
       "compositePrimaryKeys": {
         "sync_state_account_id_device_id_pk": {
           "name": "sync_state_account_id_device_id_pk",
-          "columns": [
-            "account_id",
-            "device_id"
-          ]
+          "columns": ["account_id", "device_id"]
         }
       },
       "uniqueConstraints": {},
@@ -699,12 +670,8 @@
           "name": "traces_account_id_accounts_id_fk",
           "tableFrom": "traces",
           "tableTo": "accounts",
-          "columnsFrom": [
-            "account_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["account_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -720,20 +687,12 @@
     "public.item_type": {
       "name": "item_type",
       "schema": "public",
-      "values": [
-        "permission",
-        "session",
-        "audit_log",
-        "settings"
-      ]
+      "values": ["permission", "session", "audit_log", "settings"]
     },
     "public.trace_status": {
       "name": "trace_status",
       "schema": "public",
-      "values": [
-        "success",
-        "error"
-      ]
+      "values": ["success", "error"]
     }
   },
   "schemas": {},

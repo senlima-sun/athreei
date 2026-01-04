@@ -17,7 +17,13 @@ export type {
 /**
  * Permission scope for AI actions
  */
-export type PermissionScope = "read" | "interact" | "navigate" | "screenshot" | "execute" | "custom"
+export type PermissionScope =
+  | "read"
+  | "interact"
+  | "navigate"
+  | "screenshot"
+  | "execute"
+  | "custom"
 
 /**
  * How long a permission should last
@@ -89,31 +95,27 @@ export interface PermissionOptions {
 /**
  * Action event callback
  */
-export type ActionCallback = (
-  action: {
-    requestId: string
-    tool: string
-    args: Record<string, unknown>
-    timestamp: number
-    origin: string
-    aiApp?: string
-  }
-) => void | boolean | Promise<void | boolean>
+export type ActionCallback = (action: {
+  requestId: string
+  tool: string
+  args: Record<string, unknown>
+  timestamp: number
+  origin: string
+  aiApp?: string
+}) => void | boolean | Promise<void | boolean>
 
 /**
  * Action result callback
  */
-export type ActionResultCallback = (
-  action: {
-    requestId: string
-    tool: string
-    success: boolean
-    result?: unknown
-    error?: string
-    timestamp: number
-    duration: number
-  }
-) => void | Promise<void>
+export type ActionResultCallback = (action: {
+  requestId: string
+  tool: string
+  success: boolean
+  result?: unknown
+  error?: string
+  timestamp: number
+  duration: number
+}) => void | Promise<void>
 
 /**
  * Options for AthreeiClient

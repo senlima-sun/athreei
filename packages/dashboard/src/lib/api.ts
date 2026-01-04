@@ -4,12 +4,15 @@
  * Centralized API calls to the Hono backend running on port 3001
  */
 
-const API_BASE = 'http://localhost:3001'
+const API_BASE = "http://localhost:3001"
 
-export async function fetchApi<T>(path: string, options?: RequestInit): Promise<T> {
+export async function fetchApi<T>(
+  path: string,
+  options?: RequestInit
+): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
-    ...options
+    headers: { "Content-Type": "application/json" },
+    ...options,
   })
   if (!res.ok) throw new Error(`API error: ${res.status}`)
   return res.json()
@@ -49,15 +52,15 @@ export interface ExtensionStatus {
 }
 
 export async function getSystemStatus(): Promise<SystemStatus> {
-  return fetchApi<SystemStatus>('/api/status')
+  return fetchApi<SystemStatus>("/api/status")
 }
 
 export async function getMcpStatus(): Promise<McpStatus> {
-  return fetchApi<McpStatus>('/api/status/mcp')
+  return fetchApi<McpStatus>("/api/status/mcp")
 }
 
 export async function getExtensionStatus(): Promise<ExtensionStatus> {
-  return fetchApi<ExtensionStatus>('/api/status/extension')
+  return fetchApi<ExtensionStatus>("/api/status/extension")
 }
 
 // Audit Log API
@@ -69,7 +72,7 @@ export interface AuditLogEntry {
   origin: string
   args: Record<string, unknown>
   result?: Record<string, unknown>
-  status: 'success' | 'denied' | 'error'
+  status: "success" | "denied" | "error"
 }
 
 export interface AuditLogResponse {
@@ -101,7 +104,7 @@ export async function getAuditLogs(params?: {
     })
   }
   const query = searchParams.toString()
-  return fetchApi<AuditLogResponse>(`/api/audit${query ? `?${query}` : ''}`)
+  return fetchApi<AuditLogResponse>(`/api/audit${query ? `?${query}` : ""}`)
 }
 
 // Sessions API
@@ -140,12 +143,12 @@ export async function getSessions(params?: {
     })
   }
   const query = searchParams.toString()
-  return fetchApi<SessionsResponse>(`/api/sessions${query ? `?${query}` : ''}`)
+  return fetchApi<SessionsResponse>(`/api/sessions${query ? `?${query}` : ""}`)
 }
 
 // Permissions API
 // Aligned with @athreei/shared types
-export type PermissionLevel = 'denied' | 'allowed' | 'ask'
+export type PermissionLevel = "denied" | "allowed" | "ask"
 
 export interface Permission {
   id: string
@@ -175,12 +178,14 @@ export async function getPermissions(params?: {
     })
   }
   const query = searchParams.toString()
-  return fetchApi<PermissionsResponse>(`/api/permissions${query ? `?${query}` : ''}`)
+  return fetchApi<PermissionsResponse>(
+    `/api/permissions${query ? `?${query}` : ""}`
+  )
 }
 
 // Settings API
 export interface Settings {
-  theme: 'dark' | 'light' | 'auto'
+  theme: "dark" | "light" | "auto"
   language: string
   autoApprove: boolean
   logRetention: number
@@ -203,13 +208,15 @@ export interface DataClearResponse {
 }
 
 export async function getSettings(): Promise<Settings> {
-  return fetchApi<Settings>('/api/settings')
+  return fetchApi<Settings>("/api/settings")
 }
 
-export async function updateSettings(settings: Partial<Settings>): Promise<SettingsUpdateResponse> {
-  return fetchApi<SettingsUpdateResponse>('/api/settings', {
-    method: 'PUT',
-    body: JSON.stringify(settings)
+export async function updateSettings(
+  settings: Partial<Settings>
+): Promise<SettingsUpdateResponse> {
+  return fetchApi<SettingsUpdateResponse>("/api/settings", {
+    method: "PUT",
+    body: JSON.stringify(settings),
   })
 }
 
@@ -223,35 +230,38 @@ export interface ExportData {
 }
 
 export async function exportData(): Promise<ExportData> {
-  return fetchApi<ExportData>('/api/settings/export', {
-    method: 'POST'
+  return fetchApi<ExportData>("/api/settings/export", {
+    method: "POST",
   })
 }
 
 export async function clearAllData(): Promise<DataClearResponse> {
-  return fetchApi<DataClearResponse>('/api/settings/data', {
-    method: 'DELETE'
+  return fetchApi<DataClearResponse>("/api/settings/data", {
+    method: "DELETE",
   })
 }
 
 export async function resetSettings(): Promise<SettingsUpdateResponse> {
-  return fetchApi<SettingsUpdateResponse>('/api/settings/reset', {
-    method: 'POST'
+  return fetchApi<SettingsUpdateResponse>("/api/settings/reset", {
+    method: "POST",
   })
 }
 
 // API client object for pages that use object-style API calls
 export const api = {
   get: <T>(path: string): Promise<T> => fetchApi<T>(path),
-  post: <T>(path: string, data?: unknown): Promise<T> => fetchApi<T>(path, {
-    method: 'POST',
-    body: data ? JSON.stringify(data) : undefined
-  }),
-  put: <T>(path: string, data?: unknown): Promise<T> => fetchApi<T>(path, {
-    method: 'PUT',
-    body: data ? JSON.stringify(data) : undefined
-  }),
-  delete: <T>(path: string): Promise<T> => fetchApi<T>(path, {
-    method: 'DELETE'
-  })
+  post: <T>(path: string, data?: unknown): Promise<T> =>
+    fetchApi<T>(path, {
+      method: "POST",
+      body: data ? JSON.stringify(data) : undefined,
+    }),
+  put: <T>(path: string, data?: unknown): Promise<T> =>
+    fetchApi<T>(path, {
+      method: "PUT",
+      body: data ? JSON.stringify(data) : undefined,
+    }),
+  delete: <T>(path: string): Promise<T> =>
+    fetchApi<T>(path, {
+      method: "DELETE",
+    }),
 }

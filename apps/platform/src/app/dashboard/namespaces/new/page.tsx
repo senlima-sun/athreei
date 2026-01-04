@@ -1,26 +1,26 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { PageHeader } from "@/components/dashboard/page-header";
-import { NamespaceForm } from "@/components/namespaces";
-import { useActiveOrganization } from "@/lib/auth-client";
-import { Loader2 } from "lucide-react";
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { PageHeader } from "@/components/dashboard/page-header"
+import { NamespaceForm } from "@/components/namespaces"
+import { useActiveOrganization } from "@/lib/auth-client"
+import { Loader2 } from "lucide-react"
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
 
 export default function NewNamespacePage() {
-  const router = useRouter();
-  const { data: activeOrg, isPending: isOrgPending } = useActiveOrganization();
-  const [error, setError] = useState<string | null>(null);
+  const router = useRouter()
+  const { data: activeOrg, isPending: isOrgPending } = useActiveOrganization()
+  const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async (data: { name: string; description?: string }) => {
     if (!activeOrg?.id) {
-      setError("No organization selected");
-      return;
+      setError("No organization selected")
+      return
     }
 
-    setError(null);
+    setError(null)
 
     try {
       const response = await fetch(
@@ -36,22 +36,22 @@ export default function NewNamespacePage() {
             description: data.description || undefined,
           }),
         }
-      );
+      )
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.message || "Failed to create namespace");
+        const errorData = await response.json().catch(() => null)
+        throw new Error(errorData?.message || "Failed to create namespace")
       }
 
       // Navigate to namespaces list on success
-      router.push("/dashboard/namespaces");
+      router.push("/dashboard/namespaces")
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to create namespace"
-      );
-      throw err; // Re-throw so form shows error state
+      )
+      throw err // Re-throw so form shows error state
     }
-  };
+  }
 
   if (isOrgPending) {
     return (
@@ -64,7 +64,7 @@ export default function NewNamespacePage() {
           <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
         </div>
       </div>
-    );
+    )
   }
 
   if (!activeOrg) {
@@ -80,7 +80,7 @@ export default function NewNamespacePage() {
           </p>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -98,5 +98,5 @@ export default function NewNamespacePage() {
 
       <NamespaceForm onSubmit={handleSubmit} submitLabel="Create namespace" />
     </div>
-  );
+  )
 }

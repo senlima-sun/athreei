@@ -4,8 +4,8 @@
  * These tables are required by Better Auth with the organization plugin.
  */
 
-import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
-import { relations } from "drizzle-orm";
+import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core"
+import { relations } from "drizzle-orm"
 
 // =============================================================================
 // Core Authentication Tables
@@ -18,11 +18,13 @@ export const user = sqliteTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
-  emailVerified: integer("emailVerified", { mode: "boolean" }).notNull().default(false),
+  emailVerified: integer("emailVerified", { mode: "boolean" })
+    .notNull()
+    .default(false),
   image: text("image"),
   createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
-});
+})
 
 /**
  * Session table - stores active user sessions
@@ -42,7 +44,7 @@ export const session = sqliteTable("session", {
   ),
   createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
-});
+})
 
 /**
  * Account table - stores OAuth provider connections and credentials
@@ -57,13 +59,15 @@ export const account = sqliteTable("account", {
   accessToken: text("accessToken"),
   refreshToken: text("refreshToken"),
   accessTokenExpiresAt: integer("accessTokenExpiresAt", { mode: "timestamp" }),
-  refreshTokenExpiresAt: integer("refreshTokenExpiresAt", { mode: "timestamp" }),
+  refreshTokenExpiresAt: integer("refreshTokenExpiresAt", {
+    mode: "timestamp",
+  }),
   scope: text("scope"),
   idToken: text("idToken"),
   password: text("password"), // For credential provider (hashed)
   createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
-});
+})
 
 /**
  * Verification table - stores email verification and password reset tokens
@@ -75,7 +79,7 @@ export const verification = sqliteTable("verification", {
   expiresAt: integer("expiresAt", { mode: "timestamp" }).notNull(),
   createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
   updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
-});
+})
 
 // =============================================================================
 // Organization Plugin Tables
@@ -91,7 +95,7 @@ export const organization = sqliteTable("organization", {
   logo: text("logo"),
   metadata: text("metadata"), // JSON string for additional data
   createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
-});
+})
 
 /**
  * Member table - stores organization membership
@@ -106,7 +110,7 @@ export const member = sqliteTable("member", {
     .references(() => organization.id, { onDelete: "cascade" }),
   role: text("role").notNull(), // owner, admin, member, etc.
   createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
-});
+})
 
 /**
  * Invitation table - stores pending organization invitations
@@ -124,7 +128,7 @@ export const invitation = sqliteTable("invitation", {
   status: text("status").notNull(), // pending, accepted, rejected, canceled
   expiresAt: integer("expiresAt", { mode: "timestamp" }).notNull(),
   createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
-});
+})
 
 // =============================================================================
 // Relations
@@ -135,7 +139,7 @@ export const userRelations = relations(user, ({ many }) => ({
   accounts: many(account),
   memberships: many(member),
   invitations: many(invitation),
-}));
+}))
 
 export const sessionRelations = relations(session, ({ one }) => ({
   user: one(user, {
@@ -146,19 +150,19 @@ export const sessionRelations = relations(session, ({ one }) => ({
     fields: [session.activeOrganizationId],
     references: [organization.id],
   }),
-}));
+}))
 
 export const accountRelations = relations(account, ({ one }) => ({
   user: one(user, {
     fields: [account.userId],
     references: [user.id],
   }),
-}));
+}))
 
 export const organizationRelations = relations(organization, ({ many }) => ({
   members: many(member),
   invitations: many(invitation),
-}));
+}))
 
 export const memberRelations = relations(member, ({ one }) => ({
   user: one(user, {
@@ -169,7 +173,7 @@ export const memberRelations = relations(member, ({ one }) => ({
     fields: [member.organizationId],
     references: [organization.id],
   }),
-}));
+}))
 
 export const invitationRelations = relations(invitation, ({ one }) => ({
   inviter: one(user, {
@@ -180,4 +184,4 @@ export const invitationRelations = relations(invitation, ({ one }) => ({
     fields: [invitation.organizationId],
     references: [organization.id],
   }),
-}));
+}))

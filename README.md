@@ -78,28 +78,28 @@ npm install @athreei/sdk
 ```
 
 ```javascript
-import { athreei } from '@athreei/sdk'
+import { athreei } from "@athreei/sdk"
 
 // Wait for athreei to be ready
 athreei.onReady((info) => {
-  console.log('athreei ready:', info.version)
+  console.log("athreei ready:", info.version)
 })
 
 // Register a custom tool
 athreei.registerTool({
-  name: 'add_to_cart',
-  description: 'Add a product to the shopping cart',
+  name: "add_to_cart",
+  description: "Add a product to the shopping cart",
   parameters: {
-    productId: { type: 'string', required: true },
-    quantity: { type: 'number', default: 1 }
+    productId: { type: "string", required: true },
+    quantity: { type: "number", default: 1 },
   },
   handler: async ({ productId, quantity }) => {
     await addToCart(productId, quantity)
     return {
       success: true,
-      cartCount: getCartCount()
+      cartCount: getCartCount(),
     }
-  }
+  },
 })
 ```
 

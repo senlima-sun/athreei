@@ -2,9 +2,9 @@
  * Endpoints & API Keys Schema (PostgreSQL)
  */
 
-import { pgTable, text, timestamp, integer } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
-import { organization, user } from "./auth";
+import { pgTable, text, timestamp, integer } from "drizzle-orm/pg-core"
+import { relations } from "drizzle-orm"
+import { organization, user } from "./auth"
 
 export const endpoint = pgTable("endpoint", {
   id: text("id").primaryKey(),
@@ -20,7 +20,7 @@ export const endpoint = pgTable("endpoint", {
   status: text("status").notNull().default("active"),
   createdAt: timestamp("createdAt").notNull(),
   updatedAt: timestamp("updatedAt").notNull(),
-});
+})
 
 export const apiKey = pgTable("api_key", {
   id: text("id").primaryKey(),
@@ -44,7 +44,7 @@ export const apiKey = pgTable("api_key", {
   revokedById: text("revokedById").references(() => user.id),
   createdAt: timestamp("createdAt").notNull(),
   updatedAt: timestamp("updatedAt").notNull(),
-});
+})
 
 export const endpointRelations = relations(endpoint, ({ one, many }) => ({
   organization: one(organization, {
@@ -52,7 +52,7 @@ export const endpointRelations = relations(endpoint, ({ one, many }) => ({
     references: [organization.id],
   }),
   apiKeys: many(apiKey),
-}));
+}))
 
 export const apiKeyRelations = relations(apiKey, ({ one }) => ({
   organization: one(organization, {
@@ -71,4 +71,4 @@ export const apiKeyRelations = relations(apiKey, ({ one }) => ({
     fields: [apiKey.revokedById],
     references: [user.id],
   }),
-}));
+}))

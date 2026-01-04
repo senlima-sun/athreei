@@ -22,7 +22,8 @@ const STATUS_POLLING_INTERVAL_MS = 10000 // 10 seconds
 export function ConnectionStatus() {
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null)
   const [mcpStatus, setMcpStatus] = useState<McpStatus | null>(null)
-  const [extensionStatus, setExtensionStatus] = useState<ExtensionStatus | null>(null)
+  const [extensionStatus, setExtensionStatus] =
+    useState<ExtensionStatus | null>(null)
   const [showDetails, setShowDetails] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -58,7 +59,10 @@ export function ConnectionStatus() {
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setShowDetails(false)
       }
     }
@@ -140,7 +144,10 @@ export function ConnectionStatus() {
               {/* MCP Server Status */}
               <div className="mb-4">
                 <div className="flex items-center gap-2 mb-1">
-                  <StatusIndicator status={mcpStatus?.running ? "online" : "offline"} size="sm" />
+                  <StatusIndicator
+                    status={mcpStatus?.running ? "online" : "offline"}
+                    size="sm"
+                  />
                   <h4 className="m-0 text-sm font-medium">MCP Server</h4>
                 </div>
                 {mcpStatus && (
@@ -168,7 +175,9 @@ export function ConnectionStatus() {
                     <div>Active tabs: {extensionStatus.activeTabs}</div>
                     <div>
                       Native host:{" "}
-                      {extensionStatus.nativeHost.connected ? "Connected" : "Disconnected"}
+                      {extensionStatus.nativeHost.connected
+                        ? "Connected"
+                        : "Disconnected"}
                     </div>
                   </div>
                 )}
@@ -176,7 +185,9 @@ export function ConnectionStatus() {
 
               {/* Connected AI Apps */}
               <div>
-                <h4 className="m-0 mb-1 text-sm font-medium">Connected AI Apps</h4>
+                <h4 className="m-0 mb-1 text-sm font-medium">
+                  Connected AI Apps
+                </h4>
                 {systemStatus?.aiApps && systemStatus.aiApps.length > 0 ? (
                   <div className="flex flex-wrap gap-1 mt-1">
                     {systemStatus.aiApps.map((app) => (
@@ -189,7 +200,9 @@ export function ConnectionStatus() {
                     ))}
                   </div>
                 ) : (
-                  <p className="m-0 text-xs text-muted-foreground">No AI apps connected</p>
+                  <p className="m-0 text-xs text-muted-foreground">
+                    No AI apps connected
+                  </p>
                 )}
               </div>
 
@@ -198,7 +211,9 @@ export function ConnectionStatus() {
                 <div className="mt-4 pt-4 border-t border-border text-xs text-muted-foreground">
                   <div>System version: {systemStatus.version}</div>
                   {systemStatus.uptime && (
-                    <div>System uptime: {formatUptime(systemStatus.uptime)}</div>
+                    <div>
+                      System uptime: {formatUptime(systemStatus.uptime)}
+                    </div>
                   )}
                 </div>
               )}

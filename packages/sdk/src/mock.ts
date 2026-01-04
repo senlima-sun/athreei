@@ -2,7 +2,11 @@
  * Mock mode for testing athreei integration without the extension
  */
 
-import { dispatchAiiiEvent, generateRequestId, AIII_EVENT_NAMES } from "./events"
+import {
+  dispatchAiiiEvent,
+  generateRequestId,
+  AIII_EVENT_NAMES,
+} from "./events"
 import type { AiiiReadyEvent, AiiiRequestEvent } from "./types"
 
 /**
@@ -65,7 +69,7 @@ export function enableMockMode(options: MockModeOptions): void {
   if (options.mock !== true) {
     console.error(
       "[athreei mock] Mock mode requires explicit `mock: true` flag. " +
-      "This is to prevent accidental activation in production."
+        "This is to prevent accidental activation in production."
     )
     return
   }
@@ -76,10 +80,13 @@ export function enableMockMode(options: MockModeOptions): void {
   }
 
   // Production warning
-  if (typeof process !== "undefined" && process.env?.NODE_ENV === "production") {
+  if (
+    typeof process !== "undefined" &&
+    process.env?.NODE_ENV === "production"
+  ) {
     console.warn(
       "[athreei mock] WARNING: Mock mode is active in production environment! " +
-      "This should only be used for testing purposes."
+        "This should only be used for testing purposes."
     )
   }
 
@@ -95,7 +102,13 @@ export function enableMockMode(options: MockModeOptions): void {
     simulateDelay: options.simulateDelay ?? 100,
     mockResponses: options.mockResponses ?? {},
     version: options.version ?? "0.1.0-mock",
-    capabilities: options.capabilities ?? ["click", "type", "navigate", "scroll", "screenshot"],
+    capabilities: options.capabilities ?? [
+      "click",
+      "type",
+      "navigate",
+      "scroll",
+      "screenshot",
+    ],
     autoTriggerTools: options.autoTriggerTools ?? [],
   }
 
@@ -133,7 +146,9 @@ export function enableMockMode(options: MockModeOptions): void {
     }
   }
   document.addEventListener(AIII_EVENT_NAMES.REGISTER, registerHandler)
-  cleanupFunctions.push(() => document.removeEventListener(AIII_EVENT_NAMES.REGISTER, registerHandler))
+  cleanupFunctions.push(() =>
+    document.removeEventListener(AIII_EVENT_NAMES.REGISTER, registerHandler)
+  )
 
   // Listen for responses to log them
   const responseHandler = (event: Event) => {
@@ -141,7 +156,9 @@ export function enableMockMode(options: MockModeOptions): void {
     console.log("[athreei mock] Response received:", customEvent.detail)
   }
   document.addEventListener(AIII_EVENT_NAMES.RESPONSE, responseHandler)
-  cleanupFunctions.push(() => document.removeEventListener(AIII_EVENT_NAMES.RESPONSE, responseHandler))
+  cleanupFunctions.push(() =>
+    document.removeEventListener(AIII_EVENT_NAMES.RESPONSE, responseHandler)
+  )
 }
 
 /**
@@ -149,7 +166,7 @@ export function enableMockMode(options: MockModeOptions): void {
  */
 export function disableMockMode(): void {
   mockModeEnabled = false
-  cleanupFunctions.forEach(fn => fn())
+  cleanupFunctions.forEach((fn) => fn())
   cleanupFunctions = []
   console.log("[athreei mock] Mock mode disabled")
 }
@@ -164,7 +181,10 @@ export function isMockModeEnabled(): boolean {
 /**
  * Manually trigger a mock request
  */
-export function triggerMockRequest(tool: string, args: Record<string, unknown> = {}): void {
+export function triggerMockRequest(
+  tool: string,
+  args: Record<string, unknown> = {}
+): void {
   if (!mockModeEnabled) {
     console.warn("[athreei mock] Mock mode is not enabled")
     return

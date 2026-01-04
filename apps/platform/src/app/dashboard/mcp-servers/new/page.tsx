@@ -1,32 +1,38 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { PageHeader } from "@/components/dashboard/page-header";
-import { McpServerForm, McpServerFormData, McpServer, McpTransportType } from "@/components/mcp";
-import { useActiveOrganization } from "@/lib/auth-client";
-import { Loader2 } from "lucide-react";
+import { useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { PageHeader } from "@/components/dashboard/page-header"
+import {
+  McpServerForm,
+  McpServerFormData,
+  McpServer,
+  McpTransportType,
+} from "@/components/mcp"
+import { useActiveOrganization } from "@/lib/auth-client"
+import { Loader2 } from "lucide-react"
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
 
 // Transform frontend form data to API format
 function toApiFormat(data: McpServerFormData) {
   return {
     name: data.name,
     description: data.description || undefined,
-    transport: data.transportType === "http" ? "streamable-http" : data.transportType,
+    transport:
+      data.transportType === "http" ? "streamable-http" : data.transportType,
     status: data.status,
     command: data.command || undefined,
     args: data.args?.length ? JSON.stringify(data.args) : undefined,
     url: data.url || undefined,
-  };
+  }
 }
 
 export default function NewMcpServerPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const { data: activeOrg, isPending: isOrgPending } = useActiveOrganization();
-  const [error, setError] = useState<string | null>(null);
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const { data: activeOrg, isPending: isOrgPending } = useActiveOrganization()
+  const [error, setError] = useState<string | null>(null)
 
   // Build initial server from query params (from JSON import)
   const initialServer: McpServer | undefined = searchParams.get("name")
@@ -34,21 +40,22 @@ export default function NewMcpServerPage() {
         id: "",
         name: searchParams.get("name") || "",
         description: searchParams.get("description") || undefined,
-        transportType: (searchParams.get("transport") || "stdio") as McpTransportType,
+        transportType: (searchParams.get("transport") ||
+          "stdio") as McpTransportType,
         status: "active",
         command: searchParams.get("command") || undefined,
         args: searchParams.get("args")?.split(" ").filter(Boolean) || undefined,
         url: searchParams.get("url") || undefined,
       }
-    : undefined;
+    : undefined
 
   const handleSubmit = async (data: McpServerFormData) => {
     if (!activeOrg?.id) {
-      setError("No organization selected");
-      return;
+      setError("No organization selected")
+      return
     }
 
-    setError(null);
+    setError(null)
 
     try {
       const response = await fetch(
@@ -61,19 +68,21 @@ export default function NewMcpServerPage() {
           credentials: "include",
           body: JSON.stringify(toApiFormat(data)),
         }
-      );
+      )
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.message || "Failed to create MCP server");
+        const errorData = await response.json().catch(() => null)
+        throw new Error(errorData?.message || "Failed to create MCP server")
       }
 
-      router.push("/dashboard/mcp-servers");
+      router.push("/dashboard/mcp-servers")
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create MCP server");
-      throw err; // Re-throw so form shows error state
+      setError(
+        err instanceof Error ? err.message : "Failed to create MCP server"
+      )
+      throw err // Re-throw so form shows error state
     }
-  };
+  }
 
   if (isOrgPending) {
     return (
@@ -86,7 +95,7 @@ export default function NewMcpServerPage() {
           <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
         </div>
       </div>
-    );
+    )
   }
 
   if (!activeOrg) {
@@ -102,7 +111,7 @@ export default function NewMcpServerPage() {
           </p>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -129,5 +138,5 @@ export default function NewMcpServerPage() {
         </div>
       </div>
     </div>
-  );
+  )
 }

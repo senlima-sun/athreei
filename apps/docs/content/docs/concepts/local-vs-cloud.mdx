@@ -24,13 +24,13 @@ Everything runs on your machine:
 
 ### Characteristics
 
-| Aspect | Local |
-|--------|-------|
-| Data location | 100% on your machine |
-| Audit logs | Local SQLite database |
-| Setup | Download binary, configure |
-| Performance | Fast - no network latency |
-| Transport | stdio |
+| Aspect        | Local                      |
+| ------------- | -------------------------- |
+| Data location | 100% on your machine       |
+| Audit logs    | Local SQLite database      |
+| Setup         | Download binary, configure |
+| Performance   | Fast - no network latency  |
+| Transport     | stdio                      |
 
 ### Best For
 
@@ -66,13 +66,13 @@ Gateway runs as a hosted service:
 
 ### Characteristics
 
-| Aspect | Cloud |
-|--------|-------|
+| Aspect        | Cloud                           |
+| ------------- | ------------------------------- |
 | Data location | Your MCPs remain where they are |
-| Audit logs | Cloud with E2E encryption |
-| Setup | Connect via API |
-| Performance | Network-dependent |
-| Transport | SSE |
+| Audit logs    | Cloud with E2E encryption       |
+| Setup         | Connect via API                 |
+| Performance   | Network-dependent               |
+| Transport     | SSE                             |
 
 ### Best For
 
@@ -85,23 +85,23 @@ Gateway runs as a hosted service:
 
 ```javascript
 // Connect via SSE
-const response = await fetch('https://gateway.athreei.com/sse', {
-  headers: { 'Authorization': 'Bearer YOUR_API_KEY' }
+const response = await fetch("https://gateway.athreei.com/sse", {
+  headers: { Authorization: "Bearer YOUR_API_KEY" },
 })
 ```
 
 ## Feature Comparison
 
-| Feature | Local | Cloud |
-|---------|-------|-------|
-| Transport | stdio | SSE |
-| Binary required | Yes | No |
-| Internet required | No | Yes |
-| Audit log storage | Local SQLite | Cloud (E2E encrypted) |
-| Dashboard | Local web UI | Hosted web UI |
-| Multi-user | Single user | Team support |
-| Session management | N/A | Automatic |
-| Offline support | Full | None |
+| Feature            | Local        | Cloud                 |
+| ------------------ | ------------ | --------------------- |
+| Transport          | stdio        | SSE                   |
+| Binary required    | Yes          | No                    |
+| Internet required  | No           | Yes                   |
+| Audit log storage  | Local SQLite | Cloud (E2E encrypted) |
+| Dashboard          | Local web UI | Hosted web UI         |
+| Multi-user         | Single user  | Team support          |
+| Session management | N/A          | Automatic             |
+| Offline support    | Full         | None                  |
 
 ## Audit Log Differences
 
@@ -165,13 +165,13 @@ Start
 
 ### Recommendations
 
-| Scenario | Setup |
-|----------|-------|
-| Claude Desktop user | Local Gateway |
-| Web-based AI product | Cloud Gateway |
+| Scenario             | Setup                 |
+| -------------------- | --------------------- |
+| Claude Desktop user  | Local Gateway         |
+| Web-based AI product | Cloud Gateway         |
 | Team with mixed apps | Both (sync via cloud) |
-| Maximum data control | Local Gateway |
-| Quick testing | Cloud Gateway |
+| Maximum data control | Local Gateway         |
+| Quick testing        | Cloud Gateway         |
 
 ## Mixing Modes
 
@@ -183,5 +183,6 @@ You can use both:
 - Same MCP server configs work in both
 
 Configure each AI app for its appropriate transport:
+
 - Desktop apps → stdio → Local Gateway
 - Web apps → SSE → Cloud Gateway

@@ -64,7 +64,8 @@ export function showPermissionDialog(
     const container = createDialogContainer()
     const shadow = container.attachShadow({ mode: "closed" })
 
-    const description = options.toolDescription || getToolDescription(options.tool)
+    const description =
+      options.toolDescription || getToolDescription(options.tool)
     let rememberChoice = false
     let isResolved = false
 
@@ -359,7 +360,9 @@ export function showPermissionDialog(
       "remember-checkbox"
     ) as HTMLInputElement
     const denyBtn = shadow.getElementById("deny-btn") as HTMLButtonElement
-    const allowOnceBtn = shadow.getElementById("allow-once-btn") as HTMLButtonElement
+    const allowOnceBtn = shadow.getElementById(
+      "allow-once-btn"
+    ) as HTMLButtonElement
     const allowBtn = shadow.getElementById("allow-btn") as HTMLButtonElement
     const closeBtn = shadow.getElementById("close-btn") as HTMLButtonElement
 

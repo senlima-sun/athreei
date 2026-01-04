@@ -1,21 +1,21 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { Server, Trash2, ToggleLeft, ToggleRight, Loader2 } from "lucide-react";
+import { useState } from "react"
+import { Server, Trash2, ToggleLeft, ToggleRight, Loader2 } from "lucide-react"
 
 export interface NamespaceServer {
-  id: string;
-  serverId: string;
-  name: string;
-  description?: string | null;
-  status: "online" | "offline" | "unknown";
-  enabled: boolean;
+  id: string
+  serverId: string
+  name: string
+  description?: string | null
+  status: "online" | "offline" | "unknown"
+  enabled: boolean
 }
 
 interface NamespaceServerListProps {
-  servers: NamespaceServer[];
-  onRemove: (serverId: string) => Promise<void>;
-  onToggleEnabled: (serverId: string, enabled: boolean) => Promise<void>;
+  servers: NamespaceServer[]
+  onRemove: (serverId: string) => Promise<void>
+  onToggleEnabled: (serverId: string, enabled: boolean) => Promise<void>
 }
 
 export function NamespaceServerList({
@@ -23,50 +23,50 @@ export function NamespaceServerList({
   onRemove,
   onToggleEnabled,
 }: NamespaceServerListProps) {
-  const [removingId, setRemovingId] = useState<string | null>(null);
-  const [togglingId, setTogglingId] = useState<string | null>(null);
-  const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null)
+  const [togglingId, setTogglingId] = useState<string | null>(null)
+  const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null)
 
   const handleRemove = async (serverId: string) => {
-    setRemovingId(serverId);
+    setRemovingId(serverId)
     try {
-      await onRemove(serverId);
+      await onRemove(serverId)
     } finally {
-      setRemovingId(null);
-      setConfirmRemoveId(null);
+      setRemovingId(null)
+      setConfirmRemoveId(null)
     }
-  };
+  }
 
   const handleToggle = async (serverId: string, currentEnabled: boolean) => {
-    setTogglingId(serverId);
+    setTogglingId(serverId)
     try {
-      await onToggleEnabled(serverId, !currentEnabled);
+      await onToggleEnabled(serverId, !currentEnabled)
     } finally {
-      setTogglingId(null);
+      setTogglingId(null)
     }
-  };
+  }
 
   const getStatusColor = (status: NamespaceServer["status"]) => {
     switch (status) {
       case "online":
-        return "bg-green-500";
+        return "bg-green-500"
       case "offline":
-        return "bg-red-500";
+        return "bg-red-500"
       default:
-        return "bg-gray-400";
+        return "bg-gray-400"
     }
-  };
+  }
 
   const getStatusLabel = (status: NamespaceServer["status"]) => {
     switch (status) {
       case "online":
-        return "Online";
+        return "Online"
       case "offline":
-        return "Offline";
+        return "Offline"
       default:
-        return "Unknown";
+        return "Unknown"
     }
-  };
+  }
 
   if (servers.length === 0) {
     return (
@@ -79,7 +79,7 @@ export function NamespaceServerList({
           Add MCP servers to this namespace to organize your tools.
         </p>
       </div>
-    );
+    )
   }
 
   return (
@@ -172,5 +172,5 @@ export function NamespaceServerList({
         ))}
       </ul>
     </div>
-  );
+  )
 }

@@ -1,28 +1,33 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { PageHeader } from "@/components/dashboard/page-header";
-import { McpServerCardGrid, McpServer, McpTransportType, JsonImportModal } from "@/components/mcp";
-import { useActiveOrganization } from "@/lib/auth-client";
-import { Plus, Loader2, Server, FileJson } from "lucide-react";
-import type { ParsedMcpServer } from "@/lib/mcp-config-parser";
+import { useState, useEffect } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { PageHeader } from "@/components/dashboard/page-header"
+import {
+  McpServerCardGrid,
+  McpServer,
+  McpTransportType,
+  JsonImportModal,
+} from "@/components/mcp"
+import { useActiveOrganization } from "@/lib/auth-client"
+import { Plus, Loader2, Server, FileJson } from "lucide-react"
+import type { ParsedMcpServer } from "@/lib/mcp-config-parser"
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
 
 // API response types
 interface ApiMcpServer {
-  id: string;
-  name: string;
-  description?: string | null;
-  transport: "stdio" | "sse" | "streamable-http";
-  status: "active" | "inactive" | "pending";
-  command?: string | null;
-  args?: string | null;
-  url?: string | null;
-  createdAt: string;
-  updatedAt: string;
+  id: string
+  name: string
+  description?: string | null
+  transport: "stdio" | "sse" | "streamable-http"
+  status: "active" | "inactive" | "pending"
+  command?: string | null
+  args?: string | null
+  url?: string | null
+  createdAt: string
+  updatedAt: string
 }
 
 // Transform API response to frontend format
@@ -31,70 +36,72 @@ function toFrontendFormat(server: ApiMcpServer): McpServer {
     id: server.id,
     name: server.name,
     description: server.description || undefined,
-    transportType: (server.transport === "streamable-http" ? "http" : server.transport) as McpTransportType,
+    transportType: (server.transport === "streamable-http"
+      ? "http"
+      : server.transport) as McpTransportType,
     status: server.status === "pending" ? "inactive" : server.status,
     command: server.command || undefined,
     args: server.args ? JSON.parse(server.args) : undefined,
     url: server.url || undefined,
     createdAt: new Date(server.createdAt),
     updatedAt: new Date(server.updatedAt),
-  };
+  }
 }
 
 export default function McpServersPage() {
-  const router = useRouter();
-  const { data: activeOrg, isPending: isOrgPending } = useActiveOrganization();
-  const [servers, setServers] = useState<McpServer[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [showJsonImport, setShowJsonImport] = useState(false);
+  const router = useRouter()
+  const { data: activeOrg, isPending: isOrgPending } = useActiveOrganization()
+  const [servers, setServers] = useState<McpServer[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [showJsonImport, setShowJsonImport] = useState(false)
 
   const handleImport = (parsedServers: ParsedMcpServer[]) => {
     // Redirect to new page with first server pre-filled
     // Full implementation would batch-create all servers
-    const server = parsedServers[0];
+    const server = parsedServers[0]
     const params = new URLSearchParams({
       name: server.name,
       transport: server.transport,
       ...(server.command && { command: server.command }),
       ...(server.args?.length && { args: server.args.join(" ") }),
       ...(server.url && { url: server.url }),
-    });
-    router.push(`/dashboard/mcp-servers/new?${params.toString()}`);
-    setShowJsonImport(false);
-  };
+    })
+    router.push(`/dashboard/mcp-servers/new?${params.toString()}`)
+    setShowJsonImport(false)
+  }
 
   useEffect(() => {
     const loadServers = async () => {
-      if (!activeOrg?.id) return;
+      if (!activeOrg?.id) return
 
-      setIsLoading(true);
-      setError(null);
+      setIsLoading(true)
+      setError(null)
 
       try {
         const response = await fetch(
           `${API_URL}/api/mcp-servers?organizationId=${activeOrg.id}`,
           { credentials: "include" }
-        );
+        )
 
         if (!response.ok) {
-          throw new Error("Failed to fetch MCP servers");
+          throw new Error("Failed to fetch MCP servers")
         }
 
-        const data = await response.json();
-        const transformedServers = (data.data || []).map(toFrontendFormat);
-        setServers(transformedServers);
+        const data = await response.json()
+        const transformedServers = (data.data || []).map(toFrontendFormat)
+        setServers(transformedServers)
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load servers");
+        setError(err instanceof Error ? err.message : "Failed to load servers")
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
-    };
+    }
 
     if (!isOrgPending) {
-      loadServers();
+      loadServers()
     }
-  }, [activeOrg?.id, isOrgPending]);
+  }, [activeOrg?.id, isOrgPending])
 
   if (isOrgPending || isLoading) {
     return (
@@ -107,7 +114,7 @@ export default function McpServersPage() {
           <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
         </div>
       </div>
-    );
+    )
   }
 
   if (!activeOrg) {
@@ -123,7 +130,7 @@ export default function McpServersPage() {
           </p>
         </div>
       </div>
-    );
+    )
   }
 
   if (error) {
@@ -144,7 +151,7 @@ export default function McpServersPage() {
           </button>
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -205,5 +212,5 @@ export default function McpServersPage() {
         />
       )}
     </div>
-  );
+  )
 }

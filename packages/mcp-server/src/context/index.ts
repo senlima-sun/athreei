@@ -6,25 +6,25 @@
  */
 
 export interface McpContext {
-  clientName: string;
-  clientVersion: string;
-  connectedAt: Date;
+  clientName: string
+  clientVersion: string
+  connectedAt: Date
 }
 
-let currentContext: McpContext | null = null;
+let currentContext: McpContext | null = null
 
 /**
  * Set the MCP context when a client connects
  */
 export function setMcpContext(context: McpContext): void {
-  currentContext = context;
+  currentContext = context
 }
 
 /**
  * Get the current MCP context
  */
 export function getMcpContext(): McpContext | null {
-  return currentContext;
+  return currentContext
 }
 
 /**
@@ -32,19 +32,19 @@ export function getMcpContext(): McpContext | null {
  * Returns the client name if available, otherwise "AI Assistant"
  */
 export function getAiAppName(): string {
-  return currentContext?.clientName || "AI Assistant";
+  return currentContext?.clientName || "AI Assistant"
 }
 
 /**
  * Clear the MCP context when disconnected
  */
 export function clearMcpContext(): void {
-  currentContext = null;
+  currentContext = null
 }
 
 /**
  * Check if a client is currently connected
  */
 export function isClientConnected(): boolean {
-  return currentContext !== null;
+  return currentContext !== null
 }

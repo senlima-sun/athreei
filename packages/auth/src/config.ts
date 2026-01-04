@@ -1,23 +1,23 @@
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { organization } from "better-auth/plugins";
-import type { BetterAuthOptions } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle"
+import { organization } from "better-auth/plugins"
+import type { BetterAuthOptions } from "better-auth"
 
-export type DatabaseProvider = "sqlite" | "pg" | "mysql";
+export type DatabaseProvider = "sqlite" | "pg" | "mysql"
 
 /**
  * Email callback functions for auth flows
  */
 export interface EmailCallbacks {
   sendResetPassword?: (params: {
-    user: { email: string; name: string };
-    url: string;
-    token: string;
-  }) => Promise<void>;
+    user: { email: string; name: string }
+    url: string
+    token: string
+  }) => Promise<void>
   sendVerificationEmail?: (params: {
-    user: { email: string; name: string };
-    url: string;
-    token: string;
-  }) => Promise<void>;
+    user: { email: string; name: string }
+    url: string
+    token: string
+  }) => Promise<void>
 }
 
 export interface AuthConfigOptions extends Partial<BetterAuthOptions> {
@@ -25,11 +25,11 @@ export interface AuthConfigOptions extends Partial<BetterAuthOptions> {
    * Database provider type
    * @default "sqlite"
    */
-  provider?: DatabaseProvider;
+  provider?: DatabaseProvider
   /**
    * Email callback functions for password reset and verification
    */
-  email?: EmailCallbacks;
+  email?: EmailCallbacks
 }
 
 /**
@@ -42,7 +42,7 @@ export function createAuthConfig(
   db: Parameters<typeof drizzleAdapter>[0],
   options: AuthConfigOptions = {}
 ): BetterAuthOptions {
-  const { provider = "sqlite", email, ...restOptions } = options;
+  const { provider = "sqlite", email, ...restOptions } = options
 
   return {
     database: drizzleAdapter(db, {
@@ -59,11 +59,11 @@ export function createAuthConfig(
               url,
               token,
             }: {
-              user: { email: string; name: string };
-              url: string;
-              token: string;
+              user: { email: string; name: string }
+              url: string
+              token: string
             }) => {
-              await email.sendResetPassword!({ user, url, token });
+              await email.sendResetPassword!({ user, url, token })
             },
           }
         : {}),
@@ -78,11 +78,11 @@ export function createAuthConfig(
               url,
               token,
             }: {
-              user: { email: string; name: string };
-              url: string;
-              token: string;
+              user: { email: string; name: string }
+              url: string
+              token: string
             }) => {
-              await email.sendVerificationEmail!({ user, url, token });
+              await email.sendVerificationEmail!({ user, url, token })
             },
             sendOnSignUp: true,
             autoSignInAfterVerification: true,
@@ -98,7 +98,6 @@ export function createAuthConfig(
       //   clientId: process.env.GITHUB_CLIENT_ID as string,
       //   clientSecret: process.env.GITHUB_CLIENT_SECRET as string,
       // },
-
       // Google OAuth
       // Uncomment and configure with your credentials:
       // google: {
@@ -131,5 +130,5 @@ export function createAuthConfig(
 
     // Merge any additional options
     ...restOptions,
-  };
+  }
 }

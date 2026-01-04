@@ -133,7 +133,8 @@ export function listAuditLogEntries(options?: {
     params.push(options.to)
   }
 
-  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : ""
+  const whereClause =
+    conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : ""
   const query = `
     SELECT * FROM audit_log
     ${whereClause}
@@ -193,7 +194,8 @@ export function countAuditLogEntries(options?: {
     params.push(options.to)
   }
 
-  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : ""
+  const whereClause =
+    conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : ""
   const query = `SELECT COUNT(*) as count FROM audit_log ${whereClause}`
 
   const result = db
@@ -227,9 +229,10 @@ export function clearAuditLog(): number {
  */
 export function getRecentAuditLogEntries(count: number = 50): AuditLogEntry[] {
   const rows = db
-    .query<AuditLogRow, [number]>(
-      "SELECT * FROM audit_log ORDER BY timestamp DESC LIMIT ?"
-    )
+    .query<
+      AuditLogRow,
+      [number]
+    >("SELECT * FROM audit_log ORDER BY timestamp DESC LIMIT ?")
     .all(count)
 
   return rows.map(rowToAuditLogEntry)

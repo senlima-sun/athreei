@@ -1,57 +1,63 @@
-"use client";
+"use client"
 
-import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { ChevronDown, Plus, Building2, Check } from "lucide-react";
-import { useActiveOrganization, useListOrganizations, organization } from "@/lib/auth-client";
+import { useState, useRef, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { ChevronDown, Plus, Building2, Check } from "lucide-react"
+import {
+  useActiveOrganization,
+  useListOrganizations,
+  organization,
+} from "@/lib/auth-client"
 
 interface Organization {
-  id: string;
-  name: string;
-  slug?: string | null;
-  logo?: string | null;
-  createdAt: Date;
+  id: string
+  name: string
+  slug?: string | null
+  logo?: string | null
+  createdAt: Date
 }
 
 export function OrgSwitcher() {
-  const router = useRouter();
-  const [open, setOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const router = useRouter()
+  const [open, setOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
-  const { data: activeOrg, isPending: isActiveOrgPending } = useActiveOrganization();
-  const { data: orgList, isPending: isOrgListPending } = useListOrganizations();
+  const { data: activeOrg, isPending: isActiveOrgPending } =
+    useActiveOrganization()
+  const { data: orgList, isPending: isOrgListPending } = useListOrganizations()
 
-  const organizations = (orgList ?? []) as Organization[];
-  const isPending = isActiveOrgPending || isOrgListPending;
+  const organizations = (orgList ?? []) as Organization[]
+  const isPending = isActiveOrgPending || isOrgListPending
 
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setOpen(false);
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setOpen(false)
       }
     }
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
 
   const handleSwitchOrg = async (orgId: string) => {
-    await organization.setActive({ organizationId: orgId });
-    setOpen(false);
+    await organization.setActive({ organizationId: orgId })
+    setOpen(false)
     // Refresh to update the active organization state
-    router.refresh();
-  };
+    router.refresh()
+  }
 
   const handleCreateOrg = () => {
-    setOpen(false);
-    router.push("/dashboard/organizations/new");
-  };
+    setOpen(false)
+    router.push("/dashboard/organizations/new")
+  }
 
   if (isPending) {
-    return (
-      <div className="h-9 w-32 animate-pulse rounded-md bg-gray-100" />
-    );
+    return <div className="h-9 w-32 animate-pulse rounded-md bg-gray-100" />
   }
 
   return (
@@ -110,5 +116,5 @@ export function OrgSwitcher() {
         </div>
       )}
     </div>
-  );
+  )
 }

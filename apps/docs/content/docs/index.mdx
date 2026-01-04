@@ -40,6 +40,7 @@ athreei solves this with three core features:
 ```
 
 Instead of configuring multiple MCP servers in your AI app, you configure **athreei once**. athreei then:
+
 1. **Aggregates** all your MCP servers behind a single endpoint
 2. **Logs** every tool call with full request/response data
 3. **Routes** requests to the appropriate MCP server
@@ -68,6 +69,7 @@ Tools from different servers are namespaced: `filesystem__read_file`, `github__c
 ### Audit Logging
 
 Every tool call is recorded with:
+
 - **Tool name and server** - Which tool was called on which server
 - **Request/Response** - Full payload with E2E encryption
 - **Status** - Success, denied, or error
@@ -82,16 +84,16 @@ Filter by endpoint, server, tool, status, or date range. Export for compliance.
 Websites can register custom tools that AI apps can discover and use:
 
 ```javascript
-import { athreei } from '@athreei/sdk'
+import { athreei } from "@athreei/sdk"
 
 // Register a tool
-athreei.registerTool('search_products', {
-  description: 'Search for products',
-  parameters: { query: { type: 'string' } },
+athreei.registerTool("search_products", {
+  description: "Search for products",
+  parameters: { query: { type: "string" } },
   handler: async ({ query }) => {
     const results = await searchProducts(query)
     return { products: results }
-  }
+  },
 })
 ```
 
@@ -110,15 +112,15 @@ When users visit your site with athreei, your tools become available to their AI
 
 ## Documentation
 
-| Section | Description |
-|---------|-------------|
-| [Getting Started](/docs/getting-started) | Installation and configuration |
-| [Gateway](/docs/gateway) | MCP aggregation and routing |
-| [Audit Logs](/docs/audit-logs) | Monitoring and compliance |
-| [SDK](/docs/sdk) | Website integration for vendors |
-| [Concepts](/docs/concepts) | Architecture overview |
-| [Browser Tools](/docs/browser-tools) | Demo tools for testing |
-| [Development](/docs/development) | Contributing to athreei |
+| Section                                  | Description                     |
+| ---------------------------------------- | ------------------------------- |
+| [Getting Started](/docs/getting-started) | Installation and configuration  |
+| [Gateway](/docs/gateway)                 | MCP aggregation and routing     |
+| [Audit Logs](/docs/audit-logs)           | Monitoring and compliance       |
+| [SDK](/docs/sdk)                         | Website integration for vendors |
+| [Concepts](/docs/concepts)               | Architecture overview           |
+| [Browser Tools](/docs/browser-tools)     | Demo tools for testing          |
+| [Development](/docs/development)         | Contributing to athreei         |
 
 ## Demo: Browser Tools
 

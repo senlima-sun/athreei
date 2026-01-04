@@ -25,7 +25,9 @@ import type { NativeRequest } from "@athreei/shared"
 describe("Protocol Helpers", () => {
   describe("createRequest", () => {
     test("creates a valid request message", () => {
-      const request = createRequest("test-id", "browser_list_tabs", { foo: "bar" })
+      const request = createRequest("test-id", "browser_list_tabs", {
+        foo: "bar",
+      })
 
       expect(request).toEqual({
         id: "test-id",
@@ -50,7 +52,12 @@ describe("Protocol Helpers", () => {
     })
 
     test("creates an error response", () => {
-      const response = createResponse("test-id", false, null, "Something went wrong")
+      const response = createResponse(
+        "test-id",
+        false,
+        null,
+        "Something went wrong"
+      )
 
       expect(response).toEqual({
         id: "test-id",
@@ -116,7 +123,12 @@ describe("Protocol Helpers", () => {
 
 describe("Message Encoding/Decoding", () => {
   test("encodes message length as little-endian uint32", () => {
-    const messageText = JSON.stringify({ id: "1", type: "request", method: "test", payload: {} })
+    const messageText = JSON.stringify({
+      id: "1",
+      type: "request",
+      method: "test",
+      payload: {},
+    })
     const messageBytes = Buffer.from(messageText, "utf-8")
     const messageLength = messageBytes.length
 
@@ -315,7 +327,9 @@ describe("handleRequest", () => {
 
     registerHandler(
       "validated",
-      async (payload: { name: string }) => ({ greeting: `Hello, ${payload.name}` }),
+      async (payload: { name: string }) => ({
+        greeting: `Hello, ${payload.name}`,
+      }),
       z.object({ name: z.string() })
     )
 
@@ -374,7 +388,9 @@ describe("initializeHandlers", () => {
     expect(response.success).toBe(true)
     expect(response.payload).toHaveProperty("pong", true)
     expect(response.payload).toHaveProperty("timestamp")
-    expect(typeof (response.payload as { timestamp: number }).timestamp).toBe("number")
+    expect(typeof (response.payload as { timestamp: number }).timestamp).toBe(
+      "number"
+    )
   })
 
   test("unregistered browser methods return unknown method error", async () => {

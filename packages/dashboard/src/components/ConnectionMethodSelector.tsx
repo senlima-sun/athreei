@@ -87,7 +87,10 @@ export function detectPlatform(): Platform {
 
   const userAgent = navigator.userAgent.toLowerCase()
   const platform = (
-    navigator.platform || (navigator as { userAgentData?: { platform?: string } }).userAgentData?.platform || ""
+    navigator.platform ||
+    (navigator as { userAgentData?: { platform?: string } }).userAgentData
+      ?.platform ||
+    ""
   ).toLowerCase()
 
   // Check for Windows
@@ -109,7 +112,9 @@ export function detectPlatform(): Platform {
       userAgent.includes("arm") ||
       // Check if running on a newer Mac (likely Apple Silicon)
       // Note: This is a heuristic and may not be 100% accurate
-      (typeof navigator !== "undefined" && "maxTouchPoints" in navigator && navigator.maxTouchPoints > 0)
+      (typeof navigator !== "undefined" &&
+        "maxTouchPoints" in navigator &&
+        navigator.maxTouchPoints > 0)
     ) {
       return "macos-arm64"
     }
@@ -131,7 +136,11 @@ function ProsConsList({ items }: { items: ProsConsItem[] }) {
           ) : (
             <X className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
           )}
-          <span className={cn(item.isPro ? "text-foreground" : "text-muted-foreground")}>
+          <span
+            className={cn(
+              item.isPro ? "text-foreground" : "text-muted-foreground"
+            )}
+          >
             {item.text}
           </span>
         </li>
@@ -192,7 +201,9 @@ export function ConnectionMethodSelector({
   return (
     <div className={cn("space-y-4", className)}>
       <div className="space-y-2">
-        <h3 className="text-lg font-semibold">Choose your connection method:</h3>
+        <h3 className="text-lg font-semibold">
+          Choose your connection method:
+        </h3>
         <p className="text-sm text-muted-foreground">
           Select how you want to connect your AI apps to athreei.
         </p>
@@ -270,21 +281,23 @@ export function ConnectionMethodSelector({
                   aria-label="Platform options"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  {(Object.keys(PLATFORM_LABELS) as Platform[]).map((platform) => (
-                    <button
-                      key={platform}
-                      role="option"
-                      aria-selected={platform === detectedPlatform}
-                      className={cn(
-                        "w-full px-4 py-2 text-left text-sm hover:bg-accent transition-colors",
-                        "first:rounded-t-md last:rounded-b-md",
-                        platform === detectedPlatform && "bg-accent"
-                      )}
-                      onClick={() => handleDownload(platform)}
-                    >
-                      {PLATFORM_LABELS[platform]}
-                    </button>
-                  ))}
+                  {(Object.keys(PLATFORM_LABELS) as Platform[]).map(
+                    (platform) => (
+                      <button
+                        key={platform}
+                        role="option"
+                        aria-selected={platform === detectedPlatform}
+                        className={cn(
+                          "w-full px-4 py-2 text-left text-sm hover:bg-accent transition-colors",
+                          "first:rounded-t-md last:rounded-b-md",
+                          platform === detectedPlatform && "bg-accent"
+                        )}
+                        onClick={() => handleDownload(platform)}
+                      >
+                        {PLATFORM_LABELS[platform]}
+                      </button>
+                    )
+                  )}
                 </div>
               )}
             </div>

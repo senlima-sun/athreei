@@ -1,9 +1,9 @@
-import type { SyncItem } from '../db/schema';
-import type { ConflictResponse } from '../types';
+import type { SyncItem } from "../db/schema"
+import type { ConflictResponse } from "../types"
 
 export interface ConflictResult {
-  hasConflict: boolean;
-  conflict?: ConflictResponse;
+  hasConflict: boolean
+  conflict?: ConflictResponse
 }
 
 /**
@@ -17,7 +17,7 @@ export function detectConflict(
 ): ConflictResult {
   // No server item means no conflict (new item)
   if (!serverItem) {
-    return { hasConflict: false };
+    return { hasConflict: false }
   }
 
   // If client doesn't provide version, assume conflict
@@ -30,7 +30,7 @@ export function detectConflict(
         clientVersion: 0,
         serverData: mapSyncItemToResponse(serverItem),
       },
-    };
+    }
   }
 
   // Version mismatch = conflict
@@ -43,10 +43,10 @@ export function detectConflict(
         clientVersion,
         serverData: mapSyncItemToResponse(serverItem),
       },
-    };
+    }
   }
 
-  return { hasConflict: false };
+  return { hasConflict: false }
 }
 
 /**
@@ -57,14 +57,14 @@ export function resolveConflict(
   serverItem: SyncItem,
   clientData: string,
   clientVersion: number
-): 'server' | 'client' | 'manual' {
+): "server" | "client" | "manual" {
   // If versions are close, require manual resolution
   if (Math.abs(serverItem.version - clientVersion) <= 1) {
-    return 'manual';
+    return "manual"
   }
 
   // Otherwise, last-write-wins (higher version)
-  return serverItem.version > clientVersion ? 'server' : 'client';
+  return serverItem.version > clientVersion ? "server" : "client"
 }
 
 /**
@@ -75,14 +75,14 @@ export function shouldGarbageCollect(
   retentionDays: number = 30
 ): boolean {
   if (!deletedAt) {
-    return false;
+    return false
   }
 
-  const now = new Date();
-  const deletedTime = new Date(deletedAt).getTime();
-  const daysSinceDeleted = (now.getTime() - deletedTime) / (1000 * 60 * 60 * 24);
+  const now = new Date()
+  const deletedTime = new Date(deletedAt).getTime()
+  const daysSinceDeleted = (now.getTime() - deletedTime) / (1000 * 60 * 60 * 24)
 
-  return daysSinceDeleted > retentionDays;
+  return daysSinceDeleted > retentionDays
 }
 
 // Helper to map SyncItem to response format
@@ -95,5 +95,5 @@ function mapSyncItemToResponse(item: SyncItem) {
     updatedAt: item.updated_at.toISOString(),
     deletedAt: item.deleted_at ? item.deleted_at.toISOString() : null,
     deviceId: item.device_id,
-  };
+  }
 }

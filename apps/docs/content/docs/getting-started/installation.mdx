@@ -20,12 +20,12 @@ This guide covers installing the athreei gateway on all platforms.
 
 2. Download for your platform:
 
-   | Platform | File |
-   |----------|------|
-   | macOS (Apple Silicon) | `athreei-gateway-darwin-arm64` |
-   | macOS (Intel) | `athreei-gateway-darwin-x64` |
-   | Windows | `athreei-gateway-windows-x64.exe` |
-   | Linux | `athreei-gateway-linux-x64` |
+   | Platform              | File                              |
+   | --------------------- | --------------------------------- |
+   | macOS (Apple Silicon) | `athreei-gateway-darwin-arm64`    |
+   | macOS (Intel)         | `athreei-gateway-darwin-x64`      |
+   | Windows               | `athreei-gateway-windows-x64.exe` |
+   | Linux                 | `athreei-gateway-linux-x64`       |
 
 3. Install:
 
@@ -71,6 +71,7 @@ bun run build
 ```
 
 Run with:
+
 ```bash
 cd packages/dashboard && bun run dev
 # Opens at http://localhost:5173
@@ -79,7 +80,8 @@ cd packages/dashboard && bun run dev
 ## Browser Tools Demo (Optional)
 
 <Callout type="info">
-The browser tools are for testing and demonstration only. Skip this section if you just want to use the gateway for MCP aggregation.
+  The browser tools are for testing and demonstration only. Skip this section if
+  you just want to use the gateway for MCP aggregation.
 </Callout>
 
 If you want to test with browser automation tools:
@@ -92,6 +94,7 @@ bun run build
 ```
 
 Then in Chrome:
+
 1. Go to `chrome://extensions/`
 2. Enable "Developer mode"
 3. Click "Load unpacked"
@@ -109,6 +112,7 @@ The native host binary will be in `packages/native-host/dist/`.
 ### 3. Register Native Messaging
 
 **macOS:**
+
 ```bash
 mkdir -p ~/Library/Application\ Support/Google/Chrome/NativeMessagingHosts/
 cat > ~/Library/Application\ Support/Google/Chrome/NativeMessagingHosts/com.athreei.host.json << 'EOF'
@@ -125,6 +129,7 @@ EOF
 ```
 
 **Linux:**
+
 ```bash
 mkdir -p ~/.config/google-chrome/NativeMessagingHosts/
 # Create the same JSON file
@@ -136,6 +141,7 @@ Create a registry key at `HKCU\Software\Google\Chrome\NativeMessagingHosts\com.a
 ## Verifying Installation
 
 1. **Gateway:**
+
    ```bash
    athreei-gateway --version
    # Should output version number

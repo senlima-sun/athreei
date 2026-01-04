@@ -21,14 +21,14 @@
  */
 
 // Server exports
-export { createAuth, createAuthConfig, type Auth } from "./server.ts";
+export { createAuth, createAuthConfig, type Auth } from "./server.ts"
 
 // Config types
 export {
   type AuthConfigOptions,
   type DatabaseProvider,
   type EmailCallbacks,
-} from "./config.ts";
+} from "./config.ts"
 
 // Client exports
-export { createClient, type AuthClient } from "./client.ts";
+export { createClient, type AuthClient } from "./client.ts"

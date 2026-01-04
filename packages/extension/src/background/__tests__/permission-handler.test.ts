@@ -290,9 +290,7 @@ describe("Background Permission Handler", () => {
         decision: "allow",
         remember: true,
       })
-      mockUpdatePermissionLevel.mockRejectedValue(
-        new Error("Database error")
-      )
+      mockUpdatePermissionLevel.mockRejectedValue(new Error("Database error"))
 
       // The handler should catch the error and still return the response
       const result = await handlePermissionRequest(

@@ -5,16 +5,16 @@
  * Each SSE connection creates a new gateway session with connected MCP servers.
  */
 
-import { Hono } from "hono";
-import { streamSSE } from "hono/streaming";
-import type { SSEStreamingApi } from "hono/streaming";
+import { Hono } from "hono"
+import { streamSSE } from "hono/streaming"
+import type { SSEStreamingApi } from "hono/streaming"
 import {
   GatewayErrorCode,
   type EndpointConfig,
   type GatewayError,
   type McpRequest,
   type McpResponse,
-} from "../types.js";
+} from "../types.js"
 import {
   createSession,
   getSession,
@@ -22,20 +22,20 @@ import {
   touchSession,
   listSessionTools,
   callSessionTool,
-} from "../gateway/session.js";
-import { noopLogger, type Logger } from "@athreei/gateway-core";
+} from "../gateway/session.js"
+import { noopLogger, type Logger } from "@athreei/gateway-core"
 
-const sse = new Hono();
+const sse = new Hono()
 
 /** Logger instance (can be configured) */
-let logger: Logger = noopLogger;
+let logger: Logger = noopLogger
 
 /**
  * Configure the SSE routes
  */
 export function configureSseRoutes(options: { logger?: Logger }): void {
   if (options.logger) {
-    logger = options.logger;
+    logger = options.logger
   }
 }
 
@@ -52,36 +52,36 @@ async function validateAndGetConfig(
   platformUrl: string
 ): Promise<EndpointConfig | null> {
   if (!apiKey) {
-    logger.debug("No API key provided");
-    return null;
+    logger.debug("No API key provided")
+    return null
   }
 
   try {
-    const url = `${platformUrl}/api/gateway/config?endpoint=${encodeURIComponent(endpointName)}`;
+    const url = `${platformUrl}/api/gateway/config?endpoint=${encodeURIComponent(endpointName)}`
 
-    logger.debug(`Fetching endpoint config from: ${url}`);
+    logger.debug(`Fetching endpoint config from: ${url}`)
 
     const response = await fetch(url, {
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
-    });
+    })
 
     if (!response.ok) {
       logger.warn(
         `API key validation failed: ${response.status} ${response.statusText}`
-      );
-      return null;
+      )
+      return null
     }
 
-    const config = (await response.json()) as EndpointConfig;
-    logger.debug(`Endpoint config fetched for: ${config.endpointName}`);
+    const config = (await response.json()) as EndpointConfig
+    logger.debug(`Endpoint config fetched for: ${config.endpointName}`)
 
-    return config;
+    return config
   } catch (error) {
-    logger.error("Error validating API key:", error);
-    return null;
+    logger.error("Error validating API key:", error)
+    return null
   }
 }
 
@@ -93,7 +93,7 @@ function createError(
   message: string,
   details?: unknown
 ): GatewayError {
-  return { error: code, message, details };
+  return { error: code, message, details }
 }
 
 // =============================================================================
@@ -120,7 +120,7 @@ function handleInitialize(
         version: "0.1.0",
       },
     },
-  };
+  }
 }
 
 /**
@@ -128,19 +128,19 @@ function handleInitialize(
  */
 function handleToolsList(request: McpRequest, sessionId: string): McpResponse {
   try {
-    const tools = listSessionTools(sessionId);
+    const tools = listSessionTools(sessionId)
     return {
       jsonrpc: "2.0",
       id: request.id,
       result: { tools },
-    };
+    }
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = error instanceof Error ? error.message : String(error)
     return {
       jsonrpc: "2.0",
       id: request.id,
       error: { code: -32603, message },
-    };
+    }
   }
 }
 
@@ -153,37 +153,37 @@ async function handleToolsCall(
 ): Promise<McpResponse> {
   try {
     const params = request.params as {
-      name: string;
-      arguments?: Record<string, unknown>;
-    };
+      name: string
+      arguments?: Record<string, unknown>
+    }
 
     if (!params?.name) {
       return {
         jsonrpc: "2.0",
         id: request.id,
         error: { code: -32602, message: "Missing tool name" },
-      };
+      }
     }
 
     const result = await callSessionTool(
       sessionId,
       params.name,
       params.arguments ?? {}
-    );
+    )
 
     return {
       jsonrpc: "2.0",
       id: request.id,
       result,
-    };
+    }
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    logger.error(`Tool call error: ${message}`);
+    const message = error instanceof Error ? error.message : String(error)
+    logger.error(`Tool call error: ${message}`)
     return {
       jsonrpc: "2.0",
       id: request.id,
       error: { code: -32603, message },
-    };
+    }
   }
 }
 
@@ -195,7 +195,7 @@ function handlePing(request: McpRequest): McpResponse {
     jsonrpc: "2.0",
     id: request.id,
     result: {},
-  };
+  }
 }
 
 /**
@@ -209,7 +209,7 @@ function handleUnknownMethod(request: McpRequest): McpResponse {
       code: -32601,
       message: `Method not found: ${request.method}`,
     },
-  };
+  }
 }
 
 /**
@@ -219,19 +219,19 @@ async function handleMcpRequest(
   request: McpRequest,
   sessionId: string
 ): Promise<McpResponse> {
-  logger.debug(`Handling MCP request: ${request.method}`);
+  logger.debug(`Handling MCP request: ${request.method}`)
 
   switch (request.method) {
     case "initialize":
-      return handleInitialize(request, sessionId);
+      return handleInitialize(request, sessionId)
     case "tools/list":
-      return handleToolsList(request, sessionId);
+      return handleToolsList(request, sessionId)
     case "tools/call":
-      return await handleToolsCall(request, sessionId);
+      return await handleToolsCall(request, sessionId)
     case "ping":
-      return handlePing(request);
+      return handlePing(request)
     default:
-      return handleUnknownMethod(request);
+      return handleUnknownMethod(request)
   }
 }
 
@@ -248,13 +248,13 @@ async function sendEvent(
   data: unknown,
   id?: string
 ): Promise<void> {
-  const dataStr = typeof data === "string" ? data : JSON.stringify(data);
+  const dataStr = typeof data === "string" ? data : JSON.stringify(data)
 
   await stream.writeSSE({
     event,
     data: dataStr,
     id,
-  });
+  })
 }
 
 /**
@@ -265,42 +265,42 @@ async function handleSseConnection(
   sessionId: string,
   abortController: AbortController
 ): Promise<void> {
-  logger.info(`SSE connection established for session: ${sessionId}`);
+  logger.info(`SSE connection established for session: ${sessionId}`)
 
   // Send initial connection event with session endpoint
-  await sendEvent(stream, "endpoint", `/mcp/messages?sessionId=${sessionId}`);
+  await sendEvent(stream, "endpoint", `/mcp/messages?sessionId=${sessionId}`)
 
   // Keep connection alive with periodic pings
   const pingInterval = setInterval(async () => {
     if (abortController.signal.aborted) {
-      clearInterval(pingInterval);
-      return;
+      clearInterval(pingInterval)
+      return
     }
 
     try {
       // Touch session to keep it alive
-      touchSession(sessionId);
+      touchSession(sessionId)
 
-      await sendEvent(stream, "ping", { timestamp: Date.now() });
+      await sendEvent(stream, "ping", { timestamp: Date.now() })
     } catch {
       // Connection closed
-      clearInterval(pingInterval);
+      clearInterval(pingInterval)
     }
-  }, 30000); // Ping every 30 seconds
+  }, 30000) // Ping every 30 seconds
 
   // Wait for abort signal
   await new Promise<void>((resolve) => {
     if (abortController.signal.aborted) {
-      resolve();
-      return;
+      resolve()
+      return
     }
     abortController.signal.addEventListener("abort", () => resolve(), {
       once: true,
-    });
-  });
+    })
+  })
 
-  clearInterval(pingInterval);
-  logger.info(`SSE connection closed for session: ${sessionId}`);
+  clearInterval(pingInterval)
+  logger.info(`SSE connection closed for session: ${sessionId}`)
 }
 
 // =============================================================================
@@ -312,23 +312,22 @@ async function handleSseConnection(
  * GET /mcp/:endpointName/sse
  */
 sse.get("/:endpointName/sse", async (c) => {
-  const { endpointName } = c.req.param();
-  const apiKey = c.req.header("Authorization")?.replace("Bearer ", "");
-  const platformUrl =
-    process.env.PLATFORM_URL ?? "http://localhost:3000";
+  const { endpointName } = c.req.param()
+  const apiKey = c.req.header("Authorization")?.replace("Bearer ", "")
+  const platformUrl = process.env.PLATFORM_URL ?? "http://localhost:3000"
 
   // Validate API key and get endpoint config
-  const config = await validateAndGetConfig(endpointName, apiKey, platformUrl);
+  const config = await validateAndGetConfig(endpointName, apiKey, platformUrl)
 
   if (!config) {
     return c.json(
       createError(GatewayErrorCode.UNAUTHORIZED, "Invalid or missing API key"),
       401
-    );
+    )
   }
 
   // Create gateway session
-  let session;
+  let session
   try {
     session = await createSession({
       endpointName: config.endpointName,
@@ -336,80 +335,91 @@ sse.get("/:endpointName/sse", async (c) => {
       namespaceId: config.namespaceId,
       servers: config.servers,
       logger,
-    });
+      apiKey, // Pass apiKey for fetching server environment variables
+    })
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    logger.error(`Failed to create session: ${message}`);
+    const message = error instanceof Error ? error.message : String(error)
+    logger.error(`Failed to create session: ${message}`)
     return c.json(
-      createError(GatewayErrorCode.INTERNAL_ERROR, "Failed to create gateway session", {
-        error: message,
-      }),
+      createError(
+        GatewayErrorCode.INTERNAL_ERROR,
+        "Failed to create gateway session",
+        {
+          error: message,
+        }
+      ),
       500
-    );
+    )
   }
 
-  const abortController = new AbortController();
+  const abortController = new AbortController()
 
   // Set up connection close handler
   c.req.raw.signal.addEventListener(
     "abort",
     async () => {
-      abortController.abort();
-      await destroySession(session.id);
+      abortController.abort()
+      await destroySession(session.id)
     },
     { once: true }
-  );
+  )
 
   return streamSSE(c, async (stream) => {
     try {
-      await handleSseConnection(stream, session.id, abortController);
+      await handleSseConnection(stream, session.id, abortController)
     } catch (error) {
-      logger.error("SSE stream error:", error);
+      logger.error("SSE stream error:", error)
     } finally {
-      await destroySession(session.id);
+      await destroySession(session.id)
     }
-  });
-});
+  })
+})
 
 /**
  * Message endpoint for receiving MCP requests
  * POST /mcp/messages
  */
 sse.post("/messages", async (c) => {
-  const sessionId = c.req.query("sessionId");
+  const sessionId = c.req.query("sessionId")
 
   if (!sessionId) {
     return c.json(
-      createError(GatewayErrorCode.INVALID_REQUEST, "Missing sessionId query parameter"),
+      createError(
+        GatewayErrorCode.INVALID_REQUEST,
+        "Missing sessionId query parameter"
+      ),
       400
-    );
+    )
   }
 
-  const session = getSession(sessionId);
+  const session = getSession(sessionId)
 
   if (!session) {
     return c.json(
-      createError(GatewayErrorCode.SESSION_NOT_FOUND, `Session not found: ${sessionId}`),
+      createError(
+        GatewayErrorCode.SESSION_NOT_FOUND,
+        `Session not found: ${sessionId}`
+      ),
       404
-    );
+    )
   }
 
   if (!session.isActive) {
     return c.json(
       createError(GatewayErrorCode.SESSION_EXPIRED, "Session has expired"),
       410
-    );
+    )
   }
 
   // Parse MCP request
-  let request: McpRequest;
+  let request: McpRequest
   try {
-    request = await c.req.json();
+    request = await c.req.json()
   } catch {
     return c.json(
       createError(GatewayErrorCode.INVALID_REQUEST, "Invalid JSON body"),
       400
-    );
+    )
   }
 
   // Validate basic JSON-RPC structure
@@ -421,56 +431,59 @@ sse.post("/messages", async (c) => {
     return c.json(
       createError(GatewayErrorCode.INVALID_REQUEST, "Invalid JSON-RPC request"),
       400
-    );
+    )
   }
 
   // Handle the MCP request
-  const response = await handleMcpRequest(request, sessionId);
+  const response = await handleMcpRequest(request, sessionId)
 
-  return c.json(response);
-});
+  return c.json(response)
+})
 
 /**
  * Resume an existing session via SSE
  * GET /mcp/session/:sessionId/sse
  */
 sse.get("/session/:sessionId/sse", async (c) => {
-  const { sessionId } = c.req.param();
+  const { sessionId } = c.req.param()
 
-  const session = getSession(sessionId);
+  const session = getSession(sessionId)
 
   if (!session) {
     return c.json(
-      createError(GatewayErrorCode.SESSION_NOT_FOUND, `Session not found: ${sessionId}`),
+      createError(
+        GatewayErrorCode.SESSION_NOT_FOUND,
+        `Session not found: ${sessionId}`
+      ),
       404
-    );
+    )
   }
 
   if (!session.isActive) {
     return c.json(
       createError(GatewayErrorCode.SESSION_EXPIRED, "Session has expired"),
       410
-    );
+    )
   }
 
-  const abortController = new AbortController();
+  const abortController = new AbortController()
 
   c.req.raw.signal.addEventListener(
     "abort",
     () => {
-      abortController.abort();
+      abortController.abort()
       // Don't destroy session on reconnect, just close the stream
     },
     { once: true }
-  );
+  )
 
   return streamSSE(c, async (stream) => {
     try {
-      await handleSseConnection(stream, session.id, abortController);
+      await handleSseConnection(stream, session.id, abortController)
     } catch (error) {
-      logger.error("SSE stream error:", error);
+      logger.error("SSE stream error:", error)
     }
-  });
-});
+  })
+})
 
-export default sse;
+export default sse

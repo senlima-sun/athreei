@@ -8,31 +8,31 @@
  * They are skipped when no database is configured.
  */
 
-import { describe, it, expect } from "vitest";
-import app from "../../app";
+import { describe, it, expect } from "vitest"
+import app from "../../app"
 
 // Skip these tests if no database is configured
-const hasDatabase = !!process.env.DATABASE_URL;
+const hasDatabase = !!process.env.DATABASE_URL
 
 describe.skipIf(!hasDatabase)("Gateway API Routes", () => {
   describe("GET /api/gateway/config", () => {
     it("requires Authorization header", async () => {
-      const res = await app.request("/api/gateway/config?endpoint=test");
+      const res = await app.request("/api/gateway/config?endpoint=test")
 
-      expect(res.status).toBe(401);
-      const body = await res.json() as { error: string };
-      expect(body.error).toBe("Authorization header required");
-    });
+      expect(res.status).toBe(401)
+      const body = (await res.json()) as { error: string }
+      expect(body.error).toBe("Authorization header required")
+    })
 
     it("requires endpoint query parameter", async () => {
       const res = await app.request("/api/gateway/config", {
         headers: {
           Authorization: "Bearer ak_testkey123",
         },
-      });
+      })
 
-      expect(res.status).toBe(400);
-    });
+      expect(res.status).toBe(400)
+    })
 
     // This test requires a running database
     it.skip("rejects invalid API keys (requires DB)", async () => {
@@ -40,13 +40,13 @@ describe.skipIf(!hasDatabase)("Gateway API Routes", () => {
         headers: {
           Authorization: "Bearer ak_invalidkey12345678901234567890abc",
         },
-      });
+      })
 
-      expect(res.status).toBe(401);
-      const body = await res.json() as { error: string };
-      expect(body.error).toBeDefined();
-    });
-  });
+      expect(res.status).toBe(401)
+      const body = (await res.json()) as { error: string }
+      expect(body.error).toBeDefined()
+    })
+  })
 
   describe("POST /api/gateway/traces", () => {
     it("requires Authorization header", async () => {
@@ -58,10 +58,10 @@ describe.skipIf(!hasDatabase)("Gateway API Routes", () => {
         body: JSON.stringify({
           traces: [],
         }),
-      });
+      })
 
-      expect(res.status).toBe(401);
-    });
+      expect(res.status).toBe(401)
+    })
 
     // This test requires a running database
     it.skip("rejects requests with invalid API key (requires DB)", async () => {
@@ -82,9 +82,9 @@ describe.skipIf(!hasDatabase)("Gateway API Routes", () => {
             },
           ],
         }),
-      });
+      })
 
-      expect(res.status).toBe(401);
-    });
-  });
-});
+      expect(res.status).toBe(401)
+    })
+  })
+})

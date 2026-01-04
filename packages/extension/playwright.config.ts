@@ -1,4 +1,4 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices } from "@playwright/test"
 
 /**
  * Playwright configuration for athreei extension E2E tests
@@ -8,7 +8,7 @@ import { defineConfig, devices } from '@playwright/test';
  * - launchPersistentContext with extension loading args
  */
 export default defineConfig({
-  testDir: './tests',
+  testDir: "./tests",
 
   // Timeout for each test
   timeout: 30000,
@@ -34,7 +34,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
 
   // Reporter to use
-  reporter: process.env.CI ? 'github' : 'list',
+  reporter: process.env.CI ? "github" : "list",
 
   // Shared settings for all the projects below
   use: {
@@ -45,21 +45,21 @@ export default defineConfig({
     // baseURL: 'http://localhost:3000',
 
     // Collect trace when retrying the failed test
-    trace: 'on-first-retry',
+    trace: "on-first-retry",
 
     // Screenshot on failure
-    screenshot: 'only-on-failure',
+    screenshot: "only-on-failure",
 
     // Video on failure
-    video: 'retain-on-failure',
+    video: "retain-on-failure",
   },
 
   // Configure projects for major browsers
   projects: [
     {
-      name: 'chromium',
+      name: "chromium",
       use: {
-        ...devices['Desktop Chrome'],
+        ...devices["Desktop Chrome"],
         // Extensions only work in Chromium
       },
     },
@@ -74,4 +74,4 @@ export default defineConfig({
   //   url: 'http://localhost:5173',
   //   reuseExistingServer: !process.env.CI,
   // },
-});
+})

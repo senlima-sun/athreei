@@ -1,14 +1,14 @@
-import { defineConfig } from "drizzle-kit";
+import { defineConfig } from "drizzle-kit"
 
-const databaseUrl = process.env.DATABASE_URL;
+const databaseUrl = process.env.DATABASE_URL
 
 if (!databaseUrl) {
-  throw new Error("DATABASE_URL environment variable is required");
+  throw new Error("DATABASE_URL environment variable is required")
 }
 
 const isPostgres =
   databaseUrl.startsWith("postgres://") ||
-  databaseUrl.startsWith("postgresql://");
+  databaseUrl.startsWith("postgresql://")
 
 export default defineConfig({
   // Use dialect-specific schema paths
@@ -20,4 +20,4 @@ export default defineConfig({
   dbCredentials: isPostgres
     ? { url: databaseUrl }
     : { url: databaseUrl.replace(/^file:/, "") },
-});
+})

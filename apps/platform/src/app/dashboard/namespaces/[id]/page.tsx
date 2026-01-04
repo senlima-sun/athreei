@@ -1,81 +1,75 @@
-"use client";
+"use client"
 
-import { useState, useEffect, useCallback } from "react";
-import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
-import { PageHeader } from "@/components/dashboard/page-header";
+import { useState, useEffect, useCallback } from "react"
+import { useParams, useRouter } from "next/navigation"
+import Link from "next/link"
+import { PageHeader } from "@/components/dashboard/page-header"
 import {
   NamespaceServerList,
   ServerPickerModal,
   type NamespaceServer,
   type McpServer,
-} from "@/components/namespaces";
-import { useActiveOrganization } from "@/lib/auth-client";
-import {
-  Plus,
-  Trash2,
-  Loader2,
-  AlertTriangle,
-} from "lucide-react";
+} from "@/components/namespaces"
+import { useActiveOrganization } from "@/lib/auth-client"
+import { Plus, Trash2, Loader2, AlertTriangle } from "lucide-react"
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
 
 interface NamespaceDetails {
-  id: string;
-  name: string;
-  slug: string;
-  description?: string | null;
-  isDefault: boolean;
-  createdAt: string;
-  serverCount: number;
+  id: string
+  name: string
+  slug: string
+  description?: string | null
+  isDefault: boolean
+  createdAt: string
+  serverCount: number
 }
 
 interface ApiServer {
-  id: string;
-  name: string;
-  description?: string | null;
-  status: string;
-  transport: string;
-  mappingId: string;
-  addedAt: string;
-  enabled?: boolean;
+  id: string
+  name: string
+  description?: string | null
+  status: string
+  transport: string
+  mappingId: string
+  addedAt: string
+  enabled?: boolean
 }
 
 export default function NamespaceDetailsPage() {
-  const params = useParams();
-  const router = useRouter();
-  const namespaceId = params.id as string;
-  const { data: activeOrg, isPending: isOrgPending } = useActiveOrganization();
+  const params = useParams()
+  const router = useRouter()
+  const namespaceId = params.id as string
+  const { data: activeOrg, isPending: isOrgPending } = useActiveOrganization()
 
-  const [namespace, setNamespace] = useState<NamespaceDetails | null>(null);
-  const [servers, setServers] = useState<NamespaceServer[]>([]);
-  const [availableServers, setAvailableServers] = useState<McpServer[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [showPickerModal, setShowPickerModal] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [namespace, setNamespace] = useState<NamespaceDetails | null>(null)
+  const [servers, setServers] = useState<NamespaceServer[]>([])
+  const [availableServers, setAvailableServers] = useState<McpServer[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [showPickerModal, setShowPickerModal] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   // Load namespace details
   const loadNamespace = useCallback(async () => {
-    if (!activeOrg?.id) return;
+    if (!activeOrg?.id) return
 
     try {
-      const response = await fetch(
-        `${API_URL}/api/namespaces/${namespaceId}`,
-        { credentials: "include" }
-      );
+      const response = await fetch(`${API_URL}/api/namespaces/${namespaceId}`, {
+        credentials: "include",
+      })
 
       if (!response.ok) {
         if (response.status === 404) {
-          setNamespace(null);
-          return;
+          setNamespace(null)
+          return
         }
-        throw new Error("Failed to fetch namespace");
+        throw new Error("Failed to fetch namespace")
       }
 
-      const data = await response.json();
-      setNamespace(data.namespace);
+      const data = await response.json()
+      setNamespace(data.namespace)
 
       // Transform servers to match NamespaceServer type
       const transformedServers: NamespaceServer[] = (data.servers || []).map(
@@ -87,48 +81,53 @@ export default function NamespaceDetailsPage() {
           status: server.status === "active" ? "online" : "offline",
           enabled: server.enabled ?? true,
         })
-      );
-      setServers(transformedServers);
+      )
+      setServers(transformedServers)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load namespace");
+      setError(err instanceof Error ? err.message : "Failed to load namespace")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  }, [activeOrg?.id, namespaceId]);
+  }, [activeOrg?.id, namespaceId])
 
   // Load available servers (not in namespace)
   const loadAvailableServers = useCallback(async () => {
-    if (!activeOrg?.id) return;
+    if (!activeOrg?.id) return
 
     try {
       const response = await fetch(
         `${API_URL}/api/mcp-servers?organizationId=${activeOrg.id}`,
         { credentials: "include" }
-      );
+      )
 
-      if (!response.ok) return;
+      if (!response.ok) return
 
-      const data = await response.json();
+      const data = await response.json()
       const allServers: McpServer[] = (data.data || []).map(
-        (server: { id: string; name: string; description?: string | null; status: string }) => ({
+        (server: {
+          id: string
+          name: string
+          description?: string | null
+          status: string
+        }) => ({
           id: server.id,
           name: server.name,
           description: server.description,
           status: server.status === "active" ? "online" : "offline",
         })
-      );
-      setAvailableServers(allServers);
+      )
+      setAvailableServers(allServers)
     } catch {
       // Silently fail - available servers are not critical
     }
-  }, [activeOrg?.id]);
+  }, [activeOrg?.id])
 
   useEffect(() => {
     if (!isOrgPending && activeOrg?.id) {
-      loadNamespace();
-      loadAvailableServers();
+      loadNamespace()
+      loadAvailableServers()
     }
-  }, [isOrgPending, activeOrg?.id, loadNamespace, loadAvailableServers]);
+  }, [isOrgPending, activeOrg?.id, loadNamespace, loadAvailableServers])
 
   const handleAddServer = async (serverId: string) => {
     try {
@@ -140,14 +139,14 @@ export default function NamespaceDetailsPage() {
           credentials: "include",
           body: JSON.stringify({ serverId }),
         }
-      );
+      )
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.message || "Failed to add server");
+        const errorData = await response.json().catch(() => null)
+        throw new Error(errorData?.message || "Failed to add server")
       }
 
-      const data = await response.json();
+      const data = await response.json()
 
       // Add the new server to the list
       const newServer: NamespaceServer = {
@@ -157,13 +156,13 @@ export default function NamespaceDetailsPage() {
         description: data.server.description,
         status: data.server.status === "active" ? "online" : "offline",
         enabled: true,
-      };
+      }
 
-      setServers((prev) => [...prev, newServer]);
+      setServers((prev) => [...prev, newServer])
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to add server");
+      setError(err instanceof Error ? err.message : "Failed to add server")
     }
-  };
+  }
 
   const handleRemoveServer = async (serverId: string) => {
     try {
@@ -173,17 +172,17 @@ export default function NamespaceDetailsPage() {
           method: "DELETE",
           credentials: "include",
         }
-      );
+      )
 
       if (!response.ok) {
-        throw new Error("Failed to remove server");
+        throw new Error("Failed to remove server")
       }
 
-      setServers((prev) => prev.filter((s) => s.serverId !== serverId));
+      setServers((prev) => prev.filter((s) => s.serverId !== serverId))
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to remove server");
+      setError(err instanceof Error ? err.message : "Failed to remove server")
     }
-  };
+  }
 
   const handleToggleServer = async (serverId: string, enabled: boolean) => {
     try {
@@ -195,48 +194,49 @@ export default function NamespaceDetailsPage() {
           credentials: "include",
           body: JSON.stringify({ enabled }),
         }
-      );
+      )
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.message || "Failed to update server status");
+        const errorData = await response.json().catch(() => null)
+        throw new Error(errorData?.message || "Failed to update server status")
       }
 
       // Update local state on success
       setServers((prev) =>
         prev.map((s) => (s.serverId === serverId ? { ...s, enabled } : s))
-      );
+      )
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update server status");
+      setError(
+        err instanceof Error ? err.message : "Failed to update server status"
+      )
     }
-  };
+  }
 
   const handleDeleteNamespace = async () => {
-    setIsDeleting(true);
-    setError(null);
+    setIsDeleting(true)
+    setError(null)
 
     try {
-      const response = await fetch(
-        `${API_URL}/api/namespaces/${namespaceId}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        }
-      );
+      const response = await fetch(`${API_URL}/api/namespaces/${namespaceId}`, {
+        method: "DELETE",
+        credentials: "include",
+      })
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.message || "Failed to delete namespace");
+        const errorData = await response.json().catch(() => null)
+        throw new Error(errorData?.message || "Failed to delete namespace")
       }
 
-      router.push("/dashboard/namespaces");
+      router.push("/dashboard/namespaces")
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete namespace");
-      setShowDeleteConfirm(false);
+      setError(
+        err instanceof Error ? err.message : "Failed to delete namespace"
+      )
+      setShowDeleteConfirm(false)
     } finally {
-      setIsDeleting(false);
+      setIsDeleting(false)
     }
-  };
+  }
 
   if (isOrgPending || isLoading) {
     return (
@@ -246,7 +246,7 @@ export default function NamespaceDetailsPage() {
           <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
         </div>
       </div>
-    );
+    )
   }
 
   if (!activeOrg) {
@@ -259,7 +259,7 @@ export default function NamespaceDetailsPage() {
           </p>
         </div>
       </div>
-    );
+    )
   }
 
   if (!namespace) {
@@ -279,20 +279,22 @@ export default function NamespaceDetailsPage() {
           </Link>
         </div>
       </div>
-    );
+    )
   }
 
-  const existingServerIds = servers.map((s) => s.serverId);
+  const existingServerIds = servers.map((s) => s.serverId)
   // Filter available servers to exclude ones already in the namespace
   const serversToShow = availableServers.filter(
     (s) => !existingServerIds.includes(s.id)
-  );
+  )
 
   return (
     <div>
       <PageHeader
         title={namespace.name}
-        description={namespace.description || "Manage servers in this namespace"}
+        description={
+          namespace.description || "Manage servers in this namespace"
+        }
         actions={
           <button
             type="button"
@@ -459,5 +461,5 @@ export default function NamespaceDetailsPage() {
         excludeServerIds={existingServerIds}
       />
     </div>
-  );
+  )
 }

@@ -27,8 +27,12 @@ export async function executeScript(
   try {
     // Create a function from the script
     // We wrap it to allow both expressions and statements
-    const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor
-    const fn = new AsyncFunction("return (async () => { " + args.script + " })()")
+    const AsyncFunction = Object.getPrototypeOf(
+      async function () {}
+    ).constructor
+    const fn = new AsyncFunction(
+      "return (async () => { " + args.script + " })()"
+    )
 
     // Execute the function
     const result = await fn()
@@ -43,8 +47,7 @@ export async function executeScript(
     }
   } catch (error) {
     // Return error information
-    const errorMessage =
-      error instanceof Error ? error.message : String(error)
+    const errorMessage = error instanceof Error ? error.message : String(error)
 
     return {
       executed: false,

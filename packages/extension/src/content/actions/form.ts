@@ -63,10 +63,7 @@ function findForm(selector: string): HTMLFormElement | null {
 /**
  * Submit form
  */
-function submitForm(
-  form: HTMLFormElement,
-  selector: string
-): FormResult {
+function submitForm(form: HTMLFormElement, selector: string): FormResult {
   // Dispatch submit event (cancelable)
   const event = new Event("submit", { bubbles: true, cancelable: true })
   const prevented = !form.dispatchEvent(event)
@@ -86,10 +83,7 @@ function submitForm(
 /**
  * Reset form
  */
-function resetForm(
-  form: HTMLFormElement,
-  selector: string
-): FormResult {
+function resetForm(form: HTMLFormElement, selector: string): FormResult {
   form.reset()
   return {
     success: true,
@@ -101,17 +95,17 @@ function resetForm(
 /**
  * Get form values
  */
-function getFormValues(
-  form: HTMLFormElement,
-  selector: string
-): FormResult {
+function getFormValues(form: HTMLFormElement, selector: string): FormResult {
   const values: Record<string, unknown> = {}
 
   // Get all form elements
   const elements = form.elements
 
   for (let i = 0; i < elements.length; i++) {
-    const element = elements[i] as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    const element = elements[i] as
+      | HTMLInputElement
+      | HTMLSelectElement
+      | HTMLTextAreaElement
 
     // Skip elements without name
     if (!element.name) continue
@@ -127,9 +121,7 @@ function getFormValues(
         }
       } else if (element.type === "file") {
         // File: return file names
-        const files = Array.from(element.files || []).map(
-          (f) => f.name
-        )
+        const files = Array.from(element.files || []).map((f) => f.name)
         values[element.name] = files
       } else {
         // Other inputs: return value

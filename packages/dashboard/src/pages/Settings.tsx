@@ -2,7 +2,10 @@ import { useState, useEffect } from "react"
 import { LegacyCard as Card } from "../components/ui/Card"
 import { Button } from "../components/ui/Button"
 import { ConnectionStatus } from "../components/ConnectionStatus"
-import { ConnectionMethodSelector, type ConnectionMethod } from "../components/ConnectionMethodSelector"
+import {
+  ConnectionMethodSelector,
+  type ConnectionMethod,
+} from "../components/ConnectionMethodSelector"
 import {
   getSettings,
   updateSettings,
@@ -12,7 +15,11 @@ import {
   getMcpStatus,
   getExtensionStatus,
 } from "../lib/api"
-import type { Settings as SettingsType, McpStatus, ExtensionStatus } from "../lib/api"
+import type {
+  Settings as SettingsType,
+  McpStatus,
+  ExtensionStatus,
+} from "../lib/api"
 import { cn } from "@/lib/utils"
 
 export function Settings() {
@@ -22,8 +29,11 @@ export function Settings() {
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [mcpStatus, setMcpStatus] = useState<McpStatus | null>(null)
-  const [extensionStatus, setExtensionStatus] = useState<ExtensionStatus | null>(null)
-  const [connectionMethod, setConnectionMethod] = useState<ConnectionMethod | undefined>(undefined)
+  const [extensionStatus, setExtensionStatus] =
+    useState<ExtensionStatus | null>(null)
+  const [connectionMethod, setConnectionMethod] = useState<
+    ConnectionMethod | undefined
+  >(undefined)
 
   // Fetch settings on mount
   useEffect(() => {
@@ -241,7 +251,12 @@ export function Settings() {
             <select
               id="theme"
               value={settings?.theme || "dark"}
-              onChange={(e) => updateSetting("theme", e.target.value as "dark" | "light" | "auto")}
+              onChange={(e) =>
+                updateSetting(
+                  "theme",
+                  e.target.value as "dark" | "light" | "auto"
+                )
+              }
               className="w-full p-2 bg-secondary border border-border rounded-md text-foreground"
             >
               <option value="dark">Dark</option>
@@ -251,7 +266,10 @@ export function Settings() {
           </div>
 
           <div>
-            <label htmlFor="language" className="block mb-1.5 text-sm font-medium">
+            <label
+              htmlFor="language"
+              className="block mb-1.5 text-sm font-medium"
+            >
               Language
             </label>
             <select
@@ -279,7 +297,9 @@ export function Settings() {
                 onChange={(e) => updateSetting("autoApprove", e.target.checked)}
                 className="mr-2 w-4 h-4 cursor-pointer"
               />
-              <span className="text-sm font-medium">Auto-approve known origins</span>
+              <span className="text-sm font-medium">
+                Auto-approve known origins
+              </span>
             </label>
             <p className="mt-1 ml-6 text-xs text-muted-foreground">
               Automatically grant permissions to previously approved origins.
@@ -287,13 +307,18 @@ export function Settings() {
           </div>
 
           <div>
-            <label htmlFor="retention" className="block mb-1.5 text-sm font-medium">
+            <label
+              htmlFor="retention"
+              className="block mb-1.5 text-sm font-medium"
+            >
               Log Retention (days)
             </label>
             <select
               id="retention"
               value={settings?.logRetention || 30}
-              onChange={(e) => updateSetting("logRetention", parseInt(e.target.value))}
+              onChange={(e) =>
+                updateSetting("logRetention", parseInt(e.target.value))
+              }
               className="w-full p-2 bg-secondary border border-border rounded-md text-foreground"
             >
               <option value="7">7 days</option>
@@ -317,7 +342,9 @@ export function Settings() {
               <input
                 type="checkbox"
                 checked={settings?.notificationsEnabled || false}
-                onChange={(e) => updateSetting("notificationsEnabled", e.target.checked)}
+                onChange={(e) =>
+                  updateSetting("notificationsEnabled", e.target.checked)
+                }
                 className="mr-2 w-4 h-4 cursor-pointer"
               />
               <span className="text-sm font-medium">Enable notifications</span>
@@ -328,7 +355,9 @@ export function Settings() {
           </div>
 
           <div>
-            <label className="block mb-1.5 text-sm font-medium">Notify on:</label>
+            <label className="block mb-1.5 text-sm font-medium">
+              Notify on:
+            </label>
             <div className="flex flex-col gap-2 ml-4">
               <label className="flex items-center cursor-pointer">
                 <input
@@ -336,7 +365,10 @@ export function Settings() {
                   checked={settings?.notifyOnPermissionRequests || false}
                   disabled={!settings?.notificationsEnabled}
                   onChange={(e) =>
-                    updateSetting("notifyOnPermissionRequests", e.target.checked)
+                    updateSetting(
+                      "notifyOnPermissionRequests",
+                      e.target.checked
+                    )
                   }
                   className="mr-2 w-4 h-4 cursor-pointer"
                 />
@@ -377,7 +409,11 @@ export function Settings() {
       <Card title="Data Management" className="mb-6">
         <div className="flex flex-col gap-4">
           <div>
-            <Button variant="secondary" onClick={handleExportData} disabled={saving}>
+            <Button
+              variant="secondary"
+              onClick={handleExportData}
+              disabled={saving}
+            >
               Export Data
             </Button>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -386,7 +422,11 @@ export function Settings() {
           </div>
 
           <div>
-            <Button variant="danger" onClick={handleClearAllData} disabled={saving}>
+            <Button
+              variant="danger"
+              onClick={handleClearAllData}
+              disabled={saving}
+            >
               Clear All Data
             </Button>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -405,7 +445,9 @@ export function Settings() {
           </div>
 
           <div className="flex justify-between items-center">
-            <span className="text-sm text-muted-foreground">MCP Server Status:</span>
+            <span className="text-sm text-muted-foreground">
+              MCP Server Status:
+            </span>
             <span
               className={cn(
                 "px-2 py-1 text-xs font-semibold rounded",
@@ -419,7 +461,9 @@ export function Settings() {
           </div>
 
           <div className="flex justify-between items-center">
-            <span className="text-sm text-muted-foreground">Extension Status:</span>
+            <span className="text-sm text-muted-foreground">
+              Extension Status:
+            </span>
             <span
               className={cn(
                 "px-2 py-1 text-xs font-semibold rounded",
@@ -448,7 +492,11 @@ export function Settings() {
         >
           Save Changes
         </Button>
-        <Button variant="secondary" onClick={handleResetToDefaults} disabled={saving}>
+        <Button
+          variant="secondary"
+          onClick={handleResetToDefaults}
+          disabled={saving}
+        >
           Reset to Defaults
         </Button>
       </div>

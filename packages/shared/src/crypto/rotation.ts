@@ -110,7 +110,10 @@ export async function rotateKeyBatch(
  * @param version - Key version to filter for
  * @returns Items matching the specified key version
  */
-export function filterByKeyVersion(items: EncryptedData[], version: number): EncryptedData[] {
+export function filterByKeyVersion(
+  items: EncryptedData[],
+  version: number
+): EncryptedData[] {
   return items.filter((item) => item.keyVersion === version)
 }
 
@@ -121,7 +124,10 @@ export function filterByKeyVersion(items: EncryptedData[], version: number): Enc
  * @param expectedVersion - Expected key version
  * @returns true if all items match expected version
  */
-export function verifyKeyVersion(items: EncryptedData[], expectedVersion: number): boolean {
+export function verifyKeyVersion(
+  items: EncryptedData[],
+  expectedVersion: number
+): boolean {
   return items.every((item) => item.keyVersion === expectedVersion)
 }
 
@@ -138,7 +144,9 @@ export function verifyKeyVersion(items: EncryptedData[], expectedVersion: number
  * console.log(`Items using v2: ${stats.get(2)}`)
  * ```
  */
-export function getKeyVersionStats(items: EncryptedData[]): Map<number, number> {
+export function getKeyVersionStats(
+  items: EncryptedData[]
+): Map<number, number> {
   const stats = new Map<number, number>()
 
   for (const item of items) {
@@ -169,7 +177,9 @@ export function planKeyRotation(
   itemsNeedingRotation: EncryptedData[]
 } {
   const versionStats = getKeyVersionStats(items)
-  const itemsNeedingRotation = items.filter((item) => item.keyVersion !== targetVersion)
+  const itemsNeedingRotation = items.filter(
+    (item) => item.keyVersion !== targetVersion
+  )
 
   return {
     totalItems: items.length,

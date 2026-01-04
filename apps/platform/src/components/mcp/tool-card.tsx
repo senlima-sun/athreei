@@ -135,12 +135,11 @@ export function ToolCard({ tool, onToggleEnabled, onEdit }: ToolCardProps) {
           )}
 
           {/* No additional info */}
-          {!tool.inputSchema &&
-            !tool.customPrompt && (
-              <p className="text-sm text-gray-500 italic">
-                No additional configuration for this tool.
-              </p>
-            )}
+          {!tool.inputSchema && !tool.customPrompt && (
+            <p className="text-sm text-gray-500 italic">
+              No additional configuration for this tool.
+            </p>
+          )}
         </div>
       )}
     </div>

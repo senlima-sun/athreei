@@ -6,8 +6,8 @@
  */
 
 // Default: PostgreSQL schema
-export * from "./pg";
+export * from "./pg"
 
 // Re-export dialect-specific schemas as namespaces for explicit imports
-export * as pg from "./pg";
-export * as sqlite from "./sqlite";
+export * as pg from "./pg"
+export * as sqlite from "./sqlite"

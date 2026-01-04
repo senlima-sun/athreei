@@ -1,50 +1,50 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { AuthLayout } from "@/components/auth/auth-layout";
-import { authClient } from "@/lib/auth-client";
-import { getConfig } from "@/lib/api";
+import { useState, useEffect } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { AuthLayout } from "@/components/auth/auth-layout"
+import { authClient } from "@/lib/auth-client"
+import { getConfig } from "@/lib/api"
 
 export default function ForgotPasswordPage() {
-  const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [isCheckingFeature, setIsCheckingFeature] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const router = useRouter()
+  const [email, setEmail] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [isCheckingFeature, setIsCheckingFeature] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [isSubmitted, setIsSubmitted] = useState(false)
 
   useEffect(() => {
     // Redirect if password reset is not enabled
     getConfig().then((config) => {
       if (!config.features.passwordReset) {
-        router.replace("/login");
+        router.replace("/login")
       } else {
-        setIsCheckingFeature(false);
+        setIsCheckingFeature(false)
       }
-    });
-  }, [router]);
+    })
+  }, [router])
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError(null);
+    e.preventDefault()
+    setIsLoading(true)
+    setError(null)
 
     try {
       await authClient.requestPasswordReset({
         email,
         redirectTo: "/reset-password",
-      });
-      setIsSubmitted(true);
+      })
+      setIsSubmitted(true)
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to send reset email"
-      );
+      )
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   if (isCheckingFeature) {
     return (
@@ -53,7 +53,7 @@ export default function ForgotPasswordPage() {
           <div className="animate-spin inline-block w-6 h-6 border-2 border-gray-300 border-t-gray-900 rounded-full" />
         </div>
       </AuthLayout>
-    );
+    )
   }
 
   if (isSubmitted) {
@@ -75,7 +75,7 @@ export default function ForgotPasswordPage() {
           </Link>
         </div>
       </AuthLayout>
-    );
+    )
   }
 
   return (
@@ -125,5 +125,5 @@ export default function ForgotPasswordPage() {
         </p>
       </form>
     </AuthLayout>
-  );
+  )
 }

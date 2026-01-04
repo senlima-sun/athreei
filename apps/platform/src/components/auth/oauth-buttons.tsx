@@ -1,33 +1,31 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { authClient } from "@/lib/auth-client";
+import { useState } from "react"
+import { authClient } from "@/lib/auth-client"
 
 export function OAuthButtons() {
-  const [isLoading, setIsLoading] = useState<"github" | "google" | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<"github" | "google" | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   const handleOAuthSignIn = async (provider: "github" | "google") => {
-    setIsLoading(provider);
-    setError(null);
+    setIsLoading(provider)
+    setError(null)
 
     try {
       await authClient.signIn.social({
         provider,
         callbackURL: "/",
-      });
+      })
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to sign in");
+      setError(err instanceof Error ? err.message : "Failed to sign in")
     } finally {
-      setIsLoading(null);
+      setIsLoading(null)
     }
-  };
+  }
 
   return (
     <div className="space-y-3">
-      {error && (
-        <p className="text-sm text-red-600 text-center">{error}</p>
-      )}
+      {error && <p className="text-sm text-red-600 text-center">{error}</p>}
       <button
         type="button"
         onClick={() => handleOAuthSignIn("github")}
@@ -66,5 +64,5 @@ export function OAuthButtons() {
         {isLoading === "google" ? "Signing in..." : "Continue with Google"}
       </button>
     </div>
-  );
+  )
 }

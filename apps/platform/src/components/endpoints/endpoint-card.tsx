@@ -1,24 +1,24 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { Globe, Settings, ExternalLink } from "lucide-react";
+import Link from "next/link"
+import { Globe, Settings, ExternalLink } from "lucide-react"
 
 export interface Endpoint {
-  id: string;
-  name: string;
-  slug: string;
-  namespaceId: string | null;
-  namespaceName?: string;
-  status: "active" | "inactive";
-  createdAt: Date;
+  id: string
+  name: string
+  slug: string
+  namespaceId: string | null
+  namespaceName?: string
+  status: "active" | "inactive"
+  createdAt: Date
 }
 
 interface EndpointCardProps {
-  endpoint: Endpoint;
+  endpoint: Endpoint
 }
 
 export function EndpointCard({ endpoint }: EndpointCardProps) {
-  const connectionUrl = `https://athreei.com/mcp/${endpoint.slug}/sse`;
+  const connectionUrl = `https://athreei.com/mcp/${endpoint.slug}/sse`
 
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-4">
@@ -69,5 +69,5 @@ export function EndpointCard({ endpoint }: EndpointCardProps) {
         </div>
       </div>
     </div>
-  );
+  )
 }

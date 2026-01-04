@@ -1,12 +1,12 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { ChevronRight, Home } from "lucide-react";
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { ChevronRight, Home } from "lucide-react"
 
 interface BreadcrumbItem {
-  label: string;
-  href: string;
+  label: string
+  href: string
 }
 
 // Map path segments to human-readable labels
@@ -19,38 +19,38 @@ const segmentLabels: Record<string, string> = {
   new: "New",
   members: "Members",
   profile: "Profile",
-};
+}
 
 export function Breadcrumbs() {
-  const pathname = usePathname();
+  const pathname = usePathname()
 
   // Split path and filter empty segments
-  const segments = pathname.split("/").filter(Boolean);
+  const segments = pathname.split("/").filter(Boolean)
 
   // Build breadcrumb items
-  const breadcrumbs: BreadcrumbItem[] = [];
-  let currentPath = "";
+  const breadcrumbs: BreadcrumbItem[] = []
+  let currentPath = ""
 
   for (const segment of segments) {
-    currentPath += `/${segment}`;
+    currentPath += `/${segment}`
 
     // Skip dynamic segments like [id] - they'll be handled specially
     if (segment.startsWith("[") && segment.endsWith("]")) {
-      continue;
+      continue
     }
 
     // Check if it's a UUID-like segment (organization ID, etc.)
-    const isUuid = /^[0-9a-f-]{36}$/i.test(segment);
+    const isUuid = /^[0-9a-f-]{36}$/i.test(segment)
 
     breadcrumbs.push({
-      label: isUuid ? "Details" : (segmentLabels[segment] || segment),
+      label: isUuid ? "Details" : segmentLabels[segment] || segment,
       href: currentPath,
-    });
+    })
   }
 
   // Don't show breadcrumbs for just "/dashboard"
   if (breadcrumbs.length <= 1) {
-    return null;
+    return null
   }
 
   return (
@@ -78,5 +78,5 @@ export function Breadcrumbs() {
         </div>
       ))}
     </nav>
-  );
+  )
 }

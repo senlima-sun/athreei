@@ -1,59 +1,57 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import Link from "next/link";
-import { AuthLayout } from "@/components/auth/auth-layout";
-import { authClient } from "@/lib/auth-client";
+import { useState, useEffect } from "react"
+import { useSearchParams, useRouter } from "next/navigation"
+import Link from "next/link"
+import { AuthLayout } from "@/components/auth/auth-layout"
+import { authClient } from "@/lib/auth-client"
 
 export default function ResetPasswordPage() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isSuccess, setIsSuccess] = useState(false);
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [isSuccess, setIsSuccess] = useState(false)
 
-  const token = searchParams.get("token");
+  const token = searchParams.get("token")
 
   useEffect(() => {
     if (!token) {
-      setError("Invalid or missing reset token");
+      setError("Invalid or missing reset token")
     }
-  }, [token]);
+  }, [token])
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
+      setError("Passwords do not match")
+      return
     }
 
     if (password.length < 8) {
-      setError("Password must be at least 8 characters");
-      return;
+      setError("Password must be at least 8 characters")
+      return
     }
 
-    setIsLoading(true);
-    setError(null);
+    setIsLoading(true)
+    setError(null)
 
     try {
       await authClient.resetPassword({
         newPassword: password,
         token: token!,
-      });
-      setIsSuccess(true);
-      setTimeout(() => router.push("/login"), 3000);
+      })
+      setIsSuccess(true)
+      setTimeout(() => router.push("/login"), 3000)
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to reset password"
-      );
+      setError(err instanceof Error ? err.message : "Failed to reset password")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   if (isSuccess) {
     return (
@@ -62,9 +60,7 @@ export default function ResetPasswordPage() {
         description="Your password has been updated."
       >
         <div className="text-center space-y-4">
-          <p className="text-sm text-gray-600">
-            Redirecting you to sign in...
-          </p>
+          <p className="text-sm text-gray-600">Redirecting you to sign in...</p>
           <Link
             href="/login"
             className="inline-block text-sm font-medium text-gray-900 hover:text-gray-700"
@@ -73,7 +69,7 @@ export default function ResetPasswordPage() {
           </Link>
         </div>
       </AuthLayout>
-    );
+    )
   }
 
   return (
@@ -144,5 +140,5 @@ export default function ResetPasswordPage() {
         </p>
       </form>
     </AuthLayout>
-  );
+  )
 }

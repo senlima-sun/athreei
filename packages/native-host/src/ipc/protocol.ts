@@ -30,8 +30,11 @@ export function cleanupStaleSocket(socketPath: string): void {
       unlinkSync(socketPath)
       console.error(`[ipc-protocol] Removed stale socket: ${socketPath}`)
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error)
-      console.error(`[ipc-protocol] Failed to remove stale socket: ${errorMessage}`)
+      const errorMessage =
+        error instanceof Error ? error.message : String(error)
+      console.error(
+        `[ipc-protocol] Failed to remove stale socket: ${errorMessage}`
+      )
     }
   }
 }
@@ -56,8 +59,11 @@ export function ensureSocketDir(socketPath: string): void {
       mkdirSync(dir, { recursive: true })
       console.error(`[ipc-protocol] Created socket directory: ${dir}`)
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error)
-      console.error(`[ipc-protocol] Failed to create socket directory: ${errorMessage}`)
+      const errorMessage =
+        error instanceof Error ? error.message : String(error)
+      console.error(
+        `[ipc-protocol] Failed to create socket directory: ${errorMessage}`
+      )
       throw error
     }
   }

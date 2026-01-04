@@ -27,7 +27,11 @@ const labelSizeMap = {
   lg: "text-base",
 }
 
-export function StatusIndicator({ status, label, size = "md" }: StatusIndicatorProps) {
+export function StatusIndicator({
+  status,
+  label,
+  size = "md",
+}: StatusIndicatorProps) {
   const shouldPulse = status === "online"
 
   return (
@@ -41,7 +45,9 @@ export function StatusIndicator({ status, label, size = "md" }: StatusIndicatorP
         )}
       />
       {label && (
-        <span className={cn("text-muted-foreground", labelSizeMap[size])}>{label}</span>
+        <span className={cn("text-muted-foreground", labelSizeMap[size])}>
+          {label}
+        </span>
       )}
     </div>
   )

@@ -36,9 +36,12 @@ async function generateIcon(size: number): Promise<Uint8Array> {
   const png = new Uint8Array(totalLength)
 
   let offset = 0
-  png.set(signature, offset); offset += signature.length
-  png.set(ihdr, offset); offset += ihdr.length
-  png.set(idat, offset); offset += idat.length
+  png.set(signature, offset)
+  offset += signature.length
+  png.set(ihdr, offset)
+  offset += ihdr.length
+  png.set(idat, offset)
+  offset += idat.length
   png.set(iend, offset)
 
   return png
@@ -48,13 +51,13 @@ function createIHDRChunk(width: number, height: number): Uint8Array {
   const data = new Uint8Array(13)
   const view = new DataView(data.buffer)
 
-  view.setUint32(0, width, false)  // width
+  view.setUint32(0, width, false) // width
   view.setUint32(4, height, false) // height
-  data[8] = 8   // bit depth
-  data[9] = 2   // color type (RGB)
-  data[10] = 0  // compression
-  data[11] = 0  // filter
-  data[12] = 0  // interlace
+  data[8] = 8 // bit depth
+  data[9] = 2 // color type (RGB)
+  data[10] = 0 // compression
+  data[11] = 0 // filter
+  data[12] = 0 // interlace
 
   return wrapChunk("IHDR", data)
 }
@@ -65,7 +68,9 @@ function createIDATChunk(width: number, height: number): Uint8Array {
   const rawData = new Uint8Array(rowSize * height)
 
   // Teal color: RGB(20, 184, 166) - matches Tailwind teal-500
-  const r = 20, g = 184, b = 166
+  const r = 20,
+    g = 184,
+    b = 166
 
   for (let y = 0; y < height; y++) {
     const rowStart = y * rowSize

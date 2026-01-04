@@ -11,7 +11,12 @@
  */
 
 import { spawn, type ChildProcess } from "child_process"
-import type { NativeMessage, NativeRequest, NativeResponse, NativeEvent } from "@athreei/shared"
+import type {
+  NativeMessage,
+  NativeRequest,
+  NativeResponse,
+  NativeEvent,
+} from "@athreei/shared"
 
 const MAX_MESSAGE_SIZE = 1024 * 1024 // 1MB
 const DEFAULT_TIMEOUT = 30000 // 30 seconds
@@ -97,7 +102,11 @@ export class NativeMessagingClient {
   /**
    * Send a request to the native host and wait for response
    */
-  async sendRequest(method: string, payload: Record<string, unknown> = {}, timeout = DEFAULT_TIMEOUT): Promise<unknown> {
+  async sendRequest(
+    method: string,
+    payload: Record<string, unknown> = {},
+    timeout = DEFAULT_TIMEOUT
+  ): Promise<unknown> {
     if (!this.isConnected || !this.process?.stdin) {
       throw new Error("Not connected to native host")
     }
@@ -176,7 +185,9 @@ export class NativeMessagingClient {
     const messageLength = messageBytes.length
 
     if (messageLength > MAX_MESSAGE_SIZE) {
-      throw new Error(`Message too large: ${messageLength} bytes (max: ${MAX_MESSAGE_SIZE})`)
+      throw new Error(
+        `Message too large: ${messageLength} bytes (max: ${MAX_MESSAGE_SIZE})`
+      )
     }
 
     // Create 4-byte length prefix (little-endian)
@@ -245,7 +256,9 @@ export class NativeMessagingClient {
   private handleResponse(response: NativeResponse): void {
     const pending = this.pendingRequests.get(response.id)
     if (!pending) {
-      console.warn(`[bridge] Received response for unknown request: ${response.id}`)
+      console.warn(
+        `[bridge] Received response for unknown request: ${response.id}`
+      )
       return
     }
 
@@ -270,7 +283,10 @@ export class NativeMessagingClient {
       try {
         handler(event.payload)
       } catch (error) {
-        console.error(`[bridge] Error in event handler for ${event.event}:`, error)
+        console.error(
+          `[bridge] Error in event handler for ${event.event}:`,
+          error
+        )
       }
     }
   }
@@ -332,7 +348,9 @@ export class NativeMessagingClient {
     // Attempt to reconnect
     if (this.reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
       this.reconnectAttempts++
-      console.log(`[bridge] Reconnecting (attempt ${this.reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})...`)
+      console.log(
+        `[bridge] Reconnecting (attempt ${this.reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})...`
+      )
       setTimeout(() => {
         this.connect().catch((error) => {
           console.error("[bridge] Reconnect failed:", error)
@@ -364,7 +382,9 @@ export class NativeMessagingClient {
 /**
  * Create and connect to the native host
  */
-export async function createNativeMessagingClient(binaryPath: string): Promise<NativeMessagingClient> {
+export async function createNativeMessagingClient(
+  binaryPath: string
+): Promise<NativeMessagingClient> {
   const client = new NativeMessagingClient(binaryPath)
   await client.connect()
   return client

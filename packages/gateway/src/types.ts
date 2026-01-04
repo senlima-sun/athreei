@@ -15,9 +15,9 @@ export type {
   ToolCallValidation,
   RoutingInfo,
   Logger,
-} from "@athreei/gateway-core";
+} from "@athreei/gateway-core"
 
-export { noopLogger } from "@athreei/gateway-core";
+export { noopLogger } from "@athreei/gateway-core"
 
 // =============================================================================
 // Local Configuration Types
@@ -28,13 +28,13 @@ export { noopLogger } from "@athreei/gateway-core";
  */
 export interface GatewayConfig {
   /** API key for authenticating with the Platform */
-  apiKey: string;
+  apiKey: string
   /** Endpoint name to connect to */
-  endpoint: string;
+  endpoint: string
   /** Platform API URL (defaults to https://athreei.com) */
-  platformUrl?: string;
+  platformUrl?: string
   /** Config sync interval in ms (defaults to 5 minutes) */
-  syncInterval?: number;
+  syncInterval?: number
 }
 
 // =============================================================================
@@ -47,21 +47,21 @@ export interface GatewayConfig {
  */
 export interface NamespaceConfig {
   /** Namespace ID */
-  namespaceId: string;
+  namespaceId: string
   /** Namespace name */
-  namespaceName: string;
+  namespaceName: string
   /** Namespace slug */
-  namespaceSlug: string;
+  namespaceSlug: string
   /** Endpoint ID */
-  endpointId: string;
+  endpointId: string
   /** Endpoint name */
-  endpointName: string;
+  endpointName: string
   /** Organization ID */
-  organizationId: string;
+  organizationId: string
   /** MCP servers in this namespace */
-  servers: import("@athreei/gateway-core").McpServerConfig[];
+  servers: import("@athreei/gateway-core").McpServerConfig[]
   /** Config version for change detection */
-  configVersion: string;
+  configVersion: string
 }
 
 // =============================================================================
@@ -73,29 +73,29 @@ export interface NamespaceConfig {
  */
 export interface ToolCallTrace {
   /** Unique trace ID */
-  traceId: string;
+  traceId: string
   /** Request ID for correlation (used for encryption) */
-  requestId: string;
+  requestId: string
   /** Aggregated tool name that was called */
-  aggregatedToolName: string;
+  aggregatedToolName: string
   /** Parsed server name */
-  serverName: string;
+  serverName: string
   /** Original tool name */
-  toolName: string;
+  toolName: string
   /** Call arguments */
-  arguments: unknown;
+  arguments: unknown
   /** Call result (on success) */
-  result?: unknown;
+  result?: unknown
   /** Error message (on failure) */
-  error?: string;
+  error?: string
   /** Call start timestamp */
-  startedAt: Date;
+  startedAt: Date
   /** Call end timestamp */
-  endedAt?: Date;
+  endedAt?: Date
   /** Duration in milliseconds */
-  durationMs?: number;
+  durationMs?: number
   /** Status of the trace */
-  status: "success" | "error";
+  status: "success" | "error"
 }
 
 /**
@@ -103,34 +103,34 @@ export interface ToolCallTrace {
  */
 export interface EncryptedToolCallTrace {
   /** Unique trace ID */
-  traceId: string;
+  traceId: string
   /** Request ID for correlation */
-  requestId: string;
+  requestId: string
   /** Aggregated tool name (unencrypted for routing/filtering) */
-  aggregatedToolName: string;
+  aggregatedToolName: string
   /** Server name (unencrypted for routing/filtering) */
-  serverName: string;
+  serverName: string
   /** Original tool name (unencrypted for routing/filtering) */
-  toolName: string;
+  toolName: string
   /** Call start timestamp */
-  startedAt: Date;
+  startedAt: Date
   /** Call end timestamp */
-  endedAt?: Date;
+  endedAt?: Date
   /** Duration in milliseconds */
-  durationMs?: number;
+  durationMs?: number
   /** Status of the trace */
-  status: "success" | "error";
+  status: "success" | "error"
   /** Encrypted payload containing arguments, result, and error */
   encryptedPayload: {
     /** Base64-encoded nonce */
-    nonce: string;
+    nonce: string
     /** Base64-encoded ciphertext */
-    ciphertext: string;
+    ciphertext: string
     /** Key version used for encryption */
-    keyVersion: number;
+    keyVersion: number
     /** Encryption algorithm */
-    algorithm: "xchacha20poly1305";
-  };
+    algorithm: "xchacha20poly1305"
+  }
 }
 
 // =============================================================================
@@ -143,13 +143,16 @@ export interface EncryptedToolCallTrace {
 export type GatewayEvent =
   | { type: "config_loaded"; config: GatewayConfig }
   | { type: "namespace_synced"; namespace: NamespaceConfig }
-  | { type: "server_connected"; server: import("@athreei/gateway-core").ConnectedMcp }
+  | {
+      type: "server_connected"
+      server: import("@athreei/gateway-core").ConnectedMcp
+    }
   | { type: "server_disconnected"; serverName: string; reason: string }
   | { type: "tools_aggregated"; count: number }
   | { type: "tool_call"; trace: ToolCallTrace }
-  | { type: "error"; message: string; details?: unknown };
+  | { type: "error"; message: string; details?: unknown }
 
 /**
  * Event handler callback
  */
-export type GatewayEventHandler = (event: GatewayEvent) => void;
+export type GatewayEventHandler = (event: GatewayEvent) => void

@@ -82,9 +82,10 @@ export function findSessionById(id: string): Session | null {
  */
 export function findActiveSessions(): Session[] {
   const rows = db
-    .query<SessionRow, []>(
-      "SELECT * FROM sessions WHERE ended_at IS NULL ORDER BY started_at DESC"
-    )
+    .query<
+      SessionRow,
+      []
+    >("SELECT * FROM sessions WHERE ended_at IS NULL ORDER BY started_at DESC")
     .all()
 
   return rows.map(rowToSession)
@@ -95,9 +96,10 @@ export function findActiveSessions(): Session[] {
  */
 export function findActiveSessionsByOrigin(origin: string): Session[] {
   const rows = db
-    .query<SessionRow, [string]>(
-      "SELECT * FROM sessions WHERE origin = ? AND ended_at IS NULL ORDER BY started_at DESC"
-    )
+    .query<
+      SessionRow,
+      [string]
+    >("SELECT * FROM sessions WHERE origin = ? AND ended_at IS NULL ORDER BY started_at DESC")
     .all(origin)
 
   return rows.map(rowToSession)
@@ -139,7 +141,9 @@ export function endSessionsByTabId(tabId: number, endedAt?: number): number {
   const timestamp = endedAt || Date.now()
 
   const result = db
-    .query("UPDATE sessions SET ended_at = ? WHERE tab_id = ? AND ended_at IS NULL")
+    .query(
+      "UPDATE sessions SET ended_at = ? WHERE tab_id = ? AND ended_at IS NULL"
+    )
     .run(timestamp, tabId)
 
   return result.changes
@@ -190,7 +194,8 @@ export function listSessions(options?: {
     conditions.push("ended_at IS NULL")
   }
 
-  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : ""
+  const whereClause =
+    conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : ""
   const query = `
     SELECT * FROM sessions
     ${whereClause}
@@ -231,7 +236,8 @@ export function countSessions(options?: {
     conditions.push("ended_at IS NULL")
   }
 
-  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : ""
+  const whereClause =
+    conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : ""
   const query = `SELECT COUNT(*) as count FROM sessions ${whereClause}`
 
   const result = db

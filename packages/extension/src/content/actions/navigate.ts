@@ -143,11 +143,9 @@ function waitForPageLoad(
 
       case "domcontentloaded":
         if (document.readyState === "loading") {
-          window.addEventListener(
-            "DOMContentLoaded",
-            () => resolve(),
-            { once: true }
-          )
+          window.addEventListener("DOMContentLoaded", () => resolve(), {
+            once: true,
+          })
         } else {
           resolve()
         }
@@ -183,7 +181,14 @@ function waitForPageLoad(
             ) {
               resetTimer()
               this.addEventListener("loadend", resetTimer)
-              return originalOpen.call(this, method, url, async ?? true, username, password)
+              return originalOpen.call(
+                this,
+                method,
+                url,
+                async ?? true,
+                username,
+                password
+              )
             }
 
             // Start the timer

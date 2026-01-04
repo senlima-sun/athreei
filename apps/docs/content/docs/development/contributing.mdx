@@ -58,6 +58,7 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/):
 | `chore` | Build, tooling, dependencies |
 
 **Examples:**
+
 ```
 feat: add browser_hover tool for mouse hover actions
 
@@ -73,6 +74,7 @@ test: add unit tests for permission repository
 ### Creating a Pull Request
 
 1. **Push your branch:**
+
    ```bash
    git push origin feature/my-feature
    ```
@@ -111,13 +113,13 @@ export function processData(input: any) {
 
 ### Naming Conventions
 
-| Element | Convention | Example |
-|---------|------------|---------|
-| Files | kebab-case | `native-messaging.ts` |
-| Types/Interfaces | PascalCase | `PermissionLevel` |
-| Functions | camelCase | `handleRequest` |
-| Constants | SCREAMING_SNAKE_CASE | `MAX_MESSAGE_SIZE` |
-| MCP Tools | snake_case | `browser_click` |
+| Element          | Convention           | Example               |
+| ---------------- | -------------------- | --------------------- |
+| Files            | kebab-case           | `native-messaging.ts` |
+| Types/Interfaces | PascalCase           | `PermissionLevel`     |
+| Functions        | camelCase            | `handleRequest`       |
+| Constants        | SCREAMING_SNAKE_CASE | `MAX_MESSAGE_SIZE`    |
+| MCP Tools        | snake_case           | `browser_click`       |
 
 ### File Organization
 
@@ -127,7 +129,9 @@ import { z } from "zod"
 import { logger } from "../utils/logger"
 
 // 2. Type definitions
-interface Config { /* ... */ }
+interface Config {
+  /* ... */
+}
 
 // 3. Constants
 const DEFAULT_TIMEOUT = 30000
@@ -197,7 +201,10 @@ server.tool(
 Create `packages/extension/src/content/actions/new-tool.ts`:
 
 ```typescript
-export async function handleNewTool(params: { param1: string; param2?: number }) {
+export async function handleNewTool(params: {
+  param1: string
+  param2?: number
+}) {
   // Implementation
   return { result: "success" }
 }
@@ -242,8 +249,15 @@ describe("PermissionService", () => {
   })
 
   it("grants permission for allowed origin", async () => {
-    await service.setPermission("https://example.com", "browser_click", "allowed")
-    const result = await service.checkPermission("https://example.com", "browser_click")
+    await service.setPermission(
+      "https://example.com",
+      "browser_click",
+      "allowed"
+    )
+    const result = await service.checkPermission(
+      "https://example.com",
+      "browser_click"
+    )
     expect(result).toBe("allowed")
   })
 })

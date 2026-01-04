@@ -141,10 +141,7 @@ function findElement(selector: string): Element | null {
 /**
  * Find element by text content
  */
-function findElementByText(
-  text: string,
-  selector?: string
-): Element | null {
+function findElementByText(text: string, selector?: string): Element | null {
   const elements = selector
     ? Array.from(document.querySelectorAll(selector))
     : Array.from(document.querySelectorAll("*"))

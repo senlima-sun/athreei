@@ -1,47 +1,47 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { Key, Trash2, Loader2, AlertTriangle } from "lucide-react";
+import { useState } from "react"
+import { Key, Trash2, Loader2, AlertTriangle } from "lucide-react"
 
 export interface ApiKey {
-  id: string;
-  name: string;
-  keyPrefix: string;
-  createdAt: Date;
-  lastUsedAt: Date | null;
+  id: string
+  name: string
+  keyPrefix: string
+  createdAt: Date
+  lastUsedAt: Date | null
 }
 
 interface ApiKeyListProps {
-  apiKeys: ApiKey[];
-  onRevoke: (keyId: string) => Promise<void>;
+  apiKeys: ApiKey[]
+  onRevoke: (keyId: string) => Promise<void>
 }
 
 export function ApiKeyList({ apiKeys, onRevoke }: ApiKeyListProps) {
-  const [revokingId, setRevokingId] = useState<string | null>(null);
-  const [showConfirmId, setShowConfirmId] = useState<string | null>(null);
+  const [revokingId, setRevokingId] = useState<string | null>(null)
+  const [showConfirmId, setShowConfirmId] = useState<string | null>(null)
 
   const handleRevoke = async (keyId: string) => {
-    setRevokingId(keyId);
+    setRevokingId(keyId)
     try {
-      await onRevoke(keyId);
+      await onRevoke(keyId)
     } finally {
-      setRevokingId(null);
-      setShowConfirmId(null);
+      setRevokingId(null)
+      setShowConfirmId(null)
     }
-  };
+  }
 
   const maskKey = (prefix: string) => {
-    return `${prefix}${"*".repeat(32)}`;
-  };
+    return `${prefix}${"*".repeat(32)}`
+  }
 
   const formatDate = (date: Date | null) => {
-    if (!date) return "Never";
+    if (!date) return "Never"
     return new Date(date).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
-    });
-  };
+    })
+  }
 
   if (apiKeys.length === 0) {
     return (
@@ -54,7 +54,7 @@ export function ApiKeyList({ apiKeys, onRevoke }: ApiKeyListProps) {
           Create an API key to authenticate requests to this endpoint.
         </p>
       </div>
-    );
+    )
   }
 
   return (
@@ -122,5 +122,5 @@ export function ApiKeyList({ apiKeys, onRevoke }: ApiKeyListProps) {
         </div>
       ))}
     </div>
-  );
+  )
 }

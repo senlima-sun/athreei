@@ -12,7 +12,9 @@ import { createResponse } from "./protocol.js"
 /**
  * Handler function type with typed payload validation
  */
-type HandlerFunction<TPayload = unknown, TResult = unknown> = (payload: TPayload) => Promise<TResult>
+type HandlerFunction<TPayload = unknown, TResult = unknown> = (
+  payload: TPayload
+) => Promise<TResult>
 
 /**
  * Handler definition with optional payload schema
@@ -36,7 +38,9 @@ export function registerHandler<TPayload, TResult>(
   payloadSchema?: z.ZodType<TPayload>
 ): void {
   if (handlers.has(method)) {
-    throw new Error(`Handler already registered for method: ${method}. Remove it first if you want to replace.`)
+    throw new Error(
+      `Handler already registered for method: ${method}. Remove it first if you want to replace.`
+    )
   }
   handlers.set(method, {
     handler: handler as HandlerFunction,
@@ -62,7 +66,9 @@ export function clearHandlers(): void {
 /**
  * Handle an incoming request message
  */
-export async function handleRequest(request: NativeRequest): Promise<NativeResponse> {
+export async function handleRequest(
+  request: NativeRequest
+): Promise<NativeResponse> {
   const { id, method, payload } = request
 
   console.error(`[handlers] Handling request: ${method} (id: ${id})`)
@@ -80,8 +86,12 @@ export async function handleRequest(request: NativeRequest): Promise<NativeRespo
     if (definition.payloadSchema) {
       const result = definition.payloadSchema.safeParse(payload)
       if (!result.success) {
-        const issues = result.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join(", ")
-        console.error(`[handlers] Payload validation failed for ${method}: ${issues}`)
+        const issues = result.error.issues
+          .map((i) => `${i.path.join(".")}: ${i.message}`)
+          .join(", ")
+        console.error(
+          `[handlers] Payload validation failed for ${method}: ${issues}`
+        )
         return createResponse(id, false, null, `Invalid payload: ${issues}`)
       }
       validatedPayload = result.data

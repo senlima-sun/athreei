@@ -71,9 +71,10 @@ export function createPermissionsRepository(db: Database) {
   return {
     findByOriginAndTool(origin: string, tool: string): Permission | null {
       const row = db
-        .query<PermissionRow, [string, string]>(
-          "SELECT * FROM permissions WHERE origin = ? AND tool = ?"
-        )
+        .query<
+          PermissionRow,
+          [string, string]
+        >("SELECT * FROM permissions WHERE origin = ? AND tool = ?")
         .get(origin, tool)
 
       return row ? rowToPermission(row) : null
@@ -81,7 +82,10 @@ export function createPermissionsRepository(db: Database) {
 
     findByOrigin(origin: string): Permission[] {
       const rows = db
-        .query<PermissionRow, [string]>("SELECT * FROM permissions WHERE origin = ?")
+        .query<
+          PermissionRow,
+          [string]
+        >("SELECT * FROM permissions WHERE origin = ?")
         .all(origin)
 
       return rows.map(rowToPermission)
@@ -114,7 +118,10 @@ export function createPermissionsRepository(db: Database) {
       }
 
       // Return the permission
-      const result = this.findByOriginAndTool(permission.origin, permission.tool)
+      const result = this.findByOriginAndTool(
+        permission.origin,
+        permission.tool
+      )
       if (!result) {
         throw new Error("Failed to upsert permission")
       }
@@ -132,9 +139,10 @@ export function createPermissionsRepository(db: Database) {
       const offset = options?.offset ?? 0
 
       const rows = db
-        .query<PermissionRow, [number, number]>(
-          "SELECT * FROM permissions ORDER BY created_at DESC LIMIT ? OFFSET ?"
-        )
+        .query<
+          PermissionRow,
+          [number, number]
+        >("SELECT * FROM permissions ORDER BY created_at DESC LIMIT ? OFFSET ?")
         .all(limit, offset)
 
       return rows.map(rowToPermission)
@@ -142,7 +150,10 @@ export function createPermissionsRepository(db: Database) {
 
     count(): number {
       const result = db
-        .query<{ count: number }, []>("SELECT COUNT(*) as count FROM permissions")
+        .query<
+          { count: number },
+          []
+        >("SELECT COUNT(*) as count FROM permissions")
         .get()
 
       return result?.count ?? 0
@@ -158,4 +169,6 @@ export function createPermissionsRepository(db: Database) {
   }
 }
 
-export type PermissionsRepository = ReturnType<typeof createPermissionsRepository>
+export type PermissionsRepository = ReturnType<
+  typeof createPermissionsRepository
+>

@@ -1,17 +1,17 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { Boxes, Loader2 } from "lucide-react";
-import Link from "next/link";
+import { useState } from "react"
+import { Boxes, Loader2 } from "lucide-react"
+import Link from "next/link"
 
 interface NamespaceFormProps {
   initialData?: {
-    name: string;
-    description?: string;
-  };
-  onSubmit: (data: { name: string; description?: string }) => Promise<void>;
-  submitLabel?: string;
-  isEdit?: boolean;
+    name: string
+    description?: string
+  }
+  onSubmit: (data: { name: string; description?: string }) => Promise<void>
+  submitLabel?: string
+  isEdit?: boolean
 }
 
 export function NamespaceForm({
@@ -20,31 +20,29 @@ export function NamespaceForm({
   submitLabel = "Create namespace",
   isEdit = false,
 }: NamespaceFormProps) {
-  const [name, setName] = useState(initialData?.name || "");
-  const [description, setDescription] = useState(
-    initialData?.description || ""
-  );
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [name, setName] = useState(initialData?.name || "")
+  const [description, setDescription] = useState(initialData?.description || "")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setIsSubmitting(true);
+    e.preventDefault()
+    setError(null)
+    setIsSubmitting(true)
 
     try {
       await onSubmit({
         name: name.trim(),
         description: description.trim() || undefined,
-      });
+      })
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "An unexpected error occurred"
-      );
+      )
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   return (
     <div className="mx-auto max-w-lg">
@@ -124,5 +122,5 @@ export function NamespaceForm({
         </div>
       </form>
     </div>
-  );
+  )
 }

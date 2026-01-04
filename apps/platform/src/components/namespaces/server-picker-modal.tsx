@@ -1,21 +1,21 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { X, Server, Search, Plus, Check } from "lucide-react";
+import { useState } from "react"
+import { X, Server, Search, Plus, Check } from "lucide-react"
 
 export interface McpServer {
-  id: string;
-  name: string;
-  description?: string | null;
-  status: "online" | "offline" | "unknown";
+  id: string
+  name: string
+  description?: string | null
+  status: "online" | "offline" | "unknown"
 }
 
 interface ServerPickerModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSelect: (serverId: string) => Promise<void>;
-  availableServers: McpServer[];
-  excludeServerIds?: string[];
+  isOpen: boolean
+  onClose: () => void
+  onSelect: (serverId: string) => Promise<void>
+  availableServers: McpServer[]
+  excludeServerIds?: string[]
 }
 
 export function ServerPickerModal({
@@ -25,37 +25,37 @@ export function ServerPickerModal({
   availableServers,
   excludeServerIds = [],
 }: ServerPickerModalProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isAdding, setIsAdding] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("")
+  const [isAdding, setIsAdding] = useState<string | null>(null)
 
-  if (!isOpen) return null;
+  if (!isOpen) return null
 
   const filteredServers = availableServers.filter(
     (server) =>
       !excludeServerIds.includes(server.id) &&
       (server.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         server.description?.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  )
 
   const handleSelect = async (serverId: string) => {
-    setIsAdding(serverId);
+    setIsAdding(serverId)
     try {
-      await onSelect(serverId);
+      await onSelect(serverId)
     } finally {
-      setIsAdding(null);
+      setIsAdding(null)
     }
-  };
+  }
 
   const getStatusColor = (status: McpServer["status"]) => {
     switch (status) {
       case "online":
-        return "bg-green-500";
+        return "bg-green-500"
       case "offline":
-        return "bg-red-500";
+        return "bg-red-500"
       default:
-        return "bg-gray-400";
+        return "bg-gray-400"
     }
-  };
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -159,5 +159,5 @@ export function ServerPickerModal({
         </div>
       </div>
     </div>
-  );
+  )
 }

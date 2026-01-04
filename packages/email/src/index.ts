@@ -3,5 +3,5 @@ export {
   getResendClient,
   resetResendClient,
   type SendEmailOptions,
-} from "./client";
-export * from "./templates/index";
+} from "./client"
+export * from "./templates/index"

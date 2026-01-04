@@ -69,7 +69,7 @@ export function useKeyboardShortcuts() {
       }
 
       for (const shortcut of shortcuts) {
-        const ctrlOrMeta = shortcut.ctrl ? (event.ctrlKey || event.metaKey) : true
+        const ctrlOrMeta = shortcut.ctrl ? event.ctrlKey || event.metaKey : true
         const shift = shortcut.shift ? event.shiftKey : !event.shiftKey
         const keyMatch = event.key.toLowerCase() === shortcut.key.toLowerCase()
 
@@ -101,7 +101,9 @@ export function formatShortcut(shortcut: {
   meta?: boolean
   shift?: boolean
 }): string {
-  const isMac = typeof navigator !== "undefined" && navigator.platform.toUpperCase().indexOf("MAC") >= 0
+  const isMac =
+    typeof navigator !== "undefined" &&
+    navigator.platform.toUpperCase().indexOf("MAC") >= 0
   const parts: string[] = []
 
   if (shortcut.ctrl) {

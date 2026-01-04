@@ -11,23 +11,24 @@
 // ============================================================================
 
 export interface A11yNode {
-  role: string           // button, link, input, heading, etc.
-  name: string           // accessible name (text content, aria-label, etc.)
-  description?: string   // aria-description
-  value?: string         // current value for inputs
-  checked?: boolean      // for checkboxes/radios
-  selected?: boolean     // for options
+  role: string // button, link, input, heading, etc.
+  name: string // accessible name (text content, aria-label, etc.)
+  description?: string // aria-description
+  value?: string // current value for inputs
+  checked?: boolean // for checkboxes/radios
+  selected?: boolean // for options
   disabled?: boolean
-  expanded?: boolean     // for expandable elements
-  level?: number         // heading level
-  bounds?: {             // bounding box
+  expanded?: boolean // for expandable elements
+  level?: number // heading level
+  bounds?: {
+    // bounding box
     x: number
     y: number
     width: number
     height: number
   }
   children?: A11yNode[]
-  selector?: string      // CSS selector to target this element
+  selector?: string // CSS selector to target this element
 }
 
 export interface A11yTree {
@@ -37,12 +38,12 @@ export interface A11yTree {
 }
 
 export interface InteractiveElement {
-  index: number          // unique index for AI to reference
+  index: number // unique index for AI to reference
   role: string
   name: string
-  selector: string       // CSS selector
+  selector: string // CSS selector
   bounds: { x: number; y: number; width: number; height: number }
-  actionable: boolean    // is it visible and enabled?
+  actionable: boolean // is it visible and enabled?
 }
 
 // ============================================================================
@@ -56,95 +57,101 @@ function getImplicitRole(element: Element): string | null {
   const tagName = element.tagName.toLowerCase()
 
   // Check explicit role attribute first
-  const explicitRole = element.getAttribute('role')
+  const explicitRole = element.getAttribute("role")
   if (explicitRole) {
     return explicitRole
   }
 
   // Map HTML elements to implicit ARIA roles
   switch (tagName) {
-    case 'a':
-      return element.hasAttribute('href') ? 'link' : null
-    case 'button':
-      return 'button'
-    case 'input': {
-      const type = (element as HTMLInputElement).type?.toLowerCase() || 'text'
+    case "a":
+      return element.hasAttribute("href") ? "link" : null
+    case "button":
+      return "button"
+    case "input": {
+      const type = (element as HTMLInputElement).type?.toLowerCase() || "text"
       const roleMap: Record<string, string> = {
-        'button': 'button',
-        'checkbox': 'checkbox',
-        'radio': 'radio',
-        'range': 'slider',
-        'search': 'searchbox',
-        'email': 'textbox',
-        'tel': 'textbox',
-        'url': 'textbox',
-        'text': 'textbox',
-        'number': 'spinbutton',
-        'submit': 'button',
-        'reset': 'button',
-        'image': 'button',
+        button: "button",
+        checkbox: "checkbox",
+        radio: "radio",
+        range: "slider",
+        search: "searchbox",
+        email: "textbox",
+        tel: "textbox",
+        url: "textbox",
+        text: "textbox",
+        number: "spinbutton",
+        submit: "button",
+        reset: "button",
+        image: "button",
       }
-      return roleMap[type] || 'textbox'
+      return roleMap[type] || "textbox"
     }
-    case 'textarea':
-      return 'textbox'
-    case 'select':
-      return (element as HTMLSelectElement).multiple ? 'listbox' : 'combobox'
-    case 'option':
-      return 'option'
-    case 'img':
-      return element.hasAttribute('alt') ? 'image' : 'presentation'
-    case 'h1': return 'heading'
-    case 'h2': return 'heading'
-    case 'h3': return 'heading'
-    case 'h4': return 'heading'
-    case 'h5': return 'heading'
-    case 'h6': return 'heading'
-    case 'nav':
-      return 'navigation'
-    case 'main':
-      return 'main'
-    case 'article':
-      return 'article'
-    case 'section':
-      return 'region'
-    case 'aside':
-      return 'complementary'
-    case 'header':
-      return 'banner'
-    case 'footer':
-      return 'contentinfo'
-    case 'form':
-      return 'form'
-    case 'dialog':
-      return 'dialog'
-    case 'ul':
-    case 'ol':
-      return 'list'
-    case 'li':
-      return 'listitem'
-    case 'table':
-      return 'table'
-    case 'tr':
-      return 'row'
-    case 'td':
-      return 'cell'
-    case 'th':
-      return 'columnheader'
-    case 'tbody':
-      return 'rowgroup'
-    case 'thead':
-      return 'rowgroup'
-    case 'tfoot':
-      return 'rowgroup'
-    case 'progress':
-      return 'progressbar'
-    case 'meter':
-      return 'meter'
-    case 'output':
-      return 'status'
-    case 'hr':
-      return 'separator'
+    case "textarea":
+      return "textbox"
+    case "select":
+      return (element as HTMLSelectElement).multiple ? "listbox" : "combobox"
+    case "option":
+      return "option"
+    case "img":
+      return element.hasAttribute("alt") ? "image" : "presentation"
+    case "h1":
+      return "heading"
+    case "h2":
+      return "heading"
+    case "h3":
+      return "heading"
+    case "h4":
+      return "heading"
+    case "h5":
+      return "heading"
+    case "h6":
+      return "heading"
+    case "nav":
+      return "navigation"
+    case "main":
+      return "main"
+    case "article":
+      return "article"
+    case "section":
+      return "region"
+    case "aside":
+      return "complementary"
+    case "header":
+      return "banner"
+    case "footer":
+      return "contentinfo"
+    case "form":
+      return "form"
+    case "dialog":
+      return "dialog"
+    case "ul":
+    case "ol":
+      return "list"
+    case "li":
+      return "listitem"
+    case "table":
+      return "table"
+    case "tr":
+      return "row"
+    case "td":
+      return "cell"
+    case "th":
+      return "columnheader"
+    case "tbody":
+      return "rowgroup"
+    case "thead":
+      return "rowgroup"
+    case "tfoot":
+      return "rowgroup"
+    case "progress":
+      return "progressbar"
+    case "meter":
+      return "meter"
+    case "output":
+      return "status"
+    case "hr":
+      return "separator"
     default:
       return null
   }
@@ -155,10 +162,10 @@ function getImplicitRole(element: Element): string | null {
  */
 function getHeadingLevel(element: Element): number | undefined {
   const tagName = element.tagName.toLowerCase()
-  const role = element.getAttribute('role')
+  const role = element.getAttribute("role")
 
-  if (role === 'heading') {
-    const level = element.getAttribute('aria-level')
+  if (role === "heading") {
+    const level = element.getAttribute("aria-level")
     return level ? parseInt(level, 10) : undefined
   }
 
@@ -179,20 +186,20 @@ function getHeadingLevel(element: Element): number | undefined {
  */
 function computeAccessibleName(element: Element): string {
   // 1. aria-labelledby
-  const labelledBy = element.getAttribute('aria-labelledby')
+  const labelledBy = element.getAttribute("aria-labelledby")
   if (labelledBy) {
     const ids = labelledBy.split(/\s+/)
     const texts = ids
-      .map(id => document.getElementById(id))
+      .map((id) => document.getElementById(id))
       .filter(Boolean)
-      .map(el => el!.textContent?.trim() || '')
+      .map((el) => el!.textContent?.trim() || "")
     if (texts.length > 0) {
-      return texts.join(' ')
+      return texts.join(" ")
     }
   }
 
   // 2. aria-label
-  const ariaLabel = element.getAttribute('aria-label')
+  const ariaLabel = element.getAttribute("aria-label")
   if (ariaLabel) {
     return ariaLabel.trim()
   }
@@ -206,15 +213,15 @@ function computeAccessibleName(element: Element): string {
   }
 
   // 4. alt attribute (for images)
-  const alt = element.getAttribute('alt')
+  const alt = element.getAttribute("alt")
   if (alt !== null) {
     return alt.trim()
   }
 
   // 5. value attribute for buttons
-  if (element.tagName.toLowerCase() === 'input') {
+  if (element.tagName.toLowerCase() === "input") {
     const type = (element as HTMLInputElement).type?.toLowerCase()
-    if (type === 'button' || type === 'submit' || type === 'reset') {
+    if (type === "button" || type === "submit" || type === "reset") {
       const value = (element as HTMLInputElement).value
       if (value) {
         return value.trim()
@@ -223,7 +230,7 @@ function computeAccessibleName(element: Element): string {
   }
 
   // 6. title attribute
-  const title = element.getAttribute('title')
+  const title = element.getAttribute("title")
   if (title) {
     return title.trim()
   }
@@ -231,23 +238,33 @@ function computeAccessibleName(element: Element): string {
   // 7. Text content (for buttons, links, headings, etc.)
   const role = getImplicitRole(element)
   const useTextContent = [
-    'button', 'link', 'heading', 'tab', 'menuitem',
-    'option', 'treeitem', 'gridcell', 'columnheader',
-    'rowheader', 'cell', 'checkbox', 'radio'
+    "button",
+    "link",
+    "heading",
+    "tab",
+    "menuitem",
+    "option",
+    "treeitem",
+    "gridcell",
+    "columnheader",
+    "rowheader",
+    "cell",
+    "checkbox",
+    "radio",
   ]
 
   if (role && useTextContent.includes(role)) {
     // Get direct text content, not deep text (to avoid nested interactive elements)
-    let text = ''
+    let text = ""
     for (const node of element.childNodes) {
       if (node.nodeType === Node.TEXT_NODE) {
-        text += node.textContent || ''
+        text += node.textContent || ""
       } else if (node.nodeType === Node.ELEMENT_NODE) {
         const childElement = node as Element
         const childRole = getImplicitRole(childElement)
         // Include text from non-interactive children
         if (!childRole || !isInteractiveRole(childRole)) {
-          text += childElement.textContent || ''
+          text += childElement.textContent || ""
         }
       }
     }
@@ -258,12 +275,12 @@ function computeAccessibleName(element: Element): string {
   }
 
   // 8. placeholder (for inputs, fallback)
-  const placeholder = element.getAttribute('placeholder')
+  const placeholder = element.getAttribute("placeholder")
   if (placeholder) {
     return placeholder.trim()
   }
 
-  return ''
+  return ""
 }
 
 /**
@@ -271,10 +288,24 @@ function computeAccessibleName(element: Element): string {
  */
 function isInteractiveRole(role: string): boolean {
   const interactiveRoles = [
-    'button', 'link', 'textbox', 'searchbox', 'checkbox',
-    'radio', 'slider', 'spinbutton', 'combobox', 'listbox',
-    'option', 'menuitem', 'menuitemcheckbox', 'menuitemradio',
-    'tab', 'switch', 'scrollbar', 'searchbox'
+    "button",
+    "link",
+    "textbox",
+    "searchbox",
+    "checkbox",
+    "radio",
+    "slider",
+    "spinbutton",
+    "combobox",
+    "listbox",
+    "option",
+    "menuitem",
+    "menuitemcheckbox",
+    "menuitemradio",
+    "tab",
+    "switch",
+    "scrollbar",
+    "searchbox",
   ]
   return interactiveRoles.includes(role)
 }
@@ -296,12 +327,12 @@ export function isVisible(element: Element): boolean {
   const style = window.getComputedStyle(element)
 
   // Check display
-  if (style.display === 'none') {
+  if (style.display === "none") {
     return false
   }
 
   // Check visibility
-  if (style.visibility === 'hidden') {
+  if (style.visibility === "hidden") {
     return false
   }
 
@@ -321,7 +352,7 @@ export function isVisible(element: Element): boolean {
   const parent = element.parentElement
   if (parent) {
     const parentStyle = window.getComputedStyle(parent)
-    if (parentStyle.overflow === 'hidden' || parentStyle.overflow === 'clip') {
+    if (parentStyle.overflow === "hidden" || parentStyle.overflow === "clip") {
       const parentRect = parent.getBoundingClientRect()
       // Check if element is completely outside parent bounds
       if (
@@ -336,7 +367,7 @@ export function isVisible(element: Element): boolean {
   }
 
   // Check aria-hidden
-  if (element.getAttribute('aria-hidden') === 'true') {
+  if (element.getAttribute("aria-hidden") === "true") {
     return false
   }
 
@@ -360,7 +391,7 @@ function generateSelector(element: Element): string {
   }
 
   // 2. Try data attributes
-  const dataTestId = element.getAttribute('data-testid')
+  const dataTestId = element.getAttribute("data-testid")
   if (dataTestId) {
     const selector = `[data-testid="${dataTestId}"]`
     if (document.querySelectorAll(selector).length === 1) {
@@ -368,7 +399,7 @@ function generateSelector(element: Element): string {
     }
   }
 
-  const dataTest = element.getAttribute('data-test')
+  const dataTest = element.getAttribute("data-test")
   if (dataTest) {
     const selector = `[data-test="${dataTest}"]`
     if (document.querySelectorAll(selector).length === 1) {
@@ -386,10 +417,10 @@ function generateSelector(element: Element): string {
     // Add classes if available (max 2 for brevity)
     if (current.classList.length > 0) {
       const classes = Array.from(current.classList)
-        .filter(cls => /^[a-zA-Z][\w-]*$/.test(cls))
+        .filter((cls) => /^[a-zA-Z][\w-]*$/.test(cls))
         .slice(0, 2)
       if (classes.length > 0) {
-        selector += '.' + classes.join('.')
+        selector += "." + classes.join(".")
       }
     }
 
@@ -397,7 +428,7 @@ function generateSelector(element: Element): string {
     const parent = current.parentElement
     if (parent) {
       const siblings = Array.from(parent.children).filter(
-        child => child.tagName === current!.tagName
+        (child) => child.tagName === current!.tagName
       )
       if (siblings.length > 1) {
         const index = siblings.indexOf(current) + 1
@@ -415,7 +446,7 @@ function generateSelector(element: Element): string {
   }
 
   // Verify the selector is unique, if not add more specificity
-  let fullSelector = path.join(' > ')
+  let fullSelector = path.join(" > ")
   if (document.querySelectorAll(fullSelector).length !== 1) {
     // Fallback to adding nth-of-type
     const parent = element.parentElement
@@ -444,9 +475,18 @@ function buildA11yNode(element: Element, depth: number = 0): A11yNode | null {
   }
 
   const visible = isVisible(element)
-  const semanticContainers = ['navigation', 'main', 'complementary', 'contentinfo', 'banner', 'form', 'region', 'article']
+  const semanticContainers = [
+    "navigation",
+    "main",
+    "complementary",
+    "contentinfo",
+    "banner",
+    "form",
+    "region",
+    "article",
+  ]
 
-  if (!visible && (!semanticContainers.includes(role))) {
+  if (!visible && !semanticContainers.includes(role)) {
     return null
   }
 
@@ -459,20 +499,26 @@ function buildA11yNode(element: Element, depth: number = 0): A11yNode | null {
   }
 
   // Add optional properties
-  const description = element.getAttribute('aria-description')
+  const description = element.getAttribute("aria-description")
   if (description) {
     node.description = description
   }
 
   // Get value for inputs
-  if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
+  if (
+    element instanceof HTMLInputElement ||
+    element instanceof HTMLTextAreaElement
+  ) {
     node.value = element.value
   } else if (element instanceof HTMLSelectElement) {
     node.value = element.value
   }
 
   // Get checked state
-  if (element instanceof HTMLInputElement && (element.type === 'checkbox' || element.type === 'radio')) {
+  if (
+    element instanceof HTMLInputElement &&
+    (element.type === "checkbox" || element.type === "radio")
+  ) {
     node.checked = element.checked
   }
 
@@ -482,14 +528,16 @@ function buildA11yNode(element: Element, depth: number = 0): A11yNode | null {
   }
 
   // Get disabled state
-  if ('disabled' in element) {
-    node.disabled = (element as HTMLInputElement | HTMLButtonElement | HTMLSelectElement).disabled
+  if ("disabled" in element) {
+    node.disabled = (
+      element as HTMLInputElement | HTMLButtonElement | HTMLSelectElement
+    ).disabled
   }
 
   // Get expanded state
-  const expanded = element.getAttribute('aria-expanded')
+  const expanded = element.getAttribute("aria-expanded")
   if (expanded !== null) {
-    node.expanded = expanded === 'true'
+    node.expanded = expanded === "true"
   }
 
   // Get heading level
@@ -531,7 +579,7 @@ function buildA11yNode(element: Element, depth: number = 0): A11yNode | null {
  */
 export function buildA11yTree(): A11yTree {
   const tree = buildA11yNode(document.body, 0) || {
-    role: 'document',
+    role: "document",
     name: document.title,
     children: [],
   }
@@ -556,11 +604,11 @@ export function getInteractiveElements(): InteractiveElement[] {
 
   // Query for interactive elements
   const selectors = [
-    'a[href]',
-    'button',
-    'input',
-    'select',
-    'textarea',
+    "a[href]",
+    "button",
+    "input",
+    "select",
+    "textarea",
     '[role="button"]',
     '[role="link"]',
     '[role="textbox"]',
@@ -572,11 +620,11 @@ export function getInteractiveElements(): InteractiveElement[] {
     '[role="tab"]',
     '[role="switch"]',
     '[role="slider"]',
-    '[onclick]',
-    '[tabindex]',
+    "[onclick]",
+    "[tabindex]",
   ]
 
-  const allElements = document.querySelectorAll(selectors.join(','))
+  const allElements = document.querySelectorAll(selectors.join(","))
 
   for (const element of allElements) {
     const role = getImplicitRole(element)
@@ -590,10 +638,13 @@ export function getInteractiveElements(): InteractiveElement[] {
 
     // Check if element is actionable (visible and enabled)
     let actionable = visible
-    if ('disabled' in element) {
-      actionable = actionable && !(element as HTMLInputElement | HTMLButtonElement | HTMLSelectElement).disabled
+    if ("disabled" in element) {
+      actionable =
+        actionable &&
+        !(element as HTMLInputElement | HTMLButtonElement | HTMLSelectElement)
+          .disabled
     }
-    if (element.getAttribute('aria-disabled') === 'true') {
+    if (element.getAttribute("aria-disabled") === "true") {
       actionable = false
     }
 
@@ -626,7 +677,7 @@ export function findElement(selector: string): Element | null {
   try {
     return document.querySelector(selector)
   } catch (error) {
-    console.error('Invalid selector:', selector, error)
+    console.error("Invalid selector:", selector, error)
     return null
   }
 }
@@ -642,7 +693,10 @@ let changeCallback: (() => void) | null = null
 /**
  * Watch for DOM changes and notify when the tree should be refreshed
  */
-export function watchForChanges(callback: () => void, debounceMs: number = 500): void {
+export function watchForChanges(
+  callback: () => void,
+  debounceMs: number = 500
+): void {
   // Stop existing observer
   stopWatching()
 
@@ -665,9 +719,18 @@ export function watchForChanges(callback: () => void, debounceMs: number = 500):
     subtree: true,
     attributes: true,
     attributeFilter: [
-      'class', 'id', 'role', 'aria-label', 'aria-labelledby',
-      'aria-hidden', 'aria-expanded', 'aria-checked', 'aria-selected',
-      'disabled', 'hidden', 'style'
+      "class",
+      "id",
+      "role",
+      "aria-label",
+      "aria-labelledby",
+      "aria-hidden",
+      "aria-expanded",
+      "aria-checked",
+      "aria-selected",
+      "disabled",
+      "hidden",
+      "style",
     ],
   })
 }

@@ -1,15 +1,15 @@
-"use client";
+"use client"
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
 
 export interface AppConfig {
   features: {
-    emailVerification: boolean;
-    passwordReset: boolean;
-  };
+    emailVerification: boolean
+    passwordReset: boolean
+  }
 }
 
-let configCache: AppConfig | null = null;
+let configCache: AppConfig | null = null
 
 /**
  * Fetch app configuration from the API
@@ -17,10 +17,10 @@ let configCache: AppConfig | null = null;
  */
 export async function getConfig(): Promise<AppConfig> {
   if (configCache) {
-    return configCache;
+    return configCache
   }
 
-  const response = await fetch(`${API_URL}/api/config`);
+  const response = await fetch(`${API_URL}/api/config`)
   if (!response.ok) {
     // Return defaults if config endpoint fails
     return {
@@ -28,17 +28,17 @@ export async function getConfig(): Promise<AppConfig> {
         emailVerification: false,
         passwordReset: false,
       },
-    };
+    }
   }
 
-  configCache = await response.json();
-  return configCache!;
+  configCache = await response.json()
+  return configCache!
 }
 
 /**
  * Check if email verification is enabled
  */
 export async function isEmailVerificationEnabled(): Promise<boolean> {
-  const config = await getConfig();
-  return config.features.emailVerification;
+  const config = await getConfig()
+  return config.features.emailVerification
 }

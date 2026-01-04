@@ -4,44 +4,44 @@
  * Verifies session tokens using Better Auth and attaches user info to context.
  */
 
-import type { Context, Next } from "hono";
-import { getAuth } from "../lib/auth";
+import type { Context, Next } from "hono"
+import { getAuth } from "../lib/auth"
 
 /**
  * Auth context stored in Hono context
  */
 export interface AuthContext {
-  userId: string;
-  email: string;
-  name: string;
+  userId: string
+  email: string
+  name: string
   session: {
-    id: string;
-    expiresAt: Date;
-  };
+    id: string
+    expiresAt: Date
+  }
 }
 
 /**
  * Type for Hono context with auth variables
  */
 export type AuthVariables = {
-  auth: AuthContext;
-};
+  auth: AuthContext
+}
 
 /**
  * Auth middleware to protect routes.
  * Verifies the session token from Better Auth and attaches user info to context.
  */
 export async function authMiddleware(c: Context, next: Next) {
-  const auth = getAuth();
+  const auth = getAuth()
 
   try {
     // Get session from the request using Better Auth
     const session = await auth.api.getSession({
       headers: c.req.raw.headers,
-    });
+    })
 
     if (!session || !session.user) {
-      return c.json({ error: "Unauthorized" }, 401);
+      return c.json({ error: "Unauthorized" }, 401)
     }
 
     // Attach auth context
@@ -53,12 +53,12 @@ export async function authMiddleware(c: Context, next: Next) {
         id: session.session.id,
         expiresAt: session.session.expiresAt,
       },
-    } satisfies AuthContext);
+    } satisfies AuthContext)
 
-    await next();
+    await next()
   } catch (error) {
-    console.error("Auth middleware error:", error);
-    return c.json({ error: "Authentication failed" }, 401);
+    console.error("Auth middleware error:", error)
+    return c.json({ error: "Authentication failed" }, 401)
   }
 }
 
@@ -67,9 +67,11 @@ export async function authMiddleware(c: Context, next: Next) {
  * Throws if auth context is not present.
  */
 export function getAuthContext(c: Context): AuthContext {
-  const auth = c.get("auth") as AuthContext | undefined;
+  const auth = c.get("auth") as AuthContext | undefined
   if (!auth) {
-    throw new Error("Auth context not found. Did you forget to add authMiddleware?");
+    throw new Error(
+      "Auth context not found. Did you forget to add authMiddleware?"
+    )
   }
-  return auth;
+  return auth
 }

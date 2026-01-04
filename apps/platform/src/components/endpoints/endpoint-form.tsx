@@ -1,62 +1,68 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Globe, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { Globe, Loader2 } from "lucide-react"
 
 interface Namespace {
-  id: string;
-  name: string;
-  slug: string;
+  id: string
+  name: string
+  slug: string
 }
 
 interface EndpointFormProps {
-  namespaces: Namespace[];
+  namespaces: Namespace[]
   initialData?: {
-    id: string;
-    name: string;
-    slug: string;
-    namespaceId: string | null;
-    status: "active" | "inactive";
-  };
+    id: string
+    name: string
+    slug: string
+    namespaceId: string | null
+    status: "active" | "inactive"
+  }
   onSubmit: (data: {
-    name: string;
-    slug: string;
-    namespaceId: string | null;
-    status: "active" | "inactive";
-  }) => Promise<{ error?: string }>;
+    name: string
+    slug: string
+    namespaceId: string | null
+    status: "active" | "inactive"
+  }) => Promise<{ error?: string }>
 }
 
-export function EndpointForm({ namespaces, initialData, onSubmit }: EndpointFormProps) {
-  const router = useRouter();
-  const [name, setName] = useState(initialData?.name || "");
-  const [slug, setSlug] = useState(initialData?.slug || "");
-  const [namespaceId, setNamespaceId] = useState(initialData?.namespaceId || "");
-  const [status, setStatus] = useState<"active" | "inactive">(initialData?.status || "active");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export function EndpointForm({
+  namespaces,
+  initialData,
+  onSubmit,
+}: EndpointFormProps) {
+  const router = useRouter()
+  const [name, setName] = useState(initialData?.name || "")
+  const [slug, setSlug] = useState(initialData?.slug || "")
+  const [namespaceId, setNamespaceId] = useState(initialData?.namespaceId || "")
+  const [status, setStatus] = useState<"active" | "inactive">(
+    initialData?.status || "active"
+  )
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   // Auto-generate slug from name
   const handleNameChange = (value: string) => {
-    setName(value);
+    setName(value)
     // Only auto-generate if user hasn't manually edited slug or is creating new
     if (!initialData && (!slug || slug === generateSlug(name))) {
-      setSlug(generateSlug(value));
+      setSlug(generateSlug(value))
     }
-  };
+  }
 
   const generateSlug = (value: string) => {
     return value
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "");
-  };
+      .replace(/^-+|-+$/g, "")
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setIsSubmitting(true);
+    e.preventDefault()
+    setError(null)
+    setIsSubmitting(true)
 
     try {
       const result = await onSubmit({
@@ -64,20 +70,20 @@ export function EndpointForm({ namespaces, initialData, onSubmit }: EndpointForm
         slug: slug.trim(),
         namespaceId: namespaceId || null,
         status,
-      });
+      })
 
       if (result.error) {
-        setError(result.error);
-        return;
+        setError(result.error)
+        return
       }
 
-      router.push("/dashboard/endpoints");
+      router.push("/dashboard/endpoints")
     } catch (err) {
-      setError("An unexpected error occurred");
+      setError("An unexpected error occurred")
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   return (
     <div className="mx-auto max-w-lg">
@@ -124,7 +130,9 @@ export function EndpointForm({ namespaces, initialData, onSubmit }: EndpointForm
               type="text"
               id="slug"
               value={slug}
-              onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+              onChange={(e) =>
+                setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))
+              }
               placeholder="my-endpoint"
               required
               disabled={!!initialData}
@@ -221,5 +229,5 @@ export function EndpointForm({ namespaces, initialData, onSubmit }: EndpointForm
         </div>
       </form>
     </div>
-  );
+  )
 }

@@ -1,14 +1,14 @@
-"use client";
+"use client"
 
-import { Terminal, Radio, Globe } from "lucide-react";
+import { Terminal, Radio, Globe } from "lucide-react"
 
-export type McpTransportType = "stdio" | "sse" | "http";
+export type McpTransportType = "stdio" | "sse" | "http"
 
 interface TransportOption {
-  value: McpTransportType;
-  label: string;
-  description: string;
-  icon: React.ComponentType<{ className?: string }>;
+  value: McpTransportType
+  label: string
+  description: string
+  icon: React.ComponentType<{ className?: string }>
 }
 
 const transportOptions: TransportOption[] = [
@@ -30,12 +30,12 @@ const transportOptions: TransportOption[] = [
     description: "Standard HTTP request/response protocol",
     icon: Globe,
   },
-];
+]
 
 interface McpTypeSelectorProps {
-  value: McpTransportType;
-  onChange: (value: McpTransportType) => void;
-  disabled?: boolean;
+  value: McpTransportType
+  onChange: (value: McpTransportType) => void
+  disabled?: boolean
 }
 
 export function McpTypeSelector({
@@ -46,8 +46,8 @@ export function McpTypeSelector({
   return (
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
       {transportOptions.map((option) => {
-        const Icon = option.icon;
-        const isSelected = value === option.value;
+        const Icon = option.icon
+        const isSelected = value === option.value
 
         return (
           <button
@@ -70,11 +70,13 @@ export function McpTypeSelector({
               >
                 {option.label}
               </p>
-              <p className="mt-0.5 text-xs text-gray-500">{option.description}</p>
+              <p className="mt-0.5 text-xs text-gray-500">
+                {option.description}
+              </p>
             </div>
           </button>
-        );
+        )
       })}
     </div>
-  );
+  )
 }

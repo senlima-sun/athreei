@@ -1,35 +1,35 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { authClient } from "@/lib/auth-client";
-import { isEmailVerificationEnabled } from "@/lib/api";
+import { useState } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { authClient } from "@/lib/auth-client"
+import { isEmailVerificationEnabled } from "@/lib/api"
 
 export function RegisterForm() {
-  const router = useRouter();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const router = useRouter()
+  const [name, setName] = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
+    e.preventDefault()
+    setError(null)
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
+      setError("Passwords do not match")
+      return
     }
 
     if (password.length < 8) {
-      setError("Password must be at least 8 characters");
-      return;
+      setError("Password must be at least 8 characters")
+      return
     }
 
-    setIsLoading(true);
+    setIsLoading(true)
 
     try {
       const result = await authClient.signUp.email({
@@ -37,27 +37,27 @@ export function RegisterForm() {
         email,
         password,
         callbackURL: "/dashboard",
-      });
+      })
 
       if (result.error) {
-        setError(result.error.message || "Failed to create account");
-        return;
+        setError(result.error.message || "Failed to create account")
+        return
       }
 
       // Redirect based on whether email verification is enabled
-      const emailEnabled = await isEmailVerificationEnabled();
+      const emailEnabled = await isEmailVerificationEnabled()
       if (emailEnabled) {
-        router.push("/verify-email");
+        router.push("/verify-email")
       } else {
         // Skip verification, go directly to dashboard
-        router.push("/");
+        router.push("/")
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create account");
+      setError(err instanceof Error ? err.message : "Failed to create account")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -159,5 +159,5 @@ export function RegisterForm() {
         </Link>
       </p>
     </form>
-  );
+  )
 }

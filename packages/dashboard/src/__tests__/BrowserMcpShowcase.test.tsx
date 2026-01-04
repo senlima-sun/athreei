@@ -67,9 +67,15 @@ describe("BrowserMcpShowcase", () => {
   describe("Tabs Navigation", () => {
     it("renders all tab triggers", () => {
       renderWithRouter(<BrowserMcpShowcase />)
-      expect(screen.getByRole("tab", { name: "Setup Guide" })).toBeInTheDocument()
-      expect(screen.getByRole("tab", { name: "Available Tools" })).toBeInTheDocument()
-      expect(screen.getByRole("tab", { name: "Example Prompts" })).toBeInTheDocument()
+      expect(
+        screen.getByRole("tab", { name: "Setup Guide" })
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole("tab", { name: "Available Tools" })
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole("tab", { name: "Example Prompts" })
+      ).toBeInTheDocument()
     })
 
     it("shows setup guide by default", () => {
@@ -95,7 +101,9 @@ describe("BrowserMcpShowcase", () => {
     it("renders all 5 setup steps", () => {
       renderWithRouter(<BrowserMcpShowcase />)
 
-      expect(screen.getByText("Install the Chrome Extension")).toBeInTheDocument()
+      expect(
+        screen.getByText("Install the Chrome Extension")
+      ).toBeInTheDocument()
       expect(screen.getByText("Install the Native Host")).toBeInTheDocument()
       expect(screen.getByText("Configure Claude Desktop")).toBeInTheDocument()
       expect(screen.getByText("Restart Claude Desktop")).toBeInTheDocument()

@@ -14,6 +14,7 @@ The athreei extension has two types of tests:
 ### Setup
 
 1. **Build the extension:**
+
    ```bash
    cd packages/extension
    bun run build
@@ -184,6 +185,7 @@ The extension supports these permission scopes:
 **Symptoms:** Tests fail with "Extension not found" or timeout errors
 
 **Solutions:**
+
 1. Ensure extension is built: `bun run build`
 2. Check that `dist/` directory exists and contains manifest.json
 3. Verify the extensionPath in test matches your directory structure
@@ -193,6 +195,7 @@ The extension supports these permission scopes:
 **Symptoms:** Tests timeout waiting for `[role="dialog"]`
 
 **Solutions:**
+
 1. Check browser console for errors in test browser
 2. Verify content script is injected (Chrome DevTools → Sources)
 3. Ensure background service worker is running (check chrome://extensions/)
@@ -205,6 +208,7 @@ The extension supports these permission scopes:
 **Note:** The permission dialog uses Shadow DOM for style isolation. Playwright may have difficulty selecting elements inside shadow DOM. Current tests use generic selectors that work with the dialog's outer structure.
 
 **Solutions:**
+
 1. Use Playwright's `page.locator()` with text selectors
 2. Wait for elements to be visible before interacting
 3. Consider using `page.evaluate()` to pierce shadow DOM if needed
@@ -214,6 +218,7 @@ The extension supports these permission scopes:
 **Symptoms:** Tests fail due to timeout errors
 
 **Solutions:**
+
 1. Increase timeout in `playwright.config.ts` (currently 30s)
 2. Add more `waitForTimeout()` calls to allow extension initialization
 3. Check if extension is actually loaded by inspecting test browser manually
@@ -226,6 +231,7 @@ The tests are designed to work in CI environments:
 **Environment Variable:** Set `CI=true`
 
 **CI Behavior:**
+
 - Uses GitHub Actions reporter
 - Retries failed tests twice
 - Runs tests serially (not in parallel)

@@ -2,8 +2,18 @@
  * Middleware exports
  */
 
-export { authMiddleware, getAuthContext, type AuthContext, type AuthVariables } from "./auth";
-export { errorHandler, notFoundHandler, ApiError, type ErrorResponse } from "./error";
+export {
+  authMiddleware,
+  getAuthContext,
+  type AuthContext,
+  type AuthVariables,
+} from "./auth"
+export {
+  errorHandler,
+  notFoundHandler,
+  ApiError,
+  type ErrorResponse,
+} from "./error"
 export {
   createRateLimiter,
   checkRateLimit,
@@ -13,4 +23,4 @@ export {
   type RateLimitConfig,
   type RateLimitInfo,
   type RateLimitVariables,
-} from "./rate-limit";
+} from "./rate-limit"

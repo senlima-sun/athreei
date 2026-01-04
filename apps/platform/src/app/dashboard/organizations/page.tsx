@@ -1,24 +1,25 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { PageHeader } from "@/components/dashboard/page-header";
-import { useListOrganizations, useActiveOrganization } from "@/lib/auth-client";
-import { Building2, Plus, Users, Settings } from "lucide-react";
+import Link from "next/link"
+import { PageHeader } from "@/components/dashboard/page-header"
+import { useListOrganizations, useActiveOrganization } from "@/lib/auth-client"
+import { Building2, Plus, Users, Settings } from "lucide-react"
 
 interface Organization {
-  id: string;
-  name: string;
-  slug?: string | null;
-  logo?: string | null;
-  createdAt: Date;
+  id: string
+  name: string
+  slug?: string | null
+  logo?: string | null
+  createdAt: Date
 }
 
 export default function OrganizationsPage() {
-  const { data: orgList, isPending: isOrgListPending } = useListOrganizations();
-  const { data: activeOrg, isPending: isActiveOrgPending } = useActiveOrganization();
+  const { data: orgList, isPending: isOrgListPending } = useListOrganizations()
+  const { data: activeOrg, isPending: isActiveOrgPending } =
+    useActiveOrganization()
 
-  const isPending = isOrgListPending || isActiveOrgPending;
-  const organizations = (orgList ?? []) as Organization[];
+  const isPending = isOrgListPending || isActiveOrgPending
+  const organizations = (orgList ?? []) as Organization[]
 
   if (isPending) {
     return (
@@ -31,7 +32,7 @@ export default function OrganizationsPage() {
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-gray-600" />
         </div>
       </div>
-    );
+    )
   }
 
   return (
@@ -57,7 +58,8 @@ export default function OrganizationsPage() {
             No organizations yet
           </h3>
           <p className="mt-2 text-sm text-gray-500">
-            Create your first organization to start collaborating with your team.
+            Create your first organization to start collaborating with your
+            team.
           </p>
           <Link
             href="/dashboard/organizations/new"
@@ -116,5 +118,5 @@ export default function OrganizationsPage() {
         </div>
       )}
     </div>
-  );
+  )
 }

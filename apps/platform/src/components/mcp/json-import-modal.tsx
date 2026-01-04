@@ -2,10 +2,7 @@
 
 import { useState } from "react"
 import { X, FileJson, AlertCircle, CheckCircle } from "lucide-react"
-import {
-  parseMcpConfig,
-  type ParsedMcpServer,
-} from "@/lib/mcp-config-parser"
+import { parseMcpConfig, type ParsedMcpServer } from "@/lib/mcp-config-parser"
 
 interface JsonImportModalProps {
   onClose: () => void

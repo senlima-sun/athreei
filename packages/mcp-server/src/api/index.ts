@@ -28,17 +28,28 @@ export function createApiServer() {
   const app = new Hono()
 
   // CORS for dashboard (running on :5173 or :5174)
-  app.use("*", cors({
-    origin: ["http://localhost:5173", "http://localhost:5174", "http://127.0.0.1:5173", "http://127.0.0.1:5174"],
-    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowHeaders: ["Content-Type"],
-    credentials: true,
-  }))
+  app.use(
+    "*",
+    cors({
+      origin: [
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:5174",
+      ],
+      allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      allowHeaders: ["Content-Type"],
+      credentials: true,
+    })
+  )
 
   // Request logging (logs to stderr)
-  app.use("*", apiLogger((message) => {
-    logger.info(message)
-  }))
+  app.use(
+    "*",
+    apiLogger((message) => {
+      logger.info(message)
+    })
+  )
 
   // Mount routes
   app.route("/api/status", statusRoutes)
@@ -72,8 +83,12 @@ export function startApiServer(): ReturnType<typeof Bun.serve> | undefined {
     return server
   } catch (error) {
     if (error instanceof Error && error.message.includes("EADDRINUSE")) {
-      logger.warn(`Port ${API_PORT} is already in use. Dashboard API will not be available.`)
-      logger.warn("This is non-fatal - MCP server will continue without the dashboard API.")
+      logger.warn(
+        `Port ${API_PORT} is already in use. Dashboard API will not be available.`
+      )
+      logger.warn(
+        "This is non-fatal - MCP server will continue without the dashboard API."
+      )
       return undefined
     }
     throw error

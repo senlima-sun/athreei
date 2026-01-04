@@ -7,20 +7,20 @@
 
 export const logger = {
   info: (message: string, ...args: unknown[]) => {
-    console.error(`[INFO] ${message}`, ...args);
+    console.error(`[INFO] ${message}`, ...args)
   },
 
   error: (message: string, ...args: unknown[]) => {
-    console.error(`[ERROR] ${message}`, ...args);
+    console.error(`[ERROR] ${message}`, ...args)
   },
 
   warn: (message: string, ...args: unknown[]) => {
-    console.error(`[WARN] ${message}`, ...args);
+    console.error(`[WARN] ${message}`, ...args)
   },
 
   debug: (message: string, ...args: unknown[]) => {
     if (process.env.DEBUG) {
-      console.error(`[DEBUG] ${message}`, ...args);
+      console.error(`[DEBUG] ${message}`, ...args)
     }
   },
-};
+}

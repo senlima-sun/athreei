@@ -11,7 +11,9 @@ describe("getToolDescription", () => {
   })
 
   it("should return description for browser_type", () => {
-    expect(getToolDescription("browser_type")).toBe("Type text into form fields")
+    expect(getToolDescription("browser_type")).toBe(
+      "Type text into form fields"
+    )
   })
 
   it("should return description for browser_navigate", () => {
@@ -41,12 +43,22 @@ describe("getToolDescription", () => {
   })
 
   it("should return description for all browser tools", () => {
-    expect(getToolDescription("browser_list_tabs")).toBe("List all open browser tabs")
-    expect(getToolDescription("browser_get_active_tab")).toBe("Get information about the active tab")
+    expect(getToolDescription("browser_list_tabs")).toBe(
+      "List all open browser tabs"
+    )
+    expect(getToolDescription("browser_get_active_tab")).toBe(
+      "Get information about the active tab"
+    )
     expect(getToolDescription("browser_get_content")).toBe("Read page content")
-    expect(getToolDescription("browser_get_elements")).toBe("Get interactive elements on the page")
-    expect(getToolDescription("browser_scroll")).toBe("Scroll the page or elements")
-    expect(getToolDescription("browser_wait")).toBe("Wait for elements or conditions")
+    expect(getToolDescription("browser_get_elements")).toBe(
+      "Get interactive elements on the page"
+    )
+    expect(getToolDescription("browser_scroll")).toBe(
+      "Scroll the page or elements"
+    )
+    expect(getToolDescription("browser_wait")).toBe(
+      "Wait for elements or conditions"
+    )
   })
 
   it("should return description for legacy tools", () => {

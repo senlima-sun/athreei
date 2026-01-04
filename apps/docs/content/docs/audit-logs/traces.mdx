@@ -15,14 +15,14 @@ Each tool call generates a trace containing:
 interface TraceEntry {
   id: string
   traceId: string
-  toolName: string      // e.g., "browser__screenshot"
-  serverName: string    // e.g., "browser"
+  toolName: string // e.g., "browser__screenshot"
+  serverName: string // e.g., "browser"
   endpointId?: string
   status: "success" | "error"
   durationMs: number
   startTime: number
   endTime?: number
-  encryptedPayload?: string  // E2E encrypted
+  encryptedPayload?: string // E2E encrypted
   keyVersion?: number
   errorMessage?: string
 }
@@ -49,14 +49,14 @@ Decryption happens client-side in your browser. athreei servers never see plaint
 
 The Traces page in the Dashboard shows:
 
-| Column | Description |
-|--------|-------------|
-| Time | When the call started |
-| Tool | Tool name with server prefix |
-| Server | MCP server that handled the call |
-| Status | Success or error indicator |
-| Duration | Execution time in ms/seconds |
-| Action | View full trace details |
+| Column   | Description                      |
+| -------- | -------------------------------- |
+| Time     | When the call started            |
+| Tool     | Tool name with server prefix     |
+| Server   | MCP server that handled the call |
+| Status   | Success or error indicator       |
+| Duration | Execution time in ms/seconds     |
+| Action   | View full trace details          |
 
 ### Filtering Options
 
@@ -103,6 +103,7 @@ Use traces to analyze performance:
 ## Export
 
 Export traces for:
+
 - Compliance audits
 - Performance reports
 - Debugging sessions

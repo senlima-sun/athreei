@@ -5,12 +5,8 @@
  * using Resend and React Email templates.
  */
 
-import {
-  sendEmail,
-  PasswordResetEmail,
-  VerifyEmail,
-} from "@athreei/email";
-import type { EmailCallbacks } from "@athreei/auth";
+import { sendEmail, PasswordResetEmail, VerifyEmail } from "@athreei/email"
+import type { EmailCallbacks } from "@athreei/auth"
 
 /**
  * Email callbacks to be passed to createAuth()
@@ -21,7 +17,7 @@ export const emailCallbacks: EmailCallbacks = {
       to: user.email,
       subject: "Reset your password",
       react: PasswordResetEmail({ url, userName: user.name }),
-    });
+    })
   },
 
   sendVerificationEmail: async ({ user, url }) => {
@@ -29,6 +25,6 @@ export const emailCallbacks: EmailCallbacks = {
       to: user.email,
       subject: "Verify your email address",
       react: VerifyEmail({ url, userName: user.name }),
-    });
+    })
   },
-};
+}

@@ -14,7 +14,11 @@ const sizeClasses = {
 export function Spinner({ size = "md", className }: SpinnerProps) {
   return (
     <svg
-      className={cn("animate-spin text-muted-foreground", sizeClasses[size], className)}
+      className={cn(
+        "animate-spin text-muted-foreground",
+        sizeClasses[size],
+        className
+      )}
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
       viewBox="0 0 24 24"
@@ -41,9 +45,17 @@ interface LoadingStateProps {
   className?: string
 }
 
-export function LoadingState({ message = "Loading...", className }: LoadingStateProps) {
+export function LoadingState({
+  message = "Loading...",
+  className,
+}: LoadingStateProps) {
   return (
-    <div className={cn("flex flex-col items-center justify-center p-8 gap-4", className)}>
+    <div
+      className={cn(
+        "flex flex-col items-center justify-center p-8 gap-4",
+        className
+      )}
+    >
       <Spinner size="lg" />
       <p className="text-muted-foreground text-sm">{message}</p>
     </div>

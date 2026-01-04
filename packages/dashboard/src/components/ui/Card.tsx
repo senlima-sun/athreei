@@ -86,7 +86,13 @@ interface LegacyCardProps extends React.ComponentProps<"div"> {
   actions?: React.ReactNode
 }
 
-function LegacyCard({ title, actions, children, className, ...props }: LegacyCardProps) {
+function LegacyCard({
+  title,
+  actions,
+  children,
+  className,
+  ...props
+}: LegacyCardProps) {
   return (
     <Card className={className} {...props}>
       {(title || actions) && (
@@ -95,7 +101,9 @@ function LegacyCard({ title, actions, children, className, ...props }: LegacyCar
           {actions && <CardAction>{actions}</CardAction>}
         </CardHeader>
       )}
-      <CardContent className={title || actions ? "" : "pt-0"}>{children}</CardContent>
+      <CardContent className={title || actions ? "" : "pt-0"}>
+        {children}
+      </CardContent>
     </Card>
   )
 }

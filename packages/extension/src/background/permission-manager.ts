@@ -50,7 +50,10 @@ class PermissionManagerImpl {
   /**
    * Get permission from memory cache
    */
-  private getFromMemoryCache(origin: string, tool: string): PermissionLevel | null {
+  private getFromMemoryCache(
+    origin: string,
+    tool: string
+  ): PermissionLevel | null {
     const key = this.getCacheKey(origin, tool)
     const cached = this.memoryCache.get(key)
 
@@ -69,7 +72,10 @@ class PermissionManagerImpl {
   /**
    * Get permission from chrome.storage.local
    */
-  private async getFromStorageCache(origin: string, tool: string): Promise<PermissionLevel | null> {
+  private async getFromStorageCache(
+    origin: string,
+    tool: string
+  ): Promise<PermissionLevel | null> {
     try {
       const storageKey = STORAGE_KEY_PREFIX + this.getCacheKey(origin, tool)
       const result = await chrome.storage.local.get(storageKey)
@@ -88,7 +94,10 @@ class PermissionManagerImpl {
 
       return null
     } catch (error) {
-      console.error("[PermissionManager] Error reading from storage cache:", error)
+      console.error(
+        "[PermissionManager] Error reading from storage cache:",
+        error
+      )
       return null
     }
   }
@@ -96,7 +105,10 @@ class PermissionManagerImpl {
   /**
    * Fetch permission from MCP server
    */
-  private async fetchFromServer(origin: string, tool: string): Promise<PermissionLevel> {
+  private async fetchFromServer(
+    origin: string,
+    tool: string
+  ): Promise<PermissionLevel> {
     try {
       const url = new URL("/api/permissions", MCP_SERVER_URL)
       url.searchParams.set("origin", origin)
@@ -122,7 +134,10 @@ class PermissionManagerImpl {
 
       // Validate response before using
       if (!["allowed", "denied", "ask"].includes(level)) {
-        console.error("[PermissionManager] Invalid permission level from server:", level)
+        console.error(
+          "[PermissionManager] Invalid permission level from server:",
+          level
+        )
         return "ask"
       }
 
@@ -162,7 +177,10 @@ class PermissionManagerImpl {
       const storageKey = STORAGE_KEY_PREFIX + key
       await chrome.storage.local.set({ [storageKey]: cached })
     } catch (error) {
-      console.error("[PermissionManager] Error writing to storage cache:", error)
+      console.error(
+        "[PermissionManager] Error writing to storage cache:",
+        error
+      )
     }
   }
 
@@ -171,8 +189,13 @@ class PermissionManagerImpl {
    *
    * Returns the permission level: "allowed", "denied", or "ask"
    */
-  async checkPermission(origin: string, tool: string): Promise<PermissionLevel> {
-    console.log(`[PermissionManager] Checking permission for ${origin} -> ${tool}`)
+  async checkPermission(
+    origin: string,
+    tool: string
+  ): Promise<PermissionLevel> {
+    console.log(
+      `[PermissionManager] Checking permission for ${origin} -> ${tool}`
+    )
 
     // 1. Check memory cache
     const memCached = this.getFromMemoryCache(origin, tool)
@@ -250,7 +273,10 @@ class PermissionManagerImpl {
       const storageKey = STORAGE_KEY_PREFIX + key
       await chrome.storage.local.remove(storageKey)
     } catch (error) {
-      console.error("[PermissionManager] Error invalidating storage cache:", error)
+      console.error(
+        "[PermissionManager] Error invalidating storage cache:",
+        error
+      )
     }
   }
 }
@@ -262,11 +288,15 @@ class PermissionManagerImpl {
 export const permissionManager = new PermissionManagerImpl()
 
 // Helper exports
-export const checkPermission = (origin: string, tool: string): Promise<PermissionLevel> =>
-  permissionManager.checkPermission(origin, tool)
+export const checkPermission = (
+  origin: string,
+  tool: string
+): Promise<PermissionLevel> => permissionManager.checkPermission(origin, tool)
 
 export const isAllowed = (origin: string, tool: string): Promise<boolean> =>
   permissionManager.isAllowed(origin, tool)
 
-export const requiresPrompt = (origin: string, tool: string): Promise<boolean> =>
-  permissionManager.requiresPrompt(origin, tool)
+export const requiresPrompt = (
+  origin: string,
+  tool: string
+): Promise<boolean> => permissionManager.requiresPrompt(origin, tool)

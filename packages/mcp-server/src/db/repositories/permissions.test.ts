@@ -78,7 +78,10 @@ describe("Permissions Repository", () => {
         allowed: "allowed" as PermissionLevel,
       })
 
-      const found = repo.findByOriginAndTool("https://example.com", "browser_navigate")
+      const found = repo.findByOriginAndTool(
+        "https://example.com",
+        "browser_navigate"
+      )
 
       expect(found).toBeDefined()
       expect(found?.id).toBe(created.id)
@@ -117,7 +120,9 @@ describe("Permissions Repository", () => {
       const permissions = repo.findByOrigin("https://example.com")
 
       expect(permissions).toHaveLength(2)
-      expect(permissions.every((p) => p.origin === "https://example.com")).toBe(true)
+      expect(permissions.every((p) => p.origin === "https://example.com")).toBe(
+        true
+      )
     })
 
     it("should return empty array for origin with no permissions", () => {
@@ -137,7 +142,10 @@ describe("Permissions Repository", () => {
       const deleted = repo.delete(permission.id)
       expect(deleted).toBe(true)
 
-      const found = repo.findByOriginAndTool("https://example.com", "browser_navigate")
+      const found = repo.findByOriginAndTool(
+        "https://example.com",
+        "browser_navigate"
+      )
       expect(found).toBeNull()
     })
 

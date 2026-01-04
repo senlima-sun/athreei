@@ -106,11 +106,9 @@ export function runMigrations(db: Database): void {
       db.exec(migration.sql)
 
       // Record migration as applied
-      db
-        .query(
-          "INSERT INTO _migrations (id, name, applied_at) VALUES (?, ?, ?)"
-        )
-        .run(migration.id, migration.name, Date.now())
+      db.query(
+        "INSERT INTO _migrations (id, name, applied_at) VALUES (?, ?, ?)"
+      ).run(migration.id, migration.name, Date.now())
     })()
 
     console.log(`Migration ${migration.id} applied successfully`)

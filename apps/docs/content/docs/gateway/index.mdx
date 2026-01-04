@@ -10,6 +10,7 @@ The athreei Gateway is the core of the platform: **connect one MCP to your AI ap
 ## Why Use a Gateway?
 
 Today, connecting AI apps to MCP servers is painful:
+
 - Each MCP server requires separate configuration
 - Claude Desktop supports multiple servers, but other apps may not
 - No visibility into what tools are being called
@@ -59,15 +60,16 @@ All your MCP servers (configured via Platform) are accessible through this singl
 
 Tools from different servers are prefixed to prevent collisions:
 
-| Server | Original Tool | Aggregated Name |
-|--------|---------------|-----------------|
-| github | `create_issue` | `github__create_issue` |
-| filesystem | `read_file` | `filesystem__read_file` |
-| slack | `send_message` | `slack__send_message` |
+| Server     | Original Tool  | Aggregated Name         |
+| ---------- | -------------- | ----------------------- |
+| github     | `create_issue` | `github__create_issue`  |
+| filesystem | `read_file`    | `filesystem__read_file` |
+| slack      | `send_message` | `slack__send_message`   |
 
 ### Built-in Audit Logging
 
 Every tool call through the gateway is logged:
+
 - Tool name and server
 - Request parameters
 - Response data
@@ -100,6 +102,7 @@ athreei-gateway
 ```
 
 **Best for:**
+
 - Users who want everything local
 - Combining multiple local MCP servers
 - Maximum control over configuration
@@ -111,12 +114,13 @@ athreei-gateway
 A hosted service with SSE transport:
 
 ```javascript
-const response = await fetch('https://gateway.athreei.com/sse', {
-  headers: { 'Authorization': 'Bearer YOUR_TOKEN' }
+const response = await fetch("https://gateway.athreei.com/sse", {
+  headers: { Authorization: "Bearer YOUR_TOKEN" },
 })
 ```
 
 **Best for:**
+
 - Web-based AI applications
 - Teams wanting centralized management
 - Environments where local binaries aren't practical
@@ -125,13 +129,13 @@ const response = await fetch('https://gateway.athreei.com/sse', {
 
 ## Comparison
 
-| Feature | Local Gateway | Cloud Gateway |
-|---------|--------------|---------------|
-| Transport | stdio | SSE |
-| Data location | Your machine | Encrypted on server |
-| Setup | Download binary | API endpoint |
-| Server config | Platform dashboard | Platform dashboard |
-| Audit logs | Platform sync | Platform sync |
+| Feature       | Local Gateway      | Cloud Gateway       |
+| ------------- | ------------------ | ------------------- |
+| Transport     | stdio              | SSE                 |
+| Data location | Your machine       | Encrypted on server |
+| Setup         | Download binary    | API endpoint        |
+| Server config | Platform dashboard | Platform dashboard  |
+| Audit logs    | Platform sync      | Platform sync       |
 
 ## Getting Started
 

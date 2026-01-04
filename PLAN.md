@@ -210,15 +210,15 @@ CREATE TABLE sessions (
 
 Custom events for website owners:
 
-| Event               | Direction        | Purpose                        |
-| ------------------- | ---------------- | ------------------------------ |
-| `aiii:ready`        | Extension → Page | Extension is ready             |
-| `aiii:request`      | Extension → Page | AI is requesting action        |
-| `aiii:response`     | Page → Extension | Website's custom response      |
-| `aiii:register`     | Page → Extension | Register custom tools          |
-| `aiii:permission`   | Page → Extension | Request permission scope       |
-| `aiii:action:before`| Extension → Page | Before action (cancelable)     |
-| `aiii:action:after` | Extension → Page | After action with results      |
+| Event                | Direction        | Purpose                    |
+| -------------------- | ---------------- | -------------------------- |
+| `aiii:ready`         | Extension → Page | Extension is ready         |
+| `aiii:request`       | Extension → Page | AI is requesting action    |
+| `aiii:response`      | Page → Extension | Website's custom response  |
+| `aiii:register`      | Page → Extension | Register custom tools      |
+| `aiii:permission`    | Page → Extension | Request permission scope   |
+| `aiii:action:before` | Extension → Page | Before action (cancelable) |
+| `aiii:action:after`  | Extension → Page | After action with results  |
 
 **Example website integration:**
 

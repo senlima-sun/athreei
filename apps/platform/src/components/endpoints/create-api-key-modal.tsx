@@ -1,49 +1,53 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { X, Loader2, Key } from "lucide-react";
+import { useState } from "react"
+import { X, Loader2, Key } from "lucide-react"
 
 interface CreateApiKeyModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onCreate: (name: string) => Promise<{ key?: string; error?: string }>;
+  isOpen: boolean
+  onClose: () => void
+  onCreate: (name: string) => Promise<{ key?: string; error?: string }>
 }
 
-export function CreateApiKeyModal({ isOpen, onClose, onCreate }: CreateApiKeyModalProps) {
-  const [name, setName] = useState("");
-  const [isCreating, setIsCreating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+export function CreateApiKeyModal({
+  isOpen,
+  onClose,
+  onCreate,
+}: CreateApiKeyModalProps) {
+  const [name, setName] = useState("")
+  const [isCreating, setIsCreating] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  if (!isOpen) return null;
+  if (!isOpen) return null
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setIsCreating(true);
+    e.preventDefault()
+    setError(null)
+    setIsCreating(true)
 
     try {
-      const result = await onCreate(name.trim());
+      const result = await onCreate(name.trim())
       if (result.error) {
-        setError(result.error);
-        return;
+        setError(result.error)
+        return
       }
       // Success - the parent component will show the key created modal
-      setName("");
-      onClose();
+      setName("")
+      onClose()
     } catch (err) {
-      setError("An unexpected error occurred");
+      setError("An unexpected error occurred")
     } finally {
-      setIsCreating(false);
+      setIsCreating(false)
     }
-  };
+  }
 
   const handleClose = () => {
     if (!isCreating) {
-      setName("");
-      setError(null);
-      onClose();
+      setName("")
+      setError(null)
+      onClose()
     }
-  };
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -99,7 +103,8 @@ export function CreateApiKeyModal({ isOpen, onClose, onCreate }: CreateApiKeyMod
           <div className="rounded-md bg-amber-50 border border-amber-200 p-3 text-sm text-amber-700">
             <p className="font-medium">Important</p>
             <p className="mt-1">
-              The API key will only be shown once after creation. Make sure to copy and store it securely.
+              The API key will only be shown once after creation. Make sure to
+              copy and store it securely.
             </p>
           </div>
 
@@ -124,5 +129,5 @@ export function CreateApiKeyModal({ isOpen, onClose, onCreate }: CreateApiKeyMod
         </form>
       </div>
     </div>
-  );
+  )
 }
