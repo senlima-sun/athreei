@@ -4,8 +4,13 @@
  * Types for the cloud-hosted MCP gateway SSE service.
  */
 
-import { z } from "zod";
-import type { McpServerConfig, ConnectedMcp, AggregatedTool, Logger } from "@athreei/gateway-core";
+import { z } from "zod"
+import type {
+  McpServerConfig,
+  ConnectedMcp,
+  AggregatedTool,
+  Logger,
+} from "@athreei/gateway-core"
 
 // =============================================================================
 // Session Types
@@ -16,34 +21,36 @@ import type { McpServerConfig, ConnectedMcp, AggregatedTool, Logger } from "@ath
  */
 export interface GatewaySession {
   /** Unique session ID */
-  id: string;
+  id: string
   /** Endpoint name for this session */
-  endpointName: string;
+  endpointName: string
   /** User/account ID */
-  userId: string;
+  userId: string
   /** Namespace ID */
-  namespaceId: string;
+  namespaceId: string
   /** Connected MCP servers */
-  connectedMcps: Map<string, ConnectedMcp>;
+  connectedMcps: Map<string, ConnectedMcp>
   /** Aggregated tools from all servers */
-  aggregatedTools: AggregatedTool[];
+  aggregatedTools: AggregatedTool[]
   /** Session creation timestamp */
-  createdAt: Date;
+  createdAt: Date
   /** Last activity timestamp */
-  lastActivity: Date;
+  lastActivity: Date
   /** Whether session is active */
-  isActive: boolean;
+  isActive: boolean
 }
 
 /**
  * Session creation options
  */
 export interface CreateSessionOptions {
-  endpointName: string;
-  userId: string;
-  namespaceId: string;
-  servers: McpServerConfig[];
-  logger?: Logger;
+  endpointName: string
+  userId: string
+  namespaceId: string
+  servers: McpServerConfig[]
+  logger?: Logger
+  /** API key for fetching server environment variables */
+  apiKey?: string
 }
 
 // =============================================================================
@@ -54,24 +61,24 @@ export interface CreateSessionOptions {
  * Endpoint configuration from Platform API
  */
 export interface EndpointConfig {
-  endpointId: string;
-  endpointName: string;
-  namespaceId: string;
-  namespaceName: string;
-  namespaceSlug: string;
-  organizationId: string;
-  userId: string;
-  servers: McpServerConfig[];
-  configVersion: string;
+  endpointId: string
+  endpointName: string
+  namespaceId: string
+  namespaceName: string
+  namespaceSlug: string
+  organizationId: string
+  userId: string
+  servers: McpServerConfig[]
+  configVersion: string
 }
 
 /**
  * API key validation result
  */
 export interface ApiKeyValidation {
-  valid: boolean;
-  config?: EndpointConfig;
-  error?: string;
+  valid: boolean
+  config?: EndpointConfig
+  error?: string
 }
 
 // =============================================================================
@@ -82,38 +89,38 @@ export interface ApiKeyValidation {
  * MCP JSON-RPC message (incoming)
  */
 export interface McpRequest {
-  jsonrpc: "2.0";
-  id: string | number;
-  method: string;
-  params?: Record<string, unknown>;
+  jsonrpc: "2.0"
+  id: string | number
+  method: string
+  params?: Record<string, unknown>
 }
 
 /**
  * MCP JSON-RPC response (outgoing)
  */
 export interface McpResponse {
-  jsonrpc: "2.0";
-  id: string | number;
-  result?: unknown;
+  jsonrpc: "2.0"
+  id: string | number
+  result?: unknown
   error?: {
-    code: number;
-    message: string;
-    data?: unknown;
-  };
+    code: number
+    message: string
+    data?: unknown
+  }
 }
 
 /**
  * SSE event types
  */
-export type SseEventType = "message" | "endpoint" | "error" | "ping";
+export type SseEventType = "message" | "endpoint" | "error" | "ping"
 
 /**
  * SSE event structure
  */
 export interface SseEvent {
-  event: SseEventType;
-  data: string;
-  id?: string;
+  event: SseEventType
+  data: string
+  id?: string
 }
 
 // =============================================================================
@@ -124,11 +131,11 @@ export interface SseEvent {
  * Health check response
  */
 export interface HealthCheckResponse {
-  status: "ok" | "degraded" | "unhealthy";
-  timestamp: string;
-  version: string;
-  activeSessions: number;
-  uptime: number;
+  status: "ok" | "degraded" | "unhealthy"
+  timestamp: string
+  version: string
+  activeSessions: number
+  uptime: number
 }
 
 // =============================================================================
@@ -140,9 +147,9 @@ export interface HealthCheckResponse {
  */
 export const SseQuerySchema = z.object({
   sessionId: z.string().optional(),
-});
+})
 
-export type SseQuery = z.infer<typeof SseQuerySchema>;
+export type SseQuery = z.infer<typeof SseQuerySchema>
 
 /**
  * MCP message validation schema
@@ -152,9 +159,9 @@ export const McpMessageSchema = z.object({
   id: z.union([z.string(), z.number()]),
   method: z.string(),
   params: z.record(z.unknown()).optional(),
-});
+})
 
-export type McpMessage = z.infer<typeof McpMessageSchema>;
+export type McpMessage = z.infer<typeof McpMessageSchema>
 
 // =============================================================================
 // Error Types
@@ -177,9 +184,9 @@ export enum GatewayErrorCode {
  * Gateway error response
  */
 export interface GatewayError {
-  error: GatewayErrorCode;
-  message: string;
-  details?: unknown;
+  error: GatewayErrorCode
+  message: string
+  details?: unknown
 }
 
 // =============================================================================
@@ -191,15 +198,15 @@ export interface GatewayError {
  */
 export interface GatewayCloudConfig {
   /** Port to listen on */
-  port: number;
+  port: number
   /** Platform API URL for validating API keys */
-  platformUrl: string;
+  platformUrl: string
   /** Session idle timeout in milliseconds */
-  sessionIdleTimeout: number;
+  sessionIdleTimeout: number
   /** Session cleanup interval in milliseconds */
-  sessionCleanupInterval: number;
+  sessionCleanupInterval: number
   /** Enable debug logging */
-  debug: boolean;
+  debug: boolean
 }
 
 /**
@@ -211,4 +218,4 @@ export const DEFAULT_CONFIG: GatewayCloudConfig = {
   sessionIdleTimeout: 30 * 60 * 1000, // 30 minutes
   sessionCleanupInterval: 60 * 1000, // 1 minute
   debug: process.env.NODE_ENV === "development",
-};
+}
