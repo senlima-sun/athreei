@@ -13,3 +13,5 @@ export { default as apiKeysRoutes } from "./api-keys";
 export { default as mcpServersRoutes } from "./mcp-servers";
 export { default as namespacesRoutes } from "./namespaces";
 export { default as gatewayRoutes } from "./gateway";
+export { default as tracesRoutes } from "./traces";
+export { default as toolsRoutes } from "./tools";

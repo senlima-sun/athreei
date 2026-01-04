@@ -7,7 +7,7 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-import { healthRoutes, configRoutes, organizationsRoutes, endpointsRoutes, apiKeysRoutes, mcpServersRoutes, namespacesRoutes, gatewayRoutes } from "./routes";
+import { healthRoutes, configRoutes, organizationsRoutes, endpointsRoutes, apiKeysRoutes, mcpServersRoutes, namespacesRoutes, gatewayRoutes, tracesRoutes, toolsRoutes } from "./routes";
 import { errorHandler, notFoundHandler } from "./middleware";
 import { getAuth } from "./lib/auth";
 
@@ -74,6 +74,12 @@ app.route("/api/namespaces", namespacesRoutes);
 
 // Gateway routes (API key auth via Bearer token)
 app.route("/api/gateway", gatewayRoutes);
+
+// Traces routes (protected)
+app.route("/api/traces", tracesRoutes);
+
+// Tools routes (protected)
+app.route("/api/tools", toolsRoutes);
 
 // =============================================================================
 // Error Handling
