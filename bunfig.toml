@@ -1,0 +1,21 @@
+# Bun configuration
+#
+# TEST RUNNER NOTES:
+# -----------------
+# Primary test command: `bun run test` (uses Vitest)
+# SQLite tests only: `bun run test:sqlite` (uses Bun's native runner)
+#
+# Most tests use Vitest-specific APIs (vi.hoisted, vi.mocked, jsdom environment)
+# which are NOT compatible with Bun's native test runner.
+#
+# Do NOT run `bun test` directly - it will fail on:
+# - Playwright tests (@playwright/test conflicts with bun:test)
+# - Dashboard/Auth tests (use vi.hoisted, vi.mocked)
+# - Extension tests (need jsdom environment)
+#
+# The only tests that require Bun's native runner are SQLite tests
+# in packages/mcp-server/src/db/ which use bun:sqlite.
+
+[test]
+# Preload setup file for Bun-native tests
+preload = ["./test-setup-bun.ts"]

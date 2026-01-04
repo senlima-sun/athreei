@@ -128,10 +128,11 @@ bun run dev
 # Build all packages
 bun run build
 
-# Testing
-bun test                      # Run all tests
-bun test --watch              # Watch mode
-bun test packages/mcp-server  # Single package
+# Testing (Vitest)
+bun run test                  # Run all tests
+bun run test:watch            # Watch mode
+npx vitest run <path>         # Single file/package
+bun run test:sqlite           # SQLite tests only (bun:sqlite)
 
 # Linting & Formatting
 bun run lint               # Check with ESLint
@@ -304,10 +305,14 @@ export default {
 
 ## Testing
 
+- **Primary test runner:** Vitest (`bun run test`)
 - Vitest with `jsdom` environment for extension tests (browser simulation)
 - Node environment for all other tests
-- Run single test file: `bun test packages/mcp-server/src/server.test.ts`
+- Run single test file: `npx vitest run packages/mcp-server/src/server.test.ts`
+- SQLite tests (bun:sqlite): `bun run test:sqlite`
 - Extension tests require jsdom for DOM APIs
+
+**Important:** Do NOT use `bun test` directly - most tests use Vitest-specific APIs (`vi.hoisted`, `vi.mocked`, jsdom environment) that are incompatible with Bun's native test runner.
 
 ## Tech Stack
 

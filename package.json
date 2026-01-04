@@ -12,7 +12,7 @@
     "build": "bun run --filter '*' build",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:bun": "bun test",
+    "test:sqlite": "bun test packages/mcp-server/src/db",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "format": "prettier --write .",
