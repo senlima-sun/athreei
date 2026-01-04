@@ -14,6 +14,7 @@ import {
   Loader2,
   ExternalLink,
   CheckCircle2,
+  AlertTriangle,
 } from "lucide-react"
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
@@ -139,16 +140,10 @@ export default function RegistryDetailPage({
     }))
   }
 
-  // Check if all required env vars are filled
-  const hasAllRequiredEnvVars = () => {
-    if (!server) return false
-
-    if (oauthProvider) {
-      return oauthToken.trim().length > 0
-    }
-
-    const requiredVars = server.envVars.filter((v) => v.required)
-    return requiredVars.every((v) => envVarValues[v.name]?.trim())
+  // Installation is always allowed - env vars can be configured separately
+  // TODO: Re-enable validation when env var storage is implemented
+  const canInstall = () => {
+    return activeOrg !== null && server !== null
   }
 
   if (isLoading) {
@@ -216,6 +211,23 @@ export default function RegistryDetailPage({
       )}
 
       <div className="space-y-6">
+        {/* Warning about env vars not yet being persisted */}
+        {(oauthProvider || server.envVars.length > 0) && (
+          <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+            <div>
+              <p className="text-sm font-medium text-amber-800">
+                Environment variable storage coming soon
+              </p>
+              <p className="mt-1 text-sm text-amber-700">
+                The server configuration will be saved, but environment
+                variables will need to be configured separately after
+                installation. We&apos;re working on secure credential storage.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* OAuth Setup Guide or Env Vars section */}
         {oauthProvider ? (
           <OAuthSetupGuide
@@ -288,9 +300,7 @@ export default function RegistryDetailPage({
               <button
                 type="button"
                 onClick={handleInstall}
-                disabled={
-                  isInstalling || isOrgPending || !hasAllRequiredEnvVars()
-                }
+                disabled={isInstalling || isOrgPending || !canInstall()}
                 className="inline-flex items-center gap-2 rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isInstalling ? (

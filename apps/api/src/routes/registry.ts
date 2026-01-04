@@ -6,9 +6,18 @@
  */
 
 import { Hono } from "hono"
+import { zValidator } from "@hono/zod-validator"
+import { z } from "zod"
 import { REGISTRY_SERVERS } from "../data/mcp-registry"
 
 const registry = new Hono()
+
+// Query validation schemas
+const registryQuerySchema = z.object({
+  category: z.string().max(50).optional(),
+  search: z.string().max(100).optional(),
+  verified: z.enum(["true", "false"]).optional(),
+})
 
 /**
  * GET /api/registry
@@ -19,10 +28,9 @@ const registry = new Hono()
  * - search: Search by name or description
  * - verified: Filter by verified status ("true" or "false")
  */
-registry.get("/", (c) => {
-  const category = c.req.query("category")
-  const search = c.req.query("search")?.toLowerCase()
-  const verifiedParam = c.req.query("verified")
+registry.get("/", zValidator("query", registryQuerySchema), (c) => {
+  const { category, search, verified: verifiedParam } = c.req.valid("query")
+  const searchLower = search?.toLowerCase()
 
   let servers = [...REGISTRY_SERVERS]
 
@@ -32,12 +40,12 @@ registry.get("/", (c) => {
   }
 
   // Filter by search term (name or description)
-  if (search) {
+  if (searchLower) {
     servers = servers.filter(
       (s) =>
-        s.name.toLowerCase().includes(search) ||
-        s.description.toLowerCase().includes(search) ||
-        s.publisher.toLowerCase().includes(search)
+        s.name.toLowerCase().includes(searchLower) ||
+        s.description.toLowerCase().includes(searchLower) ||
+        s.publisher.toLowerCase().includes(searchLower)
     )
   }
 
