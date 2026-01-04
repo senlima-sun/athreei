@@ -1,27 +1,32 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Loader2, Server, Plus, X } from "lucide-react";
-import { McpTypeSelector, McpTransportType } from "./mcp-type-selector";
-import { McpServer, McpServerStatus } from "./mcp-server-card";
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { Loader2, Server, Plus, X } from "lucide-react"
+import { McpTypeSelector, McpTransportType } from "./mcp-type-selector"
+import { McpServer, McpServerStatus } from "./mcp-server-card"
+import { OAuthSetupGuide } from "./oauth-setup-guide"
+import {
+  detectOAuthProviderByName,
+  type OAuthProvider,
+} from "@/lib/mcp-oauth-detection"
 
 interface McpServerFormProps {
-  server?: McpServer;
-  onSubmit: (data: McpServerFormData) => Promise<void>;
-  cancelHref: string;
-  submitLabel?: string;
+  server?: McpServer
+  onSubmit: (data: McpServerFormData) => Promise<void>
+  cancelHref: string
+  submitLabel?: string
 }
 
 export interface McpServerFormData {
-  name: string;
-  description: string;
-  transportType: McpTransportType;
-  status: McpServerStatus;
-  command?: string;
-  args?: string[];
-  url?: string;
+  name: string
+  description: string
+  transportType: McpTransportType
+  status: McpServerStatus
+  command?: string
+  args?: string[]
+  url?: string
 }
 
 export function McpServerForm({
@@ -30,55 +35,71 @@ export function McpServerForm({
   cancelHref,
   submitLabel = "Create MCP Server",
 }: McpServerFormProps) {
-  const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const router = useRouter()
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   // Form state
-  const [name, setName] = useState(server?.name || "");
-  const [description, setDescription] = useState(server?.description || "");
+  const [name, setName] = useState(server?.name || "")
+  const [description, setDescription] = useState(server?.description || "")
   const [transportType, setTransportType] = useState<McpTransportType>(
     server?.transportType || "stdio"
-  );
-  const [status, setStatus] = useState<McpServerStatus>(server?.status || "active");
+  )
+  const [status, setStatus] = useState<McpServerStatus>(
+    server?.status || "active"
+  )
 
   // STDIO config
-  const [command, setCommand] = useState(server?.command || "");
-  const [args, setArgs] = useState<string[]>(server?.args || []);
-  const [newArg, setNewArg] = useState("");
+  const [command, setCommand] = useState(server?.command || "")
+  const [args, setArgs] = useState<string[]>(server?.args || [])
+  const [newArg, setNewArg] = useState("")
 
   // SSE/HTTP config
-  const [url, setUrl] = useState(server?.url || "");
+  const [url, setUrl] = useState(server?.url || "")
+
+  // OAuth detection state
+  const [detectedProvider, setDetectedProvider] =
+    useState<OAuthProvider | null>(null)
+  const [oauthTokenValue, setOauthTokenValue] = useState("")
+
+  // Detect OAuth provider when name changes
+  useEffect(() => {
+    if (name.trim()) {
+      const provider = detectOAuthProviderByName(name)
+      setDetectedProvider(provider)
+    } else {
+      setDetectedProvider(null)
+    }
+  }, [name])
 
   // Validation
-  const isStdio = transportType === "stdio";
+  const isStdio = transportType === "stdio"
   const isValid = Boolean(
-    name.trim() &&
-      (isStdio ? command.trim() : url.trim())
-  );
+    name.trim() && (isStdio ? command.trim() : url.trim())
+  )
 
   const handleAddArg = () => {
     if (newArg.trim()) {
-      setArgs([...args, newArg.trim()]);
-      setNewArg("");
+      setArgs([...args, newArg.trim()])
+      setNewArg("")
     }
-  };
+  }
 
   const handleRemoveArg = (index: number) => {
-    setArgs(args.filter((_, i) => i !== index));
-  };
+    setArgs(args.filter((_, i) => i !== index))
+  }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
-      e.preventDefault();
-      handleAddArg();
+      e.preventDefault()
+      handleAddArg()
     }
-  };
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setIsSubmitting(true);
+    e.preventDefault()
+    setError(null)
+    setIsSubmitting(true)
 
     try {
       const formData: McpServerFormData = {
@@ -86,18 +107,18 @@ export function McpServerForm({
         description: description.trim(),
         transportType,
         status,
-        ...(isStdio
-          ? { command: command.trim(), args }
-          : { url: url.trim() }),
-      };
+        ...(isStdio ? { command: command.trim(), args } : { url: url.trim() }),
+      }
 
-      await onSubmit(formData);
+      await onSubmit(formData)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An unexpected error occurred");
+      setError(
+        err instanceof Error ? err.message : "An unexpected error occurred"
+      )
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
@@ -161,7 +182,9 @@ export function McpServerForm({
 
       {/* Connection config */}
       <div className="space-y-4">
-        <h3 className="text-sm font-medium text-gray-900">Connection Configuration</h3>
+        <h3 className="text-sm font-medium text-gray-900">
+          Connection Configuration
+        </h3>
 
         {isStdio ? (
           <>
@@ -265,6 +288,16 @@ export function McpServerForm({
         )}
       </div>
 
+      {/* OAuth Setup Guide */}
+      {detectedProvider && (
+        <OAuthSetupGuide
+          provider={detectedProvider}
+          envVarName={detectedProvider.envVarNames[0]}
+          currentValue={oauthTokenValue}
+          onTokenChange={setOauthTokenValue}
+        />
+      )}
+
       {/* Status */}
       <div className="space-y-4">
         <h3 className="text-sm font-medium text-gray-900">Status</h3>
@@ -311,5 +344,5 @@ export function McpServerForm({
         </button>
       </div>
     </form>
-  );
+  )
 }
