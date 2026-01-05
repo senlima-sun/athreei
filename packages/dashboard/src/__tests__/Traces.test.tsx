@@ -7,53 +7,54 @@ import { render, screen, waitFor, fireEvent } from "@testing-library/react"
 import { BrowserRouter } from "react-router-dom"
 import { Traces, type TraceEntry } from "../pages/Traces"
 
-// Mock the API
-vi.mock("../lib/api", () => ({
-  api: {
-    get: vi.fn(),
-  },
-}))
-
-// Import the mocked module
-import { api } from "../lib/api"
+// Mock global fetch
+const mockFetch = vi.fn()
+vi.stubGlobal("fetch", mockFetch)
 
 const mockTraces: TraceEntry[] = [
   {
-    id: "1",
     traceId: "trace-001",
-    toolName: "browser__screenshot",
+    requestId: "req-001",
+    aggregatedToolName: "browser__screenshot",
     serverName: "browser-mcp",
-    endpointId: "my-endpoint",
+    toolName: "screenshot",
     status: "success",
     durationMs: 1234,
-    startTime: Date.now() - 5000,
-    endTime: Date.now() - 3766,
+    startedAt: new Date(Date.now() - 5000).toISOString(),
+    endedAt: new Date(Date.now() - 3766).toISOString(),
+    arguments: { url: "https://example.com" },
+    result: { screenshot: "base64..." },
   },
   {
-    id: "2",
     traceId: "trace-002",
-    toolName: "github__create_issue",
+    requestId: "req-002",
+    aggregatedToolName: "github__create_issue",
     serverName: "github-mcp",
-    endpointId: "my-endpoint",
+    toolName: "create_issue",
     status: "error",
     durationMs: 823,
-    startTime: Date.now() - 10000,
-    errorMessage: "API rate limit exceeded",
+    startedAt: new Date(Date.now() - 10000).toISOString(),
+    error: "API rate limit exceeded",
   },
 ]
 
 const mockResponse = {
-  data: mockTraces,
-  pagination: {
-    page: 1,
-    limit: 20,
-    total: 2,
-    totalPages: 1,
-  },
+  traces: mockTraces,
+  total: 2,
+  limit: 50,
+  offset: 0,
 }
 
 function renderWithRouter(component: React.ReactNode) {
   return render(<BrowserRouter>{component}</BrowserRouter>)
+}
+
+// Helper to create a mock fetch response
+function createFetchResponse(data: unknown) {
+  return {
+    ok: true,
+    json: () => Promise.resolve(data),
+  }
 }
 
 describe("Traces", () => {
@@ -62,13 +63,13 @@ describe("Traces", () => {
   })
 
   it("renders loading state initially", () => {
-    vi.mocked(api.get).mockImplementation(() => new Promise(() => {}))
+    mockFetch.mockImplementation(() => new Promise(() => {}))
     renderWithRouter(<Traces />)
     expect(screen.getByText("Loading data...")).toBeInTheDocument()
   })
 
   it("renders traces when loaded successfully", async () => {
-    vi.mocked(api.get).mockResolvedValue(mockResponse)
+    mockFetch.mockResolvedValue(createFetchResponse(mockResponse))
     renderWithRouter(<Traces />)
 
     await waitFor(() => {
@@ -86,7 +87,7 @@ describe("Traces", () => {
   })
 
   it("renders success and error status badges correctly", async () => {
-    vi.mocked(api.get).mockResolvedValue(mockResponse)
+    mockFetch.mockResolvedValue(createFetchResponse(mockResponse))
     renderWithRouter(<Traces />)
 
     await waitFor(() => {
@@ -96,24 +97,23 @@ describe("Traces", () => {
     expect(screen.getAllByText("Error").length).toBeGreaterThanOrEqual(1)
   })
 
-  it("shows empty state when API fails", async () => {
-    vi.mocked(api.get).mockRejectedValue(new Error("API error"))
+  it("shows gateway disconnected when fetch fails with TypeError", async () => {
+    mockFetch.mockRejectedValue(new TypeError("Failed to fetch"))
     renderWithRouter(<Traces />)
 
     await waitFor(() => {
-      // Should show empty state message
-      expect(screen.getByText(/No traces recorded yet/)).toBeInTheDocument()
+      expect(screen.getByText("Gateway Not Connected")).toBeInTheDocument()
     })
   })
 
   it("renders filter controls", async () => {
-    vi.mocked(api.get).mockResolvedValue(mockResponse)
+    mockFetch.mockResolvedValue(createFetchResponse(mockResponse))
     renderWithRouter(<Traces />)
 
     await waitFor(() => {
       expect(screen.getByText("Filters")).toBeInTheDocument()
     })
-    expect(screen.getByText("Endpoint")).toBeInTheDocument()
+    expect(screen.getByText("Search")).toBeInTheDocument()
     expect(screen.getByText("MCP Server")).toBeInTheDocument()
     // "Tool" appears in both the filter label and the table header
     expect(screen.getAllByText("Tool").length).toBeGreaterThanOrEqual(1)
@@ -122,7 +122,7 @@ describe("Traces", () => {
   })
 
   it("applies status filter correctly", async () => {
-    vi.mocked(api.get).mockResolvedValue(mockResponse)
+    mockFetch.mockResolvedValue(createFetchResponse(mockResponse))
     renderWithRouter(<Traces />)
 
     await waitFor(() => {
@@ -130,19 +130,19 @@ describe("Traces", () => {
     })
 
     // Find the select by its role and name (since labels are not htmlFor connected)
-    const statusSelect = screen.getAllByRole("combobox")[3] // Status is the 4th select
+    const statusSelect = screen.getAllByRole("combobox")[2] // Status is the 3rd select (Search is textbox)
     fireEvent.change(statusSelect, { target: { value: "success" } })
 
     // Should trigger a new API call with status filter
     await waitFor(() => {
-      expect(api.get).toHaveBeenCalledWith(
+      expect(mockFetch).toHaveBeenCalledWith(
         expect.stringContaining("status=success")
       )
     })
   })
 
   it("formats duration correctly", async () => {
-    vi.mocked(api.get).mockResolvedValue(mockResponse)
+    mockFetch.mockResolvedValue(createFetchResponse(mockResponse))
     renderWithRouter(<Traces />)
 
     await waitFor(() => {
@@ -154,7 +154,7 @@ describe("Traces", () => {
   })
 
   it("renders View button for each trace", async () => {
-    vi.mocked(api.get).mockResolvedValue(mockResponse)
+    mockFetch.mockResolvedValue(createFetchResponse(mockResponse))
     renderWithRouter(<Traces />)
 
     await waitFor(() => {
@@ -164,7 +164,7 @@ describe("Traces", () => {
   })
 
   it("shows clear filters button when filters are active", async () => {
-    vi.mocked(api.get).mockResolvedValue(mockResponse)
+    mockFetch.mockResolvedValue(createFetchResponse(mockResponse))
     renderWithRouter(<Traces />)
 
     await waitFor(() => {
@@ -174,8 +174,8 @@ describe("Traces", () => {
     // Initially no clear button
     expect(screen.queryByText("Clear filters")).not.toBeInTheDocument()
 
-    // Apply a filter - Status is the 4th select
-    const statusSelect = screen.getAllByRole("combobox")[3]
+    // Apply a filter - Status is the 3rd select
+    const statusSelect = screen.getAllByRole("combobox")[2]
     fireEvent.change(statusSelect, { target: { value: "success" } })
 
     // Clear button should appear
@@ -185,14 +185,27 @@ describe("Traces", () => {
   })
 
   it("renders empty state when no traces", async () => {
-    vi.mocked(api.get).mockResolvedValue({
-      data: [],
-      pagination: { page: 1, limit: 20, total: 0, totalPages: 0 },
-    })
+    mockFetch.mockResolvedValue(
+      createFetchResponse({
+        traces: [],
+        total: 0,
+        limit: 50,
+        offset: 0,
+      })
+    )
     renderWithRouter(<Traces />)
 
     await waitFor(() => {
       expect(screen.getByText(/No traces recorded yet/i)).toBeInTheDocument()
+    })
+  })
+
+  it("shows gateway connection status indicator", async () => {
+    mockFetch.mockResolvedValue(createFetchResponse(mockResponse))
+    renderWithRouter(<Traces />)
+
+    await waitFor(() => {
+      expect(screen.getByText("Gateway Connected")).toBeInTheDocument()
     })
   })
 })

@@ -7,59 +7,43 @@ import { render, screen, waitFor, fireEvent } from "@testing-library/react"
 import { MemoryRouter, Route, Routes } from "react-router-dom"
 import { TraceDetail } from "../pages/TraceDetail"
 
-// Mock the API
-vi.mock("../lib/api", () => ({
-  api: {
-    get: vi.fn(),
-  },
-}))
-
-// Mock the @athreei/shared module
-vi.mock("@athreei/shared", () => ({
-  deriveKey: vi.fn().mockResolvedValue({
-    key: new Uint8Array(32),
-    salt: new Uint8Array(16),
-    version: 1,
-  }),
-  decrypt: vi.fn().mockReturnValue({
-    request: { arguments: { url: "https://example.com" } },
-    response: { result: { success: true } },
-  }),
-}))
-
-import { api } from "../lib/api"
+// Mock global fetch
+const mockFetch = vi.fn()
+vi.stubGlobal("fetch", mockFetch)
 
 const mockTrace = {
-  data: {
-    id: "1",
-    traceId: "trace-001",
-    toolName: "browser__screenshot",
-    serverName: "browser-mcp",
-    endpointId: "my-endpoint",
-    status: "success",
-    durationMs: 1234,
-    startTime: Date.now() - 5000,
-    endTime: Date.now() - 3766,
-    encryptedPayload: "encrypted-data-base64",
-    nonce: "nonce-base64",
-    keyVersion: 1,
-  },
+  traceId: "trace-001",
+  requestId: "req-001",
+  aggregatedToolName: "browser__screenshot",
+  toolName: "screenshot",
+  serverName: "browser-mcp",
+  status: "success" as const,
+  durationMs: 1234,
+  startedAt: new Date(Date.now() - 5000).toISOString(),
+  endedAt: new Date(Date.now() - 3766).toISOString(),
+  arguments: { url: "https://example.com" },
+  result: { screenshot: "base64..." },
 }
 
 const mockTraceWithoutPayload = {
-  data: {
-    ...mockTrace.data,
-    encryptedPayload: undefined,
-    nonce: undefined,
-  },
+  ...mockTrace,
+  arguments: undefined,
+  result: undefined,
 }
 
 const mockErrorTrace = {
-  data: {
-    ...mockTrace.data,
-    status: "error",
-    errorMessage: "Connection timeout",
-  },
+  ...mockTrace,
+  status: "error" as const,
+  error: "Connection timeout",
+}
+
+// Helper to create a mock fetch response
+function createFetchResponse(data: unknown, ok = true, status = 200) {
+  return {
+    ok,
+    status,
+    json: () => Promise.resolve(data),
+  }
 }
 
 function renderWithRouter(traceId: string = "trace-001") {
@@ -79,13 +63,13 @@ describe("TraceDetail", () => {
   })
 
   it("renders loading state initially", () => {
-    vi.mocked(api.get).mockImplementation(() => new Promise(() => {}))
+    mockFetch.mockImplementation(() => new Promise(() => {}))
     renderWithRouter()
     expect(screen.getByText("Loading trace details...")).toBeInTheDocument()
   })
 
   it("renders trace metadata when loaded", async () => {
-    vi.mocked(api.get).mockResolvedValue(mockTrace)
+    mockFetch.mockResolvedValue(createFetchResponse(mockTrace))
     renderWithRouter()
 
     await waitFor(() => {
@@ -93,12 +77,12 @@ describe("TraceDetail", () => {
     })
     expect(screen.getByText("trace-001")).toBeInTheDocument()
     expect(screen.getByText("browser__screenshot")).toBeInTheDocument()
+    expect(screen.getByText("screenshot")).toBeInTheDocument()
     expect(screen.getByText("browser-mcp")).toBeInTheDocument()
-    expect(screen.getByText("my-endpoint")).toBeInTheDocument()
   })
 
   it("renders success status correctly", async () => {
-    vi.mocked(api.get).mockResolvedValue(mockTrace)
+    mockFetch.mockResolvedValue(createFetchResponse(mockTrace))
     renderWithRouter()
 
     await waitFor(() => {
@@ -107,7 +91,7 @@ describe("TraceDetail", () => {
   })
 
   it("renders error status and message correctly", async () => {
-    vi.mocked(api.get).mockResolvedValue(mockErrorTrace)
+    mockFetch.mockResolvedValue(createFetchResponse(mockErrorTrace))
     renderWithRouter()
 
     await waitFor(() => {
@@ -117,43 +101,28 @@ describe("TraceDetail", () => {
     expect(screen.getByText("Connection timeout")).toBeInTheDocument()
   })
 
-  it("shows decrypt button when payload is encrypted", async () => {
-    vi.mocked(api.get).mockResolvedValue(mockTrace)
+  it("shows request arguments when available", async () => {
+    mockFetch.mockResolvedValue(createFetchResponse(mockTrace))
     renderWithRouter()
 
     await waitFor(() => {
-      expect(screen.getByText("Decrypt Payload")).toBeInTheDocument()
+      expect(screen.getByText("Request Arguments")).toBeInTheDocument()
     })
   })
 
-  it("shows message when no encrypted payload", async () => {
-    vi.mocked(api.get).mockResolvedValue(mockTraceWithoutPayload)
+  it("shows message when no payload data", async () => {
+    mockFetch.mockResolvedValue(createFetchResponse(mockTraceWithoutPayload))
     renderWithRouter()
 
     await waitFor(() => {
       expect(
-        screen.getByText("No encrypted payload available for this trace.")
+        screen.getByText("No payload data available for this trace.")
       ).toBeInTheDocument()
     })
   })
 
-  it("shows password dialog when decrypt button clicked", async () => {
-    vi.mocked(api.get).mockResolvedValue(mockTrace)
-    renderWithRouter()
-
-    await waitFor(() => {
-      expect(screen.getByText("Decrypt Payload")).toBeInTheDocument()
-    })
-
-    fireEvent.click(screen.getByText("Decrypt Payload"))
-
-    await waitFor(() => {
-      expect(screen.getByText("Enter Decryption Password")).toBeInTheDocument()
-    })
-  })
-
   it("renders back button that navigates to traces list", async () => {
-    vi.mocked(api.get).mockResolvedValue(mockTrace)
+    mockFetch.mockResolvedValue(createFetchResponse(mockTrace))
     renderWithRouter()
 
     await waitFor(() => {
@@ -168,7 +137,7 @@ describe("TraceDetail", () => {
   })
 
   it("formats duration correctly", async () => {
-    vi.mocked(api.get).mockResolvedValue(mockTrace)
+    mockFetch.mockResolvedValue(createFetchResponse(mockTrace))
     renderWithRouter()
 
     await waitFor(() => {
@@ -177,22 +146,30 @@ describe("TraceDetail", () => {
   })
 
   it("shows error state when API fails", async () => {
-    vi.mocked(api.get).mockRejectedValue(new Error("Not found"))
+    mockFetch.mockResolvedValue(createFetchResponse(null, false, 404))
     renderWithRouter("invalid-uuid")
 
-    // Should show error state instead of mock data
     await waitFor(() => {
       expect(screen.getByText("Unable to load trace")).toBeInTheDocument()
     })
   })
 
-  it("displays key version when available", async () => {
-    vi.mocked(api.get).mockResolvedValue(mockTrace)
+  it("shows gateway not connected when fetch fails", async () => {
+    mockFetch.mockRejectedValue(new TypeError("Failed to fetch"))
     renderWithRouter()
 
     await waitFor(() => {
-      expect(screen.getByText("Key Version")).toBeInTheDocument()
+      expect(screen.getByText("Gateway Not Connected")).toBeInTheDocument()
     })
-    expect(screen.getByText("v1")).toBeInTheDocument()
+  })
+
+  it("displays request ID when available", async () => {
+    mockFetch.mockResolvedValue(createFetchResponse(mockTrace))
+    renderWithRouter()
+
+    await waitFor(() => {
+      expect(screen.getByText("Request ID")).toBeInTheDocument()
+    })
+    expect(screen.getByText("req-001")).toBeInTheDocument()
   })
 })

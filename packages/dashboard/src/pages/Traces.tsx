@@ -1,56 +1,53 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
-import { api } from "../lib/api"
 import { DataTable } from "../components/ui/DataTable"
 import type { Column } from "../components/ui/DataTable"
 import { LegacyCard as Card } from "../components/ui/Card"
 import { Button } from "../components/ui/Button"
 import { cn } from "@/lib/utils"
 
+const GATEWAY_API_URL = "http://localhost:3001"
+const POLLING_INTERVAL_MS = 2000
+
 /**
- * Trace entry from the API
- * Contains both metadata (unencrypted) and encrypted payload
+ * Trace entry from the local Gateway HTTP API
+ * Matches ToolCallTrace from gateway/src/types.ts
  */
 export interface TraceEntry {
-  id: string
+  /** Unique trace ID */
   traceId: string
-  /** Tool name (e.g., browser__screenshot) */
-  toolName: string
+  /** Request ID for correlation */
+  requestId: string
+  /** Aggregated tool name (e.g., server__tool) */
+  aggregatedToolName: string
   /** MCP server name */
   serverName: string
-  /** Endpoint ID this trace belongs to */
-  endpointId?: string
-  /** Status: success or error */
-  status: "success" | "error"
+  /** Original tool name */
+  toolName: string
+  /** Call arguments */
+  arguments?: unknown
+  /** Call result (on success) */
+  result?: unknown
+  /** Error message (on failure) */
+  error?: string
+  /** Call start timestamp (ISO string from JSON) */
+  startedAt: string
+  /** Call end timestamp (ISO string from JSON) */
+  endedAt?: string
   /** Duration in milliseconds */
-  durationMs: number
-  /** Start timestamp */
-  startTime: number
-  /** End timestamp */
-  endTime?: number
-  /**
-   * Encrypted request/response payload (base64-encoded JSON)
-   * Contains: { nonce, ciphertext, keyVersion, algorithm }
-   */
-  encryptedPayload?: string
-  /** Key version used for encryption (also embedded in encryptedPayload) */
-  keyVersion?: number
-  /** Error message if status is error */
-  errorMessage?: string
+  durationMs?: number
+  /** Status of the trace */
+  status: "success" | "error"
 }
 
 interface TracesResponse {
-  data: TraceEntry[]
-  pagination: {
-    page: number
-    limit: number
-    total: number
-    totalPages: number
-  }
+  traces: TraceEntry[]
+  total: number
+  limit: number
+  offset: number
 }
 
 interface FilterOptions {
-  endpoints: string[]
   servers: string[]
   tools: string[]
 }
@@ -60,18 +57,16 @@ export function Traces() {
   const [traces, setTraces] = useState<TraceEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [gatewayConnected, setGatewayConnected] = useState(true)
 
   // Filter state
-  const [endpointFilter, setEndpointFilter] = useState<string>("")
   const [serverFilter, setServerFilter] = useState<string>("")
   const [toolFilter, setToolFilter] = useState<string>("")
   const [statusFilter, setStatusFilter] = useState<string>("")
-  const [dateFrom, setDateFrom] = useState<string>("")
-  const [dateTo, setDateTo] = useState<string>("")
+  const [searchQuery, setSearchQuery] = useState<string>("")
 
   // Filter options (populated from data)
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({
-    endpoints: [],
     servers: [],
     tools: [],
   })
@@ -81,81 +76,121 @@ export function Traces() {
   const [total, setTotal] = useState(0)
   const pageSize = 20
 
-  // Fetch traces from API
-  const fetchTraces = async () => {
-    try {
-      setLoading(true)
-      setError(null)
+  // Auto-refresh polling ref
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const isInitialLoad = useRef(true)
 
-      // Build query params
-      const params = new URLSearchParams()
-      params.set("page", page.toString())
-      params.set("limit", pageSize.toString())
-      if (endpointFilter) params.set("endpoint", endpointFilter)
-      if (serverFilter) params.set("server", serverFilter)
-      if (toolFilter) params.set("tool", toolFilter)
-      if (statusFilter) params.set("status", statusFilter)
-      if (dateFrom)
-        params.set("dateFrom", new Date(dateFrom).getTime().toString())
-      if (dateTo) params.set("dateTo", new Date(dateTo).getTime().toString())
+  // Fetch traces from Gateway HTTP API
+  const fetchTraces = useCallback(
+    async (showLoading = true) => {
+      try {
+        if (showLoading) {
+          setLoading(true)
+        }
+        setError(null)
 
-      const response = await api.get<TracesResponse>(
-        `/api/traces?${params.toString()}`
-      )
+        // Build query params for gateway API
+        const params = new URLSearchParams()
+        params.set("limit", pageSize.toString())
+        params.set("offset", ((page - 1) * pageSize).toString())
+        if (statusFilter) params.set("status", statusFilter)
+        if (searchQuery) params.set("search", searchQuery)
 
-      setTraces(response.data || [])
-      setTotal(response.pagination?.total || 0)
+        const response = await fetch(
+          `${GATEWAY_API_URL}/api/traces?${params.toString()}`
+        )
 
-      // Update filter options from data
-      updateFilterOptions(response.data || [])
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to fetch traces"
-      setError(errorMessage)
-      setTraces([])
-      setTotal(0)
-    } finally {
-      setLoading(false)
-    }
-  }
+        if (!response.ok) {
+          throw new Error(`Gateway API error: ${response.status}`)
+        }
+
+        const data: TracesResponse = await response.json()
+
+        // Apply client-side filtering for server and tool (gateway only supports status and search)
+        let filteredTraces = data.traces || []
+        if (serverFilter) {
+          filteredTraces = filteredTraces.filter(
+            (t) => t.serverName === serverFilter
+          )
+        }
+        if (toolFilter) {
+          filteredTraces = filteredTraces.filter(
+            (t) => t.aggregatedToolName === toolFilter
+          )
+        }
+
+        setTraces(filteredTraces)
+        setTotal(data.total || 0)
+        setGatewayConnected(true)
+
+        // Update filter options from data
+        updateFilterOptions(data.traces || [])
+      } catch (err) {
+        // Check if it's a connection error (gateway not running)
+        if (
+          err instanceof TypeError &&
+          err.message.includes("Failed to fetch")
+        ) {
+          setGatewayConnected(false)
+          setError("Gateway not connected")
+        } else {
+          const errorMessage =
+            err instanceof Error ? err.message : "Failed to fetch traces"
+          setError(errorMessage)
+        }
+        setTraces([])
+        setTotal(0)
+      } finally {
+        setLoading(false)
+        isInitialLoad.current = false
+      }
+    },
+    [page, statusFilter, searchQuery, serverFilter, toolFilter]
+  )
 
   // Update filter options from traces data
   const updateFilterOptions = (data: TraceEntry[]) => {
-    const endpoints = [
-      ...new Set(data.filter((t) => t.endpointId).map((t) => t.endpointId!)),
-    ]
     const servers = [...new Set(data.map((t) => t.serverName))]
-    const tools = [...new Set(data.map((t) => t.toolName))]
-    setFilterOptions({ endpoints, servers, tools })
+    const tools = [...new Set(data.map((t) => t.aggregatedToolName))]
+    setFilterOptions({ servers, tools })
   }
 
   // Fetch traces on mount and when filters/page change
   useEffect(() => {
-    fetchTraces()
-  }, [
-    page,
-    endpointFilter,
-    serverFilter,
-    toolFilter,
-    statusFilter,
-    dateFrom,
-    dateTo,
-  ])
+    fetchTraces(isInitialLoad.current)
+  }, [fetchTraces])
+
+  // Setup auto-refresh polling
+  useEffect(() => {
+    // Start polling
+    pollingRef.current = setInterval(() => {
+      fetchTraces(false) // Don't show loading spinner on auto-refresh
+    }, POLLING_INTERVAL_MS)
+
+    // Cleanup on unmount
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current)
+        pollingRef.current = null
+      }
+    }
+  }, [fetchTraces])
 
   // Reset to page 1 when filters change
   useEffect(() => {
     setPage(1)
-  }, [endpointFilter, serverFilter, toolFilter, statusFilter, dateFrom, dateTo])
+  }, [serverFilter, toolFilter, statusFilter, searchQuery])
 
   // Format duration for display
-  const formatDuration = (ms: number) => {
+  const formatDuration = (ms: number | undefined) => {
+    if (ms === undefined) return "-"
     if (ms < 1000) return `${ms}ms`
     return `${(ms / 1000).toFixed(1)}s`
   }
 
-  // Format time for display
-  const formatTime = (timestamp: number) => {
-    return new Date(timestamp).toLocaleTimeString("en-US", {
+  // Format time for display (from ISO string)
+  const formatTime = (isoString: string) => {
+    return new Date(isoString).toLocaleTimeString("en-US", {
       hour12: false,
       hour: "2-digit",
       minute: "2-digit",
@@ -166,14 +201,14 @@ export function Traces() {
   // Define table columns
   const columns: Column<TraceEntry>[] = [
     {
-      accessor: "startTime",
+      accessor: "startedAt",
       header: "Time",
       cell: (value) => (
-        <span className="font-mono text-sm">{formatTime(value as number)}</span>
+        <span className="font-mono text-sm">{formatTime(value as string)}</span>
       ),
     },
     {
-      accessor: "toolName",
+      accessor: "aggregatedToolName",
       header: "Tool",
       cell: (value) => (
         <code className="text-sm bg-muted px-1.5 py-0.5 rounded">
@@ -241,12 +276,12 @@ export function Traces() {
       header: "Duration",
       cell: (value) => (
         <span className="font-mono text-sm text-muted-foreground">
-          {formatDuration(value as number)}
+          {formatDuration(value as number | undefined)}
         </span>
       ),
     },
     {
-      accessor: (row) => row.id,
+      accessor: (row) => row.traceId,
       header: "Action",
       sortable: false,
       cell: (_value, row) => (
@@ -263,31 +298,80 @@ export function Traces() {
 
   // Clear all filters
   const clearFilters = () => {
-    setEndpointFilter("")
     setServerFilter("")
     setToolFilter("")
     setStatusFilter("")
-    setDateFrom("")
-    setDateTo("")
+    setSearchQuery("")
   }
 
   const hasActiveFilters =
-    endpointFilter ||
-    serverFilter ||
-    toolFilter ||
-    statusFilter ||
-    dateFrom ||
-    dateTo
+    serverFilter || toolFilter || statusFilter || searchQuery
 
   return (
     <div>
       <div className="mb-8">
-        <h2 className="text-2xl font-semibold mb-2">Traces</h2>
-        <p className="text-muted-foreground">
-          View and analyze tool call traces with end-to-end encrypted payloads.
-          Request and response data is decrypted client-side.
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-semibold mb-2">Traces</h2>
+            <p className="text-muted-foreground">
+              Real-time tool call traces from the local gateway.
+            </p>
+          </div>
+          {/* Connection status indicator */}
+          <div
+            className={cn(
+              "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium",
+              gatewayConnected
+                ? "bg-success/10 text-success"
+                : "bg-error/10 text-error"
+            )}
+          >
+            <span
+              className={cn(
+                "w-2 h-2 rounded-full",
+                gatewayConnected ? "bg-success" : "bg-error"
+              )}
+            />
+            {gatewayConnected ? "Gateway Connected" : "Gateway Disconnected"}
+          </div>
+        </div>
       </div>
+
+      {/* Gateway not connected message */}
+      {!gatewayConnected && (
+        <Card className="mb-6">
+          <div className="text-center py-8">
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-error/10 mb-4">
+              <svg
+                className="w-6 h-6 text-error"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium mb-2">Gateway Not Connected</h3>
+            <p className="text-muted-foreground text-sm mb-4">
+              The local gateway is not running or cannot be reached at{" "}
+              <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                {GATEWAY_API_URL}
+              </code>
+            </p>
+            <p className="text-muted-foreground text-sm">
+              Start the gateway with{" "}
+              <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                cd packages/gateway && bun run dev
+              </code>
+            </p>
+          </div>
+        </Card>
+      )}
 
       {/* Filters */}
       <Card className="mb-6">
@@ -299,24 +383,19 @@ export function Traces() {
             </Button>
           )}
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {/* Endpoint Filter */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Search */}
           <div>
             <label className="block mb-1.5 text-sm font-medium text-muted-foreground">
-              Endpoint
+              Search
             </label>
-            <select
-              value={endpointFilter}
-              onChange={(e) => setEndpointFilter(e.target.value)}
-              className="w-full p-2 bg-secondary border border-border rounded-md text-foreground text-sm"
-            >
-              <option value="">All Endpoints</option>
-              {filterOptions.endpoints.map((endpoint) => (
-                <option key={endpoint} value={endpoint}>
-                  {endpoint}
-                </option>
-              ))}
-            </select>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search tools, servers..."
+              className="w-full p-2 bg-secondary border border-border rounded-md text-foreground text-sm placeholder:text-muted-foreground"
+            />
           </div>
 
           {/* Server Filter */}
@@ -372,37 +451,11 @@ export function Traces() {
               <option value="error">Error</option>
             </select>
           </div>
-
-          {/* Date From */}
-          <div>
-            <label className="block mb-1.5 text-sm font-medium text-muted-foreground">
-              From Date
-            </label>
-            <input
-              type="date"
-              value={dateFrom}
-              onChange={(e) => setDateFrom(e.target.value)}
-              className="w-full p-2 bg-secondary border border-border rounded-md text-foreground text-sm"
-            />
-          </div>
-
-          {/* Date To */}
-          <div>
-            <label className="block mb-1.5 text-sm font-medium text-muted-foreground">
-              To Date
-            </label>
-            <input
-              type="date"
-              value={dateTo}
-              onChange={(e) => setDateTo(e.target.value)}
-              className="w-full p-2 bg-secondary border border-border rounded-md text-foreground text-sm"
-            />
-          </div>
         </div>
       </Card>
 
-      {/* Error Message */}
-      {error && (
+      {/* Error Message (non-connection errors) */}
+      {error && gatewayConnected && (
         <Card className="mb-6">
           <div className="text-warning text-center text-sm">{error}</div>
         </Card>
@@ -414,7 +467,11 @@ export function Traces() {
           columns={columns}
           data={traces}
           loading={loading}
-          emptyMessage="No traces recorded yet. Traces will appear here once tool calls are made through the gateway."
+          emptyMessage={
+            gatewayConnected
+              ? "No traces recorded yet. Traces will appear here once tool calls are made through the gateway."
+              : "Connect to the gateway to view traces."
+          }
           page={page}
           pageSize={pageSize}
           total={total}
