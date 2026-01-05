@@ -2,7 +2,7 @@
  * MCP Client Connector
  *
  * Connects to upstream MCP servers based on their transport type.
- * Supports stdio and SSE transports.
+ * Supports stdio and SSE transports with OAuth authentication.
  */
 
 import { Client } from "@modelcontextprotocol/sdk/client/index.js"
@@ -12,12 +12,24 @@ import type { Tool } from "@modelcontextprotocol/sdk/types.js"
 import type { McpServerConfig, ConnectedMcp } from "./types.js"
 import { sanitizeName } from "./aggregator.js"
 import { log } from "./logger.js"
+import type { OAuthManager } from "./oauth/index.js"
+
+/**
+ * Options for connecting to MCP server
+ */
+export interface ConnectOptions {
+  /** OAuth manager for handling authentication */
+  oauthManager?: OAuthManager
+  /** Callback to prompt user for OAuth */
+  promptOAuth?: (message: string) => Promise<void>
+}
 
 /**
  * Connect to a single MCP server
  */
 export async function connectToMcpServer(
-  config: McpServerConfig
+  config: McpServerConfig,
+  options?: ConnectOptions
 ): Promise<ConnectedMcp> {
   log.info(`Connecting to MCP server: ${config.name} (${config.transport})`)
 
@@ -49,7 +61,7 @@ export async function connectToMcpServer(
           `MCP server "${config.name}" is SSE transport but has no URL`
         )
       }
-      transport = createSSETransport(config)
+      transport = await createSSETransportWithAuth(config, options)
       break
 
     case "streamable-http":
@@ -59,7 +71,7 @@ export async function connectToMcpServer(
           `MCP server "${config.name}" is HTTP transport but has no URL`
         )
       }
-      transport = createSSETransport(config)
+      transport = await createSSETransportWithAuth(config, options)
       break
 
     default:
@@ -93,13 +105,75 @@ export async function connectToMcpServer(
 function createStdioTransport(config: McpServerConfig): StdioClientTransport {
   const command = config.command!
   const args = config.args ? config.args.split(" ").filter(Boolean) : []
+  const env = config.env
 
   log.debug(`Creating stdio transport: ${command} ${args.join(" ")}`)
+  if (env && Object.keys(env).length > 0) {
+    log.debug(
+      `Stdio transport includes ${Object.keys(env).length} environment variables`
+    )
+  }
+
+  // Build environment: filter out undefined values from process.env
+  const mergedEnv = env
+    ? Object.fromEntries(
+        Object.entries({ ...process.env, ...env }).filter(
+          (entry): entry is [string, string] => entry[1] !== undefined
+        )
+      )
+    : undefined
 
   return new StdioClientTransport({
     command,
     args,
+    env: mergedEnv,
   })
+}
+
+/**
+ * Create an SSE transport with OAuth support
+ *
+ * Checks if server requires OAuth and initiates flow if needed.
+ * Falls back to static headers if OAuth is not required.
+ */
+async function createSSETransportWithAuth(
+  config: McpServerConfig,
+  options?: ConnectOptions
+): Promise<SSEClientTransport> {
+  const url = new URL(config.url!)
+  let headers = { ...config.headers }
+
+  // Try OAuth if manager is available
+  if (options?.oauthManager && config.url) {
+    // Check for existing valid token
+    const existingToken = await options.oauthManager.getAccessToken(config.url)
+
+    if (existingToken) {
+      log.debug(`Using existing OAuth token for ${config.name}`)
+      headers.Authorization = `Bearer ${existingToken}`
+    } else {
+      // Check if server requires OAuth
+      const requiresOAuth = await options.oauthManager.requiresOAuth(config.url)
+
+      if (requiresOAuth) {
+        log.info(`${config.name} requires OAuth authentication`)
+
+        // Initiate OAuth flow
+        const result = await options.oauthManager.initiateOAuth(config.url, {
+          prompt: options.promptOAuth,
+        })
+
+        if (result.status === "authorized") {
+          headers.Authorization = `Bearer ${result.tokens.access_token}`
+          log.info(`OAuth authentication successful for ${config.name}`)
+        } else if (result.status === "error") {
+          throw new Error(`OAuth failed for ${config.name}: ${result.error}`)
+        }
+      }
+    }
+  }
+
+  return createSSETransport(config, headers)
 }
 
 /**
@@ -110,16 +184,19 @@ function createStdioTransport(config: McpServerConfig): StdioClientTransport {
  * workaround is to use `eventSourceInit` with a custom fetch that includes
  * the headers on all requests.
  */
-function createSSETransport(config: McpServerConfig): SSEClientTransport {
+function createSSETransport(
+  config: McpServerConfig,
+  headers?: Record<string, string>
+): SSEClientTransport {
   const url = new URL(config.url!)
-  const headers = config.headers
+  const allHeaders = { ...config.headers, ...headers }
 
   log.debug(`Creating SSE transport: ${url.toString()}`)
 
   // If headers are provided, use the workaround pattern
-  if (headers && Object.keys(headers).length > 0) {
+  if (allHeaders && Object.keys(allHeaders).length > 0) {
     log.debug(
-      `SSE transport includes ${Object.keys(headers).length} custom headers`
+      `SSE transport includes ${Object.keys(allHeaders).length} custom headers`
     )
 
     return new SSEClientTransport(url, {
@@ -129,11 +206,11 @@ function createSSETransport(config: McpServerConfig): SSEClientTransport {
             ...init,
             headers: {
               ...init?.headers,
-              ...headers,
+              ...allHeaders,
             },
           }),
       },
-      requestInit: { headers },
+      requestInit: { headers: allHeaders },
     })
   }
 

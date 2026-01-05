@@ -32,6 +32,8 @@ export interface McpServerConfig {
   url?: string
   /** HTTP headers for SSE/HTTP transport (e.g., Authorization) */
   headers?: Record<string, string>
+  /** Environment variables for stdio transport (e.g., API tokens) */
+  env?: Record<string, string>
   /** Server version */
   version?: string
   /** Server capabilities as JSON string */
