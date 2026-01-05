@@ -2,36 +2,17 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { PageHeader } from "@/components/dashboard/page-header"
+import {
+  PageHeader,
+  LoadingState,
+  ErrorState,
+  EmptyState,
+} from "@/components/dashboard"
 import { TraceFilters } from "@/components/traces/trace-filters"
 import { useActiveOrganization } from "@/lib/auth-client"
-import { Activity, Loader2, CheckCircle, XCircle, Clock } from "lucide-react"
-
-interface Trace {
-  id: string
-  traceId: string
-  name: string
-  status: "success" | "error"
-  statusMessage?: string
-  durationMs?: number
-  startTime: string
-  endTime?: string
-  attributes?: {
-    toolName?: string
-    serverName?: string
-    aggregatedToolName?: string
-  }
-}
-
-function formatDuration(ms?: number): string {
-  if (!ms) return "-"
-  if (ms < 1000) return `${Math.round(ms)}ms`
-  return `${(ms / 1000).toFixed(2)}s`
-}
-
-function formatTime(dateString: string): string {
-  return new Date(dateString).toLocaleString()
-}
+import { Activity, CheckCircle, XCircle, Clock } from "lucide-react"
+import type { Trace } from "@/types"
+import { formatDuration, formatTime } from "@/utils"
 
 export default function TracesPage() {
   const { data: activeOrg, isPending: isOrgPending } = useActiveOrganization()
@@ -85,9 +66,7 @@ export default function TracesPage() {
           title="Traces"
           description="View tool calls and their results"
         />
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-        </div>
+        <LoadingState />
       </div>
     )
   }
@@ -99,15 +78,11 @@ export default function TracesPage() {
           title="Traces"
           description="View tool calls and their results"
         />
-        <div className="rounded-lg border-2 border-dashed border-gray-200 p-12 text-center">
-          <Activity className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-4 text-lg font-medium text-gray-900">
-            No organization selected
-          </h3>
-          <p className="mt-2 text-sm text-gray-500">
-            Select an organization to view its traces.
-          </p>
-        </div>
+        <EmptyState
+          icon={Activity}
+          title="No organization selected"
+          description="Select an organization to view its traces."
+        />
       </div>
     )
   }
@@ -119,9 +94,7 @@ export default function TracesPage() {
           title="Traces"
           description="View tool calls and their results"
         />
-        <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
-          <p className="text-sm text-red-600">{error}</p>
-        </div>
+        <ErrorState message={error} />
       </div>
     )
   }
@@ -141,16 +114,11 @@ export default function TracesPage() {
       />
 
       {traces.length === 0 ? (
-        <div className="rounded-lg border-2 border-dashed border-gray-200 p-12 text-center">
-          <Activity className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-4 text-lg font-medium text-gray-900">
-            No traces yet
-          </h3>
-          <p className="mt-2 text-sm text-gray-500">
-            Traces will appear here when your AI apps make tool calls through
-            athreei.
-          </p>
-        </div>
+        <EmptyState
+          icon={Activity}
+          title="No traces yet"
+          description="Traces will appear here when your AI apps make tool calls through athreei."
+        />
       ) : (
         <div className="overflow-hidden rounded-lg border border-gray-200">
           <table className="min-w-full divide-y divide-gray-200">
