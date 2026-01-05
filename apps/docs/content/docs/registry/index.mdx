@@ -1,0 +1,97 @@
+---
+title: MCP Registry
+description: Browse and install MCP servers with one click
+---
+
+# MCP Registry
+
+The athreei Registry is a curated collection of verified MCP servers. Install popular integrations with one click - no JSON editing required.
+
+## Available MCPs
+
+The registry includes verified MCP servers for popular services:
+
+| MCP | Description | Publisher |
+|-----|-------------|-----------|
+| **Figma** | Access Figma files, components, and design tokens | Anthropic |
+| **Sentry** | Query errors, issues, and performance data | Sentry |
+| **Linear** | Manage issues, projects, and cycles | Linear |
+| **GitHub** | Interact with repos, issues, and pull requests | GitHub |
+| **Notion** | Access pages, databases, and blocks | Notion |
+| **Slack** | Send messages and manage channels | Slack |
+
+More MCPs are added regularly. [Request an integration →](https://github.com/athreei/athreei/issues)
+
+## One-Click Install
+
+1. Browse the registry at `/dashboard/registry`
+2. Click on an MCP to see details
+3. Enter required credentials (e.g., API token)
+4. Click **Install** - done!
+
+The MCP is automatically added to your namespace and available through your gateway.
+
+## OAuth Setup Guidance
+
+Many MCPs require authentication tokens. athreei detects this and provides:
+
+- Step-by-step instructions for getting tokens
+- Direct links to the provider's token page
+- Clear labeling of required vs optional fields
+
+For example, when installing the Figma MCP:
+
+1. Go to Figma Settings → Account → Personal Access Tokens
+2. Click "Create new token"
+3. Copy the token and paste it in athreei
+4. Click Install
+
+## JSON Import
+
+Already have MCP configs from Claude Desktop or another app? Import them directly:
+
+1. Go to `/dashboard/mcp-servers`
+2. Click **Import JSON**
+3. Paste your `mcpServers` config:
+
+```json
+{
+  "mcpServers": {
+    "figma": {
+      "command": "npx",
+      "args": ["-y", "@anthropic/mcp-figma"],
+      "env": {
+        "FIGMA_ACCESS_TOKEN": "your-token"
+      }
+    }
+  }
+}
+```
+
+4. Click **Parse** to validate
+5. Click **Import** to add the servers
+
+athreei automatically detects:
+- Transport type (stdio vs SSE)
+- Environment variables (with secret detection)
+- OAuth requirements
+
+## Managing Installed MCPs
+
+After installation, MCPs appear in your **My Servers** list:
+
+- **View details** - See connection status, tools, and config
+- **Edit tools** - Customize descriptions and add prompts
+- **Enable/disable** - Control which tools are exposed
+- **Delete** - Remove the MCP from your namespace
+
+## Next Steps
+
+<Cards>
+  <Card title="Tool Configuration" href="/docs/tools">
+    Customize how AI uses your tools
+  </Card>
+  <Card title="Gateway" href="/docs/gateway">
+    Configure gateway settings
+  </Card>
+</Cards>

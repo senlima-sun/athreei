@@ -4,11 +4,11 @@
     "index",
     "getting-started",
     "gateway",
+    "registry",
+    "tools",
     "audit-logs",
     "sdk",
-    "events",
     "concepts",
-    "browser-tools",
     "development"
   ]
 }

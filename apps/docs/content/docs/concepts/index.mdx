@@ -1,11 +1,27 @@
 ---
 title: Architecture
-description: How athreei works as an MCP gateway platform
+description: How athreei works as the universal MCP gateway
 ---
 
 # Architecture
 
-athreei is an MCP gateway platform that aggregates multiple MCP servers through a single connection while providing audit logging for every interaction.
+athreei is the universal MCP gateway - one connection for AI apps, unified access to all your MCP servers.
+
+## The Problem We Solve
+
+Today, context ownership is controlled by AI app providers:
+
+- **Claude Desktop** - Anthropic controls your MCP connections
+- **ChatGPT** - OpenAI controls it (via their App Store)
+- **Cursor, Windsurf, etc.** - Each app has its own config
+
+This means:
+- You configure MCPs separately for each AI app
+- You can't see what tools AI actually called
+- You can't iterate on tool prompts with real data
+- Switching AI apps means reconfiguring everything
+
+athreei decouples context from AI apps. You control your MCP connections, and any AI app can use them through athreei.
 
 ## System Overview
 
@@ -64,7 +80,17 @@ Every tool call is recorded:
 
 Payloads are stored with end-to-end encryption. Only you can decrypt them.
 
-### SDK
+### Tool Configuration
+
+Users can customize any tool without modifying the MCP server:
+
+- **Custom descriptions** - Override how tools are described to AI
+- **Custom prompts** - Add instructions that guide AI behavior
+- **Enable/disable** - Control which tools are exposed
+
+This enables the iteration loop: view traces → spot issues → edit tools → retry → validate improvements.
+
+### SDK (For Developers)
 
 Enables websites to become MCP servers:
 

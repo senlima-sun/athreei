@@ -1,0 +1,168 @@
+---
+title: Tool Configuration
+description: Customize tool descriptions and prompts to improve AI behavior
+---
+
+# Tool Configuration
+
+Every MCP tool can be customized to improve how AI uses it. Edit descriptions, add custom prompts, and control visibility - all without modifying the original MCP server.
+
+## Why Customize Tools?
+
+AI models decide which tools to use based on their descriptions. The default descriptions from MCP servers are often:
+
+- **Too technical** - Written for developers, not AI understanding
+- **Too vague** - Missing context about when to use the tool
+- **Missing constraints** - No guidance on preferred formats or limits
+
+By customizing tools in athreei, you can improve AI behavior without touching the MCP server code.
+
+## Customization Options
+
+### Custom Description
+
+Override the tool's description to improve AI understanding:
+
+**Original:**
+```
+get_components - Retrieves component data from a Figma file
+```
+
+**Custom:**
+```
+Get all components from a Figma file. Use this when the user asks about
+design components, UI elements, or wants to see what's available in a
+design file. Returns component names, IDs, and metadata.
+```
+
+### Custom Prompt
+
+Add additional instructions that the AI sees when the tool is available:
+
+```
+When using this tool:
+- Always ask for the file ID if not provided
+- Prefer returning JSON format for structured data
+- Limit results to 50 components unless user asks for more
+```
+
+### Enable/Disable
+
+Control which tools are exposed to AI:
+
+- **Enabled** - Tool is visible and usable
+- **Disabled** - Tool is hidden from AI (useful for deprecated or sensitive tools)
+
+## The Iteration Loop
+
+Tool configuration enables data-driven improvement:
+
+```
+1. View a trace     ─── See what the AI sent to a tool
+         │
+         ▼
+2. Spot an issue    ─── "The AI used the wrong parameters"
+         │
+         ▼
+3. Edit the tool    ─── Add custom description or prompt
+         │
+         ▼
+4. Retry            ─── Ask the AI to try again
+         │
+         ▼
+5. Validate         ─── Check the new trace - did it improve?
+```
+
+No more blind prompt engineering. See real data, make targeted improvements.
+
+## Accessing Tool Configuration
+
+### From Server Details
+
+1. Go to `/dashboard/mcp-servers`
+2. Click on a server to view details
+3. Scroll to the **Tools** section
+4. Click the edit icon on any tool
+
+### From Traces
+
+1. View a trace at `/dashboard/traces/{id}`
+2. See which tool was called
+3. Click **Configure Tool** to edit
+
+## Best Practices
+
+### Be Specific
+
+**Bad:**
+```
+Gets data from the API
+```
+
+**Good:**
+```
+Fetches user profile data including name, email, and preferences.
+Use when the user asks about their account or profile settings.
+```
+
+### Include Examples
+
+```
+Returns issues matching the query. Examples:
+- "open bugs" → status:open type:bug
+- "my tasks" → assignee:@me
+- "high priority" → priority:high
+```
+
+### Set Constraints
+
+```
+Important:
+- Maximum 100 results per request
+- Date format must be ISO 8601 (YYYY-MM-DD)
+- Use English for search queries
+```
+
+### Guide Tool Selection
+
+```
+Use this tool instead of list_all_issues when you only need a
+specific subset. For bulk operations, use batch_update instead.
+```
+
+## Propagation to Gateway
+
+Custom configurations are automatically used by the gateway:
+
+1. You edit a tool in the dashboard
+2. Gateway fetches updated config (every 5 minutes or on restart)
+3. AI apps see the customized description
+
+No manual sync required.
+
+## API Access
+
+Update tools programmatically:
+
+```bash
+# Update tool configuration
+PATCH /api/tools/{toolId}
+Content-Type: application/json
+
+{
+  "customDescription": "Your improved description",
+  "customPrompt": "Additional instructions for AI",
+  "isEnabled": true
+}
+```
+
+## Next Steps
+
+<Cards>
+  <Card title="Traces" href="/docs/audit-logs/traces">
+    View tool calls to identify improvement opportunities
+  </Card>
+  <Card title="Registry" href="/docs/registry">
+    Add more MCP servers to customize
+  </Card>
+</Cards>
