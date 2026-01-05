@@ -12,116 +12,32 @@
 
 import { Hono } from "hono"
 import { zValidator } from "@hono/zod-validator"
-import { z } from "zod"
 import { eq, and } from "drizzle-orm"
 import { authMiddleware, getAuthContext, ApiError } from "../middleware"
-import { getDb, type DatabaseClient } from "../lib/db"
-import { namespace, namespaceResource, member, mcpServer } from "@athreei/db"
+import { getDb } from "../lib/db"
+import { namespace, namespaceResource, mcpServer } from "@athreei/db"
+
+// Import extracted schemas
+import {
+  createNamespaceSchema,
+  updateNamespaceSchema,
+  addServerSchema,
+  updateServerMappingSchema,
+} from "../schemas/namespaces"
+
+// Import extracted services
+import {
+  verifyOrganizationMembership,
+  getNamespaceWithAccess,
+  generateNamespaceId,
+  generateNamespaceResourceId,
+  generateSlug,
+} from "../services"
 
 const namespaces = new Hono()
 
 // Apply auth middleware to all namespace routes
 namespaces.use("*", authMiddleware)
-
-// =============================================================================
-// Validation Schemas
-// =============================================================================
-
-const createNamespaceSchema = z.object({
-  name: z.string().min(1, "Name is required").max(100, "Name too long"),
-  description: z.string().max(500).optional(),
-  isDefault: z.boolean().default(false),
-})
-
-const updateNamespaceSchema = z.object({
-  name: z.string().min(1).max(100).optional(),
-  description: z.string().max(500).nullable().optional(),
-  isDefault: z.boolean().optional(),
-})
-
-const addServerSchema = z.object({
-  serverId: z.string().min(1, "Server ID is required"),
-})
-
-const updateServerMappingSchema = z.object({
-  enabled: z.boolean(),
-})
-
-// =============================================================================
-// Helper Functions
-// =============================================================================
-
-/**
- * Generate a unique namespace ID
- */
-function generateId(): string {
-  return `ns_${crypto.randomUUID().replace(/-/g, "")}`
-}
-
-/**
- * Generate a unique resource mapping ID
- */
-function generateResourceId(): string {
-  return `nsr_${crypto.randomUUID().replace(/-/g, "")}`
-}
-
-/**
- * Generate a URL-safe slug from a name
- */
-function generateSlug(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 50)
-}
-
-/**
- * Check if user is a member of the organization
- */
-async function verifyOrganizationMembership(
-  db: DatabaseClient,
-  userId: string,
-  organizationId: string
-): Promise<boolean> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const membership = await (db as any).query.member.findFirst({
-    where: and(
-      eq(member.userId, userId),
-      eq(member.organizationId, organizationId)
-    ),
-  })
-  return !!membership
-}
-
-/**
- * Get namespace and verify user has access
- */
-async function getNamespaceWithAccess(
-  db: DatabaseClient,
-  namespaceId: string,
-  userId: string
-): Promise<typeof namespace.$inferSelect> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const ns = await (db as any).query.namespace.findFirst({
-    where: eq(namespace.id, namespaceId),
-  })
-
-  if (!ns) {
-    throw ApiError.notFound("Namespace not found")
-  }
-
-  const isMember = await verifyOrganizationMembership(
-    db,
-    userId,
-    ns.organizationId
-  )
-  if (!isMember) {
-    throw ApiError.forbidden("You do not have access to this namespace")
-  }
-
-  return ns
-}
 
 // =============================================================================
 // Routes
@@ -249,7 +165,7 @@ namespaces.post("/", zValidator("json", createNamespaceSchema), async (c) => {
   }
 
   const now = new Date()
-  const namespaceId = generateId()
+  const namespaceId = generateNamespaceId()
 
   // Create the namespace
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -518,7 +434,7 @@ namespaces.post(
     }
 
     // Create the mapping
-    const mappingId = generateResourceId()
+    const mappingId = generateNamespaceResourceId()
     const now = new Date()
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
