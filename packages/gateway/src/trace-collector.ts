@@ -273,10 +273,87 @@ export class TraceCollector {
   }
 
   /**
-   * Get all traces
+   * Get all traces (for backward compatibility)
    */
-  getTraces(): ToolCallTrace[] {
+  getAllTraces(): ToolCallTrace[] {
     return [...this.traces]
+  }
+
+  /**
+   * Get traces with filtering, pagination, and sorting
+   */
+  getTraces(options?: {
+    limit?: number
+    offset?: number
+    status?: "success" | "error"
+    search?: string
+  }): ToolCallTrace[] {
+    let filtered = [...this.traces]
+
+    // Filter by status
+    if (options?.status) {
+      filtered = filtered.filter((t) => t.status === options.status)
+    }
+
+    // Filter by search (matches tool name)
+    if (options?.search) {
+      const searchLower = options.search.toLowerCase()
+      filtered = filtered.filter(
+        (t) =>
+          t.aggregatedToolName.toLowerCase().includes(searchLower) ||
+          t.toolName.toLowerCase().includes(searchLower) ||
+          t.serverName.toLowerCase().includes(searchLower)
+      )
+    }
+
+    // Sort by startedAt descending (newest first)
+    filtered.sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime())
+
+    // Apply pagination
+    const offset = options?.offset ?? 0
+    const limit = options?.limit ?? 50
+
+    return filtered.slice(offset, offset + limit)
+  }
+
+  /**
+   * Get a single trace by ID
+   */
+  getTrace(traceId: string): ToolCallTrace | undefined {
+    return this.traces.find((t) => t.traceId === traceId)
+  }
+
+  /**
+   * Get total number of traces
+   */
+  getTotal(): number {
+    return this.traces.length
+  }
+
+  /**
+   * Get filtered total for pagination
+   */
+  getFilteredTotal(options?: {
+    status?: "success" | "error"
+    search?: string
+  }): number {
+    let filtered = this.traces
+
+    if (options?.status) {
+      filtered = filtered.filter((t) => t.status === options.status)
+    }
+
+    if (options?.search) {
+      const searchLower = options.search.toLowerCase()
+      filtered = filtered.filter(
+        (t) =>
+          t.aggregatedToolName.toLowerCase().includes(searchLower) ||
+          t.toolName.toLowerCase().includes(searchLower) ||
+          t.serverName.toLowerCase().includes(searchLower)
+      )
+    }
+
+    return filtered.length
   }
 
   /**

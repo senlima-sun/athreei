@@ -29,7 +29,11 @@ import {
   addEventHandler,
   type GatewayState,
 } from "./server.js"
-import { loadConfig, ConfigSyncManager } from "./config-sync.js"
+import {
+  loadConfig,
+  loadLocalConfig,
+  ConfigSyncManager,
+} from "./config-sync.js"
 import { connectToAllServers, disconnectAllServers } from "./mcp-client.js"
 import { TraceCollector } from "./trace-collector.js"
 import { TraceSyncClient, createTraceSyncClient } from "./trace-sync.js"
@@ -44,6 +48,7 @@ import {
   stopSessionCleanup,
   cleanupAllSessions,
 } from "./session.js"
+import { startHttpApiServer } from "./http-api.js"
 
 // Re-export for library use
 export { TraceCollector } from "./trace-collector.js"
@@ -59,8 +64,10 @@ interface CliArgs {
   configPath?: string
   transport: "stdio" | "sse"
   port: number
+  apiPort: number
   debug: boolean
   mock: boolean
+  local: boolean
   help: boolean
   version: boolean
 }
@@ -70,8 +77,10 @@ function parseArgs(): CliArgs {
   const config: CliArgs = {
     transport: "stdio",
     port: 3000,
+    apiPort: 3001,
     debug: false,
     mock: false,
+    local: false,
     help: false,
     version: false,
   }
@@ -105,6 +114,14 @@ function parseArgs(): CliArgs {
         }
         break
 
+      case "--api-port":
+        config.apiPort = parseInt(args[++i], 10)
+        if (isNaN(config.apiPort)) {
+          log.error("Invalid API port number")
+          process.exit(1)
+        }
+        break
+
       case "--debug":
       case "-d":
         config.debug = true
@@ -113,6 +130,11 @@ function parseArgs(): CliArgs {
       case "--mock":
       case "-m":
         config.mock = true
+        break
+
+      case "--local":
+      case "-l":
+        config.local = true
         break
 
       case "--help":
@@ -146,20 +168,35 @@ Options:
   -c, --config <path>     Path to config file (default: ~/.athreei/config.json)
   -t, --transport <type>  Transport type: stdio (default) or sse
   -p, --port <port>       Port for SSE transport (default: 3000)
-  -m, --mock              Run in mock mode (no Platform connection required)
+  --api-port <port>       Port for HTTP API (default: 3001, local/mock mode only)
+  -l, --local             Run in local mode (no Platform sync, read servers from config)
+  -m, --mock              Run in mock mode (no servers, for testing)
   -d, --debug             Enable debug logging
   -h, --help              Show this help message
   -v, --version           Show version number
 
 Examples:
-  athreei-gateway                           # Start with stdio transport
+  athreei-gateway --local                   # Local mode with servers from config
+  athreei-gateway --local --api-port 4000   # Local mode with custom API port
+  athreei-gateway                           # Start with stdio transport (requires API key)
   athreei-gateway -t sse -p 3000           # Start with SSE on port 3000
   athreei-gateway -c /path/to/config.json  # Use custom config file
   athreei-gateway -t sse --mock            # SSE mode with mock servers (for testing)
 
-Config file format (~/.athreei/config.json):
+Config file format for --local mode (~/.athreei/config.json):
 {
-  "apiKey": "atr_your_api_key",
+  "servers": [
+    {
+      "name": "filesystem",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/dir"]
+    }
+  ]
+}
+
+Config file format for Platform mode:
+{
+  "apiKey": "ak_your_api_key",
   "endpoint": "your-endpoint-name",
   "platformUrl": "https://athreei.com"
 }
@@ -264,7 +301,7 @@ function setupShutdownHandlers(
   traceSyncClient: TraceSyncClient | null,
   server: ReturnType<typeof createServer>,
   transport: "stdio" | "sse",
-  _mock: boolean = false
+  httpApiServer: { stop: () => void } | null = null
 ): void {
   const shutdown = async (signal: string) => {
     log.info(`Received ${signal}, shutting down gracefully...`)
@@ -274,6 +311,9 @@ function setupShutdownHandlers(
       syncManager?.stopPeriodicSync()
       traceCollector.stopPeriodicFlush()
       traceSyncClient?.stopPeriodicFlush()
+
+      // Stop HTTP API server if running
+      httpApiServer?.stop()
 
       // Flush remaining traces
       await traceCollector.flush().catch(() => {})
@@ -409,6 +449,24 @@ function createMockNamespaceConfig(): NamespaceConfig {
   }
 }
 
+/**
+ * Create namespace config from local servers (for --local mode)
+ */
+function createLocalNamespaceConfig(
+  servers: import("@athreei/gateway-core").McpServerConfig[]
+): NamespaceConfig {
+  return {
+    namespaceId: "local-namespace",
+    namespaceName: "Local",
+    namespaceSlug: "local",
+    endpointId: "local-endpoint",
+    endpointName: "local",
+    organizationId: "local-org",
+    servers,
+    configVersion: `local-v${Date.now()}`,
+  }
+}
+
 async function main(): Promise<void> {
   const cliArgs = parseArgs()
 
@@ -450,16 +508,28 @@ async function main(): Promise<void> {
   let namespaceConfig: NamespaceConfig
 
   if (cliArgs.mock) {
-    // Mock mode: use mock config
+    // Mock mode: use mock config (no servers, no Platform)
     namespaceConfig = createMockNamespaceConfig()
     setSseNamespaceConfig(namespaceConfig)
+  } else if (cliArgs.local) {
+    // Local mode: read servers from local config, no Platform sync
+    log.info("Running in LOCAL mode (no Platform sync)")
+    try {
+      const localConfig = loadLocalConfig(cliArgs.configPath)
+      namespaceConfig = createLocalNamespaceConfig(localConfig.servers)
+      setSseNamespaceConfig(namespaceConfig)
+    } catch (error) {
+      log.error("Failed to load local config:", error)
+      process.exit(1)
+    }
   } else {
     // Production mode: load config and sync with Platform
     try {
       gatewayConfig = loadConfig(cliArgs.configPath)
     } catch (error) {
       log.error("Failed to load config:", error)
-      log.error("Use --mock flag to run without config file")
+      log.error("Use --local flag to run without Platform sync")
+      log.error("Use --mock flag to run without any config file")
       process.exit(1)
     }
 
@@ -538,6 +608,12 @@ async function main(): Promise<void> {
   // Create the gateway MCP server
   const server = createServer(state)
 
+  // Start HTTP API server in local/mock mode
+  let httpApiServer: { stop: () => void } | null = null
+  if (cliArgs.local || cliArgs.mock) {
+    httpApiServer = startHttpApiServer(state, traceCollector, cliArgs.apiPort)
+  }
+
   // Setup shutdown handlers
   setupShutdownHandlers(
     state,
@@ -546,7 +622,7 @@ async function main(): Promise<void> {
     traceSyncClient,
     server,
     cliArgs.transport,
-    cliArgs.mock
+    httpApiServer
   )
 
   // Start the appropriate transport
