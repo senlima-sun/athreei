@@ -22,6 +22,7 @@ export function Layout({ children }: LayoutProps) {
     if (location.pathname === "/") return "Dashboard"
     if (location.pathname === "/traces") return "Traces"
     if (location.pathname.startsWith("/traces/")) return "Trace Details"
+    if (location.pathname === "/servers") return "Servers"
     if (location.pathname === "/logs") return "Audit Logs"
     if (location.pathname === "/permissions") return "Permissions"
     if (location.pathname === "/sessions") return "Sessions"
@@ -72,6 +73,9 @@ export function Layout({ children }: LayoutProps) {
           </SidebarLink>
           <SidebarLink to="/traces" icon="📈" onClick={closeSidebar}>
             Traces
+          </SidebarLink>
+          <SidebarLink to="/servers" icon="🖥️" onClick={closeSidebar}>
+            Servers
           </SidebarLink>
           <SidebarLink to="/logs" icon="📝" onClick={closeSidebar}>
             Audit Logs
