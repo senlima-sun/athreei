@@ -6,8 +6,7 @@ import Link from "next/link"
 import { PageHeader } from "@/components/dashboard/page-header"
 import { useActiveOrganization } from "@/lib/auth-client"
 import { Server, Loader2 } from "lucide-react"
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
+import { API_URL } from "@/constants"
 
 interface Namespace {
   id: string

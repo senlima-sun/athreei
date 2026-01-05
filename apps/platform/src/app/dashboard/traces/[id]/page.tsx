@@ -5,32 +5,7 @@ import Link from "next/link"
 import { PageHeader } from "@/components/dashboard/page-header"
 import { TraceDetail } from "@/components/traces/trace-detail"
 import { Loader2, ArrowLeft, AlertCircle } from "lucide-react"
-
-interface TraceAttributes {
-  toolName?: string
-  serverName?: string
-  aggregatedToolName?: string
-  arguments?: unknown
-  result?: unknown
-  [key: string]: unknown
-}
-
-interface Trace {
-  id: string
-  traceId: string
-  parentSpanId?: string | null
-  spanId?: string
-  name: string
-  kind?: string
-  status: "success" | "error"
-  statusMessage?: string | null
-  startTime: string
-  endTime?: string | null
-  durationMs?: number | null
-  attributes?: TraceAttributes | null
-  events?: unknown[] | null
-  createdAt: string
-}
+import type { Trace } from "@/types"
 
 interface PageProps {
   params: Promise<{ id: string }>

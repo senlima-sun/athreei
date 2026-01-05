@@ -9,67 +9,12 @@ import {
   Server,
   Wrench,
 } from "lucide-react"
-
-interface TraceAttributes {
-  toolName?: string
-  serverName?: string
-  aggregatedToolName?: string
-  arguments?: unknown
-  result?: unknown
-  [key: string]: unknown
-}
-
-interface Trace {
-  id: string
-  traceId: string
-  parentSpanId?: string | null
-  spanId?: string
-  name: string
-  kind?: string
-  status: "success" | "error"
-  statusMessage?: string | null
-  startTime: string
-  endTime?: string | null
-  durationMs?: number | null
-  attributes?: TraceAttributes | null
-  events?: unknown[] | null
-  createdAt: string
-}
+import type { Trace } from "@/types"
+import { formatDuration, formatTime } from "@/utils"
+import { JsonViewer } from "@/components/traces/json-viewer"
 
 interface TraceDetailProps {
   trace: Trace
-}
-
-function formatDuration(ms?: number | null): string {
-  if (ms == null) return "-"
-  if (ms < 1000) return `${Math.round(ms)}ms`
-  return `${(ms / 1000).toFixed(2)}s`
-}
-
-function formatTime(dateString: string): string {
-  return new Date(dateString).toLocaleString()
-}
-
-function JsonViewer({ data, label }: { data: unknown; label: string }) {
-  if (data == null) {
-    return (
-      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
-        <h3 className="mb-2 text-sm font-medium text-gray-700">{label}</h3>
-        <p className="text-sm text-gray-500">No data available</p>
-      </div>
-    )
-  }
-
-  return (
-    <div className="rounded-lg border border-gray-200 bg-gray-50">
-      <div className="border-b border-gray-200 px-4 py-2">
-        <h3 className="text-sm font-medium text-gray-700">{label}</h3>
-      </div>
-      <pre className="overflow-x-auto p-4 text-sm text-gray-800">
-        {JSON.stringify(data, null, 2)}
-      </pre>
-    </div>
-  )
 }
 
 export function TraceDetail({ trace }: TraceDetailProps) {

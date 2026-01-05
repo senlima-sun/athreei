@@ -1,15 +1,9 @@
 "use client"
 
 import Link from "next/link"
-import {
-  Server,
-  Terminal,
-  Radio,
-  Globe,
-  Settings,
-  ExternalLink,
-} from "lucide-react"
+import { Server, Settings } from "lucide-react"
 import { McpTransportType } from "./mcp-type-selector"
+import { TRANSPORT_ICONS, TRANSPORT_LABELS, STATUS_STYLES } from "@/constants"
 
 export type McpServerStatus = "active" | "inactive" | "error"
 
@@ -24,6 +18,7 @@ export interface McpServer {
   args?: string[]
   // SSE/HTTP config
   url?: string
+  envKeys?: string[]
   createdAt?: Date
   updatedAt?: Date
 }
@@ -34,49 +29,13 @@ interface McpServerCardProps {
   showActions?: boolean
 }
 
-const transportIcons: Record<
-  McpTransportType,
-  React.ComponentType<{ className?: string }>
-> = {
-  stdio: Terminal,
-  sse: Radio,
-  http: Globe,
-}
-
-const transportLabels: Record<McpTransportType, string> = {
-  stdio: "STDIO",
-  sse: "SSE",
-  http: "HTTP",
-}
-
-const statusStyles: Record<
-  McpServerStatus,
-  { bg: string; text: string; dot: string }
-> = {
-  active: {
-    bg: "bg-green-100",
-    text: "text-green-700",
-    dot: "bg-green-500",
-  },
-  inactive: {
-    bg: "bg-gray-100",
-    text: "text-gray-600",
-    dot: "bg-gray-400",
-  },
-  error: {
-    bg: "bg-red-100",
-    text: "text-red-700",
-    dot: "bg-red-500",
-  },
-}
-
 export function McpServerCard({
   server,
   href,
   showActions = true,
 }: McpServerCardProps) {
-  const TransportIcon = transportIcons[server.transportType]
-  const statusStyle = statusStyles[server.status]
+  const TransportIcon = TRANSPORT_ICONS[server.transportType]
+  const statusStyle = STATUS_STYLES[server.status]
 
   const CardContent = () => (
     <>
@@ -107,7 +66,7 @@ export function McpServerCard({
           {/* Transport type badge */}
           <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
             <TransportIcon className="h-3 w-3" />
-            {transportLabels[server.transportType]}
+            {TRANSPORT_LABELS[server.transportType]}
           </span>
         </div>
       </div>

@@ -6,8 +6,7 @@ import { PageHeader } from "@/components/dashboard/page-header"
 import { NamespaceForm } from "@/components/namespaces"
 import { useActiveOrganization } from "@/lib/auth-client"
 import { Loader2 } from "lucide-react"
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
+import { API_URL } from "@/constants"
 
 export default function NewNamespacePage() {
   const router = useRouter()

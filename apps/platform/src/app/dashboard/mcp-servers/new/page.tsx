@@ -11,8 +11,7 @@ import {
 } from "@/components/mcp"
 import { useActiveOrganization } from "@/lib/auth-client"
 import { Loader2 } from "lucide-react"
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
+import { API_URL } from "@/constants"
 
 // Transform frontend form data to API format
 function toApiFormat(data: McpServerFormData) {
