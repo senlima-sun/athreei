@@ -1,6 +1,6 @@
 "use client"
 
-import { PageHeader } from "@/components/dashboard/page-header"
+import { PageHeader, LoadingState } from "@/components/dashboard"
 import { useSession } from "@/lib/auth-client"
 import { Server, Activity, Users, ArrowRight } from "lucide-react"
 import Link from "next/link"
@@ -39,11 +39,7 @@ export default function DashboardPage() {
   const { data: session, isPending } = useSession()
 
   if (isPending) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-gray-600" />
-      </div>
-    )
+    return <LoadingState />
   }
 
   const userName = session?.user?.name || "there"
