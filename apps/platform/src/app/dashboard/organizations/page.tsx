@@ -1,11 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import {
-  PageHeader,
-  LoadingState,
-  EmptyState,
-} from "@/components/dashboard"
+import { PageHeader, LoadingState, EmptyState } from "@/components/dashboard"
 import { useListOrganizations, useActiveOrganization } from "@/lib/auth-client"
 import { Building2, Plus, Users, Settings } from "lucide-react"
 

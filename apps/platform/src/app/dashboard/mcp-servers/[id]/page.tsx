@@ -6,7 +6,14 @@ import Link from "next/link"
 import { PageHeader, LoadingState } from "@/components/dashboard"
 import { McpServerForm, McpServerFormData, ToolList } from "@/components/mcp"
 import { useActiveOrganization } from "@/lib/auth-client"
-import { Server, ArrowLeft, Trash2, AlertTriangle, Loader2, Key } from "lucide-react"
+import {
+  Server,
+  ArrowLeft,
+  Trash2,
+  AlertTriangle,
+  Loader2,
+  Key,
+} from "lucide-react"
 import { API_URL } from "@/constants"
 import type { McpServer } from "@/types"
 import { toFrontendFormat, toApiFormat } from "@/utils"
