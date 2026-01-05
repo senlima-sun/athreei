@@ -11,12 +11,9 @@
 
 import { Hono } from "hono"
 import { zValidator } from "@hono/zod-validator"
-import { z } from "zod"
-import { eq, and, isNull } from "drizzle-orm"
-import { getDb, type DatabaseClient } from "../lib/db"
+import { eq, and } from "drizzle-orm"
+import { getDb } from "../lib/db"
 import {
-  apiKey,
-  endpoint,
   namespace,
   namespaceResource,
   mcpServer,
@@ -24,159 +21,20 @@ import {
   trace,
 } from "@athreei/db"
 import { checkRateLimit } from "../middleware/rate-limit"
+import { getConfigQuerySchema, postTracesSchema } from "../schemas/gateway"
+import {
+  parseAuthHeader,
+  validateApiKey,
+  generateConfigVersion,
+  generateTraceId,
+  generateSpanId,
+} from "../services"
 
 const gateway = new Hono()
 
 // =============================================================================
-// Validation Schemas
-// =============================================================================
-
-const getConfigQuerySchema = z.object({
-  endpoint: z.string().min(1, "Endpoint name is required"),
-})
-
-const postTracesSchema = z.object({
-  traces: z.array(
-    z.object({
-      traceId: z.string(),
-      aggregatedToolName: z.string(),
-      serverName: z.string(),
-      toolName: z.string(),
-      arguments: z.unknown().optional(),
-      result: z.unknown().optional(),
-      error: z.string().optional(),
-      startedAt: z.string().datetime(),
-      endedAt: z.string().datetime().optional(),
-      durationMs: z.number().optional(),
-    })
-  ),
-})
-
-// =============================================================================
 // Helper Functions
 // =============================================================================
-
-/**
- * Parse Authorization header and extract API key
- */
-function parseAuthHeader(header: string | undefined): string | null {
-  if (!header) return null
-
-  const parts = header.split(" ")
-  if (parts.length !== 2 || parts[0].toLowerCase() !== "bearer") {
-    return null
-  }
-
-  return parts[1]
-}
-
-/**
- * Hash an API key using SHA-256 (same as api-keys.ts)
- */
-async function hashApiKey(key: string): Promise<string> {
-  const encoder = new TextEncoder()
-  const data = encoder.encode(key)
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data)
-  const hashArray = Array.from(new Uint8Array(hashBuffer))
-  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
-}
-
-/**
- * Validate API key and return associated endpoint
- */
-async function validateApiKey(
-  db: DatabaseClient,
-  key: string
-): Promise<
-  | {
-      valid: true
-      apiKeyRecord: typeof apiKey.$inferSelect
-      endpointRecord: typeof endpoint.$inferSelect
-      keyHash: string
-    }
-  | { valid: false; error: string }
-> {
-  // Strip "ak_" prefix if present (the key is stored without it)
-  const keyToHash = key.startsWith("ak_") ? key.slice(3) : key
-  const keyHash = await hashApiKey(keyToHash)
-
-  // Find the API key by hash
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const dbQuery = (db as any).query
-
-  const apiKeyRecord = (await dbQuery.apiKey.findFirst({
-    where: and(eq(apiKey.keyHash, keyHash), isNull(apiKey.revokedAt)),
-  })) as typeof apiKey.$inferSelect | undefined
-
-  if (!apiKeyRecord) {
-    return { valid: false, error: "Invalid or revoked API key" }
-  }
-
-  // Check expiration
-  if (apiKeyRecord.expiresAt && new Date(apiKeyRecord.expiresAt) < new Date()) {
-    return { valid: false, error: "API key has expired" }
-  }
-
-  // Get the associated endpoint
-  if (!apiKeyRecord.endpointId) {
-    return { valid: false, error: "API key is not associated with an endpoint" }
-  }
-
-  const endpointRecord = (await dbQuery.endpoint.findFirst({
-    where: eq(endpoint.id, apiKeyRecord.endpointId),
-  })) as typeof endpoint.$inferSelect | undefined
-
-  if (!endpointRecord) {
-    return { valid: false, error: "Associated endpoint not found" }
-  }
-
-  // Update last used timestamp
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (db as any)
-    .update(apiKey)
-    .set({
-      lastUsedAt: new Date(),
-      usageCount: apiKeyRecord.usageCount + 1,
-    })
-    .where(eq(apiKey.id, apiKeyRecord.id))
-
-  return {
-    valid: true,
-    apiKeyRecord,
-    endpointRecord,
-    keyHash,
-  }
-}
-
-/**
- * Generate a config version string based on namespace and server data
- */
-function generateConfigVersion(
-  namespaceRecord: typeof namespace.$inferSelect,
-  servers: Array<typeof mcpServer.$inferSelect>
-): string {
-  // Use namespace updatedAt + server count + latest server update as version
-  const latestServerUpdate = servers.reduce((latest, s) => {
-    const updated = new Date(s.updatedAt).getTime()
-    return updated > latest ? updated : latest
-  }, new Date(namespaceRecord.updatedAt).getTime())
-
-  return `${latestServerUpdate}-${servers.length}`
-}
-
-/**
- * Generate a unique trace ID
- */
-function generateTraceId(): string {
-  return `tr_${crypto.randomUUID().replace(/-/g, "")}`
-}
-
-/**
- * Generate a unique span ID
- */
-function generateSpanId(): string {
-  return crypto.randomUUID().replace(/-/g, "").slice(0, 16)
-}
 
 /**
  * Rate limiting configuration
@@ -320,7 +178,7 @@ gateway.get("/config", zValidator("query", getConfigQuerySchema), async (c) => {
   }
 
   // Build the response
-  const configVersion = generateConfigVersion(namespaceRecord, servers)
+  const configVersion = generateConfigVersion(namespaceRecord.updatedAt, servers)
 
   return c.json({
     namespaceId: namespaceRecord.id,
