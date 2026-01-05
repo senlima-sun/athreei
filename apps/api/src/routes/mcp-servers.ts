@@ -7,11 +7,10 @@
 
 import { Hono } from "hono"
 import { zValidator } from "@hono/zod-validator"
-import { z } from "zod"
 import { eq, and, or, like, sql } from "drizzle-orm"
 import { authMiddleware, getAuthContext, ApiError } from "../middleware"
-import { getDb, type DatabaseClient } from "../lib/db"
-import { mcpServer, mcpTool, member } from "@athreei/db"
+import { getDb } from "../lib/db"
+import { mcpServer, mcpTool } from "@athreei/db"
 import {
   encryptEnv,
   decryptEnv,
@@ -19,122 +18,22 @@ import {
   isEncryptionConfigured,
 } from "../lib/encryption"
 
-// =============================================================================
-// Rate Limiting for Env Endpoint
-// =============================================================================
+// Schemas
+import {
+  createServerSchema,
+  updateServerSchema,
+  listQuerySchema,
+} from "../schemas/mcp-servers"
 
-/**
- * In-memory rate limiter for env variable access.
- * Stricter than general API rate limiting since this endpoint returns credentials.
- */
-const envAccessLimiter = new Map<
-  string,
-  { count: number; resetAt: number; violations: number }
->()
-const ENV_RATE_LIMIT = {
-  maxRequests: 10, // 10 requests per minute
-  windowMs: 60_000,
-  cleanupIntervalMs: 300_000, // 5 minutes
-}
-
-let lastEnvLimiterCleanup = Date.now()
-
-/**
- * Clean up expired rate limit entries
- */
-function cleanupEnvRateLimiter(): void {
-  const now = Date.now()
-  for (const [key, entry] of envAccessLimiter.entries()) {
-    if (now > entry.resetAt) {
-      envAccessLimiter.delete(key)
-    }
-  }
-  lastEnvLimiterCleanup = now
-}
-
-/**
- * Check rate limit for env access
- * Returns true if request is allowed, false if rate limited
- */
-function checkEnvRateLimit(key: string): {
-  allowed: boolean
-  remaining: number
-  resetIn: number
-} {
-  const now = Date.now()
-
-  // Periodic cleanup
-  if (now - lastEnvLimiterCleanup > ENV_RATE_LIMIT.cleanupIntervalMs) {
-    cleanupEnvRateLimiter()
-  }
-
-  const entry = envAccessLimiter.get(key)
-
-  // No entry or expired window - create new entry
-  if (!entry || now > entry.resetAt) {
-    envAccessLimiter.set(key, {
-      count: 1,
-      resetAt: now + ENV_RATE_LIMIT.windowMs,
-      violations: entry?.violations ?? 0,
-    })
-    return {
-      allowed: true,
-      remaining: ENV_RATE_LIMIT.maxRequests - 1,
-      resetIn: ENV_RATE_LIMIT.windowMs,
-    }
-  }
-
-  // Check if limit exceeded
-  if (entry.count >= ENV_RATE_LIMIT.maxRequests) {
-    entry.violations++
-    return {
-      allowed: false,
-      remaining: 0,
-      resetIn: entry.resetAt - now,
-    }
-  }
-
-  // Increment count
-  entry.count++
-  return {
-    allowed: true,
-    remaining: ENV_RATE_LIMIT.maxRequests - entry.count,
-    resetIn: entry.resetAt - now,
-  }
-}
-
-// =============================================================================
-// Audit Logging
-// =============================================================================
-
-interface EnvAccessAuditEvent {
-  event: "env_access"
-  serverId: string
-  userId: string
-  organizationId: string
-  timestamp: string
-  success: boolean
-  reason?: string
-}
-
-interface RateLimitViolationEvent {
-  event: "rate_limit_violation"
-  endpoint: "env_access"
-  userId: string
-  serverId: string
-  timestamp: string
-  rateLimitKey: string
-}
-
-/**
- * Log audit event to stderr as structured JSON
- * DO NOT log actual env values!
- */
-function logAuditEvent(
-  event: EnvAccessAuditEvent | RateLimitViolationEvent
-): void {
-  console.error(JSON.stringify(event))
-}
+// Services
+import {
+  verifyOrganizationMembership,
+  generateUUID,
+  checkEnvRateLimit,
+  setEnvRateLimitHeaders,
+  logEnvAccess,
+  logRateLimitViolation,
+} from "../services"
 
 const mcpServers = new Hono()
 
@@ -142,84 +41,11 @@ const mcpServers = new Hono()
 mcpServers.use("*", authMiddleware)
 
 // =============================================================================
-// Validation Schemas
-// =============================================================================
-
-const transportTypes = ["stdio", "sse", "streamable-http"] as const
-const statusTypes = ["active", "inactive", "pending"] as const
-
-const createServerSchema = z.object({
-  name: z.string().min(1, "Name is required").max(100, "Name too long"),
-  description: z.string().max(500, "Description too long").optional(),
-  transport: z.enum(transportTypes, {
-    errorMap: () => ({ message: "Invalid transport type" }),
-  }),
-  command: z.string().max(500).optional(),
-  args: z.string().max(1000).optional(),
-  url: z.string().url("Invalid URL").optional(),
-  version: z.string().max(50).optional(),
-  capabilities: z.string().max(5000).optional(),
-  env: z.record(z.string()).optional(),
-})
-
-const updateServerSchema = z.object({
-  name: z.string().min(1).max(100).optional(),
-  description: z.string().max(500).nullable().optional(),
-  transport: z
-    .enum(transportTypes, {
-      errorMap: () => ({ message: "Invalid transport type" }),
-    })
-    .optional(),
-  command: z.string().max(500).nullable().optional(),
-  args: z.string().max(1000).nullable().optional(),
-  url: z.string().url("Invalid URL").nullable().optional(),
-  status: z
-    .enum(statusTypes, {
-      errorMap: () => ({ message: "Invalid status" }),
-    })
-    .optional(),
-  version: z.string().max(50).nullable().optional(),
-  capabilities: z.string().max(5000).nullable().optional(),
-  env: z.record(z.string()).nullable().optional(),
-})
-
-const listQuerySchema = z.object({
-  status: z.enum(statusTypes).optional(),
-  transport: z.enum(transportTypes).optional(),
-  search: z.string().max(100).optional(),
-  limit: z.coerce.number().min(1).max(100).default(20),
-  offset: z.coerce.number().min(0).default(0),
-  organizationId: z.string().min(1, "Organization ID is required"),
-})
-
-// =============================================================================
 // Helper Functions
 // =============================================================================
 
-function generateId(): string {
-  return crypto.randomUUID()
-}
-
 function now(): Date {
   return new Date()
-}
-
-/**
- * Check if user is a member of the organization
- */
-async function verifyOrganizationMembership(
-  db: DatabaseClient,
-  userId: string,
-  organizationId: string
-): Promise<boolean> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const membership = await (db as any).query.member.findFirst({
-    where: and(
-      eq(member.userId, userId),
-      eq(member.organizationId, organizationId)
-    ),
-  })
-  return !!membership
 }
 
 // =============================================================================
@@ -382,32 +208,23 @@ mcpServers.get("/:id/env", async (c) => {
   const db = getDb()
   const auth = getAuthContext(c)
   const serverId = c.req.param("id")
-  const timestamp = new Date().toISOString()
 
   // Rate limiting - check BEFORE credential access
   const rateLimitKey = `${auth.userId}:${serverId}`
   const rateLimitResult = checkEnvRateLimit(rateLimitKey)
 
   // Set rate limit headers
-  c.header("X-RateLimit-Limit", String(ENV_RATE_LIMIT.maxRequests))
-  c.header("X-RateLimit-Remaining", String(rateLimitResult.remaining))
-  c.header(
-    "X-RateLimit-Reset",
-    String(Math.ceil((Date.now() + rateLimitResult.resetIn) / 1000))
-  )
+  setEnvRateLimitHeaders(c, rateLimitResult)
 
   if (!rateLimitResult.allowed) {
     // Log rate limit violation
-    logAuditEvent({
-      event: "rate_limit_violation",
+    logRateLimitViolation({
       endpoint: "env_access",
       userId: auth.userId,
       serverId,
-      timestamp,
       rateLimitKey,
     })
 
-    c.header("Retry-After", String(Math.ceil(rateLimitResult.resetIn / 1000)))
     return c.json(
       {
         error: "Rate limit exceeded",
@@ -426,12 +243,10 @@ mcpServers.get("/:id/env", async (c) => {
 
   if (!server) {
     // Log failed access attempt (server not found)
-    logAuditEvent({
-      event: "env_access",
+    logEnvAccess({
       serverId,
       userId: auth.userId,
       organizationId: "unknown",
-      timestamp,
       success: false,
       reason: "server_not_found",
     })
@@ -446,12 +261,10 @@ mcpServers.get("/:id/env", async (c) => {
   )
   if (!isMember) {
     // Log failed access attempt (unauthorized)
-    logAuditEvent({
-      event: "env_access",
+    logEnvAccess({
       serverId,
       userId: auth.userId,
       organizationId: server.organizationId,
-      timestamp,
       success: false,
       reason: "unauthorized",
     })
@@ -461,12 +274,10 @@ mcpServers.get("/:id/env", async (c) => {
   // Check if server has encrypted env vars
   if (!server.encryptedEnv) {
     // Log successful access (no env vars to return)
-    logAuditEvent({
-      event: "env_access",
+    logEnvAccess({
       serverId,
       userId: auth.userId,
       organizationId: server.organizationId,
-      timestamp,
       success: true,
       reason: "no_env_vars",
     })
@@ -476,12 +287,10 @@ mcpServers.get("/:id/env", async (c) => {
   // Verify encryption is configured
   if (!isEncryptionConfigured()) {
     // Log failed access attempt (encryption not configured)
-    logAuditEvent({
-      event: "env_access",
+    logEnvAccess({
       serverId,
       userId: auth.userId,
       organizationId: server.organizationId,
-      timestamp,
       success: false,
       reason: "encryption_not_configured",
     })
@@ -493,24 +302,20 @@ mcpServers.get("/:id/env", async (c) => {
     const env = decryptEnv(server.encryptedEnv)
 
     // Log successful access - DO NOT log actual env values!
-    logAuditEvent({
-      event: "env_access",
+    logEnvAccess({
       serverId,
       userId: auth.userId,
       organizationId: server.organizationId,
-      timestamp,
       success: true,
     })
 
     return c.json({ env })
   } catch {
     // Log failed access attempt (decryption error)
-    logAuditEvent({
-      event: "env_access",
+    logEnvAccess({
       serverId,
       userId: auth.userId,
       organizationId: server.organizationId,
-      timestamp,
       success: false,
       reason: "decryption_failed",
     })
@@ -557,7 +362,7 @@ mcpServers.post("/", zValidator("json", createServerSchema), async (c) => {
   }
 
   const timestamp = now()
-  const id = generateId()
+  const id = generateUUID()
 
   // Handle environment variable encryption
   let encryptedEnv: string | null = null
