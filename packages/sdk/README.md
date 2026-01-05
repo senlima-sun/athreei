@@ -766,7 +766,7 @@ athreei.onReady((info) => {
 // Add timeout to detect if extension is not present
 setTimeout(() => {
   console.warn("athreei extension not detected after 5 seconds")
-  console.log("Please install: https://github.com/yourorg/athreei")
+  console.log("Please install: https://athreei.com/extension")
 }, 5000)
 ```
 
@@ -873,11 +873,11 @@ See the [examples directory](../../examples/README.md) for complete working exam
 
 ## License
 
-GPL-3.0 - See [LICENSE](../../LICENSE) for details.
+GPL-3.0 - See [LICENSE](https://github.com/athreei/athreei/blob/main/LICENSE) for details.
 
 ## Links
 
-- [Documentation](https://github.com/yourorg/athreei/tree/main/docs)
-- [Website Integration Guide](../../docs/website-integration.md)
-- [GitHub Repository](https://github.com/yourorg/athreei)
-- [Report Issues](https://github.com/yourorg/athreei/issues)
+- [Documentation](https://athreei.com/docs)
+- [GitHub Repository](https://github.com/athreei/athreei)
+- [Report Issues](https://github.com/athreei/athreei/issues)
+- [NPM Package](https://www.npmjs.com/package/@athreei/sdk)

@@ -14,14 +14,16 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md"
   ],
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts --clean",
     "dev": "tsup src/index.ts --format esm,cjs --dts --watch",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "prepublishOnly": "bun run build && bun run typecheck"
   },
   "keywords": [
     "athreei",
@@ -29,8 +31,23 @@
     "browser",
     "automation",
     "mcp",
-    "sdk"
+    "model-context-protocol",
+    "sdk",
+    "extension",
+    "chrome-extension",
+    "ai-tools",
+    "website-integration"
   ],
+  "author": "athreei",
+  "homepage": "https://github.com/athreei/athreei#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/athreei/athreei.git",
+    "directory": "packages/sdk"
+  },
+  "bugs": {
+    "url": "https://github.com/athreei/athreei/issues"
+  },
   "devDependencies": {
     "@athreei/shared": "workspace:*",
     "tsup": "^8.0.0",
@@ -38,5 +55,12 @@
     "vitest": "^2.1.8"
   },
   "peerDependencies": {},
-  "license": "GPL-3.0"
+  "license": "GPL-3.0",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  }
 }
