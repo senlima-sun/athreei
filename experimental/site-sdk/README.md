@@ -1,25 +1,51 @@
-# @athreei/sdk
+# @athreei/site-sdk
 
-Official SDK for integrating websites with athreei AI browser automation.
+> ⚠️ **Experimental Project**
+>
+> This SDK is experimental and **not part of the athreei core product**. It enables websites to register custom MCP tools that AI apps can invoke, with results rendered in an iframe within the AI app's message interface.
+>
+> **Current Limitation:** This requires AI apps to support iframe rendering in messages. As of now, **no AI apps support this feature**. This SDK is published for future compatibility and experimentation.
+
+## What This SDK Does
+
+The Site SDK allows website developers to:
+
+1. **Register custom tools** - Define tools that AI can invoke on your website
+2. **Handle AI requests** - Process tool calls and return structured data
+3. **Render in iframe** - Display interactive UI within AI app messages (when supported)
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  AI App (Claude, ChatGPT, etc.)                             │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │  Message with iframe                                  │  │
+│  │  ┌─────────────────────────────────────────────────┐  │  │
+│  │  │  Your Website (embedded)                        │  │  │
+│  │  │  - Receives tool calls via aiii:* events        │  │  │
+│  │  │  - Renders results interactively                │  │  │
+│  │  └─────────────────────────────────────────────────┘  │  │
+│  └───────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+```
 
 ## Installation
 
 ### NPM
 
 ```bash
-npm install @athreei/sdk
+npm install @athreei/site-sdk
 ```
 
 ```bash
-yarn add @athreei/sdk
+yarn add @athreei/site-sdk
 ```
 
 ```bash
-pnpm add @athreei/sdk
+pnpm add @athreei/site-sdk
 ```
 
 ```bash
-bun add @athreei/sdk
+bun add @athreei/site-sdk
 ```
 
 ### CDN (unpkg)
@@ -27,7 +53,7 @@ bun add @athreei/sdk
 ```html
 <!-- ESM -->
 <script type="module">
-  import { athreei } from "https://unpkg.com/@athreei/sdk@latest/dist/index.js"
+  import { athreei } from "https://unpkg.com/@athreei/site-sdk@latest/dist/index.js"
 
   athreei.onReady((info) => {
     console.log("athreei ready:", info.version)
@@ -35,7 +61,7 @@ bun add @athreei/sdk
 </script>
 
 <!-- UMD (coming soon) -->
-<script src="https://unpkg.com/@athreei/sdk@latest/dist/index.umd.js"></script>
+<script src="https://unpkg.com/@athreei/site-sdk@latest/dist/index.umd.js"></script>
 <script>
   window.athreei.onReady((info) => {
     console.log("athreei ready:", info.version)
@@ -50,7 +76,7 @@ bun add @athreei/sdk
 The simple API uses a singleton instance that handles setup automatically:
 
 ```javascript
-import { athreei } from "@athreei/sdk"
+import { athreei } from "@athreei/site-sdk"
 
 // Wait for athreei extension to be ready
 athreei.onReady((info) => {
@@ -104,7 +130,7 @@ athreei.onRequest("add_to_cart", async ({ productId, quantity }) => {
 For more control, use the `AthreeiClient` class:
 
 ```javascript
-import { AthreeiClient } from "@athreei/sdk"
+import { AthreeiClient } from "@athreei/site-sdk"
 
 const client = new AthreeiClient({
   debug: true, // Log events to console
@@ -471,14 +497,14 @@ import type {
   AiiiPermissionEvent,
   AiiiActionBeforeEvent,
   AiiiActionAfterEvent,
-} from "@athreei/sdk"
+} from "@athreei/site-sdk"
 ```
 
 ### Type-safe Tool Registration
 
 ```typescript
-import { athreei } from "@athreei/sdk"
-import type { ToolDefinition } from "@athreei/sdk"
+import { athreei } from "@athreei/site-sdk"
+import type { ToolDefinition } from "@athreei/site-sdk"
 
 interface SearchResult {
   id: string
@@ -504,7 +530,7 @@ athreei.registerTool(searchTool)
 ### Custom Handler Types
 
 ```typescript
-import type { RequestHandler } from "@athreei/sdk"
+import type { RequestHandler } from "@athreei/site-sdk"
 
 const myHandler: RequestHandler = async (args, requestId) => {
   console.log("Request ID:", requestId)
@@ -521,7 +547,7 @@ Test your integration without the athreei extension installed.
 ### Enable Mock Mode
 
 ```javascript
-import { enableMockMode, athreei } from "@athreei/sdk"
+import { enableMockMode, athreei } from "@athreei/site-sdk"
 
 // Enable before using athreei
 enableMockMode({
@@ -559,7 +585,7 @@ import {
   setMockResponse,
   getMockResponse,
   clearMockResponses,
-} from "@athreei/sdk"
+} from "@athreei/site-sdk"
 
 // Check if mock mode is active
 if (isMockModeEnabled()) {
@@ -585,7 +611,7 @@ disableMockMode()
 ### Testing Example
 
 ```javascript
-import { enableMockMode, athreei } from "@athreei/sdk"
+import { enableMockMode, athreei } from "@athreei/site-sdk"
 
 // Enable mock mode in test environment
 if (process.env.NODE_ENV === "test") {
@@ -880,4 +906,4 @@ GPL-3.0 - See [LICENSE](https://github.com/athreei/athreei/blob/main/LICENSE) fo
 - [Documentation](https://athreei.com/docs)
 - [GitHub Repository](https://github.com/athreei/athreei)
 - [Report Issues](https://github.com/athreei/athreei/issues)
-- [NPM Package](https://www.npmjs.com/package/@athreei/sdk)
+- [NPM Package](https://www.npmjs.com/package/@athreei/site-sdk)

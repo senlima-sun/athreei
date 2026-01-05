@@ -141,8 +141,8 @@
         "vitest": "^2.1.8",
       },
     },
-    "experimental/sdk": {
-      "name": "@athreei/sdk",
+    "experimental/site-sdk": {
+      "name": "@athreei/site-sdk",
       "version": "0.1.0",
       "devDependencies": {
         "@athreei/shared": "workspace:*",
@@ -346,9 +346,9 @@
 
     "@athreei/native-host": ["@athreei/native-host@workspace:experimental/native-host"],
 
-    "@athreei/sdk": ["@athreei/sdk@workspace:experimental/sdk"],
-
     "@athreei/shared": ["@athreei/shared@workspace:packages/shared"],
+
+    "@athreei/site-sdk": ["@athreei/site-sdk@workspace:experimental/site-sdk"],
 
     "@athreei/sync-server": ["@athreei/sync-server@workspace:packages/sync-server"],
 

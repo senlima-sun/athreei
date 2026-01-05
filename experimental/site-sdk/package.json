@@ -1,7 +1,7 @@
 {
-  "name": "@athreei/sdk",
+  "name": "@athreei/site-sdk",
   "version": "0.1.0",
-  "description": "SDK for integrating websites with athreei AI browser automation",
+  "description": "SDK for websites to register custom MCP tools for AI apps with iframe rendering support",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -43,7 +43,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/athreei/athreei.git",
-    "directory": "packages/sdk"
+    "directory": "experimental/site-sdk"
   },
   "bugs": {
     "url": "https://github.com/athreei/athreei/issues"

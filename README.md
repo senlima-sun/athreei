@@ -69,16 +69,18 @@ bun run build
 
 See the [Developer Guide](docs/developer-guide.md) for detailed instructions.
 
-### For Website Owners
+### For Website Owners (Experimental)
 
-Integrate athreei into your website using the official SDK:
+> ⚠️ This feature requires AI apps to support iframe rendering in messages. Currently, no AI apps support this.
+
+Integrate athreei into your website using the Site SDK:
 
 ```bash
-npm install @athreei/sdk
+npm install @athreei/site-sdk
 ```
 
 ```javascript
-import { athreei } from "@athreei/sdk"
+import { athreei } from "@athreei/site-sdk"
 
 // Wait for athreei to be ready
 athreei.onReady((info) => {
@@ -103,7 +105,7 @@ athreei.registerTool({
 })
 ```
 
-See the [SDK Documentation](packages/sdk/README.md) for the complete API, or check out the [examples](examples/README.md) for working code.
+See the [Site SDK Documentation](experimental/site-sdk/README.md) for the complete API.
 
 ## Available Browser Tools
 
@@ -126,7 +128,7 @@ See the [SDK Documentation](packages/sdk/README.md) for the complete API, or che
 - [Installation Guide](INSTALL.md) - Complete installation instructions with troubleshooting
 - [User Guide](docs/user-guide.md) - Usage guide for end users
 - [Developer Guide](docs/developer-guide.md) - Development setup and contribution
-- [SDK Documentation](packages/sdk/README.md) - Official SDK for website integration
+- [Site SDK Documentation](experimental/site-sdk/README.md) - Experimental SDK for website integration
 - [Website Integration](docs/website-integration.md) - Integrate athreei into your website
 - [Examples](examples/README.md) - Working code examples
 - [API Reference](docs/api-reference.md) - Complete `aiii:*` events API
@@ -135,17 +137,26 @@ See the [SDK Documentation](packages/sdk/README.md) for the complete API, or che
 
 ```
 athreei/
-├── packages/
-│   ├── mcp-server/      # Local MCP server (Bun)
-│   ├── extension/       # Chrome extension (Manifest V3)
-│   ├── dashboard/       # Web dashboard (React + Vite)
-│   ├── shared/          # Shared types & utilities
-│   ├── native-host/     # Native messaging bridge binary
-│   ├── sync-server/     # E2E encrypted sync service
-│   └── sdk/             # Official SDK for website integration
+├── packages/                # Core product
+│   ├── gateway/             # Local MCP gateway (binary)
+│   ├── gateway-cloud/       # Cloud-hosted MCP gateway
+│   ├── gateway-core/        # Shared gateway logic
+│   ├── dashboard/           # Local gateway web dashboard
+│   ├── db/                  # Database layer (PostgreSQL/SQLite)
+│   ├── auth/                # Authentication (Better Auth)
+│   ├── shared/              # Shared types & utilities
+│   ├── email/               # Email templates
+│   └── sync-server/         # E2E encrypted sync service
+├── experimental/            # Experimental projects
+│   ├── browser-mcp/         # Browser automation MCP server
+│   ├── extension/           # Chrome extension
+│   ├── native-host/         # Native messaging bridge
+│   └── site-sdk/            # Website integration SDK
 ├── apps/
-│   └── web/             # Marketing/documentation site
-└── examples/            # SDK usage examples
+│   ├── api/                 # Platform API
+│   ├── platform/            # Platform web UI
+│   └── web/                 # Marketing site
+└── examples/                # SDK usage examples
 ```
 
 ## Security

@@ -3,7 +3,7 @@
  *
  * @example
  * ```typescript
- * import { athreei } from '@athreei/sdk'
+ * import { athreei } from '@athreei/site-sdk'
  *
  * athreei.onReady((info) => {
  *   console.log('athreei ready:', info.version)
