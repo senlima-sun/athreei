@@ -50,7 +50,9 @@ function createMockMcp(
     },
     sanitizedName:
       sanitizedName || name.toLowerCase().replace(/[^a-z0-9_]/g, "_"),
-    client: {} as ConnectedMcp["client"],
+    client: {
+      listTools: vi.fn().mockResolvedValue({ tools }),
+    } as unknown as ConnectedMcp["client"],
     tools,
     connectedAt: new Date(),
   }
@@ -733,6 +735,178 @@ describe("HTTP API", () => {
 
       // parseInt of invalid string returns NaN, which should be handled
       expect(res.status).toBe(200)
+    })
+  })
+
+  describe("GET /api/servers/:name/test", () => {
+    it("returns 404 for non-existent server", async () => {
+      // Set up a server so we can test for non-existent
+      const mcp = createMockMcp("filesystem", [
+        createMockTool("read_file"),
+        createMockTool("write_file"),
+      ])
+      mockState.connectedMcps.set("filesystem", mcp)
+
+      const app = createHttpApi(mockState, traceCollector)
+      const res = await app.request("/api/servers/nonexistent/test")
+
+      expect(res.status).toBe(404)
+      const data = await res.json()
+      expect(data.success).toBe(false)
+      expect(data.error).toContain("not found")
+      expect(data.availableServers).toEqual(["filesystem"])
+    })
+
+    it("returns success when server connection test passes", async () => {
+      const mcp = createMockMcp("filesystem", [
+        createMockTool("read_file"),
+        createMockTool("write_file"),
+      ])
+      mockState.connectedMcps.set("filesystem", mcp)
+
+      const app = createHttpApi(mockState, traceCollector)
+      const res = await app.request("/api/servers/filesystem/test")
+
+      expect(res.status).toBe(200)
+      const data = await res.json()
+      expect(data.success).toBe(true)
+      expect(data.server).toBe("filesystem")
+      expect(data.tools).toBe(2)
+      expect(data.durationMs).toBeGreaterThanOrEqual(0)
+    })
+
+    it("returns error when server connection test fails", async () => {
+      // Create a state with a failing MCP client
+      const failingMcp = createMockMcp("failing-server", [])
+      failingMcp.client.listTools = vi
+        .fn()
+        .mockRejectedValue(new Error("Connection lost"))
+      mockState.connectedMcps.set("failing-server", failingMcp)
+
+      const app = createHttpApi(mockState, traceCollector)
+      const res = await app.request("/api/servers/failing-server/test")
+
+      expect(res.status).toBe(500)
+      const data = await res.json()
+      expect(data.success).toBe(false)
+      expect(data.error).toBe("Connection lost")
+    })
+  })
+
+  describe("POST /api/test-config", () => {
+    it("validates stdio config correctly", async () => {
+      const app = createHttpApi(mockState, traceCollector)
+      const res = await app.request("/api/test-config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: "test-server",
+          transport: "stdio",
+          command: "npx",
+          args: ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"],
+        }),
+      })
+
+      expect(res.status).toBe(200)
+      const data = await res.json()
+      expect(data.success).toBe(true)
+      expect(data.config.name).toBe("test-server")
+      expect(data.config.transport).toBe("stdio")
+    })
+
+    it("validates sse config correctly", async () => {
+      const app = createHttpApi(mockState, traceCollector)
+      const res = await app.request("/api/test-config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: "remote-server",
+          transport: "sse",
+          url: "https://example.com/mcp/sse",
+          headers: { Authorization: "Bearer token" },
+        }),
+      })
+
+      expect(res.status).toBe(200)
+      const data = await res.json()
+      expect(data.success).toBe(true)
+      expect(data.config.hasHeaders).toBe(true)
+    })
+
+    it("returns error for missing name", async () => {
+      const app = createHttpApi(mockState, traceCollector)
+      const res = await app.request("/api/test-config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ transport: "stdio", command: "npx" }),
+      })
+
+      expect(res.status).toBe(400)
+      const data = await res.json()
+      expect(data.error).toContain("name")
+    })
+
+    it("returns error for missing command in stdio transport", async () => {
+      const app = createHttpApi(mockState, traceCollector)
+      const res = await app.request("/api/test-config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: "test", transport: "stdio" }),
+      })
+
+      expect(res.status).toBe(400)
+      const data = await res.json()
+      expect(data.error).toContain("command")
+    })
+
+    it("returns error for missing url in sse transport", async () => {
+      const app = createHttpApi(mockState, traceCollector)
+      const res = await app.request("/api/test-config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: "test", transport: "sse" }),
+      })
+
+      expect(res.status).toBe(400)
+      const data = await res.json()
+      expect(data.error).toContain("url")
+    })
+
+    it("returns error for invalid url format", async () => {
+      const app = createHttpApi(mockState, traceCollector)
+      const res = await app.request("/api/test-config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: "test", transport: "sse", url: "not-a-url" }),
+      })
+
+      expect(res.status).toBe(400)
+      const data = await res.json()
+      expect(data.error).toContain("URL")
+    })
+
+    it("returns error for unknown transport", async () => {
+      const app = createHttpApi(mockState, traceCollector)
+      const res = await app.request("/api/test-config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: "test", transport: "unknown" }),
+      })
+
+      expect(res.status).toBe(400)
+      const data = await res.json()
+      expect(data.error).toContain("Unknown transport")
+    })
+
+    it("returns error for invalid JSON", async () => {
+      const app = createHttpApi(mockState, traceCollector)
+      const res = await app.request("/api/test-config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: "not valid json",
+      })
+
+      expect(res.status).toBe(400)
     })
   })
 })
