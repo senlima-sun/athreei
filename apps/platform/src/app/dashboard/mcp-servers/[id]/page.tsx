@@ -3,79 +3,13 @@
 import { useState, useEffect, useCallback } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
-import { PageHeader } from "@/components/dashboard/page-header"
-import {
-  McpServerForm,
-  McpServerFormData,
-  McpServer,
-  McpTransportType,
-  ToolList,
-} from "@/components/mcp"
+import { PageHeader, LoadingState } from "@/components/dashboard"
+import { McpServerForm, McpServerFormData, ToolList } from "@/components/mcp"
 import { useActiveOrganization } from "@/lib/auth-client"
-import {
-  Server,
-  ArrowLeft,
-  Trash2,
-  AlertTriangle,
-  Loader2,
-  Key,
-} from "lucide-react"
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
-
-// API response type
-interface ApiMcpServer {
-  id: string
-  name: string
-  description?: string | null
-  transport: "stdio" | "sse" | "streamable-http"
-  status: "active" | "inactive" | "pending"
-  command?: string | null
-  args?: string | null
-  url?: string | null
-  envKeys?: string[]
-  createdAt: string
-  updatedAt: string
-}
-
-// Extended McpServer with envKeys for the form
-interface McpServerWithEnvKeys extends McpServer {
-  envKeys?: string[]
-}
-
-// Transform API response to frontend format
-function toFrontendFormat(server: ApiMcpServer): McpServerWithEnvKeys {
-  return {
-    id: server.id,
-    name: server.name,
-    description: server.description || undefined,
-    transportType: (server.transport === "streamable-http"
-      ? "http"
-      : server.transport) as McpTransportType,
-    status: server.status === "pending" ? "inactive" : server.status,
-    command: server.command || undefined,
-    args: server.args ? JSON.parse(server.args) : undefined,
-    url: server.url || undefined,
-    envKeys: server.envKeys,
-    createdAt: new Date(server.createdAt),
-    updatedAt: new Date(server.updatedAt),
-  }
-}
-
-// Transform frontend form data to API format
-function toApiFormat(data: McpServerFormData) {
-  return {
-    name: data.name,
-    description: data.description || undefined,
-    transport:
-      data.transportType === "http" ? "streamable-http" : data.transportType,
-    status: data.status,
-    command: data.command || undefined,
-    args: data.args?.length ? JSON.stringify(data.args) : undefined,
-    url: data.url || undefined,
-    ...(data.env ? { env: data.env } : {}),
-  }
-}
+import { Server, ArrowLeft, Trash2, AlertTriangle, Loader2, Key } from "lucide-react"
+import { API_URL } from "@/constants"
+import type { McpServer } from "@/types"
+import { toFrontendFormat, toApiFormat } from "@/utils"
 
 export default function EditMcpServerPage() {
   const params = useParams()
@@ -83,7 +17,7 @@ export default function EditMcpServerPage() {
   const serverId = params.id as string
   const { data: activeOrg, isPending: isOrgPending } = useActiveOrganization()
 
-  const [server, setServer] = useState<McpServerWithEnvKeys | null>(null)
+  const [server, setServer] = useState<McpServer | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -176,9 +110,7 @@ export default function EditMcpServerPage() {
     return (
       <div>
         <PageHeader title="Edit MCP Server" />
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-        </div>
+        <LoadingState />
       </div>
     )
   }
