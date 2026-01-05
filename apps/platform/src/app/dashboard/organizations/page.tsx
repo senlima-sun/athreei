@@ -1,7 +1,11 @@
 "use client"
 
 import Link from "next/link"
-import { PageHeader } from "@/components/dashboard/page-header"
+import {
+  PageHeader,
+  LoadingState,
+  EmptyState,
+} from "@/components/dashboard"
 import { useListOrganizations, useActiveOrganization } from "@/lib/auth-client"
 import { Building2, Plus, Users, Settings } from "lucide-react"
 
@@ -28,9 +32,7 @@ export default function OrganizationsPage() {
           title="Organizations"
           description="Manage your organizations and teams"
         />
-        <div className="flex items-center justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-gray-600" />
-        </div>
+        <LoadingState />
       </div>
     )
   }
@@ -52,23 +54,16 @@ export default function OrganizationsPage() {
       />
 
       {organizations.length === 0 ? (
-        <div className="rounded-lg border-2 border-dashed border-gray-200 p-12 text-center">
-          <Building2 className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-4 text-lg font-medium text-gray-900">
-            No organizations yet
-          </h3>
-          <p className="mt-2 text-sm text-gray-500">
-            Create your first organization to start collaborating with your
-            team.
-          </p>
-          <Link
-            href="/dashboard/organizations/new"
-            className="mt-6 inline-flex items-center gap-2 rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
-          >
-            <Plus className="h-4 w-4" />
-            Create organization
-          </Link>
-        </div>
+        <EmptyState
+          icon={Building2}
+          title="No organizations yet"
+          description="Create your first organization to start collaborating with your team."
+          action={{
+            label: "Create organization",
+            href: "/dashboard/organizations/new",
+            icon: Plus,
+          }}
+        />
       ) : (
         <div className="space-y-4">
           {organizations.map((org) => (
