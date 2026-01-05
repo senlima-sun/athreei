@@ -9,140 +9,28 @@
 
 import { Hono } from "hono"
 import { zValidator } from "@hono/zod-validator"
-import { z } from "zod"
 import { eq, and } from "drizzle-orm"
 import { authMiddleware, getAuthContext, ApiError } from "../middleware"
-import { getDb, type DatabaseClient } from "../lib/db"
-import { endpoint, namespace, namespaceResource, member } from "@athreei/db"
+import { getDb } from "../lib/db"
+import { endpoint, namespace, namespaceResource } from "@athreei/db"
+import {
+  createEndpointSchema,
+  updateEndpointSchema,
+} from "../schemas/endpoints"
+import {
+  verifyOrganizationMembership,
+  getNamespaceWithAccess,
+  generateSlug,
+  generateEndpointId,
+  generateNamespaceResourceId,
+  buildEndpointUrl,
+  buildConnectionConfig,
+} from "../services"
 
 const endpoints = new Hono()
 
 // Apply auth middleware to all endpoint routes
 endpoints.use("*", authMiddleware)
-
-// =============================================================================
-// Validation Schemas
-// =============================================================================
-
-const createEndpointSchema = z.object({
-  name: z.string().min(1, "Name is required").max(100, "Name too long"),
-  description: z.string().max(500).optional(),
-  namespaceId: z.string().min(1, "Namespace ID is required"),
-  authType: z.enum(["api_key", "bearer", "none"]).default("api_key"),
-  rateLimit: z.number().int().positive().optional(),
-})
-
-const updateEndpointSchema = z.object({
-  name: z.string().min(1).max(100).optional(),
-  description: z.string().max(500).nullable().optional(),
-  authType: z.enum(["api_key", "bearer", "none"]).optional(),
-  rateLimit: z.number().int().positive().nullable().optional(),
-  status: z.enum(["active", "inactive", "deprecated"]).optional(),
-})
-
-// =============================================================================
-// Helper Functions
-// =============================================================================
-
-/**
- * Generate a unique slug for an endpoint name
- */
-function generateSlug(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 50)
-}
-
-/**
- * Generate a unique endpoint ID
- */
-function generateId(): string {
-  return `ep_${crypto.randomUUID().replace(/-/g, "")}`
-}
-
-/**
- * Generate a unique resource mapping ID
- */
-function generateResourceId(): string {
-  return `nsr_${crypto.randomUUID().replace(/-/g, "")}`
-}
-
-/**
- * Build the public MCP URL for an endpoint
- */
-function buildEndpointUrl(slug: string): string {
-  const baseUrl = process.env.PUBLIC_URL || "https://athreei.com"
-  return `${baseUrl}/mcp/${slug}/sse`
-}
-
-/**
- * Check if user is a member of the organization
- */
-async function verifyOrganizationMembership(
-  db: DatabaseClient,
-  userId: string,
-  organizationId: string
-): Promise<boolean> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const membership = await (db as any).query.member.findFirst({
-    where: and(
-      eq(member.userId, userId),
-      eq(member.organizationId, organizationId)
-    ),
-  })
-  return !!membership
-}
-
-/**
- * Get namespace and verify organization access
- */
-async function getNamespaceWithAccess(
-  db: DatabaseClient,
-  namespaceId: string,
-  userId: string
-): Promise<typeof namespace.$inferSelect> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const ns = await (db as any).query.namespace.findFirst({
-    where: eq(namespace.id, namespaceId),
-  })
-
-  if (!ns) {
-    throw ApiError.notFound("Namespace not found")
-  }
-
-  const isMember = await verifyOrganizationMembership(
-    db,
-    userId,
-    ns.organizationId
-  )
-  if (!isMember) {
-    throw ApiError.forbidden("You do not have access to this namespace")
-  }
-
-  return ns
-}
-
-/**
- * Build connection configuration for AI apps
- */
-function buildConnectionConfig(endpointName: string, endpointUrl: string) {
-  return {
-    claudeDesktop: {
-      mcpServers: {
-        [endpointName]: {
-          url: endpointUrl,
-          transport: "sse",
-        },
-      },
-    },
-    generic: {
-      url: endpointUrl,
-      transport: "sse",
-    },
-  }
-}
 
 // =============================================================================
 // Routes
@@ -257,7 +145,7 @@ endpoints.post("/", zValidator("json", createEndpointSchema), async (c) => {
   }
 
   const now = new Date()
-  const endpointId = generateId()
+  const endpointId = generateEndpointId()
   const endpointUrl = buildEndpointUrl(slug)
 
   // Create the endpoint
@@ -279,7 +167,7 @@ endpoints.post("/", zValidator("json", createEndpointSchema), async (c) => {
   // Create namespace resource mapping
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (db as any).insert(namespaceResource).values({
-    id: generateResourceId(),
+    id: generateNamespaceResourceId(),
     namespaceId: body.namespaceId,
     resourceType: "endpoint",
     resourceId: endpointId,
