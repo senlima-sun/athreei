@@ -222,7 +222,9 @@ export function Servers() {
                         variant="secondary"
                         size="sm"
                         onClick={() =>
-                          setExpandedServer(isExpanded ? null : server.sanitizedName)
+                          setExpandedServer(
+                            isExpanded ? null : server.sanitizedName
+                          )
                         }
                       >
                         {isExpanded ? "Hide Tools" : "Show Tools"}
@@ -262,7 +264,9 @@ export function Servers() {
 
                 {isExpanded && server.tools.length > 0 && (
                   <div className="border-t bg-gray-50 p-4">
-                    <h4 className="text-sm font-medium mb-2">Available Tools</h4>
+                    <h4 className="text-sm font-medium mb-2">
+                      Available Tools
+                    </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                       {server.tools.map((tool) => (
                         <div

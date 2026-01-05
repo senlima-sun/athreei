@@ -192,11 +192,17 @@ export function createHttpApi(
       if (body.transport === "stdio") {
         if (!body.command || typeof body.command !== "string") {
           return c.json(
-            { success: false, error: "command is required for stdio transport" },
+            {
+              success: false,
+              error: "command is required for stdio transport",
+            },
             400
           )
         }
-      } else if (body.transport === "sse" || body.transport === "streamable-http") {
+      } else if (
+        body.transport === "sse" ||
+        body.transport === "streamable-http"
+      ) {
         if (!body.url || typeof body.url !== "string") {
           return c.json(
             { success: false, error: "url is required for SSE/HTTP transport" },

@@ -877,7 +877,11 @@ describe("HTTP API", () => {
       const res = await app.request("/api/test-config", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: "test", transport: "sse", url: "not-a-url" }),
+        body: JSON.stringify({
+          name: "test",
+          transport: "sse",
+          url: "not-a-url",
+        }),
       })
 
       expect(res.status).toBe(400)
