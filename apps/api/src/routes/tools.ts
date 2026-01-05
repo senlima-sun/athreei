@@ -7,52 +7,17 @@
 
 import { Hono } from "hono"
 import { zValidator } from "@hono/zod-validator"
-import { z } from "zod"
-import { eq, and } from "drizzle-orm"
+import { eq } from "drizzle-orm"
 import { authMiddleware, getAuthContext, ApiError } from "../middleware"
-import { getDb, type DatabaseClient } from "../lib/db"
-import { mcpTool, mcpServer, member } from "@athreei/db"
+import { getDb } from "../lib/db"
+import { mcpTool, mcpServer } from "@athreei/db"
+import { listToolsQuerySchema, updateToolSchema } from "../schemas/tools"
+import { verifyOrganizationMembership } from "../services"
 
 const tools = new Hono()
 
 // Apply auth middleware to all tool routes
 tools.use("*", authMiddleware)
-
-// =============================================================================
-// Validation Schemas
-// =============================================================================
-
-const listToolsQuerySchema = z.object({
-  serverId: z.string().min(1, "serverId is required"),
-})
-
-const updateToolSchema = z.object({
-  customDescription: z.string().max(2000).nullable().optional(),
-  customPrompt: z.string().max(5000).nullable().optional(),
-  isEnabled: z.boolean().optional(),
-})
-
-// =============================================================================
-// Helper Functions
-// =============================================================================
-
-/**
- * Check if user is a member of the organization
- */
-async function verifyOrganizationMembership(
-  db: DatabaseClient,
-  userId: string,
-  organizationId: string
-): Promise<boolean> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const membership = await (db as any).query.member.findFirst({
-    where: and(
-      eq(member.userId, userId),
-      eq(member.organizationId, organizationId)
-    ),
-  })
-  return !!membership
-}
 
 // =============================================================================
 // Routes

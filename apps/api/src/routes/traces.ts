@@ -11,59 +11,17 @@
 
 import { Hono } from "hono"
 import { zValidator } from "@hono/zod-validator"
-import { z } from "zod"
 import { eq, and, desc, gte, lte, like, sql } from "drizzle-orm"
-import type { PostgresJsDatabase } from "drizzle-orm/postgres-js"
 import { authMiddleware, getAuthContext, ApiError } from "../middleware"
 import { getDb } from "../lib/db"
-import { trace, member, pg } from "@athreei/db"
-
-type PgDb = PostgresJsDatabase<typeof pg>
+import { trace } from "@athreei/db"
+import { listTracesQuerySchema, traceIdParamSchema } from "../schemas/traces"
+import { verifyOrganizationMembership } from "../services"
 
 const traces = new Hono()
 
 // Apply auth middleware to all trace routes
 traces.use("*", authMiddleware)
-
-// =============================================================================
-// Validation Schemas
-// =============================================================================
-
-const listTracesQuerySchema = z.object({
-  organizationId: z.string().min(1, "organizationId is required"),
-  limit: z.coerce.number().min(1).max(100).default(50),
-  offset: z.coerce.number().min(0).default(0),
-  status: z.enum(["success", "error"]).optional(),
-  startDate: z.string().datetime().optional(),
-  endDate: z.string().datetime().optional(),
-  search: z.string().max(255).optional(),
-})
-
-const traceIdParamSchema = z.object({
-  id: z.string().min(1).max(255),
-})
-
-// =============================================================================
-// Helper Functions
-// =============================================================================
-
-/**
- * Verify user is a member of an organization
- */
-async function verifyOrganizationMembership(
-  db: PgDb,
-  userId: string,
-  organizationId: string
-): Promise<boolean> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const membership = await (db as any).query.member.findFirst({
-    where: and(
-      eq(member.userId, userId),
-      eq(member.organizationId, organizationId)
-    ),
-  })
-  return !!membership
-}
 
 /**
  * Safely parse JSON or return null
@@ -86,7 +44,7 @@ function safeJsonParse(value: string | null): unknown {
  * List traces for an organization with filtering and pagination
  */
 traces.get("/", zValidator("query", listTracesQuerySchema), async (c) => {
-  const db = getDb() as PgDb
+  const db = getDb()
   const auth = getAuthContext(c)
   const { organizationId, limit, offset, status, startDate, endDate, search } =
     c.req.valid("query")
@@ -134,7 +92,8 @@ traces.get("/", zValidator("query", listTracesQuerySchema), async (c) => {
   })
 
   // Get total count for pagination
-  const countResult = await db
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const countResult = await (db as any)
     .select({ count: sql<number>`count(*)` })
     .from(trace)
     .where(and(...conditions))
@@ -164,7 +123,7 @@ traces.get("/", zValidator("query", listTracesQuerySchema), async (c) => {
  * Get a single trace with full details
  */
 traces.get("/:id", zValidator("param", traceIdParamSchema), async (c) => {
-  const db = getDb() as PgDb
+  const db = getDb()
   const auth = getAuthContext(c)
   const { id } = c.req.valid("param")
 
