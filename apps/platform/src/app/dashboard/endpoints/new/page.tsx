@@ -4,7 +4,10 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { PageHeader } from "@/components/dashboard/page-header"
+import { useActiveOrganization } from "@/lib/auth-client"
 import { Server, Loader2 } from "lucide-react"
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
 
 interface Namespace {
   id: string
@@ -13,6 +16,7 @@ interface Namespace {
 
 export default function NewEndpointPage() {
   const router = useRouter()
+  const { data: activeOrg } = useActiveOrganization()
   const [name, setName] = useState("")
   const [slug, setSlug] = useState("")
   const [namespaceId, setNamespaceId] = useState("")
@@ -25,8 +29,16 @@ export default function NewEndpointPage() {
   // Fetch available namespaces
   useEffect(() => {
     const fetchNamespaces = async () => {
+      if (!activeOrg) {
+        setIsLoadingNamespaces(false)
+        return
+      }
+
       try {
-        const response = await fetch("/api/namespaces")
+        const response = await fetch(
+          `${API_URL}/api/namespaces?organizationId=${activeOrg.id}`,
+          { credentials: "include" }
+        )
         if (response.ok) {
           const data = await response.json()
           setNamespaces(data.namespaces || [])
@@ -39,7 +51,7 @@ export default function NewEndpointPage() {
     }
 
     fetchNamespaces()
-  }, [])
+  }, [activeOrg])
 
   // Auto-generate slug from name
   const handleNameChange = (value: string) => {
@@ -60,19 +72,29 @@ export default function NewEndpointPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+
+    if (!activeOrg) {
+      setError("Please select an organization first")
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
-      const response = await fetch("/api/endpoints", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: name.trim(),
-          slug: slug.trim() || generateSlug(name.trim()),
-          namespaceId: namespaceId || undefined,
-          status,
-        }),
-      })
+      const response = await fetch(
+        `${API_URL}/api/endpoints?organizationId=${activeOrg.id}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            name: name.trim(),
+            slug: slug.trim() || generateSlug(name.trim()),
+            namespaceId: namespaceId || undefined,
+            status,
+          }),
+        }
+      )
 
       if (!response.ok) {
         const data = await response.json()

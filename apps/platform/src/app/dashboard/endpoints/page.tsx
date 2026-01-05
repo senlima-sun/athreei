@@ -4,19 +4,31 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { PageHeader } from "@/components/dashboard/page-header"
 import { EndpointCard } from "@/components/endpoints/endpoint-card"
+import { useActiveOrganization } from "@/lib/auth-client"
 import { Server, Plus, Loader2 } from "lucide-react"
 
 import { Endpoint } from "@/components/endpoints/endpoint-card"
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
 
 export default function EndpointsPage() {
   const [endpoints, setEndpoints] = useState<Endpoint[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const { data: activeOrg } = useActiveOrganization()
 
   useEffect(() => {
     const fetchEndpoints = async () => {
+      if (!activeOrg) {
+        setIsLoading(false)
+        return
+      }
+
       try {
-        const response = await fetch("/api/endpoints")
+        const response = await fetch(
+          `${API_URL}/api/endpoints?organizationId=${activeOrg.id}`,
+          { credentials: "include" }
+        )
         if (!response.ok) {
           throw new Error("Failed to fetch endpoints")
         }
@@ -32,7 +44,7 @@ export default function EndpointsPage() {
     }
 
     fetchEndpoints()
-  }, [])
+  }, [activeOrg])
 
   if (isLoading) {
     return (
