@@ -178,7 +178,10 @@ gateway.get("/config", zValidator("query", getConfigQuerySchema), async (c) => {
   }
 
   // Build the response
-  const configVersion = generateConfigVersion(namespaceRecord.updatedAt, servers)
+  const configVersion = generateConfigVersion(
+    namespaceRecord.updatedAt,
+    servers
+  )
 
   return c.json({
     namespaceId: namespaceRecord.id,
