@@ -10,7 +10,8 @@
 import { existsSync, readFileSync, mkdirSync, writeFileSync } from "node:fs"
 import { homedir } from "node:os"
 import { join, dirname } from "node:path"
-import type { GatewayConfig, NamespaceConfig } from "./types.js"
+import type { GatewayConfig, LocalConfig, NamespaceConfig } from "./types.js"
+import type { McpServerConfig } from "@athreei/gateway-core"
 import { log } from "./logger.js"
 
 /** Default Platform URL */
@@ -87,6 +88,130 @@ export function loadConfig(configPath?: string): GatewayConfig {
 
   log.info(`Config loaded: endpoint="${gatewayConfig.endpoint}"`)
   return gatewayConfig
+}
+
+/**
+ * Load local-only configuration (servers array only, no Platform sync)
+ * Used with --local flag for offline/self-hosted usage
+ */
+export function loadLocalConfig(configPath?: string): LocalConfig {
+  const path = configPath || DEFAULT_CONFIG_PATH
+
+  log.info(`Loading local config from: ${path}`)
+
+  if (!existsSync(path)) {
+    throw new Error(
+      `Config file not found: ${path}\n` +
+        `Create one with: ${JSON.stringify(
+          {
+            servers: [
+              {
+                name: "example",
+                command: "npx",
+                args: ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"],
+              },
+            ],
+          },
+          null,
+          2
+        )}`
+    )
+  }
+
+  const content = readFileSync(path, "utf-8")
+  let config: unknown
+
+  try {
+    config = JSON.parse(content)
+  } catch {
+    throw new Error(`Invalid JSON in config file: ${path}`)
+  }
+
+  if (!config || typeof config !== "object") {
+    throw new Error(`Config must be a JSON object`)
+  }
+
+  const cfg = config as Record<string, unknown>
+
+  // Validate servers array
+  if (!Array.isArray(cfg.servers)) {
+    throw new Error(
+      `Config missing required field: servers (must be an array of MCP server configs)`
+    )
+  }
+
+  // Validate each server config
+  const servers: McpServerConfig[] = []
+  for (const [index, server] of cfg.servers.entries()) {
+    if (!server || typeof server !== "object") {
+      throw new Error(`servers[${index}] must be an object`)
+    }
+
+    const s = server as Record<string, unknown>
+
+    if (typeof s.name !== "string" || !s.name) {
+      throw new Error(`servers[${index}].name is required`)
+    }
+
+    // Determine transport type (default to stdio)
+    const transport =
+      s.transport === "sse" || s.transport === "streamable-http"
+        ? s.transport
+        : "stdio"
+
+    // Validate based on transport type
+    if (transport === "stdio") {
+      if (typeof s.command !== "string" || !s.command) {
+        throw new Error(
+          `servers[${index}].command is required for stdio transport`
+        )
+      }
+    } else {
+      // SSE or streamable-http transport
+      if (typeof s.url !== "string" || !s.url) {
+        throw new Error(
+          `servers[${index}].url is required for ${transport} transport`
+        )
+      }
+    }
+
+    // Convert args array to space-separated string (McpServerConfig uses string, not string[])
+    let argsString: string | undefined
+    if (Array.isArray(s.args)) {
+      argsString = s.args.join(" ")
+    } else if (typeof s.args === "string") {
+      argsString = s.args
+    }
+
+    // Parse headers for SSE/HTTP transport
+    let headers: Record<string, string> | undefined
+    if (
+      s.headers &&
+      typeof s.headers === "object" &&
+      !Array.isArray(s.headers)
+    ) {
+      headers = {}
+      for (const [key, value] of Object.entries(s.headers)) {
+        if (typeof value === "string") {
+          headers[key] = value
+        }
+      }
+    }
+
+    servers.push({
+      id: `local-${index}-${s.name}`,
+      name: s.name,
+      transport,
+      command: typeof s.command === "string" ? s.command : undefined,
+      args: argsString,
+      url: typeof s.url === "string" ? s.url : undefined,
+      headers,
+      status: "active",
+    })
+  }
+
+  log.info(`Local config loaded: ${servers.length} servers`)
+  return { servers }
 }
 
 /**

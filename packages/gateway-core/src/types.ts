@@ -30,6 +30,8 @@ export interface McpServerConfig {
   args?: string
   /** Server URL (for SSE/HTTP transport) */
   url?: string
+  /** HTTP headers for SSE/HTTP transport (e.g., Authorization) */
+  headers?: Record<string, string>
   /** Server version */
   version?: string
   /** Server capabilities as JSON string */

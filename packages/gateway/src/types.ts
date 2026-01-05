@@ -37,6 +37,15 @@ export interface GatewayConfig {
   syncInterval?: number
 }
 
+/**
+ * Local-only configuration (no Platform sync required)
+ * Used with --local flag
+ */
+export interface LocalConfig {
+  /** MCP servers to connect to */
+  servers: import("@athreei/gateway-core").McpServerConfig[]
+}
+
 // =============================================================================
 // Platform API Response Types
 // =============================================================================

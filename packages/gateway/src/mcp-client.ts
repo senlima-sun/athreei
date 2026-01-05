@@ -104,11 +104,38 @@ function createStdioTransport(config: McpServerConfig): StdioClientTransport {
 
 /**
  * Create an SSE transport
+ *
+ * Note: The MCP SDK's SSEClientTransport has a known bug where headers aren't
+ * sent on the initial /sse connection when using only `requestInit`. The
+ * workaround is to use `eventSourceInit` with a custom fetch that includes
+ * the headers on all requests.
  */
 function createSSETransport(config: McpServerConfig): SSEClientTransport {
   const url = new URL(config.url!)
+  const headers = config.headers
 
   log.debug(`Creating SSE transport: ${url.toString()}`)
+
+  // If headers are provided, use the workaround pattern
+  if (headers && Object.keys(headers).length > 0) {
+    log.debug(
+      `SSE transport includes ${Object.keys(headers).length} custom headers`
+    )
+
+    return new SSEClientTransport(url, {
+      eventSourceInit: {
+        fetch: (input, init) =>
+          fetch(input, {
+            ...init,
+            headers: {
+              ...init?.headers,
+              ...headers,
+            },
+          }),
+      },
+      requestInit: { headers },
+    })
+  }
 
   return new SSEClientTransport(url)
 }
