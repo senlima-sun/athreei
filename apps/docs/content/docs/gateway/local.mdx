@@ -39,7 +39,60 @@ The binary will be created in `packages/gateway/dist/`.
 
 ## Configuration
 
-Create a configuration file at `~/.athreei/config.json` with your Platform credentials:
+The gateway supports two modes:
+
+### Local Mode (No Platform Required)
+
+For self-hosted/offline usage, create `~/.athreei/config.json` with your servers:
+
+```json
+{
+  "servers": [
+    {
+      "name": "filesystem",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/dir"]
+    },
+    {
+      "name": "github",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_TOKEN": "your-token"
+      }
+    }
+  ]
+}
+```
+
+Run with the `--local` flag:
+
+```bash
+athreei-gateway --local
+```
+
+#### Remote MCP Servers (SSE Transport)
+
+You can also connect to remote MCP servers that use SSE transport:
+
+```json
+{
+  "servers": [
+    {
+      "name": "remote-mcp",
+      "transport": "sse",
+      "url": "https://example.com/mcp/sse",
+      "headers": {
+        "Authorization": "Bearer your-token"
+      }
+    }
+  ]
+}
+```
+
+### Platform Mode (Cloud Sync)
+
+For team features and observability, create `~/.athreei/config.json` with Platform credentials:
 
 ```json
 {
@@ -48,8 +101,6 @@ Create a configuration file at `~/.athreei/config.json` with your Platform crede
 }
 ```
 
-### Configuration Options
-
 | Field          | Type   | Required | Description                                   |
 | -------------- | ------ | -------- | --------------------------------------------- |
 | `apiKey`       | string | Yes      | API key from the Platform dashboard           |
@@ -57,9 +108,7 @@ Create a configuration file at `~/.athreei/config.json` with your Platform crede
 | `platformUrl`  | string | No       | Platform URL (default: `https://athreei.com`) |
 | `syncInterval` | number | No       | Config sync interval in ms (default: 300000)  |
 
-### Server Configuration
-
-MCP servers are configured via the [Platform dashboard](https://athreei.com), not in the local config file. The gateway fetches server configuration from the Platform API and automatically syncs changes every 5 minutes.
+In Platform mode, MCP servers are configured via the [Platform dashboard](https://athreei.com). The gateway syncs changes every 5 minutes.
 
 ## Usage with Claude Desktop
 
@@ -107,11 +156,38 @@ The AI assistant sees all tools as a unified set and can use them naturally.
 athreei-gateway [options]
 
 Options:
-  -c, --config <path>   Path to config file (default: ~/.athreei/config.json)
-  -d, --debug           Enable debug logging
-  -h, --help            Show help message
-  -v, --version         Show version number
+  -c, --config <path>     Path to config file (default: ~/.athreei/config.json)
+  -t, --transport <type>  Transport type: stdio (default) or sse
+  -p, --port <port>       Port for SSE transport (default: 3000)
+  --api-port <port>       Port for HTTP API (default: 3001, local/mock mode only)
+  -l, --local             Run in local mode (no Platform sync)
+  -m, --mock              Run in mock mode (for testing)
+  -d, --debug             Enable debug logging
+  -h, --help              Show help message
+  -v, --version           Show version number
 ```
+
+## Local Dashboard
+
+In local mode, the gateway exposes an HTTP API for observability. Start the dashboard to view traces:
+
+```bash
+# Terminal 1: Start gateway with local mode
+athreei-gateway --local
+
+# Terminal 2: Start dashboard
+cd packages/dashboard
+bun run dev
+```
+
+Open `http://localhost:5173/traces` to see real-time tool calls.
+
+The HTTP API (port 3001) exposes:
+- `GET /api/status` - Gateway health and statistics
+- `GET /api/traces` - List traces with pagination
+- `GET /api/traces/:id` - Get single trace details
+- `GET /api/servers` - List connected MCP servers
+- `GET /api/tools` - List aggregated tools
 
 ## Example: Aggregating Browser Tools with GitHub
 
