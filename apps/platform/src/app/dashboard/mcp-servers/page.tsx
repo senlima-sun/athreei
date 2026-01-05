@@ -3,50 +3,19 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { PageHeader } from "@/components/dashboard/page-header"
 import {
-  McpServerCardGrid,
-  McpServer,
-  McpTransportType,
-  JsonImportModal,
-} from "@/components/mcp"
+  PageHeader,
+  LoadingState,
+  ErrorState,
+  EmptyState,
+} from "@/components/dashboard"
+import { McpServerCardGrid, JsonImportModal } from "@/components/mcp"
 import { useActiveOrganization } from "@/lib/auth-client"
-import { Plus, Loader2, Server, FileJson } from "lucide-react"
+import { Plus, Server, FileJson } from "lucide-react"
 import type { ParsedMcpServer } from "@/lib/mcp-config-parser"
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"
-
-// API response types
-interface ApiMcpServer {
-  id: string
-  name: string
-  description?: string | null
-  transport: "stdio" | "sse" | "streamable-http"
-  status: "active" | "inactive" | "pending"
-  command?: string | null
-  args?: string | null
-  url?: string | null
-  createdAt: string
-  updatedAt: string
-}
-
-// Transform API response to frontend format
-function toFrontendFormat(server: ApiMcpServer): McpServer {
-  return {
-    id: server.id,
-    name: server.name,
-    description: server.description || undefined,
-    transportType: (server.transport === "streamable-http"
-      ? "http"
-      : server.transport) as McpTransportType,
-    status: server.status === "pending" ? "inactive" : server.status,
-    command: server.command || undefined,
-    args: server.args ? JSON.parse(server.args) : undefined,
-    url: server.url || undefined,
-    createdAt: new Date(server.createdAt),
-    updatedAt: new Date(server.updatedAt),
-  }
-}
+import { API_URL } from "@/constants"
+import type { McpServer } from "@/types"
+import { toFrontendFormat } from "@/utils"
 
 export default function McpServersPage() {
   const router = useRouter()
@@ -110,9 +79,7 @@ export default function McpServersPage() {
           title="My MCP Servers"
           description="Manage your custom MCP server configurations"
         />
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-        </div>
+        <LoadingState />
       </div>
     )
   }
@@ -140,16 +107,7 @@ export default function McpServersPage() {
           title="My MCP Servers"
           description="Manage your custom MCP server configurations"
         />
-        <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
-          <p className="text-sm text-red-600">{error}</p>
-          <button
-            type="button"
-            onClick={() => window.location.reload()}
-            className="mt-4 text-sm font-medium text-red-700 hover:underline"
-          >
-            Try again
-          </button>
-        </div>
+        <ErrorState message={error} onRetry={() => window.location.reload()} />
       </div>
     )
   }
@@ -181,22 +139,16 @@ export default function McpServersPage() {
       />
 
       {servers.length === 0 ? (
-        <div className="rounded-lg border-2 border-dashed border-gray-200 p-12 text-center">
-          <Server className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-4 text-lg font-medium text-gray-900">
-            No MCP servers yet
-          </h3>
-          <p className="mt-2 text-sm text-gray-500">
-            Create your first MCP server to connect AI apps to your tools.
-          </p>
-          <Link
-            href="/dashboard/mcp-servers/new"
-            className="mt-6 inline-flex items-center gap-2 rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
-          >
-            <Plus className="h-4 w-4" />
-            Create MCP server
-          </Link>
-        </div>
+        <EmptyState
+          icon={Server}
+          title="No MCP servers yet"
+          description="Create your first MCP server to connect AI apps to your tools."
+          action={{
+            label: "Create MCP server",
+            href: "/dashboard/mcp-servers/new",
+            icon: Plus,
+          }}
+        />
       ) : (
         <McpServerCardGrid
           servers={servers}
