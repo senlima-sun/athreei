@@ -3,19 +3,12 @@
 import { useState, useEffect, useCallback } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
-import { PageHeader } from "@/components/dashboard/page-header"
+import { PageHeader, LoadingState, ErrorState } from "@/components/dashboard"
 import { ConnectionConfig } from "@/components/endpoints/connection-config"
 import { ApiKeyList, ApiKey } from "@/components/endpoints/api-key-list"
 import { CreateApiKeyModal } from "@/components/endpoints/create-api-key-modal"
 import { ApiKeyCreatedModal } from "@/components/endpoints/api-key-created-modal"
-import {
-  Server,
-  Plus,
-  Loader2,
-  Trash2,
-  AlertTriangle,
-  ArrowLeft,
-} from "lucide-react"
+import { Plus, Loader2, Trash2, AlertTriangle, ArrowLeft } from "lucide-react"
 
 interface Endpoint {
   id: string
@@ -143,9 +136,7 @@ export default function EndpointDetailPage() {
     return (
       <div>
         <PageHeader title="Endpoint Details" />
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-        </div>
+        <LoadingState />
       </div>
     )
   }
@@ -154,18 +145,22 @@ export default function EndpointDetailPage() {
     return (
       <div>
         <PageHeader title="Endpoint not found" />
-        <div className="rounded-lg border border-gray-200 bg-white p-8 text-center">
-          <p className="text-gray-500">
-            {error ||
-              "This endpoint doesn't exist or you don't have access to it."}
-          </p>
-          <Link
-            href="/dashboard/endpoints"
-            className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-gray-900 hover:underline"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to endpoints
-          </Link>
+        <div className="space-y-4">
+          <ErrorState
+            message={
+              error ||
+              "This endpoint doesn't exist or you don't have access to it."
+            }
+          />
+          <div className="text-center">
+            <Link
+              href="/dashboard/endpoints"
+              className="inline-flex items-center gap-2 text-sm font-medium text-gray-900 hover:underline"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to endpoints
+            </Link>
+          </div>
         </div>
       </div>
     )
