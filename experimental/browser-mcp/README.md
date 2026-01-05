@@ -1,4 +1,8 @@
-# @athreei/mcp-server
+# @athreei/browser-mcp
+
+> ⚠️ **Experimental Project**
+>
+> This is an experimental project for testing browser automation via MCP. It is **not part of the athreei core product vision**. The core athreei product is the MCP Gateway that aggregates multiple MCP servers - this browser MCP is just one example integration for experimentation.
 
 Local MCP server for browser automation that connects AI apps to your browser via the Model Context Protocol (MCP).
 

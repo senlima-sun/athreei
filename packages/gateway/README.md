@@ -213,4 +213,4 @@ interface McpServerConfig {
 
 - `@athreei/gateway-core` - Shared gateway logic
 - `@athreei/gateway-cloud` - Cloud-hosted gateway
-- `@athreei/mcp-server` - Browser MCP server
+- `@athreei/browser-mcp` - Browser MCP server (experimental)

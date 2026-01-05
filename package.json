@@ -5,7 +5,8 @@
   "description": "Privacy-focused platform connecting AI apps to browsers via MCP",
   "workspaces": [
     "packages/*",
-    "apps/*"
+    "apps/*",
+    "experimental/*"
   ],
   "scripts": {
     "dev": "bun run --filter '*' dev",
@@ -13,7 +14,7 @@
     "build": "bun run --filter '*' build",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:sqlite": "bun test packages/mcp-server/src/db",
+    "test:sqlite": "bun test experimental/browser-mcp/src/db",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "format": "prettier --write .",

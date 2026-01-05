@@ -26,7 +26,7 @@ export const openSourceMcpServers: McpServerInsert[] = [
       "Privacy-focused browser automation via Chrome extension. Control browser tabs, navigate pages, click elements, type text, take screenshots, and execute scripts - all with full audit logging and permission controls.",
     transport: "STDIO",
     command: "npx",
-    args: JSON.stringify(["-y", "@athreei/mcp-server"]),
+    args: JSON.stringify(["-y", "@athreei/browser-mcp"]),
     status: "active",
     version: "0.1.0",
     capabilities: JSON.stringify([

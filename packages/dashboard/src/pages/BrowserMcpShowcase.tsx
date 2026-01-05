@@ -167,7 +167,7 @@ const setupSteps = [
   "mcpServers": {
     "athreei-browser": {
       "command": "npx",
-      "args": ["-y", "@athreei/mcp-server"]
+      "args": ["-y", "@athreei/browser-mcp"]
     }
   }
 }`,
@@ -389,7 +389,7 @@ export function BrowserMcpShowcase() {
               <Arrow />
               <ArchitectureBox
                 label="MCP Server"
-                sublabel="@athreei/mcp-server"
+                sublabel="@athreei/browser-mcp"
               />
               <Arrow />
               <ArchitectureBox
@@ -432,7 +432,7 @@ export function BrowserMcpShowcase() {
               <Button
                 variant="primary"
                 onClick={() =>
-                  copyToClipboard("npx -y @athreei/mcp-server", "quick-install")
+                  copyToClipboard("npx -y @athreei/browser-mcp", "quick-install")
                 }
               >
                 {copiedCode === "quick-install"

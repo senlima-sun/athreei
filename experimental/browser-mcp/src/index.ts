@@ -1,5 +1,5 @@
 /**
- * @athreei/mcp-server - Entry Point
+ * @athreei/browser-mcp - Entry Point
  *
  * Local MCP server for browser automation that connects AI apps to your browser.
  * Supports stdio transport (for Claude Desktop) and SSE transport (for web-based AI apps).
