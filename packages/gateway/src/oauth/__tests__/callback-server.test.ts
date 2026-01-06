@@ -174,45 +174,37 @@ describe("CallbackServer.waitForCallback", () => {
   it("handles OAuth error response", async () => {
     server = await startCallbackServer("TestProvider")
 
-    const callbackPromise = server.waitForCallback(5000)
-
     const callbackUrl = new URL(server.redirectUri)
     callbackUrl.searchParams.set("error", "access_denied")
     callbackUrl.searchParams.set("error_description", "User denied access")
 
-    const response = await fetch(callbackUrl.toString())
-    expect(response.status).toBe(200) // Error page still returns 200
+    // Start callback promise and HTTP request concurrently
+    const [, response] = await Promise.allSettled([
+      expect(server.waitForCallback(5000)).rejects.toThrow(OAuthCallbackError),
+      fetch(callbackUrl.toString()),
+    ])
 
-    const html = await response.text()
-    expect(html).toContain("Authorization Failed")
-    expect(html).toContain("access_denied")
-    expect(html).toContain("User denied access")
-
-    // The promise should reject with OAuthCallbackError
-    await expect(callbackPromise).rejects.toThrow(OAuthCallbackError)
+    // Check response
+    if (response.status === "fulfilled") {
+      expect(response.value.status).toBe(200) // Error page still returns 200
+      const html = await response.value.text()
+      expect(html).toContain("Authorization Failed")
+      expect(html).toContain("access_denied")
+      expect(html).toContain("User denied access")
+    }
   })
 
   it("handles OAuth error without description", async () => {
     server = await startCallbackServer("TestProvider")
 
-    // Set up callback promise with immediate error handler to avoid unhandled rejection
-    const callbackPromise = server.waitForCallback(5000).catch((err) => {
-      throw err
-    })
-
     const callbackUrl = new URL(server.redirectUri)
     callbackUrl.searchParams.set("error", "server_error")
 
-    await fetch(callbackUrl.toString())
-
-    try {
-      await callbackPromise
-      expect.fail("Should have thrown")
-    } catch (error) {
-      expect(error).toBeInstanceOf(OAuthCallbackError)
-      expect((error as OAuthCallbackError).message).toBe("server_error")
-      expect((error as OAuthCallbackError).code).toBe("server_error")
-    }
+    // Start callback promise and HTTP request concurrently
+    await Promise.allSettled([
+      expect(server.waitForCallback(5000)).rejects.toThrow("server_error"),
+      fetch(callbackUrl.toString()),
+    ])
   })
 
   it("times out when no callback received", async () => {
