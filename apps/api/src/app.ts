@@ -19,6 +19,7 @@ import {
   tracesRoutes,
   toolsRoutes,
   registryRoutes,
+  oauthRoutes,
 } from "./routes"
 import { errorHandler, notFoundHandler } from "./middleware"
 import { getAuth } from "./lib/auth"
@@ -99,6 +100,9 @@ app.route("/api/traces", tracesRoutes)
 
 // Tools routes (protected)
 app.route("/api/tools", toolsRoutes)
+
+// OAuth routes (protected + public callback)
+app.route("/api/oauth", oauthRoutes)
 
 // =============================================================================
 // Error Handling

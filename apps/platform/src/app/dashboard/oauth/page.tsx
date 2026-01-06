@@ -2,8 +2,12 @@
 
 import { useState, useEffect } from "react"
 import { PageHeader, LoadingState, ErrorState } from "@/components/dashboard"
-import { Plus, Loader2, Trash2, Shield } from "lucide-react"
+import { Plus, Loader2, Trash2, Shield, X } from "lucide-react"
 import { API_URL } from "@/constants/api"
+
+// =============================================================================
+// Types
+// =============================================================================
 
 interface OAuthConnection {
   provider: string
@@ -11,14 +15,53 @@ interface OAuthConnection {
   createdAt: string
 }
 
+interface OAuthProvider {
+  id: string
+  name: string
+  description: string
+  serverUrl: string
+  icon?: string
+}
+
+// =============================================================================
+// Constants
+// =============================================================================
+
+const KNOWN_PROVIDERS: OAuthProvider[] = [
+  {
+    id: "sentry",
+    name: "Sentry",
+    description: "Error tracking and performance monitoring",
+    serverUrl: "https://mcp.sentry.dev/sse",
+  },
+  {
+    id: "linear",
+    name: "Linear",
+    description: "Issue tracking and project management",
+    serverUrl: "https://mcp.linear.app/sse",
+  },
+  {
+    id: "github",
+    name: "GitHub",
+    description: "Code hosting and collaboration",
+    serverUrl: "https://api.github.com/mcp/sse",
+  },
+]
+
+// =============================================================================
+// Component
+// =============================================================================
+
 export default function OAuthPage() {
   const [connections, setConnections] = useState<OAuthConnection[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [isConnecting, setIsConnecting] = useState(false)
+  const [isConnecting, setIsConnecting] = useState<string | null>(null)
   const [isDeletingProvider, setIsDeletingProvider] = useState<string | null>(
     null
   )
+  const [showProviderModal, setShowProviderModal] = useState(false)
+  const [customServerUrl, setCustomServerUrl] = useState("")
 
   useEffect(() => {
     fetchConnections()
@@ -45,18 +88,25 @@ export default function OAuthPage() {
     }
   }
 
-  const handleConnect = async () => {
-    setIsConnecting(true)
+  const handleConnect = async (serverUrl: string, providerId?: string) => {
+    setIsConnecting(providerId || serverUrl)
     setError(null)
     try {
       const response = await fetch(`${API_URL}/api/oauth/connect`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
+        body: JSON.stringify({
+          serverUrl,
+          provider: providerId,
+        }),
       })
+
       if (!response.ok) {
-        throw new Error("Failed to initiate OAuth connection")
+        const data = await response.json().catch(() => ({}))
+        throw new Error(data.error || "Failed to initiate OAuth connection")
       }
+
       const data = await response.json()
       if (data.authUrl) {
         window.location.href = data.authUrl
@@ -68,8 +118,24 @@ export default function OAuthPage() {
           : "Failed to initiate OAuth connection"
       )
     } finally {
-      setIsConnecting(false)
+      setIsConnecting(null)
+      setShowProviderModal(false)
     }
+  }
+
+  const handleCustomConnect = () => {
+    if (!customServerUrl.trim()) {
+      setError("Please enter a valid server URL")
+      return
+    }
+    try {
+      new URL(customServerUrl)
+    } catch {
+      setError("Please enter a valid URL")
+      return
+    }
+    handleConnect(customServerUrl)
+    setCustomServerUrl("")
   }
 
   const handleDisconnect = async (serverUrl: string) => {
@@ -97,12 +163,15 @@ export default function OAuthPage() {
     }
   }
 
+  const getConnectedServerUrls = () =>
+    new Set(connections.map((c) => c.serverUrl))
+
   if (isLoading) {
     return (
       <div>
         <PageHeader
           title="OAuth Connections"
-          description="Manage your OAuth provider connections"
+          description="Connect to MCP servers that require OAuth authentication"
         />
         <LoadingState />
       </div>
@@ -114,7 +183,7 @@ export default function OAuthPage() {
       <div>
         <PageHeader
           title="OAuth Connections"
-          description="Manage your OAuth provider connections"
+          description="Connect to MCP servers that require OAuth authentication"
         />
         <ErrorState
           message={error}
@@ -127,18 +196,18 @@ export default function OAuthPage() {
     )
   }
 
+  const connectedUrls = getConnectedServerUrls()
+
   return (
     <div>
       <PageHeader
         title="OAuth Connections"
-        description="Manage your OAuth provider connections"
+        description="Connect to MCP servers that require OAuth authentication"
         actions={
           <button
-            onClick={handleConnect}
-            disabled={isConnecting}
-            className="inline-flex items-center gap-2 rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+            onClick={() => setShowProviderModal(true)}
+            className="inline-flex items-center gap-2 rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
           >
-            {isConnecting && <Loader2 className="h-4 w-4 animate-spin" />}
             <Plus className="h-4 w-4" />
             Connect Provider
           </button>
@@ -158,16 +227,15 @@ export default function OAuthPage() {
             No OAuth connections yet
           </h3>
           <p className="mt-2 text-sm text-gray-500">
-            Connect your OAuth providers to manage authentication.
+            Connect to MCP servers like Sentry, Linear, or GitHub to use them
+            through athreei.
           </p>
           <button
-            onClick={handleConnect}
-            disabled={isConnecting}
-            className="mt-6 inline-flex items-center gap-2 rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+            onClick={() => setShowProviderModal(true)}
+            className="mt-6 inline-flex items-center gap-2 rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
           >
-            {isConnecting && <Loader2 className="h-4 w-4 animate-spin" />}
-            {!isConnecting && <Plus className="h-4 w-4" />}
-            Connect OAuth Provider
+            <Plus className="h-4 w-4" />
+            Connect Provider
           </button>
         </div>
       ) : (
@@ -183,7 +251,7 @@ export default function OAuthPage() {
                     <Shield className="h-5 w-5 text-gray-600" />
                   </div>
                   <div>
-                    <h3 className="font-medium text-gray-900">
+                    <h3 className="font-medium capitalize text-gray-900">
                       {connection.provider}
                     </h3>
                     <p className="text-sm text-gray-500">
@@ -212,6 +280,102 @@ export default function OAuthPage() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Provider Selection Modal */}
+      {showProviderModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="w-full max-w-lg rounded-lg bg-white p-6 shadow-xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Connect OAuth Provider
+              </h2>
+              <button
+                onClick={() => setShowProviderModal(false)}
+                className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <p className="mb-4 text-sm text-gray-500">
+              Select a provider to connect, or enter a custom MCP server URL.
+            </p>
+
+            {/* Known Providers */}
+            <div className="space-y-2">
+              {KNOWN_PROVIDERS.map((provider) => {
+                const isConnected = connectedUrls.has(provider.serverUrl)
+                const isLoading = isConnecting === provider.id
+
+                return (
+                  <button
+                    key={provider.id}
+                    onClick={() =>
+                      !isConnected &&
+                      handleConnect(provider.serverUrl, provider.id)
+                    }
+                    disabled={isConnected || isLoading}
+                    className={`flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-colors ${
+                      isConnected
+                        ? "cursor-not-allowed border-gray-200 bg-gray-50 opacity-60"
+                        : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                    }`}
+                  >
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-100">
+                      <Shield className="h-5 w-5 text-gray-600" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-gray-900">
+                          {provider.name}
+                        </span>
+                        {isConnected && (
+                          <span className="rounded bg-green-100 px-2 py-0.5 text-xs text-green-700">
+                            Connected
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-500">
+                        {provider.description}
+                      </p>
+                    </div>
+                    {isLoading && (
+                      <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Custom Server URL */}
+            <div className="mt-4 border-t pt-4">
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Custom MCP Server URL
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  value={customServerUrl}
+                  onChange={(e) => setCustomServerUrl(e.target.value)}
+                  placeholder="https://example.com/mcp/sse"
+                  className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
+                />
+                <button
+                  onClick={handleCustomConnect}
+                  disabled={isConnecting === customServerUrl}
+                  className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isConnecting === customServerUrl ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    "Connect"
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
