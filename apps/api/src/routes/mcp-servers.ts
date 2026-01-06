@@ -23,7 +23,15 @@ import {
   createServerSchema,
   updateServerSchema,
   listQuerySchema,
+  verifyMcpServerSchema,
 } from "../schemas/mcp-servers"
+
+// MCP SDK
+import { Client } from "@modelcontextprotocol/sdk/client/index.js"
+import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js"
+
+// Rate limiting
+import { checkRateLimit } from "../middleware/rate-limit"
 
 // Services
 import {
@@ -602,5 +610,168 @@ mcpServers.get("/:id/tools", async (c) => {
     total: tools.length,
   })
 })
+
+// =============================================================================
+// Verification Constants
+// =============================================================================
+
+/** Rate limit for verify endpoint: 20 requests per minute */
+const VERIFY_RATE_LIMIT = 20
+const VERIFY_RATE_WINDOW_MS = 60_000
+
+/** Connection timeout for MCP server verification */
+const VERIFY_TIMEOUT_MS = 10_000
+
+/**
+ * POST /api/mcp-servers/verify
+ * Test MCP server connection with provided auth token
+ *
+ * Security features:
+ * - Rate limited: 20 requests per minute per user
+ * - Authentication required
+ * - 10 second timeout
+ */
+mcpServers.post(
+  "/verify",
+  zValidator("json", verifyMcpServerSchema),
+  async (c) => {
+    const auth = getAuthContext(c)
+    const { serverUrl, authToken } = c.req.valid("json")
+
+    // Rate limiting - check before making external connection
+    const rateLimitKey = `verify:${auth.userId}`
+    const rateLimitInfo = checkRateLimit(
+      rateLimitKey,
+      VERIFY_RATE_LIMIT,
+      VERIFY_RATE_WINDOW_MS
+    )
+
+    // Set rate limit headers
+    c.header("X-RateLimit-Limit", String(VERIFY_RATE_LIMIT))
+    c.header(
+      "X-RateLimit-Remaining",
+      String(Math.max(0, VERIFY_RATE_LIMIT - rateLimitInfo.current))
+    )
+    c.header(
+      "X-RateLimit-Reset",
+      String(Math.ceil((Date.now() + rateLimitInfo.resetIn) / 1000))
+    )
+
+    if (rateLimitInfo.limited) {
+      c.header("Retry-After", String(Math.ceil(rateLimitInfo.resetIn / 1000)))
+      return c.json(
+        {
+          success: false,
+          error: `Rate limit exceeded. Try again in ${Math.ceil(rateLimitInfo.resetIn / 1000)} seconds.`,
+        },
+        429
+      )
+    }
+
+    // Create MCP client and attempt connection
+    const client = new Client(
+      {
+        name: "athreei-verify",
+        version: "0.1.0",
+      },
+      {
+        capabilities: {},
+      }
+    )
+
+    let transport: SSEClientTransport | null = null
+
+    try {
+      // Create SSE transport with auth token
+      transport = new SSEClientTransport(new URL(serverUrl), {
+        requestInit: {
+          headers: {
+            Authorization: `Bearer ${authToken}`,
+          },
+        },
+      })
+
+      // Connect with timeout
+      const connectPromise = client.connect(transport)
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(
+          () => reject(new Error("Connection timeout after 10 seconds")),
+          VERIFY_TIMEOUT_MS
+        )
+      })
+
+      await Promise.race([connectPromise, timeoutPromise])
+
+      // List tools with timeout
+      const listToolsPromise = client.listTools()
+      const listToolsTimeout = new Promise<never>((_, reject) => {
+        setTimeout(
+          () => reject(new Error("Listing tools timeout after 10 seconds")),
+          VERIFY_TIMEOUT_MS
+        )
+      })
+
+      const toolsResponse = await Promise.race([
+        listToolsPromise,
+        listToolsTimeout,
+      ])
+      const tools = toolsResponse.tools || []
+
+      // Extract tool names
+      const toolNames = tools.map((tool: { name: string }) => tool.name)
+
+      // Close the connection
+      await client.close()
+
+      return c.json({
+        success: true,
+        tools: toolNames,
+        toolCount: toolNames.length,
+      })
+    } catch (error) {
+      // Ensure cleanup on error
+      try {
+        await client.close()
+      } catch {
+        // Ignore cleanup errors
+      }
+
+      const errorMessage =
+        error instanceof Error ? error.message : String(error)
+
+      // Provide user-friendly error messages
+      let friendlyError = errorMessage
+      if (errorMessage.includes("timeout")) {
+        friendlyError =
+          "Connection timeout. The server may be unreachable or slow to respond."
+      } else if (
+        errorMessage.includes("401") ||
+        errorMessage.includes("Unauthorized")
+      ) {
+        friendlyError =
+          "Authentication failed. Please check your auth token is correct."
+      } else if (
+        errorMessage.includes("403") ||
+        errorMessage.includes("Forbidden")
+      ) {
+        friendlyError =
+          "Access denied. Your auth token may not have the required permissions."
+      } else if (
+        errorMessage.includes("ECONNREFUSED") ||
+        errorMessage.includes("ENOTFOUND")
+      ) {
+        friendlyError =
+          "Could not connect to server. Please verify the URL is correct and the server is running."
+      } else if (errorMessage.includes("Invalid URL")) {
+        friendlyError = "Invalid server URL format."
+      }
+
+      return c.json({
+        success: false,
+        error: friendlyError,
+      })
+    }
+  }
+)
 
 export default mcpServers

@@ -53,6 +53,29 @@ vi.mock("../../middleware", () => ({
   },
 }))
 
+// Mock MCP SDK (used by verify endpoint)
+vi.mock("@modelcontextprotocol/sdk/client/index.js", () => ({
+  Client: vi.fn(() => ({
+    connect: vi.fn(),
+    listTools: vi.fn(),
+    close: vi.fn(),
+  })),
+}))
+
+vi.mock("@modelcontextprotocol/sdk/client/sse.js", () => ({
+  SSEClientTransport: vi.fn(),
+}))
+
+// Mock rate limiting
+vi.mock("../../middleware/rate-limit", () => ({
+  checkRateLimit: vi.fn(() => ({
+    current: 0,
+    limit: 20,
+    resetIn: 60000,
+    limited: false,
+  })),
+}))
+
 // Mock data
 const mockAuthContext = {
   userId: "user_123",

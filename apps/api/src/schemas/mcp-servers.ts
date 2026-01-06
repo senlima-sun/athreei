@@ -67,6 +67,12 @@ export const listQuerySchema = z.object({
 
 export type TransportType = (typeof transportTypes)[number]
 export type StatusType = (typeof statusTypes)[number]
+export const verifyMcpServerSchema = z.object({
+  serverUrl: z.string().url("Invalid server URL"),
+  authToken: z.string().min(1, "Auth token is required"),
+})
+
 export type CreateServerInput = z.infer<typeof createServerSchema>
 export type UpdateServerInput = z.infer<typeof updateServerSchema>
 export type ListServersQuery = z.infer<typeof listQuerySchema>
+export type VerifyMcpServerInput = z.infer<typeof verifyMcpServerSchema>
