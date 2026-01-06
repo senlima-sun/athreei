@@ -10,5 +10,8 @@ export * from "./types/aiii-events.js"
 // Re-export crypto module
 export * from "./crypto/index.js"
 
+// Re-export utility functions
+export * from "./utils/index.js"
+
 // Version info
 export const VERSION = "0.1.0"

@@ -23,7 +23,21 @@ import {
   parseWWWAuthenticate,
   categorizeOAuthError,
 } from "./refresh.js"
-import type { StoredTokenData, KeySource, OAuthFlowResult } from "./types.js"
+import {
+  deviceAuthFlow,
+  requestDeviceCode,
+  pollForToken,
+  supportsDeviceAuth,
+  DeviceAuthError,
+} from "./device-auth.js"
+import type {
+  StoredTokenData,
+  KeySource,
+  OAuthFlowResult,
+  DeviceAuthorizationResponse,
+  DeviceAuthErrorCode,
+  ExtendedOAuthMetadata,
+} from "./types.js"
 import { log } from "../logger.js"
 
 export {
@@ -35,9 +49,22 @@ export {
   isKeychainAvailable,
   parseWWWAuthenticate,
   categorizeOAuthError,
+  // Device Authorization Grant exports
+  deviceAuthFlow,
+  requestDeviceCode,
+  pollForToken,
+  supportsDeviceAuth,
+  DeviceAuthError,
 }
 
-export type { StoredTokenData, KeySource, OAuthFlowResult }
+export type {
+  StoredTokenData,
+  KeySource,
+  OAuthFlowResult,
+  DeviceAuthorizationResponse,
+  DeviceAuthErrorCode,
+  ExtendedOAuthMetadata,
+}
 
 /**
  * OAuth Manager
@@ -122,16 +149,32 @@ export class OAuthManager {
 
   /**
    * Initiate OAuth flow for a server
+   *
+   * Tries browser-based authorization first, falls back to Device Authorization
+   * Grant (RFC 8628) if browser redirect is not possible.
    */
   async initiateOAuth(
     serverUrl: string,
     options?: {
       scope?: string
       prompt?: (message: string) => Promise<void>
+      /** Force device auth flow instead of browser-based */
+      forceDeviceAuth?: boolean
+      /** Callback for device auth user prompts */
+      onDeviceAuthPrompt?: (userCode: string, verificationUri: string) => void
     }
   ): Promise<OAuthFlowResult> {
     const provider = detectProvider(serverUrl)
     log.info(`Initiating OAuth flow for ${provider}`)
+
+    // Check if device auth is forced or if we should try browser first
+    if (options?.forceDeviceAuth) {
+      return this.initiateDeviceAuth(serverUrl, {
+        scope: options.scope,
+        provider,
+        onUserPrompt: options.onDeviceAuthPrompt,
+      })
+    }
 
     // Prompt user if callback provided
     if (options?.prompt) {
@@ -174,8 +217,19 @@ export class OAuthManager {
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      log.error(`OAuth flow failed for ${provider}:`, message)
+      log.warn(`Browser OAuth flow failed for ${provider}: ${message}`)
 
+      // Try device authorization as fallback
+      if (await supportsDeviceAuth(serverUrl)) {
+        log.info(`Falling back to Device Authorization Grant for ${provider}`)
+        return this.initiateDeviceAuth(serverUrl, {
+          scope: options?.scope,
+          provider,
+          onUserPrompt: options?.onDeviceAuthPrompt,
+        })
+      }
+
+      log.error(`OAuth flow failed for ${provider}:`, message)
       return {
         status: "error",
         error: message,
@@ -183,6 +237,50 @@ export class OAuthManager {
       }
     } finally {
       oauthProvider.cleanup()
+    }
+  }
+
+  /**
+   * Initiate Device Authorization Grant flow (RFC 8628)
+   *
+   * Used when browser redirect is not possible (e.g., headless environments,
+   * Docker containers, SSH sessions).
+   */
+  async initiateDeviceAuth(
+    serverUrl: string,
+    options?: {
+      scope?: string
+      provider?: string
+      clientId?: string
+      onUserPrompt?: (userCode: string, verificationUri: string) => void
+    }
+  ): Promise<OAuthFlowResult> {
+    const provider = options?.provider ?? detectProvider(serverUrl)
+    log.info(`Initiating Device Authorization flow for ${provider}`)
+
+    try {
+      const token = await deviceAuthFlow(serverUrl, this.tokenStore, {
+        clientId: options?.clientId,
+        scope: options?.scope,
+        provider,
+        onUserPrompt: options?.onUserPrompt,
+      })
+
+      // Schedule refresh
+      this.refreshManager.scheduleRefresh(serverUrl, token)
+      return { status: "authorized", tokens: token }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      log.error(`Device authorization failed for ${provider}:`, message)
+
+      return {
+        status: "error",
+        error: message,
+        code:
+          error instanceof DeviceAuthError
+            ? error.code
+            : (error as { code?: string }).code,
+      }
     }
   }
 

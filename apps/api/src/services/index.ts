@@ -66,14 +66,19 @@ export {
   type RateLimitViolationEvent,
   type ApiKeyUsageEvent,
   type MembershipAccessEvent,
+  type OAuthEventType,
+  type OAuthAuditEvent,
   type AuditEvent,
   logAuditEvent,
   createEnvAccessEvent,
   createRateLimitViolationEvent,
   createApiKeyUsageEvent,
   createMembershipAccessEvent,
+  createOAuthEvent,
   logEnvAccess,
   logRateLimitViolation,
+  logOAuthEvent,
+  generateTokenHash,
 } from "./audit-log"
 
 // Endpoint URL building

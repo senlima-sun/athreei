@@ -74,6 +74,32 @@ export interface MembershipAccessEvent extends BaseAuditEvent {
 }
 
 /**
+ * OAuth event types for audit logging
+ */
+export type OAuthEventType =
+  | "oauth_auth_start"
+  | "oauth_auth_complete"
+  | "oauth_auth_error"
+  | "oauth_token_refresh"
+  | "oauth_token_revoke"
+  | "oauth_token_access"
+
+/**
+ * OAuth audit event
+ */
+export interface OAuthAuditEvent extends BaseAuditEvent {
+  event: OAuthEventType
+  /** OAuth provider name (e.g., sentry, github, linear) */
+  provider: string
+  /** MCP server URL */
+  serverUrl: string
+  /** Error code (for error events) */
+  errorCode?: string
+  /** SHA256 hash of token prefix for correlation (first 16 chars) */
+  tokenHash?: string
+}
+
+/**
  * Union type of all audit events
  */
 export type AuditEvent =
@@ -81,6 +107,7 @@ export type AuditEvent =
   | RateLimitViolationEvent
   | ApiKeyUsageEvent
   | MembershipAccessEvent
+  | OAuthAuditEvent
 
 /**
  * Log an audit event to stderr as structured JSON.
@@ -215,4 +242,73 @@ export function logRateLimitViolation(params: {
   serverId?: string
 }): void {
   logAuditEvent(createRateLimitViolationEvent(params))
+}
+
+/**
+ * Generate a token hash for audit correlation.
+ *
+ * Creates a SHA256 hash of the token and returns the first 16 characters.
+ * This allows correlating events without exposing actual tokens.
+ *
+ * @param token - The actual token value (will NOT be logged)
+ * @returns First 16 characters of SHA256 hash
+ */
+export async function generateTokenHash(token: string): Promise<string> {
+  const encoder = new TextEncoder()
+  const data = encoder.encode(token)
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("")
+  return hashHex.substring(0, 16)
+}
+
+/**
+ * Create an OAuth audit event.
+ *
+ * Helper to create properly typed OAuth events.
+ *
+ * @param eventType - The specific OAuth event type
+ * @param params - Event parameters
+ * @returns A complete OAuthAuditEvent
+ */
+export function createOAuthEvent(
+  eventType: OAuthEventType,
+  params: {
+    provider: string
+    serverUrl: string
+    userId: string
+    errorCode?: string
+    tokenHash?: string
+  }
+): OAuthAuditEvent {
+  return {
+    event: eventType,
+    timestamp: new Date().toISOString(),
+    userId: params.userId,
+    provider: params.provider,
+    serverUrl: params.serverUrl,
+    ...(params.errorCode && { errorCode: params.errorCode }),
+    ...(params.tokenHash && { tokenHash: params.tokenHash }),
+  }
+}
+
+/**
+ * Log an OAuth audit event with a single function call.
+ *
+ * Convenience function that combines creation and logging.
+ *
+ * @param eventType - The specific OAuth event type
+ * @param params - Event parameters
+ */
+export function logOAuthEvent(
+  eventType: OAuthEventType,
+  params: {
+    provider: string
+    serverUrl: string
+    userId: string
+    errorCode?: string
+    tokenHash?: string
+  }
+): void {
+  logAuditEvent(createOAuthEvent(eventType, params))
 }

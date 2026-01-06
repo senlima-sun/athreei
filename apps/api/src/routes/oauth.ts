@@ -15,7 +15,16 @@
 import { Hono } from "hono"
 import { zValidator } from "@hono/zod-validator"
 import { eq, and } from "drizzle-orm"
-import { authMiddleware, getAuthContext, ApiError } from "../middleware"
+import {
+  authMiddleware,
+  getAuthContext,
+  ApiError,
+  createConnectRateLimiter,
+  createCallbackRateLimiter,
+  createTokenRateLimiter,
+  createConnectionsRateLimiter,
+  withRateLimitLogging,
+} from "../middleware"
 import { getDb } from "../lib/db"
 import { oauthSession, oauthToken } from "@athreei/db"
 import {
@@ -33,9 +42,28 @@ import {
 } from "../schemas/oauth"
 
 // Services
-import { generateUUID, logAuditEvent } from "../services"
+import { generateUUID, logOAuthEvent, generateTokenHash } from "../services"
 
 const oauth = new Hono()
+
+// =============================================================================
+// Rate Limiters
+// =============================================================================
+
+const connectRateLimiter = withRateLimitLogging(
+  "connect",
+  createConnectRateLimiter()
+)
+const callbackRateLimiter = createCallbackRateLimiter()
+const tokenRateLimiter = withRateLimitLogging("token", createTokenRateLimiter())
+const connectionsRateLimiter = withRateLimitLogging(
+  "connections",
+  createConnectionsRateLimiter()
+)
+const tokenDeleteRateLimiter = withRateLimitLogging(
+  "token-delete",
+  createConnectionsRateLimiter() // Same limit as connections (30/min)
+)
 
 // =============================================================================
 // Constants
@@ -93,7 +121,16 @@ function base64UrlEncode(bytes: Uint8Array): string {
 }
 
 /**
- * OAuth metadata response from discovery
+ * OAuth protected resource metadata (RFC 9728)
+ */
+interface OAuthProtectedResourceMetadataResponse {
+  authorization_servers?: string[]
+  resource?: string
+  scopes_supported?: string[]
+}
+
+/**
+ * OAuth authorization server metadata (RFC 8414)
  */
 interface OAuthMetadataResponse {
   authorization_endpoint?: string
@@ -113,18 +150,44 @@ interface OAuthTokenResponse {
 }
 
 /**
- * Discover OAuth metadata from an MCP server
- * Follows RFC 8414 and MCP spec for OAuth discovery
+ * Discover OAuth protected resource metadata (RFC 9728)
+ * This should be tried BEFORE authorization server metadata
  */
-async function discoverOAuthMetadata(serverUrl: string): Promise<{
-  authorizationEndpoint: string
-  tokenEndpoint: string
-  registrationEndpoint?: string
-}> {
+async function discoverOAuthProtectedResourceMetadata(
+  serverUrl: string
+): Promise<OAuthProtectedResourceMetadataResponse | null> {
   const baseUrl = new URL(serverUrl)
   baseUrl.pathname = ""
 
-  // Try well-known endpoint first (RFC 8414)
+  const resourceMetadataUrl = new URL(
+    "/.well-known/oauth-protected-resource",
+    baseUrl
+  )
+
+  try {
+    const response = await fetch(resourceMetadataUrl.toString(), {
+      headers: { Accept: "application/json" },
+    })
+
+    if (response.ok) {
+      return (await response.json()) as OAuthProtectedResourceMetadataResponse
+    }
+  } catch {
+    // Protected resource metadata not available
+  }
+
+  return null
+}
+
+/**
+ * Discover OAuth authorization server metadata (RFC 8414)
+ */
+async function discoverOAuthAuthorizationServerMetadata(
+  authServerUrl: string
+): Promise<OAuthMetadataResponse | null> {
+  const baseUrl = new URL(authServerUrl)
+  baseUrl.pathname = ""
+
   const metadataUrl = new URL(
     "/.well-known/oauth-authorization-server",
     baseUrl
@@ -136,25 +199,66 @@ async function discoverOAuthMetadata(serverUrl: string): Promise<{
     })
 
     if (response.ok) {
-      const metadata = (await response.json()) as OAuthMetadataResponse
-      return {
-        authorizationEndpoint:
-          metadata.authorization_endpoint ||
-          new URL("/authorize", baseUrl).toString(),
-        tokenEndpoint:
-          metadata.token_endpoint || new URL("/token", baseUrl).toString(),
-        registrationEndpoint: metadata.registration_endpoint,
-      }
+      return (await response.json()) as OAuthMetadataResponse
     }
   } catch {
-    // Discovery failed, use fallback
+    // Authorization server metadata not available
   }
 
-  // Fallback to MCP spec defaults
+  return null
+}
+
+/**
+ * Discover OAuth metadata from an MCP server
+ * Follows RFC 9728 order:
+ * 1. Try protected resource metadata first (RFC 9728)
+ * 2. Use authorization_servers from resource metadata if available
+ * 3. Fall back to authorization server metadata discovery (RFC 8414)
+ * 4. Fall back to default MCP endpoints
+ */
+async function discoverOAuthMetadata(serverUrl: string): Promise<{
+  authorizationEndpoint: string
+  tokenEndpoint: string
+  registrationEndpoint?: string
+}> {
+  const baseUrl = new URL(serverUrl)
+  baseUrl.pathname = ""
+
+  // 1. Try protected resource metadata first (RFC 9728)
+  const resourceMetadata =
+    await discoverOAuthProtectedResourceMetadata(serverUrl)
+
+  // 2. Determine authorization server URL
+  const authServerUrl =
+    resourceMetadata?.authorization_servers?.[0] ?? baseUrl.toString()
+
+  // 3. Try authorization server metadata discovery (RFC 8414)
+  const authServerMetadata =
+    await discoverOAuthAuthorizationServerMetadata(authServerUrl)
+
+  if (authServerMetadata) {
+    const authServerBaseUrl = new URL(authServerUrl)
+    authServerBaseUrl.pathname = ""
+
+    return {
+      authorizationEndpoint:
+        authServerMetadata.authorization_endpoint ||
+        new URL("/authorize", authServerBaseUrl).toString(),
+      tokenEndpoint:
+        authServerMetadata.token_endpoint ||
+        new URL("/token", authServerBaseUrl).toString(),
+      registrationEndpoint: authServerMetadata.registration_endpoint,
+    }
+  }
+
+  // 4. Fallback to MCP spec defaults on the authorization server URL
+  const authServerBaseUrl = new URL(authServerUrl)
+  authServerBaseUrl.pathname = ""
+
   return {
-    authorizationEndpoint: new URL("/authorize", baseUrl).toString(),
-    tokenEndpoint: new URL("/token", baseUrl).toString(),
-    registrationEndpoint: new URL("/register", baseUrl).toString(),
+    authorizationEndpoint: new URL("/authorize", authServerBaseUrl).toString(),
+    tokenEndpoint: new URL("/token", authServerBaseUrl).toString(),
+    registrationEndpoint: new URL("/register", authServerBaseUrl).toString(),
   }
 }
 
@@ -186,34 +290,6 @@ async function getClientId(
   return fallbackClientId
 }
 
-/**
- * Log OAuth audit event
- */
-function logOAuthEvent(
-  eventType:
-    | "auth_start"
-    | "auth_complete"
-    | "token_refresh"
-    | "token_revoke"
-    | "auth_error",
-  params: {
-    provider: string
-    serverUrl: string
-    userId: string
-    errorCode?: string
-  }
-): void {
-  logAuditEvent({
-    event: "env_access", // Reusing env_access event type for OAuth
-    timestamp: new Date().toISOString(),
-    userId: params.userId,
-    serverId: params.serverUrl,
-    organizationId: "oauth",
-    success: eventType !== "auth_error",
-    reason: eventType + (params.errorCode ? `: ${params.errorCode}` : ""),
-  })
-}
-
 // =============================================================================
 // Routes
 // =============================================================================
@@ -228,6 +304,7 @@ function logOAuthEvent(
 oauth.post(
   "/connect",
   authMiddleware,
+  connectRateLimiter,
   zValidator("json", connectOAuthSchema),
   async (c) => {
     const db = getDb()
@@ -286,7 +363,7 @@ oauth.post(
     authUrl.searchParams.set("state", state)
 
     // Log the OAuth start event
-    logOAuthEvent("auth_start", {
+    logOAuthEvent("oauth_auth_start", {
       provider: provider || detectProvider(serverUrl),
       serverUrl,
       userId: auth.userId,
@@ -306,7 +383,7 @@ oauth.post(
  * Validates the state, exchanges the code for tokens, and stores them encrypted.
  * Redirects to the dashboard with success/error status.
  */
-oauth.get("/callback", async (c) => {
+oauth.get("/callback", callbackRateLimiter, async (c) => {
   const db = getDb()
   const code = c.req.query("code")
   const state = c.req.query("state")
@@ -376,7 +453,7 @@ oauth.get("/callback", async (c) => {
       const errorBody = await tokenResponse.text()
       console.error("Token exchange failed:", tokenResponse.status, errorBody)
 
-      logOAuthEvent("auth_error", {
+      logOAuthEvent("oauth_auth_error", {
         provider: session.provider,
         serverUrl: session.serverUrl,
         userId: session.userId,
@@ -448,11 +525,15 @@ oauth.get("/callback", async (c) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (db as any).delete(oauthSession).where(eq(oauthSession.id, state))
 
+    // Generate token hash for audit correlation
+    const tokenHash = await generateTokenHash(tokens.access_token)
+
     // Log success
-    logOAuthEvent("auth_complete", {
+    logOAuthEvent("oauth_auth_complete", {
       provider: session.provider,
       serverUrl: session.serverUrl,
       userId: session.userId,
+      tokenHash,
     })
 
     return c.redirect(
@@ -461,7 +542,7 @@ oauth.get("/callback", async (c) => {
   } catch (err) {
     console.error("OAuth callback error:", err)
 
-    logOAuthEvent("auth_error", {
+    logOAuthEvent("oauth_auth_error", {
       provider: session.provider,
       serverUrl: session.serverUrl,
       userId: session.userId,
@@ -486,6 +567,7 @@ oauth.get("/callback", async (c) => {
 oauth.post(
   "/token",
   authMiddleware,
+  tokenRateLimiter,
   zValidator("json", getTokenSchema),
   async (c) => {
     const db = getDb()
@@ -516,6 +598,19 @@ oauth.post(
       try {
         const refreshedToken = await refreshToken(db, token, auth.userId)
         if (refreshedToken) {
+          // Generate token hash for audit correlation
+          const refreshedTokenHash = await generateTokenHash(
+            refreshedToken.accessToken
+          )
+
+          // Log token access event for refreshed token
+          logOAuthEvent("oauth_token_access", {
+            provider: token.provider,
+            serverUrl,
+            userId: auth.userId,
+            tokenHash: refreshedTokenHash,
+          })
+
           return c.json({
             accessToken: refreshedToken.accessToken,
             expiresAt: refreshedToken.expiresAt?.toISOString(),
@@ -531,6 +626,17 @@ oauth.post(
     // Decrypt and return current token
     const decryptedData = decryptEnv(token.encryptedAccessToken)
     const accessToken = decryptedData.token
+
+    // Generate token hash for audit correlation
+    const tokenHash = await generateTokenHash(accessToken)
+
+    // Log token access event
+    logOAuthEvent("oauth_token_access", {
+      provider: token.provider,
+      serverUrl,
+      userId: auth.userId,
+      tokenHash,
+    })
 
     return c.json({
       accessToken,
@@ -610,11 +716,15 @@ async function refreshToken(
     })
     .where(eq(oauthToken.id, token.id))
 
+  // Generate token hash for audit correlation
+  const tokenHash = await generateTokenHash(tokens.access_token)
+
   // Log refresh event
-  logOAuthEvent("token_refresh", {
+  logOAuthEvent("oauth_token_refresh", {
     provider: token.provider,
     serverUrl: token.serverUrl,
     userId,
+    tokenHash,
   })
 
   return {
@@ -630,6 +740,7 @@ async function refreshToken(
 oauth.delete(
   "/token",
   authMiddleware,
+  tokenDeleteRateLimiter,
   zValidator("query", deleteTokenQuerySchema),
   async (c) => {
     const db = getDb()
@@ -654,7 +765,7 @@ oauth.delete(
     await (db as any).delete(oauthToken).where(eq(oauthToken.id, token.id))
 
     // Log revocation
-    logOAuthEvent("token_revoke", {
+    logOAuthEvent("oauth_token_revoke", {
       provider: token.provider,
       serverUrl: token.serverUrl,
       userId: auth.userId,
@@ -670,7 +781,7 @@ oauth.delete(
  *
  * Returns connection metadata without actual tokens.
  */
-oauth.get("/connections", authMiddleware, async (c) => {
+oauth.get("/connections", authMiddleware, connectionsRateLimiter, async (c) => {
   const db = getDb()
   const auth = getAuthContext(c)
 

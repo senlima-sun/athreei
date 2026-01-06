@@ -58,11 +58,22 @@ vi.mock("../../middleware", () => ({
       return error
     },
   },
+  // Rate limiter mocks
+  createConnectRateLimiter: vi.fn(() => vi.fn((_c, next) => next())),
+  createCallbackRateLimiter: vi.fn(() => vi.fn((_c, next) => next())),
+  createTokenRateLimiter: vi.fn(() => vi.fn((_c, next) => next())),
+  createConnectionsRateLimiter: vi.fn(() => vi.fn((_c, next) => next())),
+  withRateLimitLogging: vi.fn(
+    (_name, rateLimiter) => rateLimiter || vi.fn((_c, next) => next())
+  ),
 }))
 
 vi.mock("../../services", () => ({
   generateUUID: vi.fn(() => "uuid-123"),
-  logAuditEvent: vi.fn(),
+  logOAuthEvent: vi.fn(),
+  generateTokenHash: vi.fn((token: string) =>
+    Promise.resolve(token.substring(0, 16))
+  ),
 }))
 
 // Mock fetch globally
@@ -118,7 +129,7 @@ const mockOAuthSession = {
   userId: "user_123",
   provider: "github",
   serverUrl: "https://github.com/oauth",
-  encryptedCodeVerifier: "encrypted_{\"codeVerifier\":\"test_verifier_123\"}",
+  encryptedCodeVerifier: 'encrypted_{"codeVerifier":"test_verifier_123"}',
   redirectUri: "http://localhost:3001/api/oauth/callback",
   createdAt: new Date(),
   expiresAt: new Date(Date.now() + 5 * 60 * 1000),
@@ -290,7 +301,9 @@ describe("OAuth Routes", () => {
       app.route("/api/oauth", oauth)
 
       // Mock fetch to fail metadata discovery
-      global.fetch = vi.fn(() => Promise.reject(new Error("Network error"))) as any
+      global.fetch = vi.fn(() =>
+        Promise.reject(new Error("Network error"))
+      ) as any
 
       const response = await app.request("/api/oauth/connect", {
         method: "POST",
@@ -645,7 +658,7 @@ describe("OAuth Routes", () => {
       // Token with proper mock data
       const tokenForTest = {
         ...mockOAuthToken,
-        encryptedAccessToken: "encrypted_{\"token\":\"gho_test\"}",
+        encryptedAccessToken: 'encrypted_{"token":"gho_test"}',
       }
       mockDb.query.oauthToken.findFirst.mockResolvedValue(tokenForTest)
 
@@ -671,7 +684,7 @@ describe("OAuth Routes", () => {
       const validToken = {
         ...mockOAuthToken,
         expiresAt: new Date(Date.now() + 30 * 60 * 1000), // 30 minutes
-        encryptedAccessToken: "encrypted_{\"token\":\"gho_valid\"}",
+        encryptedAccessToken: 'encrypted_{"token":"gho_valid"}',
       }
       mockDb.query.oauthToken.findFirst.mockResolvedValue(validToken)
 
@@ -696,7 +709,7 @@ describe("OAuth Routes", () => {
       const noExpiryToken = {
         ...mockOAuthToken,
         expiresAt: null,
-        encryptedAccessToken: "encrypted_{\"token\":\"gho_noexpiry\"}",
+        encryptedAccessToken: 'encrypted_{"token":"gho_noexpiry"}',
       }
       mockDb.query.oauthToken.findFirst.mockResolvedValue(noExpiryToken)
 
@@ -784,12 +797,9 @@ describe("OAuth Routes", () => {
       const mockDelete = vi.fn(() => Promise.resolve())
       mockDb.delete.mockReturnValue({ where: mockDelete })
 
-      await app.request(
-        "/api/oauth/token?serverUrl=https://github.com/oauth",
-        {
-          method: "DELETE",
-        }
-      )
+      await app.request("/api/oauth/token?serverUrl=https://github.com/oauth", {
+        method: "DELETE",
+      })
 
       expect(mockDb.delete).toHaveBeenCalled()
       expect(mockDelete).toHaveBeenCalled()

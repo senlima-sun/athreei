@@ -148,7 +148,7 @@ async function tryCreateServer(
 
         // Only accept requests to our random callback path
         if (url.pathname !== callbackPath) {
-          res.writeHead(404)
+          res.writeHead(404, SECURITY_HEADERS)
           res.end("Not found")
           return
         }

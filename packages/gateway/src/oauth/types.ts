@@ -119,3 +119,38 @@ export type KeySource =
   | { type: "keychain" }
   | { type: "password"; password: string }
   | { type: "memory" }
+
+/**
+ * RFC 8628 Device Authorization Response
+ */
+export interface DeviceAuthorizationResponse {
+  /** Device verification code */
+  device_code: string
+  /** User verification code to display */
+  user_code: string
+  /** Verification URI for user to visit */
+  verification_uri: string
+  /** Verification URI with embedded user_code (optional) */
+  verification_uri_complete?: string
+  /** Lifetime of device_code and user_code in seconds */
+  expires_in: number
+  /** Minimum polling interval in seconds (default 5) */
+  interval?: number
+}
+
+/**
+ * Device authorization error codes per RFC 8628
+ */
+export type DeviceAuthErrorCode =
+  | "authorization_pending"
+  | "slow_down"
+  | "access_denied"
+  | "expired_token"
+
+/**
+ * Extended OAuth metadata with device authorization endpoint
+ */
+export interface ExtendedOAuthMetadata {
+  device_authorization_endpoint?: string
+  [key: string]: unknown
+}
