@@ -49,6 +49,7 @@ import {
   cleanupAllSessions,
 } from "./session.js"
 import { startHttpApiServer } from "./http-api.js"
+import { createOAuthManager, type OAuthManager } from "./oauth/index.js"
 
 // Re-export for library use
 export { TraceCollector } from "./trace-collector.js"
@@ -213,11 +214,33 @@ Config file format for Platform mode:
 async function initializeGateway(
   _gatewayConfig: GatewayConfig | null,
   namespaceConfig: NamespaceConfig,
-  state: GatewayState
+  state: GatewayState,
+  oauthManager?: OAuthManager
 ): Promise<void> {
   // Connect to all MCP servers in the namespace
   const { connected, failed } = await connectToAllServers(
-    namespaceConfig.servers
+    namespaceConfig.servers,
+    oauthManager
+      ? {
+          oauthManager,
+          promptOAuth: async (message) => {
+            // For stdio mode, print to stderr and wait for user input
+            log.info(message)
+            // Simple readline prompt for OAuth
+            const readline = await import("readline")
+            const rl = readline.createInterface({
+              input: process.stdin,
+              output: process.stderr,
+            })
+            return new Promise((resolve) => {
+              rl.question("Press Enter to continue...", () => {
+                rl.close()
+                resolve()
+              })
+            })
+          },
+        }
+      : undefined
   )
 
   // Add connected servers to state
@@ -301,7 +324,8 @@ function setupShutdownHandlers(
   traceSyncClient: TraceSyncClient | null,
   server: ReturnType<typeof createServer>,
   transport: "stdio" | "sse",
-  httpApiServer: { stop: () => void } | null = null
+  httpApiServer: { stop: () => void } | null = null,
+  oauthManager?: OAuthManager
 ): void {
   const shutdown = async (signal: string) => {
     log.info(`Received ${signal}, shutting down gracefully...`)
@@ -311,6 +335,9 @@ function setupShutdownHandlers(
       syncManager?.stopPeriodicSync()
       traceCollector.stopPeriodicFlush()
       traceSyncClient?.stopPeriodicFlush()
+
+      // Shutdown OAuth manager
+      oauthManager?.shutdown()
 
       // Stop HTTP API server if running
       httpApiServer?.stop()
@@ -506,6 +533,18 @@ async function main(): Promise<void> {
   let traceSyncClient: TraceSyncClient | null = null
   let syncManager: ConfigSyncManager | null = null
   let namespaceConfig: NamespaceConfig
+  let oauthManager: OAuthManager | undefined
+
+  // Create OAuth manager for MCP servers that require authentication
+  if (!cliArgs.mock) {
+    try {
+      oauthManager = await createOAuthManager()
+      log.info("OAuth manager initialized")
+    } catch (error) {
+      log.warn("Failed to initialize OAuth manager:", error)
+      log.warn("OAuth-enabled MCP servers may not work correctly")
+    }
+  }
 
   if (cliArgs.mock) {
     // Mock mode: use mock config (no servers, no Platform)
@@ -568,7 +607,7 @@ async function main(): Promise<void> {
 
   // Initialize gateway (connect to all MCP servers) - only for stdio mode
   if (cliArgs.transport === "stdio") {
-    await initializeGateway(gatewayConfig, namespaceConfig, state)
+    await initializeGateway(gatewayConfig, namespaceConfig, state, oauthManager)
   }
 
   // Update trace sync client with namespace config
@@ -622,7 +661,8 @@ async function main(): Promise<void> {
     traceSyncClient,
     server,
     cliArgs.transport,
-    httpApiServer
+    httpApiServer,
+    oauthManager
   )
 
   // Start the appropriate transport

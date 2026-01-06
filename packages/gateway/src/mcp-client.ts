@@ -235,7 +235,10 @@ export async function disconnectMcpServer(mcp: ConnectedMcp): Promise<void> {
 /**
  * Connect to multiple MCP servers
  */
-export async function connectToAllServers(configs: McpServerConfig[]): Promise<{
+export async function connectToAllServers(
+  configs: McpServerConfig[],
+  options?: ConnectOptions
+): Promise<{
   connected: ConnectedMcp[]
   failed: Array<{ config: McpServerConfig; error: string }>
 }> {
@@ -252,7 +255,7 @@ export async function connectToAllServers(configs: McpServerConfig[]): Promise<{
   // Connect to each server
   for (const config of activeConfigs) {
     try {
-      const mcp = await connectToMcpServer(config)
+      const mcp = await connectToMcpServer(config, options)
       connected.push(mcp)
     } catch (error) {
       const errorMessage =
