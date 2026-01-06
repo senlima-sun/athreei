@@ -2,7 +2,10 @@
  * MCP Client Connector
  *
  * Connects to upstream MCP servers based on their transport type.
- * Supports stdio and SSE transports with OAuth authentication.
+ * Supports stdio and SSE/HTTP transports with static header authentication.
+ *
+ * For OAuth authentication, use the cloud gateway which handles
+ * OAuth flows through the platform.
  */
 
 import { Client } from "@modelcontextprotocol/sdk/client/index.js"
@@ -12,24 +15,12 @@ import type { Tool } from "@modelcontextprotocol/sdk/types.js"
 import type { McpServerConfig, ConnectedMcp } from "./types.js"
 import { sanitizeName } from "./aggregator.js"
 import { log } from "./logger.js"
-import type { OAuthManager } from "./oauth/index.js"
-
-/**
- * Options for connecting to MCP server
- */
-export interface ConnectOptions {
-  /** OAuth manager for handling authentication */
-  oauthManager?: OAuthManager
-  /** Callback to prompt user for OAuth */
-  promptOAuth?: (message: string) => Promise<void>
-}
 
 /**
  * Connect to a single MCP server
  */
 export async function connectToMcpServer(
-  config: McpServerConfig,
-  options?: ConnectOptions
+  config: McpServerConfig
 ): Promise<ConnectedMcp> {
   log.info(`Connecting to MCP server: ${config.name} (${config.transport})`)
 
@@ -56,22 +47,13 @@ export async function connectToMcpServer(
       break
 
     case "sse":
-      if (!config.url) {
-        throw new Error(
-          `MCP server "${config.name}" is SSE transport but has no URL`
-        )
-      }
-      transport = await createSSETransportWithAuth(config, options)
-      break
-
     case "streamable-http":
-      // For now, treat streamable-http same as SSE
       if (!config.url) {
         throw new Error(
-          `MCP server "${config.name}" is HTTP transport but has no URL`
+          `MCP server "${config.name}" is ${config.transport} transport but has no URL`
         )
       }
-      transport = await createSSETransportWithAuth(config, options)
+      transport = createSSETransport(config)
       break
 
     default:
@@ -131,73 +113,22 @@ function createStdioTransport(config: McpServerConfig): StdioClientTransport {
 }
 
 /**
- * Create an SSE transport with OAuth support
- *
- * Checks if server requires OAuth and initiates flow if needed.
- * Falls back to static headers if OAuth is not required.
- */
-async function createSSETransportWithAuth(
-  config: McpServerConfig,
-  options?: ConnectOptions
-): Promise<SSEClientTransport> {
-  const url = new URL(config.url!)
-  let headers = { ...config.headers }
-
-  // Try OAuth if manager is available
-  if (options?.oauthManager && config.url) {
-    // Check for existing valid token
-    const existingToken = await options.oauthManager.getAccessToken(config.url)
-
-    if (existingToken) {
-      log.debug(`Using existing OAuth token for ${config.name}`)
-      headers.Authorization = `Bearer ${existingToken}`
-    } else {
-      // Check if server requires OAuth
-      const requiresOAuth = await options.oauthManager.requiresOAuth(config.url)
-
-      if (requiresOAuth) {
-        log.info(`${config.name} requires OAuth authentication`)
-
-        // Initiate OAuth flow
-        const result = await options.oauthManager.initiateOAuth(config.url, {
-          prompt: options.promptOAuth,
-        })
-
-        if (result.status === "authorized") {
-          headers.Authorization = `Bearer ${result.tokens.access_token}`
-          log.info(`OAuth authentication successful for ${config.name}`)
-        } else if (result.status === "error") {
-          throw new Error(`OAuth failed for ${config.name}: ${result.error}`)
-        }
-      }
-    }
-  }
-
-  return createSSETransport(config, headers)
-}
-
-/**
- * Create an SSE transport
+ * Create an SSE transport with optional static headers
  *
  * Note: The MCP SDK's SSEClientTransport has a known bug where headers aren't
  * sent on the initial /sse connection when using only `requestInit`. The
  * workaround is to use `eventSourceInit` with a custom fetch that includes
  * the headers on all requests.
  */
-function createSSETransport(
-  config: McpServerConfig,
-  headers?: Record<string, string>
-): SSEClientTransport {
+function createSSETransport(config: McpServerConfig): SSEClientTransport {
   const url = new URL(config.url!)
-  const allHeaders = { ...config.headers, ...headers }
+  const headers = config.headers
 
   log.debug(`Creating SSE transport: ${url.toString()}`)
 
   // If headers are provided, use the workaround pattern
-  if (allHeaders && Object.keys(allHeaders).length > 0) {
-    log.debug(
-      `SSE transport includes ${Object.keys(allHeaders).length} custom headers`
-    )
+  if (headers && Object.keys(headers).length > 0) {
+    log.debug(`SSE transport includes ${Object.keys(headers).length} headers`)
 
     return new SSEClientTransport(url, {
       eventSourceInit: {
@@ -206,11 +137,11 @@ function createSSETransport(
             ...init,
             headers: {
               ...init?.headers,
-              ...allHeaders,
+              ...headers,
             },
           }),
       },
-      requestInit: { headers: allHeaders },
+      requestInit: { headers },
     })
   }
 
@@ -235,10 +166,7 @@ export async function disconnectMcpServer(mcp: ConnectedMcp): Promise<void> {
 /**
  * Connect to multiple MCP servers
  */
-export async function connectToAllServers(
-  configs: McpServerConfig[],
-  options?: ConnectOptions
-): Promise<{
+export async function connectToAllServers(configs: McpServerConfig[]): Promise<{
   connected: ConnectedMcp[]
   failed: Array<{ config: McpServerConfig; error: string }>
 }> {
@@ -255,7 +183,7 @@ export async function connectToAllServers(
   // Connect to each server
   for (const config of activeConfigs) {
     try {
-      const mcp = await connectToMcpServer(config, options)
+      const mcp = await connectToMcpServer(config)
       connected.push(mcp)
     } catch (error) {
       const errorMessage =
@@ -275,9 +203,7 @@ export async function connectToAllServers(
 /**
  * Disconnect from all MCP servers
  */
-export async function disconnectAllServers(
-  mcps: ConnectedMcp[]
-): Promise<void> {
+export async function disconnectAllServers(mcps: ConnectedMcp[]): Promise<void> {
   log.info(`Disconnecting from ${mcps.length} MCP servers`)
 
   const disconnectPromises = mcps.map((mcp) =>

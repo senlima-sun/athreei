@@ -8,6 +8,7 @@
 
 // Re-export types
 export type {
+  OAuthConfig,
   McpServerConfig,
   ConnectedMcp,
   AggregatedTool,

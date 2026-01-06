@@ -13,6 +13,22 @@ import type { Tool } from "@modelcontextprotocol/sdk/types.js"
 // =============================================================================
 
 /**
+ * OAuth configuration for servers that don't support RFC 9728 discovery
+ */
+export interface OAuthConfig {
+  /** OAuth authorization endpoint URL */
+  authorizationUrl: string
+  /** OAuth token endpoint URL */
+  tokenUrl: string
+  /** Client ID (for registered OAuth apps) */
+  clientId?: string
+  /** Scopes to request */
+  scopes?: string[]
+  /** Whether to use PKCE (default: true for public clients) */
+  usePKCE?: boolean
+}
+
+/**
  * MCP server connection configuration
  */
 export interface McpServerConfig {
@@ -40,6 +56,8 @@ export interface McpServerConfig {
   capabilities?: string
   /** Whether the server is currently active */
   status: "active" | "inactive" | "pending"
+  /** OAuth configuration for servers requiring authentication */
+  oauth?: OAuthConfig
 }
 
 // =============================================================================

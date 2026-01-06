@@ -7,6 +7,7 @@
 
 // Re-export core types
 export type {
+  OAuthConfig,
   McpServerConfig,
   ConnectedMcp,
   AggregatedTool,
