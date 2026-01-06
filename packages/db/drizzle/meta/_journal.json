@@ -22,6 +22,13 @@
       "when": 1767539981930,
       "tag": "0002_goofy_cassandra_nova",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1767658744847,
+      "tag": "0003_sad_carnage",
+      "breakpoints": true
     }
   ]
 }
