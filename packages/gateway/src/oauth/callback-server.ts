@@ -9,7 +9,12 @@
  * - Security headers on responses
  */
 
-import { createServer, type Server, type IncomingMessage, type ServerResponse } from "http"
+import {
+  createServer,
+  type Server,
+  type IncomingMessage,
+  type ServerResponse,
+} from "http"
 import type { AddressInfo } from "net"
 import type { CallbackResult } from "./types.js"
 import { log } from "../logger.js"
@@ -97,7 +102,9 @@ export interface CallbackServer {
 /**
  * Start a temporary callback server for OAuth
  */
-export async function startCallbackServer(provider: string = "the provider"): Promise<CallbackServer> {
+export async function startCallbackServer(
+  provider: string = "the provider"
+): Promise<CallbackServer> {
   // Generate random callback path for extra security
   const callbackPath = `/callback/${crypto.randomUUID()}`
 
@@ -111,7 +118,9 @@ export async function startCallbackServer(provider: string = "the provider"): Pr
     }
   }
 
-  throw new Error("Could not start OAuth callback server - all localhost addresses failed")
+  throw new Error(
+    "Could not start OAuth callback server - all localhost addresses failed"
+  )
 }
 
 /**
@@ -133,43 +142,49 @@ async function tryCreateServer(
       rejectCallback = rej
     })
 
-    const server: Server = createServer((req: IncomingMessage, res: ServerResponse) => {
-      const url = new URL(req.url!, `http://${host}`)
+    const server: Server = createServer(
+      (req: IncomingMessage, res: ServerResponse) => {
+        const url = new URL(req.url!, `http://${host}`)
 
-      // Only accept requests to our random callback path
-      if (url.pathname !== callbackPath) {
-        res.writeHead(404)
-        res.end("Not found")
-        return
-      }
+        // Only accept requests to our random callback path
+        if (url.pathname !== callbackPath) {
+          res.writeHead(404)
+          res.end("Not found")
+          return
+        }
 
-      const code = url.searchParams.get("code")
-      const state = url.searchParams.get("state")
-      const error = url.searchParams.get("error")
-      const errorDescription = url.searchParams.get("error_description")
+        const code = url.searchParams.get("code")
+        const state = url.searchParams.get("state")
+        const error = url.searchParams.get("error")
+        const errorDescription = url.searchParams.get("error_description")
 
-      // Handle OAuth error
-      if (error) {
+        // Handle OAuth error
+        if (error) {
+          res.writeHead(200, SECURITY_HEADERS)
+          res.end(errorHtml(error, errorDescription ?? undefined))
+          rejectCallback?.(
+            new OAuthCallbackError(error, errorDescription ?? undefined)
+          )
+          cleanup()
+          return
+        }
+
+        // Validate required parameters
+        if (!code || !state) {
+          res.writeHead(400, SECURITY_HEADERS)
+          res.end(
+            errorHtml("invalid_request", "Missing code or state parameter")
+          )
+          return
+        }
+
+        // Success!
         res.writeHead(200, SECURITY_HEADERS)
-        res.end(errorHtml(error, errorDescription ?? undefined))
-        rejectCallback?.(new OAuthCallbackError(error, errorDescription ?? undefined))
+        res.end(successHtml(provider))
+        resolveCallback?.({ code, state })
         cleanup()
-        return
       }
-
-      // Validate required parameters
-      if (!code || !state) {
-        res.writeHead(400, SECURITY_HEADERS)
-        res.end(errorHtml("invalid_request", "Missing code or state parameter"))
-        return
-      }
-
-      // Success!
-      res.writeHead(200, SECURITY_HEADERS)
-      res.end(successHtml(provider))
-      resolveCallback?.({ code, state })
-      cleanup()
-    })
+    )
 
     const cleanup = () => {
       if (resolved) return
@@ -199,7 +214,9 @@ async function tryCreateServer(
           // Set timeout
           timeoutId = setTimeout(() => {
             cleanup()
-            rejectCallback?.(new Error("OAuth callback timeout - no response received"))
+            rejectCallback?.(
+              new Error("OAuth callback timeout - no response received")
+            )
           }, timeout)
 
           return callbackPromise

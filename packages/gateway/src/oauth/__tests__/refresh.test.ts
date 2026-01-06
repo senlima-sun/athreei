@@ -7,10 +7,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 
 // Hoist mock implementations
-const { mockRefreshAuthorization, mockDiscoverOAuthMetadata } = vi.hoisted(() => ({
-  mockRefreshAuthorization: vi.fn(),
-  mockDiscoverOAuthMetadata: vi.fn(),
-}))
+const { mockRefreshAuthorization, mockDiscoverOAuthMetadata } = vi.hoisted(
+  () => ({
+    mockRefreshAuthorization: vi.fn(),
+    mockDiscoverOAuthMetadata: vi.fn(),
+  })
+)
 
 // Mock MCP SDK auth functions
 vi.mock("@modelcontextprotocol/sdk/client/auth.js", () => ({
@@ -41,7 +43,9 @@ describe("TokenRefreshManager", () => {
   const createMockTokenStore = () => {
     const tokens = new Map<string, StoredTokenData>()
     return {
-      get: vi.fn((serverUrl: string) => Promise.resolve(tokens.get(serverUrl) ?? null)),
+      get: vi.fn((serverUrl: string) =>
+        Promise.resolve(tokens.get(serverUrl) ?? null)
+      ),
       set: vi.fn((serverUrl: string, token: StoredTokenData) => {
         tokens.set(serverUrl, token)
         return Promise.resolve()
@@ -63,10 +67,14 @@ describe("TokenRefreshManager", () => {
       clear: vi.fn(),
       setKey: vi.fn(),
       _tokens: tokens, // For test access
-    } as unknown as EncryptedTokenStore & { _tokens: Map<string, StoredTokenData> }
+    } as unknown as EncryptedTokenStore & {
+      _tokens: Map<string, StoredTokenData>
+    }
   }
 
-  const createTestToken = (overrides?: Partial<StoredTokenData>): StoredTokenData => ({
+  const createTestToken = (
+    overrides?: Partial<StoredTokenData>
+  ): StoredTokenData => ({
     access_token: "test_access_token",
     token_type: "Bearer",
     refresh_token: "test_refresh_token",
@@ -239,9 +247,9 @@ describe("TokenRefreshManager", () => {
       const token = createTestToken({ refresh_token: undefined })
       mockTokenStore._tokens.set(token.serverUrl, token)
 
-      await expect(
-        manager.refreshToken(token.serverUrl)
-      ).rejects.toThrow("No refresh token available")
+      await expect(manager.refreshToken(token.serverUrl)).rejects.toThrow(
+        "No refresh token available"
+      )
     })
 
     it("throws when OAuth metadata discovery fails", async () => {
@@ -250,9 +258,9 @@ describe("TokenRefreshManager", () => {
 
       mockDiscoverOAuthMetadata.mockResolvedValue(null)
 
-      await expect(
-        manager.refreshToken(token.serverUrl)
-      ).rejects.toThrow("Could not discover OAuth metadata")
+      await expect(manager.refreshToken(token.serverUrl)).rejects.toThrow(
+        "Could not discover OAuth metadata"
+      )
     })
 
     it("schedules next refresh after successful refresh", async () => {
@@ -301,7 +309,9 @@ describe("TokenRefreshManager", () => {
       const token = createTestToken()
       mockTokenStore._tokens.set(token.serverUrl, token)
 
-      mockRefreshAuthorization.mockRejectedValueOnce(new Error("Refresh failed"))
+      mockRefreshAuthorization.mockRejectedValueOnce(
+        new Error("Refresh failed")
+      )
 
       await expect(manager.refreshToken(token.serverUrl)).rejects.toThrow()
 
@@ -338,7 +348,9 @@ describe("TokenRefreshManager", () => {
       mockTokenStore._tokens.set(token.serverUrl, token)
 
       // First: fail
-      mockRefreshAuthorization.mockRejectedValueOnce(new Error("Refresh failed"))
+      mockRefreshAuthorization.mockRejectedValueOnce(
+        new Error("Refresh failed")
+      )
       await expect(manager.refreshToken(token.serverUrl)).rejects.toThrow()
 
       // Wait out backoff
@@ -408,7 +420,9 @@ describe("TokenRefreshManager", () => {
       mockTokenStore._tokens.set(token.serverUrl, token)
 
       // Cause backoff
-      mockRefreshAuthorization.mockRejectedValueOnce(new Error("Refresh failed"))
+      mockRefreshAuthorization.mockRejectedValueOnce(
+        new Error("Refresh failed")
+      )
       await expect(manager.refreshToken(token.serverUrl)).rejects.toThrow()
 
       manager.stopAll()
@@ -463,7 +477,8 @@ describe("parseWWWAuthenticate", () => {
   })
 
   it("parses error_description from header", () => {
-    const header = 'Bearer error="invalid_token", error_description="Token expired"'
+    const header =
+      'Bearer error="invalid_token", error_description="Token expired"'
     const result = parseWWWAuthenticate(header)
 
     expect(result.error).toBe("invalid_token")
@@ -502,7 +517,9 @@ describe("categorizeOAuthError", () => {
   })
 
   it("categorizes insufficient_scope error", () => {
-    expect(categorizeOAuthError("insufficient_scope")).toBe("insufficient_scope")
+    expect(categorizeOAuthError("insufficient_scope")).toBe(
+      "insufficient_scope"
+    )
   })
 
   it("returns unknown for unrecognized errors", () => {

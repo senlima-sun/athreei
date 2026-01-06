@@ -18,7 +18,11 @@ import {
   createTokenStore,
   isKeychainAvailable,
 } from "./token-store.js"
-import { TokenRefreshManager, parseWWWAuthenticate, categorizeOAuthError } from "./refresh.js"
+import {
+  TokenRefreshManager,
+  parseWWWAuthenticate,
+  categorizeOAuthError,
+} from "./refresh.js"
 import type { StoredTokenData, KeySource, OAuthFlowResult } from "./types.js"
 import { log } from "../logger.js"
 
@@ -69,7 +73,8 @@ export class OAuthManager {
   async requiresOAuth(serverUrl: string): Promise<boolean> {
     try {
       // Try to discover OAuth metadata
-      const resourceMetadata = await discoverOAuthProtectedResourceMetadata(serverUrl)
+      const resourceMetadata =
+        await discoverOAuthProtectedResourceMetadata(serverUrl)
       if (resourceMetadata?.authorization_servers?.length) {
         return true
       }

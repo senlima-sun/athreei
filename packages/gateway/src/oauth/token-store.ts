@@ -76,7 +76,9 @@ export class EncryptedTokenStore {
   /**
    * List all stored tokens (metadata only)
    */
-  async list(): Promise<Array<{ serverUrl: string; provider: string; expiresAt?: number }>> {
+  async list(): Promise<
+    Array<{ serverUrl: string; provider: string; expiresAt?: number }>
+  > {
     const store = await this.load()
     return Object.entries(store.tokens).map(([serverUrl, token]) => ({
       serverUrl,
@@ -195,7 +197,9 @@ export async function createTokenStore(
       // Generate ephemeral key - tokens won't persist
       const key = crypto.getRandomValues(new Uint8Array(32))
       store.setKey(key)
-      log.warn("Using in-memory token storage - tokens will not persist across restarts")
+      log.warn(
+        "Using in-memory token storage - tokens will not persist across restarts"
+      )
       break
     }
   }
@@ -226,7 +230,11 @@ async function getKeychainKey(): Promise<Uint8Array | null> {
 
     // Generate new key and store
     const newKey = crypto.getRandomValues(new Uint8Array(32))
-    await keytar.setPassword(SERVICE, ACCOUNT, Buffer.from(newKey).toString("base64"))
+    await keytar.setPassword(
+      SERVICE,
+      ACCOUNT,
+      Buffer.from(newKey).toString("base64")
+    )
     log.info("Created new encryption key in OS keychain")
 
     return newKey

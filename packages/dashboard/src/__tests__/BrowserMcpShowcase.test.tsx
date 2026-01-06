@@ -231,7 +231,9 @@ describe("BrowserMcpShowcase", () => {
       fireEvent.click(installButton)
 
       await waitFor(() => {
-        expect(mockWriteText).toHaveBeenCalledWith("npx -y @athreei/browser-mcp")
+        expect(mockWriteText).toHaveBeenCalledWith(
+          "npx -y @athreei/browser-mcp"
+        )
       })
     })
   })

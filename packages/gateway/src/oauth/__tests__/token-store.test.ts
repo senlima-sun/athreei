@@ -7,26 +7,27 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 
 // Hoist mock implementations
-const { mockKeytar, mockEncrypt, mockDecrypt, mockDeriveKey, mockFs } = vi.hoisted(() => ({
-  mockKeytar: {
-    getPassword: vi.fn(),
-    setPassword: vi.fn(),
-    findCredentials: vi.fn(),
-  },
-  mockEncrypt: vi.fn(),
-  mockDecrypt: vi.fn(),
-  mockDeriveKey: vi.fn().mockResolvedValue({
-    key: new Uint8Array(32).fill(2),
-    salt: "test-salt",
-  }),
-  mockFs: {
-    readFile: vi.fn(),
-    writeFile: vi.fn(),
-    rename: vi.fn(),
-    mkdir: vi.fn(),
-    chmod: vi.fn(),
-  },
-}))
+const { mockKeytar, mockEncrypt, mockDecrypt, mockDeriveKey, mockFs } =
+  vi.hoisted(() => ({
+    mockKeytar: {
+      getPassword: vi.fn(),
+      setPassword: vi.fn(),
+      findCredentials: vi.fn(),
+    },
+    mockEncrypt: vi.fn(),
+    mockDecrypt: vi.fn(),
+    mockDeriveKey: vi.fn().mockResolvedValue({
+      key: new Uint8Array(32).fill(2),
+      salt: "test-salt",
+    }),
+    mockFs: {
+      readFile: vi.fn(),
+      writeFile: vi.fn(),
+      rename: vi.fn(),
+      mkdir: vi.fn(),
+      chmod: vi.fn(),
+    },
+  }))
 
 // Mock keytar
 vi.mock("keytar", () => mockKeytar)
@@ -177,7 +178,10 @@ describe("EncryptedTokenStore", () => {
 
     it("persists to encrypted file for non-memory key source", async () => {
       // Use password key source which should persist
-      const store = new EncryptedTokenStore({ type: "password", password: "test" }, testKey)
+      const store = new EncryptedTokenStore(
+        { type: "password", password: "test" },
+        testKey
+      )
       await store.set(testToken.serverUrl, testToken)
 
       // Verify encrypt was called
@@ -200,7 +204,9 @@ describe("EncryptedTokenStore", () => {
       const store = new EncryptedTokenStore({ type: "memory" }, testKey)
 
       // Should not throw
-      await expect(store.delete("https://nonexistent.com")).resolves.not.toThrow()
+      await expect(
+        store.delete("https://nonexistent.com")
+      ).resolves.not.toThrow()
     })
   })
 
@@ -216,8 +222,16 @@ describe("EncryptedTokenStore", () => {
     it("returns metadata for all stored tokens", async () => {
       const store = new EncryptedTokenStore({ type: "memory" }, testKey)
 
-      const token1 = { ...testToken, serverUrl: "https://api1.example.com", provider: "Provider1" }
-      const token2 = { ...testToken, serverUrl: "https://api2.example.com", provider: "Provider2" }
+      const token1 = {
+        ...testToken,
+        serverUrl: "https://api1.example.com",
+        provider: "Provider1",
+      }
+      const token2 = {
+        ...testToken,
+        serverUrl: "https://api2.example.com",
+        provider: "Provider2",
+      }
 
       await store.set(token1.serverUrl, token1)
       await store.set(token2.serverUrl, token2)
@@ -302,8 +316,14 @@ describe("EncryptedTokenStore", () => {
     it("removes all stored tokens", async () => {
       const store = new EncryptedTokenStore({ type: "memory" }, testKey)
 
-      await store.set("https://api1.example.com", { ...testToken, serverUrl: "https://api1.example.com" })
-      await store.set("https://api2.example.com", { ...testToken, serverUrl: "https://api2.example.com" })
+      await store.set("https://api1.example.com", {
+        ...testToken,
+        serverUrl: "https://api1.example.com",
+      })
+      await store.set("https://api2.example.com", {
+        ...testToken,
+        serverUrl: "https://api2.example.com",
+      })
 
       await store.clear()
 
@@ -329,7 +349,10 @@ describe("createTokenStore", () => {
   })
 
   it("creates store with password key source", async () => {
-    const store = await createTokenStore({ type: "password", password: "test-password" })
+    const store = await createTokenStore({
+      type: "password",
+      password: "test-password",
+    })
 
     expect(store).toBeInstanceOf(EncryptedTokenStore)
   })
@@ -343,7 +366,10 @@ describe("createTokenStore", () => {
     const store = await createTokenStore({ type: "keychain" })
 
     expect(store).toBeInstanceOf(EncryptedTokenStore)
-    expect(mockKeytar.getPassword).toHaveBeenCalledWith("athreei", "oauth-tokens")
+    expect(mockKeytar.getPassword).toHaveBeenCalledWith(
+      "athreei",
+      "oauth-tokens"
+    )
   })
 
   it("generates new keychain key if none exists", async () => {
@@ -357,7 +383,9 @@ describe("createTokenStore", () => {
   })
 
   it("throws when keychain access fails", async () => {
-    mockKeytar.getPassword.mockRejectedValue(new Error("Keychain access denied"))
+    mockKeytar.getPassword.mockRejectedValue(
+      new Error("Keychain access denied")
+    )
 
     await expect(createTokenStore({ type: "keychain" })).rejects.toThrow(
       "Failed to get key from keychain"

@@ -57,7 +57,8 @@ export class AthreeiOAuthProvider implements OAuthClientProvider {
    * OAuth client metadata
    */
   get clientMetadata(): OAuthClientMetadata {
-    const redirectUri = this.callbackServer?.redirectUri ?? "http://localhost:0/callback"
+    const redirectUri =
+      this.callbackServer?.redirectUri ?? "http://localhost:0/callback"
 
     // The MCP SDK uses z.url() which validates URL strings, not URL objects
     return {
@@ -209,7 +210,9 @@ export class AthreeiOAuthProvider implements OAuthClientProvider {
   /**
    * Wait for OAuth callback
    */
-  async waitForCallback(timeout?: number): Promise<{ code: string; state: string }> {
+  async waitForCallback(
+    timeout?: number
+  ): Promise<{ code: string; state: string }> {
     if (!this.callbackServer) {
       throw new Error("Callback server not started")
     }
@@ -270,7 +273,10 @@ export function detectProvider(serverUrl: string): string {
   // Extract domain name as fallback
   const parts = host.split(".")
   if (parts.length >= 2) {
-    return parts[parts.length - 2].charAt(0).toUpperCase() + parts[parts.length - 2].slice(1)
+    return (
+      parts[parts.length - 2].charAt(0).toUpperCase() +
+      parts[parts.length - 2].slice(1)
+    )
   }
 
   return "MCP Server"

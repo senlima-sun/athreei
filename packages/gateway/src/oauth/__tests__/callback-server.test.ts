@@ -43,7 +43,9 @@ describe("startCallbackServer", () => {
   it("generates random callback path in redirectUri", async () => {
     server = await startCallbackServer("TestProvider")
 
-    expect(server.redirectUri).toMatch(/^http:\/\/(localhost|127\.0\.0\.1|\[::1\]):\d+\/callback\/[\w-]+$/)
+    expect(server.redirectUri).toMatch(
+      /^http:\/\/(localhost|127\.0\.0\.1|\[::1\]):\d+\/callback\/[\w-]+$/
+    )
   })
 
   it("generates unique callback paths for each server", async () => {
@@ -112,7 +114,9 @@ describe("CallbackServer.waitForCallback", () => {
 
     expect(html).toContain("Authorization Successful")
     expect(html).toContain("Sentry")
-    expect(response.headers.get("Content-Type")).toBe("text/html; charset=utf-8")
+    expect(response.headers.get("Content-Type")).toBe(
+      "text/html; charset=utf-8"
+    )
 
     await callbackPromise
   })
@@ -130,7 +134,9 @@ describe("CallbackServer.waitForCallback", () => {
 
     expect(response.headers.get("X-Content-Type-Options")).toBe("nosniff")
     expect(response.headers.get("X-Frame-Options")).toBe("DENY")
-    expect(response.headers.get("Content-Security-Policy")).toContain("default-src 'none'")
+    expect(response.headers.get("Content-Security-Policy")).toContain(
+      "default-src 'none'"
+    )
     expect(response.headers.get("Cache-Control")).toBe("no-store, max-age=0")
 
     await callbackPromise

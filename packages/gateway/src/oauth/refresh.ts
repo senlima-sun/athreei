@@ -10,7 +10,10 @@ import {
   refreshAuthorization,
   discoverOAuthMetadata,
 } from "@modelcontextprotocol/sdk/client/auth.js"
-import type { OAuthTokens, OAuthClientInformation } from "@modelcontextprotocol/sdk/shared/auth.js"
+import type {
+  OAuthTokens,
+  OAuthClientInformation,
+} from "@modelcontextprotocol/sdk/shared/auth.js"
 import type { EncryptedTokenStore } from "./token-store.js"
 import type { StoredTokenData } from "./types.js"
 import { log } from "../logger.js"
@@ -50,7 +53,9 @@ export class TokenRefreshManager {
 
     // Can't refresh without refresh token or expiry
     if (!token.refresh_token || !token.expiresAt) {
-      log.debug(`Cannot schedule refresh for ${token.provider} - no refresh token or expiry`)
+      log.debug(
+        `Cannot schedule refresh for ${token.provider} - no refresh token or expiry`
+      )
       return
     }
 
@@ -103,7 +108,8 @@ export class TokenRefreshManager {
       })
       .catch((error) => {
         // Apply exponential backoff on failure
-        const currentBackoff = this.retryBackoff.get(serverUrl) ?? INITIAL_BACKOFF
+        const currentBackoff =
+          this.retryBackoff.get(serverUrl) ?? INITIAL_BACKOFF
         const nextBackoff = Math.min(currentBackoff * 2, MAX_BACKOFF)
         this.retryBackoff.set(serverUrl, Date.now() + nextBackoff)
         log.warn(

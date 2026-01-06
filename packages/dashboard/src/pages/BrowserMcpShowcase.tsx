@@ -432,7 +432,10 @@ export function BrowserMcpShowcase() {
               <Button
                 variant="primary"
                 onClick={() =>
-                  copyToClipboard("npx -y @athreei/browser-mcp", "quick-install")
+                  copyToClipboard(
+                    "npx -y @athreei/browser-mcp",
+                    "quick-install"
+                  )
                 }
               >
                 {copiedCode === "quick-install"

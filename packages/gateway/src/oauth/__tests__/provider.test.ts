@@ -7,20 +7,22 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 
 // Hoist mock implementations
-const { mockCallbackServer, mockStartCallbackServer, mockOpen } = vi.hoisted(() => {
-  const server = {
-    port: 12345,
-    host: "localhost",
-    redirectUri: "http://localhost:12345/callback/test-uuid",
-    waitForCallback: vi.fn(),
-    close: vi.fn(),
+const { mockCallbackServer, mockStartCallbackServer, mockOpen } = vi.hoisted(
+  () => {
+    const server = {
+      port: 12345,
+      host: "localhost",
+      redirectUri: "http://localhost:12345/callback/test-uuid",
+      waitForCallback: vi.fn(),
+      close: vi.fn(),
+    }
+    return {
+      mockCallbackServer: server,
+      mockStartCallbackServer: vi.fn().mockResolvedValue(server),
+      mockOpen: vi.fn().mockResolvedValue(undefined),
+    }
   }
-  return {
-    mockCallbackServer: server,
-    mockStartCallbackServer: vi.fn().mockResolvedValue(server),
-    mockOpen: vi.fn().mockResolvedValue(undefined),
-  }
-})
+)
 
 // Mock the callback server
 vi.mock("../callback-server.js", () => ({
@@ -51,7 +53,9 @@ describe("AthreeiOAuthProvider", () => {
   const createMockTokenStore = () => {
     const tokens = new Map<string, StoredTokenData>()
     return {
-      get: vi.fn((serverUrl: string) => Promise.resolve(tokens.get(serverUrl) ?? null)),
+      get: vi.fn((serverUrl: string) =>
+        Promise.resolve(tokens.get(serverUrl) ?? null)
+      ),
       set: vi.fn((serverUrl: string, token: StoredTokenData) => {
         tokens.set(serverUrl, token)
         return Promise.resolve()
@@ -65,7 +69,9 @@ describe("AthreeiOAuthProvider", () => {
       clear: vi.fn(),
       setKey: vi.fn(),
       _tokens: tokens,
-    } as unknown as EncryptedTokenStore & { _tokens: Map<string, StoredTokenData> }
+    } as unknown as EncryptedTokenStore & {
+      _tokens: Map<string, StoredTokenData>
+    }
   }
 
   let mockTokenStore: ReturnType<typeof createMockTokenStore>
@@ -100,7 +106,10 @@ describe("AthreeiOAuthProvider", () => {
     })
 
     it("uses default provider name when not specified", () => {
-      const p = new AthreeiOAuthProvider("https://api.example.com", mockTokenStore)
+      const p = new AthreeiOAuthProvider(
+        "https://api.example.com",
+        mockTokenStore
+      )
 
       expect(p.getProviderName()).toBe("MCP Server")
     })
@@ -296,7 +305,9 @@ describe("AthreeiOAuthProvider", () => {
 
   describe("redirectToAuthorization", () => {
     it("opens authorization URL in browser", async () => {
-      const authUrl = new URL("https://auth.example.com/authorize?client_id=test")
+      const authUrl = new URL(
+        "https://auth.example.com/authorize?client_id=test"
+      )
 
       await provider.redirectToAuthorization(authUrl)
 
@@ -335,7 +346,9 @@ describe("AthreeiOAuthProvider", () => {
     it("invalidates all credentials with scope 'all'", async () => {
       await provider.invalidateCredentials("all")
 
-      expect(mockTokenStore.delete).toHaveBeenCalledWith("https://api.example.com")
+      expect(mockTokenStore.delete).toHaveBeenCalledWith(
+        "https://api.example.com"
+      )
       expect(provider.clientInformation()).toBeUndefined()
       expect(() => provider.codeVerifier()).toThrow()
     })
