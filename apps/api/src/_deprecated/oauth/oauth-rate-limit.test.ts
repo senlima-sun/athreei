@@ -17,7 +17,7 @@ import {
   createConnectionsRateLimiter,
   withRateLimitLogging,
   OAUTH_RATE_LIMITS,
-} from "../../middleware/oauth-rate-limit"
+} from "./rate-limit"
 import { clearAllRateLimits } from "../../middleware/rate-limit"
 import type { AuthContext } from "../../middleware/auth"
 

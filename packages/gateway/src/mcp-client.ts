@@ -203,7 +203,9 @@ export async function connectToAllServers(configs: McpServerConfig[]): Promise<{
 /**
  * Disconnect from all MCP servers
  */
-export async function disconnectAllServers(mcps: ConnectedMcp[]): Promise<void> {
+export async function disconnectAllServers(
+  mcps: ConnectedMcp[]
+): Promise<void> {
   log.info(`Disconnecting from ${mcps.length} MCP servers`)
 
   const disconnectPromises = mcps.map((mcp) =>

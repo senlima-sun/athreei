@@ -19,7 +19,6 @@ import {
   noopLogger,
 } from "@athreei/gateway-core"
 import type { GatewaySession, CreateSessionOptions } from "../types.js"
-import { getAuthHeadersForServer } from "./oauth.js"
 
 // =============================================================================
 // Session Store
@@ -172,21 +171,7 @@ async function connectToMcpServer(
         )
       }
 
-      // Fetch OAuth token for SSE/HTTP servers if API key is available
-      let authHeaders: Record<string, string> = {}
-      if (apiKey) {
-        log.debug(`Fetching OAuth token for server: ${config.name}`)
-        authHeaders = await getAuthHeadersForServer(config.url, apiKey, log)
-        if (Object.keys(authHeaders).length > 0) {
-          log.debug(`Using OAuth authentication for server: ${config.name}`)
-        }
-      }
-
-      transport = new SSEClientTransport(new URL(config.url), {
-        requestInit: {
-          headers: authHeaders,
-        },
-      })
+      transport = new SSEClientTransport(new URL(config.url))
       break
     }
 

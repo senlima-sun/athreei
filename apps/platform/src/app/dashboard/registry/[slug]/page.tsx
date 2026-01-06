@@ -4,9 +4,12 @@ import { use, useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { PageHeader } from "@/components/dashboard/page-header"
-import { OAuthSetupGuide } from "@/components/mcp"
+import { OAuthSetupGuide } from "@/components/mcp/_deprecated/oauth-setup-guide"
 import { useActiveOrganization } from "@/lib/auth-client"
-import { OAUTH_PROVIDERS, type OAuthProvider } from "@/lib/mcp-oauth-detection"
+import {
+  OAUTH_PROVIDERS,
+  type OAuthProvider,
+} from "@/lib/_deprecated/mcp-oauth-detection"
 import {
   Server,
   ArrowLeft,

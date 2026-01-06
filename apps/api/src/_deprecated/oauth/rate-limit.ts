@@ -9,8 +9,11 @@
  */
 
 import type { Context, Next } from "hono"
-import { createRateLimiter, type RateLimitConfig } from "./rate-limit"
-import { getAuthContext } from "./auth"
+import {
+  createRateLimiter,
+  type RateLimitConfig,
+} from "../../middleware/rate-limit"
+import { getAuthContext } from "../../middleware/auth"
 
 /**
  * OAuth rate limit configurations

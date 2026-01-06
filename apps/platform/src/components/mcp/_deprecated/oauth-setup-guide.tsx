@@ -1,7 +1,7 @@
 "use client"
 
 import { Key, ExternalLink } from "lucide-react"
-import type { OAuthProvider } from "@/lib/mcp-oauth-detection"
+import type { OAuthProvider } from "@/lib/_deprecated/mcp-oauth-detection"
 
 interface OAuthSetupGuideProps {
   provider: OAuthProvider

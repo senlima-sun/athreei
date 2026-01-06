@@ -15,34 +15,36 @@
 import { Hono } from "hono"
 import { zValidator } from "@hono/zod-validator"
 import { eq, and } from "drizzle-orm"
-import {
-  authMiddleware,
-  getAuthContext,
-  ApiError,
-  createConnectRateLimiter,
-  createCallbackRateLimiter,
-  createTokenRateLimiter,
-  createConnectionsRateLimiter,
-  withRateLimitLogging,
-} from "../middleware"
-import { getDb } from "../lib/db"
-import { oauthSession, oauthToken } from "@athreei/db"
+import { authMiddleware, getAuthContext, ApiError } from "../../middleware"
+import { getDb } from "../../lib/db"
+// Note: OAuth schema is deprecated - import from local deprecated schema
+// The original @athreei/db exports were removed but schema preserved for DB compatibility
+import { oauthSession, oauthToken } from "./pg-oauth-schema"
 import {
   encryptEnv,
   decryptEnv,
   getCurrentKeyVersion,
   isEncryptionConfigured,
-} from "../lib/encryption"
+} from "../../lib/encryption"
 
-// Schemas
+// Schemas (deprecated - local)
 import {
   connectOAuthSchema,
   getTokenSchema,
   deleteTokenQuerySchema,
-} from "../schemas/oauth"
+} from "./schemas"
+
+// Rate limiting (deprecated - local)
+import {
+  createConnectRateLimiter,
+  createCallbackRateLimiter,
+  createTokenRateLimiter,
+  createConnectionsRateLimiter,
+  withRateLimitLogging,
+} from "./rate-limit"
 
 // Services
-import { generateUUID, logOAuthEvent, generateTokenHash } from "../services"
+import { generateUUID, logOAuthEvent, generateTokenHash } from "../../services"
 
 const oauth = new Hono()
 

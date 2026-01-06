@@ -86,17 +86,3 @@ export {
 
 // Registry
 export { registryQuerySchema, type RegistryQuery } from "./registry"
-
-// OAuth
-export {
-  oauthProviders,
-  connectOAuthSchema,
-  getTokenSchema,
-  deleteTokenQuerySchema,
-  oauthConnectionSchema,
-  type OAuthProvider,
-  type ConnectOAuthInput,
-  type GetTokenInput,
-  type DeleteTokenQuery,
-  type OAuthConnection,
-} from "./oauth"

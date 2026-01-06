@@ -58,6 +58,9 @@ vi.mock("../../middleware", () => ({
       return error
     },
   },
+}))
+
+vi.mock("./rate-limit", () => ({
   // Rate limiter mocks
   createConnectRateLimiter: vi.fn(() => vi.fn((_c, next) => next())),
   createCallbackRateLimiter: vi.fn(() => vi.fn((_c, next) => next())),
@@ -196,7 +199,7 @@ describe("OAuth Routes", () => {
   // =========================================================================
   describe("POST /api/oauth/connect", () => {
     it("should return 400 when serverUrl is missing", async () => {
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.onError(testErrorHandler)
       app.route("/api/oauth", oauth)
@@ -211,7 +214,7 @@ describe("OAuth Routes", () => {
     })
 
     it("should return 400 when serverUrl is invalid", async () => {
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.onError(testErrorHandler)
       app.route("/api/oauth", oauth)
@@ -239,7 +242,7 @@ describe("OAuth Routes", () => {
       const { isEncryptionConfigured } = await import("../../lib/encryption")
       vi.mocked(isEncryptionConfigured).mockReturnValue(false)
 
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.onError(testErrorHandler)
       app.route("/api/oauth", oauth)
@@ -259,7 +262,7 @@ describe("OAuth Routes", () => {
       const { isEncryptionConfigured } = await import("../../lib/encryption")
       vi.mocked(isEncryptionConfigured).mockReturnValue(true)
 
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.onError(testErrorHandler)
       app.route("/api/oauth", oauth)
@@ -295,7 +298,7 @@ describe("OAuth Routes", () => {
       const { isEncryptionConfigured } = await import("../../lib/encryption")
       vi.mocked(isEncryptionConfigured).mockReturnValue(true)
 
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.onError(testErrorHandler)
       app.route("/api/oauth", oauth)
@@ -324,7 +327,7 @@ describe("OAuth Routes", () => {
       const { isEncryptionConfigured } = await import("../../lib/encryption")
       vi.mocked(isEncryptionConfigured).mockReturnValue(true)
 
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.route("/api/oauth", oauth)
 
@@ -351,7 +354,7 @@ describe("OAuth Routes", () => {
       const { isEncryptionConfigured } = await import("../../lib/encryption")
       vi.mocked(isEncryptionConfigured).mockReturnValue(true)
 
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.route("/api/oauth", oauth)
 
@@ -383,7 +386,7 @@ describe("OAuth Routes", () => {
   // =========================================================================
   describe("GET /api/oauth/callback", () => {
     it("should redirect to dashboard with error when OAuth provider returns error", async () => {
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.route("/api/oauth", oauth)
 
@@ -397,7 +400,7 @@ describe("OAuth Routes", () => {
     })
 
     it("should redirect to dashboard with error when code is missing", async () => {
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.route("/api/oauth", oauth)
 
@@ -409,7 +412,7 @@ describe("OAuth Routes", () => {
     })
 
     it("should redirect to dashboard with error when state is missing", async () => {
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.route("/api/oauth", oauth)
 
@@ -421,7 +424,7 @@ describe("OAuth Routes", () => {
     })
 
     it("should redirect to dashboard with error when session not found", async () => {
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.route("/api/oauth", oauth)
 
@@ -437,7 +440,7 @@ describe("OAuth Routes", () => {
     })
 
     it("should redirect to dashboard with error when session is expired", async () => {
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.route("/api/oauth", oauth)
 
@@ -460,7 +463,7 @@ describe("OAuth Routes", () => {
     })
 
     it("should handle callback with all required parameters", async () => {
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.onError(testErrorHandler)
       app.route("/api/oauth", oauth)
@@ -500,7 +503,7 @@ describe("OAuth Routes", () => {
     })
 
     it("should store new token with refresh_token when present", async () => {
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.onError(testErrorHandler)
       app.route("/api/oauth", oauth)
@@ -534,7 +537,7 @@ describe("OAuth Routes", () => {
     })
 
     it("should reuse existing token ID when updating", async () => {
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.onError(testErrorHandler)
       app.route("/api/oauth", oauth)
@@ -567,7 +570,7 @@ describe("OAuth Routes", () => {
     })
 
     it("should clean up session after successful callback", async () => {
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.route("/api/oauth", oauth)
 
@@ -601,7 +604,7 @@ describe("OAuth Routes", () => {
   // =========================================================================
   describe("POST /api/oauth/token", () => {
     it("should return 400 when serverUrl is missing", async () => {
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.onError(testErrorHandler)
       app.route("/api/oauth", oauth)
@@ -616,7 +619,7 @@ describe("OAuth Routes", () => {
     })
 
     it("should return 400 when serverUrl is invalid", async () => {
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.onError(testErrorHandler)
       app.route("/api/oauth", oauth)
@@ -631,7 +634,7 @@ describe("OAuth Routes", () => {
     })
 
     it("should return 404 when no token found for server", async () => {
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.onError(testErrorHandler)
       app.route("/api/oauth", oauth)
@@ -650,7 +653,7 @@ describe("OAuth Routes", () => {
     })
 
     it("should return access token for existing connection", async () => {
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.onError(testErrorHandler)
       app.route("/api/oauth", oauth)
@@ -675,7 +678,7 @@ describe("OAuth Routes", () => {
     })
 
     it("should skip refresh for tokens with sufficient expiry", async () => {
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.onError(testErrorHandler)
       app.route("/api/oauth", oauth)
@@ -701,7 +704,7 @@ describe("OAuth Routes", () => {
     })
 
     it("should handle token without expiry information", async () => {
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.onError(testErrorHandler)
       app.route("/api/oauth", oauth)
@@ -731,7 +734,7 @@ describe("OAuth Routes", () => {
   // =========================================================================
   describe("DELETE /api/oauth/token", () => {
     it("should return 400 when serverUrl query param is missing", async () => {
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.onError(testErrorHandler)
       app.route("/api/oauth", oauth)
@@ -744,7 +747,7 @@ describe("OAuth Routes", () => {
     })
 
     it("should return 404 when no token found for server", async () => {
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.onError(testErrorHandler)
       app.route("/api/oauth", oauth)
@@ -764,7 +767,7 @@ describe("OAuth Routes", () => {
     })
 
     it("should revoke/disconnect OAuth token successfully", async () => {
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.route("/api/oauth", oauth)
 
@@ -788,7 +791,7 @@ describe("OAuth Routes", () => {
     })
 
     it("should call database delete with correct token ID", async () => {
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.route("/api/oauth", oauth)
 
@@ -811,7 +814,7 @@ describe("OAuth Routes", () => {
   // =========================================================================
   describe("GET /api/oauth/connections", () => {
     it("should return empty list when no connections", async () => {
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.route("/api/oauth", oauth)
 
@@ -825,7 +828,7 @@ describe("OAuth Routes", () => {
     })
 
     it("should return all OAuth connections for user", async () => {
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.route("/api/oauth", oauth)
 
@@ -859,7 +862,7 @@ describe("OAuth Routes", () => {
     })
 
     it("should not include encrypted token data in response", async () => {
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.route("/api/oauth", oauth)
 
@@ -886,7 +889,7 @@ describe("OAuth Routes", () => {
     })
 
     it("should format dates as ISO strings", async () => {
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.route("/api/oauth", oauth)
 
@@ -913,7 +916,7 @@ describe("OAuth Routes", () => {
     })
 
     it("should handle null expiresAt", async () => {
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.route("/api/oauth", oauth)
 
@@ -936,7 +939,7 @@ describe("OAuth Routes", () => {
     })
 
     it("should handle null scope", async () => {
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.route("/api/oauth", oauth)
 
@@ -966,7 +969,7 @@ describe("OAuth Routes", () => {
     it("should require auth for POST /api/oauth/connect", async () => {
       // authMiddleware is mocked in all tests, so this is implicit
       // Testing that getAuthContext is called
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.route("/api/oauth", oauth)
 
@@ -981,7 +984,7 @@ describe("OAuth Routes", () => {
     })
 
     it("should require auth for POST /api/oauth/token", async () => {
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.onError(testErrorHandler)
       app.route("/api/oauth", oauth)
@@ -999,7 +1002,7 @@ describe("OAuth Routes", () => {
     })
 
     it("should require auth for DELETE /api/oauth/token", async () => {
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.onError(testErrorHandler)
       app.route("/api/oauth", oauth)
@@ -1017,7 +1020,7 @@ describe("OAuth Routes", () => {
     })
 
     it("should require auth for GET /api/oauth/connections", async () => {
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.route("/api/oauth", oauth)
 
@@ -1034,7 +1037,7 @@ describe("OAuth Routes", () => {
   // =========================================================================
   describe("Edge Cases", () => {
     it("should handle OAuth callback without refresh token", async () => {
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.onError(testErrorHandler)
       app.route("/api/oauth", oauth)
@@ -1067,7 +1070,7 @@ describe("OAuth Routes", () => {
     })
 
     it("should handle token without expiration", async () => {
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.route("/api/oauth", oauth)
 
@@ -1098,7 +1101,7 @@ describe("OAuth Routes", () => {
       const { isEncryptionConfigured } = await import("../../lib/encryption")
       vi.mocked(isEncryptionConfigured).mockReturnValue(true)
 
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.onError(testErrorHandler)
       app.route("/api/oauth", oauth)
@@ -1127,7 +1130,7 @@ describe("OAuth Routes", () => {
       const { isEncryptionConfigured } = await import("../../lib/encryption")
       vi.mocked(isEncryptionConfigured).mockReturnValue(true)
 
-      const { default: oauth } = await import("../../routes/oauth")
+      const { default: oauth } = await import("./routes")
       const app = new Hono()
       app.onError(testErrorHandler)
       app.route("/api/oauth", oauth)

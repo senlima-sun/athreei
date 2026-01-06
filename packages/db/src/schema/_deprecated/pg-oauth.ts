@@ -7,7 +7,7 @@
 
 import { pgTable, text, timestamp, integer, unique } from "drizzle-orm/pg-core"
 import { relations } from "drizzle-orm"
-import { user } from "./auth"
+import { user } from "../pg/auth"
 
 // =============================================================================
 // OAuth Session Table

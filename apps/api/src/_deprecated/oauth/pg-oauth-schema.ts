@@ -1,13 +1,11 @@
 /**
- * OAuth Token Storage Schema (SQLite)
+ * OAuth Token Storage Schema (PostgreSQL)
  *
- * Stores OAuth tokens and session state for MCP server authentication.
- * Tokens are encrypted at rest using application-level encryption.
+ * DEPRECATED: This schema is kept for backward compatibility with existing DB tables.
+ * The OAuth routes are deprecated and this schema is only used by the deprecated routes.
  */
 
-import { sqliteTable, text, integer, unique } from "drizzle-orm/sqlite-core"
-import { relations } from "drizzle-orm"
-import { user } from "./auth"
+import { pgTable, text, timestamp, integer, unique } from "drizzle-orm/pg-core"
 
 // =============================================================================
 // OAuth Session Table
@@ -17,14 +15,12 @@ import { user } from "./auth"
  * Temporary storage for OAuth flow state during authorization.
  * Records are short-lived (5 minute TTL) and deleted after callback.
  */
-export const oauthSession = sqliteTable("oauth_session", {
+export const oauthSession = pgTable("oauth_session", {
   // Primary key: OAuth state parameter (cryptographically random)
   id: text("id").primaryKey(),
 
   // User initiating the OAuth flow
-  userId: text("user_id")
-    .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
+  userId: text("user_id").notNull(),
 
   // Provider name (e.g., "Sentry", "GitHub")
   provider: text("provider").notNull(),
@@ -38,9 +34,9 @@ export const oauthSession = sqliteTable("oauth_session", {
   // Redirect URI used for this flow
   redirectUri: text("redirect_uri").notNull(),
 
-  // Timestamps (SQLite uses integer for timestamps)
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
-  expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
+  // Timestamps
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
 })
 
 // =============================================================================
@@ -51,15 +47,13 @@ export const oauthSession = sqliteTable("oauth_session", {
  * Persistent storage for OAuth tokens.
  * Each user can have one token per MCP server URL.
  */
-export const oauthToken = sqliteTable(
+export const oauthToken = pgTable(
   "oauth_token",
   {
     id: text("id").primaryKey(),
 
     // Token owner
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull(),
 
     // Provider name for display
     provider: text("provider").notNull(),
@@ -72,36 +66,18 @@ export const oauthToken = sqliteTable(
     encryptedRefreshToken: text("encrypted_refresh_token"),
 
     // Token metadata
-    expiresAt: integer("expires_at", { mode: "timestamp" }),
+    expiresAt: timestamp("expires_at"),
     scope: text("scope"),
 
     // Encryption key version (for key rotation)
-    keyVersion: integer("key_version").notNull().default(1),
+    keyVersion: integer("key_version").default(1).notNull(),
 
     // Timestamps
-    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
-    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
   (table) => [
     // Unique constraint: one token per user per server
     unique("oauth_token_user_server_unique").on(table.userId, table.serverUrl),
   ]
 )
-
-// =============================================================================
-// Relations
-// =============================================================================
-
-export const oauthSessionRelations = relations(oauthSession, ({ one }) => ({
-  user: one(user, {
-    fields: [oauthSession.userId],
-    references: [user.id],
-  }),
-}))
-
-export const oauthTokenRelations = relations(oauthToken, ({ one }) => ({
-  user: one(user, {
-    fields: [oauthToken.userId],
-    references: [user.id],
-  }),
-}))
