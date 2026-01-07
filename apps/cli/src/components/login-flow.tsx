@@ -6,11 +6,12 @@ import { getAuthManager, AuthSession } from "../auth/manager.js"
 interface Props {
   provider: string
   token?: string
+  profile?: string
 }
 
 type Status = "idle" | "authenticating" | "success" | "error"
 
-export function LoginFlow({ provider, token }: Props) {
+export function LoginFlow({ provider, token, profile: _profile }: Props) {
   const { exit } = useApp()
   const [status, setStatus] = useState<Status>("idle")
   const [session, setSession] = useState<AuthSession | null>(null)
