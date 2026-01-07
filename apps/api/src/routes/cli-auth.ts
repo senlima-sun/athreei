@@ -6,6 +6,7 @@
  *
  * Routes:
  * - POST /api/auth/cli/initiate - Start CLI auth flow
+ * - GET /api/auth/cli/session/:sessionId - Poll session status
  * - POST /api/auth/cli/token - Generate CLI token after browser authorization
  * - GET /api/auth/cli/verify - Verify CLI token is valid
  */
@@ -103,6 +104,46 @@ cliAuth.post("/initiate", zValidator("json", initiateSchema), async (c) => {
   const authUrl = `${platformUrl}/auth/cli?session=${sessionId}`
 
   return c.json({ sessionId, authUrl })
+})
+
+/**
+ * GET /session/:sessionId
+ * Poll session status during CLI auth flow
+ *
+ * Called by CLI tools to check if the user has completed authorization
+ * in the browser. Supports optional state validation for security.
+ *
+ * Status values:
+ * - "pending" - waiting for user to authorize
+ * - "used" - user has authorized, token was generated
+ * - "expired" - session timed out
+ */
+cliAuth.get("/session/:sessionId", async (c) => {
+  const { sessionId } = c.req.param()
+  const state = c.req.query("state")
+
+  const db = getDb()
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [session] = await (db as any)
+    .select()
+    .from(cliAuthSession)
+    .where(eq(cliAuthSession.id, sessionId))
+    .limit(1)
+
+  if (!session) {
+    return c.json({ error: "Session not found" }, 404)
+  }
+
+  if (state && session.state !== state) {
+    return c.json({ error: "Invalid state" }, 400)
+  }
+
+  if (new Date() > session.expiresAt) {
+    return c.json({ status: "expired" })
+  }
+
+  return c.json({ status: session.status })
 })
 
 /**
