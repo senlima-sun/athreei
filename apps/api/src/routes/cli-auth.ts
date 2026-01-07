@@ -285,6 +285,10 @@ cliAuth.get("/verify", async (c) => {
     .where(eq(user.id, foundToken.userId))
     .limit(1)
 
+  if (!foundUser) {
+    return c.json({ valid: false, error: "User not found" }, 401)
+  }
+
   // Get user's organizations
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const memberships = await (db as any)
