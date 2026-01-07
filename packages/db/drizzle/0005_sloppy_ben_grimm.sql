@@ -1,0 +1,1 @@
+ALTER TABLE "cli_auth_session" ADD CONSTRAINT "cli_auth_session_state_unique" UNIQUE("state");

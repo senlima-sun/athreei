@@ -53,11 +53,15 @@ export const cliToken = sqliteTable("cli_token", {
  */
 export const cliAuthSession = sqliteTable("cli_auth_session", {
   id: text("id").primaryKey(),
-  state: text("state").notNull(),
+  state: text("state").notNull().unique(),
   callbackPort: integer("callback_port").notNull(),
   userId: text("user_id").references(() => user.id),
   organizationId: text("organization_id"),
-  status: text("status").notNull().default("pending"),
+  status: text("status", {
+    enum: ["pending", "authorized", "used", "expired"],
+  })
+    .notNull()
+    .default("pending"),
   expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
   createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()

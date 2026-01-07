@@ -51,11 +51,15 @@ export const cliToken = pgTable("cli_token", {
  */
 export const cliAuthSession = pgTable("cli_auth_session", {
   id: text("id").primaryKey(),
-  state: text("state").notNull(),
+  state: text("state").notNull().unique(),
   callbackPort: integer("callback_port").notNull(),
   userId: text("user_id").references(() => user.id),
   organizationId: text("organization_id"),
-  status: text("status").notNull().default("pending"),
+  status: text("status", {
+    enum: ["pending", "authorized", "used", "expired"],
+  })
+    .notNull()
+    .default("pending"),
   expiresAt: timestamp("expires_at").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 })
