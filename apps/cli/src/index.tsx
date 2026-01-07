@@ -6,6 +6,7 @@ import { LoginFlow } from "./components/login-flow.js"
 import { AuthStatus } from "./components/auth-status.js"
 import { getAuthManager } from "./auth/manager.js"
 import { OrgList, OrgSwitch, OrgCurrent } from "./commands/org.js"
+import { McpList } from "./commands/mcp.js"
 
 const program = new Command()
 
@@ -101,5 +102,36 @@ org
     const { waitUntilExit } = render(<OrgCurrent />)
     await waitUntilExit()
   })
+
+const mcp = program.command("mcp").description("Manage MCP servers")
+
+mcp
+  .command("list")
+  .description("List configured MCP servers")
+  .option("-s, --search <query>", "Search by name or description")
+  .option(
+    "--status <status>",
+    "Filter by status (active, inactive, pending)"
+  )
+  .option(
+    "--transport <type>",
+    "Filter by transport (stdio, sse, streamable-http)"
+  )
+  .action(
+    async (options: {
+      search?: string
+      status?: string
+      transport?: string
+    }) => {
+      const { waitUntilExit } = render(
+        <McpList
+          search={options.search}
+          status={options.status}
+          transport={options.transport}
+        />
+      )
+      await waitUntilExit()
+    }
+  )
 
 program.parse()
