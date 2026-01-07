@@ -312,6 +312,8 @@ export async function createSession(
     createdAt: new Date(),
     lastActivity: new Date(),
     isActive: true,
+    apiKey: options.apiKey,
+    platformUrl: options.platformUrl,
   }
 
   sessions.set(sessionId, session)

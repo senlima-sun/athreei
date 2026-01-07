@@ -24,6 +24,7 @@ import {
   callSessionTool,
 } from "../gateway/session.js"
 import { noopLogger, type Logger } from "@athreei/gateway-core"
+import { getTraceRecorder } from "../services/trace-recorder.js"
 
 const sse = new Hono()
 
@@ -149,27 +150,53 @@ function handleToolsList(request: McpRequest, sessionId: string): McpResponse {
  */
 async function handleToolsCall(
   request: McpRequest,
-  sessionId: string
+  sessionId: string,
+  apiKey?: string,
+  platformUrl?: string
 ): Promise<McpResponse> {
+  const startTime = Date.now()
+
+  const params = request.params as {
+    name: string
+    arguments?: Record<string, unknown>
+  }
+
+  if (!params?.name) {
+    return {
+      jsonrpc: "2.0",
+      id: request.id,
+      error: { code: -32602, message: "Missing tool name" },
+    }
+  }
+
+  // Parse aggregated tool name (serverName__toolName)
+  const [serverName, toolName] = params.name.includes("__")
+    ? params.name.split("__", 2)
+    : ["unknown", params.name]
+
   try {
-    const params = request.params as {
-      name: string
-      arguments?: Record<string, unknown>
-    }
-
-    if (!params?.name) {
-      return {
-        jsonrpc: "2.0",
-        id: request.id,
-        error: { code: -32602, message: "Missing tool name" },
-      }
-    }
-
     const result = await callSessionTool(
       sessionId,
       params.name,
       params.arguments ?? {}
     )
+
+    const endTime = Date.now()
+
+    // Record trace (fire-and-forget)
+    if (apiKey && platformUrl) {
+      getTraceRecorder(apiKey, platformUrl, logger).record(
+        {
+          aggregatedToolName: params.name,
+          serverName,
+          toolName,
+          arguments: params.arguments,
+          result,
+        },
+        startTime,
+        endTime
+      )
+    }
 
     return {
       jsonrpc: "2.0",
@@ -177,7 +204,24 @@ async function handleToolsCall(
       result,
     }
   } catch (error) {
+    const endTime = Date.now()
     const message = error instanceof Error ? error.message : String(error)
+
+    // Record error trace (fire-and-forget)
+    if (apiKey && platformUrl) {
+      getTraceRecorder(apiKey, platformUrl, logger).record(
+        {
+          aggregatedToolName: params.name,
+          serverName,
+          toolName,
+          arguments: params.arguments,
+          error: message,
+        },
+        startTime,
+        endTime
+      )
+    }
+
     logger.error(`Tool call error: ${message}`)
     return {
       jsonrpc: "2.0",
@@ -217,7 +261,9 @@ function handleUnknownMethod(request: McpRequest): McpResponse {
  */
 async function handleMcpRequest(
   request: McpRequest,
-  sessionId: string
+  sessionId: string,
+  apiKey?: string,
+  platformUrl?: string
 ): Promise<McpResponse> {
   logger.debug(`Handling MCP request: ${request.method}`)
 
@@ -227,7 +273,7 @@ async function handleMcpRequest(
     case "tools/list":
       return handleToolsList(request, sessionId)
     case "tools/call":
-      return await handleToolsCall(request, sessionId)
+      return await handleToolsCall(request, sessionId, apiKey, platformUrl)
     case "ping":
       return handlePing(request)
     default:
@@ -335,7 +381,8 @@ sse.get("/:endpointName/sse", async (c) => {
       namespaceId: config.namespaceId,
       servers: config.servers,
       logger,
-      apiKey, // Pass apiKey for fetching server environment variables
+      apiKey, // Pass apiKey for fetching server environment variables and trace recording
+      platformUrl, // Pass platformUrl for trace recording
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
@@ -435,7 +482,12 @@ sse.post("/messages", async (c) => {
   }
 
   // Handle the MCP request
-  const response = await handleMcpRequest(request, sessionId)
+  const response = await handleMcpRequest(
+    request,
+    sessionId,
+    session.apiKey,
+    session.platformUrl
+  )
 
   return c.json(response)
 })

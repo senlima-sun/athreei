@@ -38,6 +38,10 @@ export interface GatewaySession {
   lastActivity: Date
   /** Whether session is active */
   isActive: boolean
+  /** API key for trace recording */
+  apiKey?: string
+  /** Platform URL for trace recording */
+  platformUrl?: string
 }
 
 /**
@@ -49,8 +53,10 @@ export interface CreateSessionOptions {
   namespaceId: string
   servers: McpServerConfig[]
   logger?: Logger
-  /** API key for fetching server environment variables */
+  /** API key for fetching server environment variables and trace recording */
   apiKey?: string
+  /** Platform URL for trace recording */
+  platformUrl?: string
 }
 
 // =============================================================================
