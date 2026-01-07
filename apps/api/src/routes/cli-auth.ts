@@ -115,6 +115,9 @@ cliAuth.post("/initiate", zValidator("json", initiateSchema), async (c) => {
  *
  * The endpoint verifies the user's session, validates the CLI auth session,
  * checks organization membership, and generates a long-lived token.
+ *
+ * Uses optimistic locking to prevent race conditions - the session is
+ * atomically updated from "pending" to "used" before token generation.
  */
 cliAuth.post("/token", zValidator("json", tokenSchema), async (c) => {
   const { sessionId, organizationId } = c.req.valid("json")
@@ -127,21 +130,16 @@ cliAuth.post("/token", zValidator("json", tokenSchema), async (c) => {
     return c.json({ error: "Not authenticated" }, 401)
   }
 
-  // Get CLI auth session
+  // Step 1: Check session exists and is not expired (read-only check)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [cliSession] = await (db as any)
     .select()
     .from(cliAuthSession)
-    .where(
-      and(
-        eq(cliAuthSession.id, sessionId),
-        eq(cliAuthSession.status, "pending")
-      )
-    )
+    .where(eq(cliAuthSession.id, sessionId))
     .limit(1)
 
   if (!cliSession) {
-    return c.json({ error: "Invalid or expired session" }, 400)
+    return c.json({ error: "Invalid session" }, 400)
   }
 
   if (new Date() > cliSession.expiresAt) {
@@ -165,8 +163,32 @@ cliAuth.post("/token", zValidator("json", tokenSchema), async (c) => {
     return c.json({ error: "No access to organization" }, 403)
   }
 
-  // Generate token: a3i_ prefix + 32 random hex characters
-  const tokenBytes = crypto.getRandomValues(new Uint8Array(16))
+  // Step 2: Atomically claim the session using optimistic locking
+  // This UPDATE only succeeds if status is still "pending"
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const updateResult = await (db as any)
+    .update(cliAuthSession)
+    .set({
+      status: "used",
+      userId: session.user.id,
+      organizationId,
+    })
+    .where(
+      and(
+        eq(cliAuthSession.id, sessionId),
+        eq(cliAuthSession.status, "pending")
+      )
+    )
+    .returning()
+
+  // If no rows updated, another request already claimed this session
+  if (!updateResult || updateResult.length === 0) {
+    return c.json({ error: "Session already used or expired" }, 409)
+  }
+
+  // Step 3: Generate token (only after successfully claiming session)
+  // a3i_ prefix + 64 random hex characters (256 bits entropy)
+  const tokenBytes = crypto.getRandomValues(new Uint8Array(32))
   const tokenSuffix = Array.from(tokenBytes)
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("")
@@ -175,26 +197,16 @@ cliAuth.post("/token", zValidator("json", tokenSchema), async (c) => {
   const tokenId = generateId()
   const expiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000) // 90 days
 
-  // Save hashed token
+  // Save hashed token with default name
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (db as any).insert(cliToken).values({
     id: tokenId,
     tokenHash,
     userId: session.user.id,
     organizationId,
+    name: "CLI Token",
     expiresAt,
   })
-
-  // Mark session as used
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (db as any)
-    .update(cliAuthSession)
-    .set({
-      status: "used",
-      userId: session.user.id,
-      organizationId,
-    })
-    .where(eq(cliAuthSession.id, sessionId))
 
   return c.json({
     token,
