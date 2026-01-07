@@ -15,6 +15,7 @@ export const ID_PREFIXES = {
   endpoint: "ep_",
   trace: "tr_",
   apiKey: "ak_",
+  cliAuthSession: "cas_",
 } as const
 
 export type IdPrefix = (typeof ID_PREFIXES)[keyof typeof ID_PREFIXES]
