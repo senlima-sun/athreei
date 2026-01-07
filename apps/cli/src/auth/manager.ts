@@ -31,6 +31,33 @@ export class AuthManager {
       throw new Error(`Unknown provider: ${providerName}`)
     }
 
+    // Special handling for Athreei provider
+    if (providerName === "athreei") {
+      const athreeiProvider =
+        provider as import("./providers/athreei.js").AthreeiProvider
+      const result = await athreeiProvider.performLogin()
+
+      const credentials: StoredCredentials = {
+        accessToken: result.token,
+        provider: providerName,
+        userId: result.user.id,
+        expiresAt: new Date(result.expiresAt).getTime(),
+      }
+
+      await this.store.set(`auth:${providerName}`, credentials)
+
+      this.currentSession = {
+        provider: providerName,
+        accessToken: result.token,
+        userId: result.user.id,
+        username: result.user.username,
+        expiresAt: credentials.expiresAt,
+      }
+
+      return this.currentSession
+    }
+
+    // Standard OAuth flow for other providers
     const config = provider.getOAuthConfig()
     const tokens = await performOAuthFlow(config)
     const credentials = provider.toStoredCredentials(tokens)
