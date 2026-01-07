@@ -5,6 +5,7 @@ import React from "react"
 import { LoginFlow } from "./components/login-flow.js"
 import { AuthStatus } from "./components/auth-status.js"
 import { getAuthManager } from "./auth/manager.js"
+import { OrgList, OrgSwitch, OrgCurrent } from "./commands/org.js"
 
 const program = new Command()
 
@@ -72,6 +73,33 @@ auth
         session.accessToken.slice(0, 8) + "..." + session.accessToken.slice(-4)
       console.log(`Token (${session.provider}): ${masked}`)
     }
+  })
+
+const org = program.command("org").description("Manage organizations")
+
+org
+  .command("list")
+  .description("List available organizations")
+  .action(async () => {
+    const { waitUntilExit } = render(<OrgList />)
+    await waitUntilExit()
+  })
+
+org
+  .command("switch")
+  .description("Switch active organization")
+  .argument("<name>", "Organization name or slug")
+  .action(async (name: string) => {
+    const { waitUntilExit } = render(<OrgSwitch orgName={name} />)
+    await waitUntilExit()
+  })
+
+org
+  .command("current")
+  .description("Show current organization")
+  .action(async () => {
+    const { waitUntilExit } = render(<OrgCurrent />)
+    await waitUntilExit()
   })
 
 program.parse()
