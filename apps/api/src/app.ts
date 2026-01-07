@@ -19,6 +19,7 @@ import {
   tracesRoutes,
   toolsRoutes,
   registryRoutes,
+  cliAuthRoutes,
 } from "./routes"
 import { errorHandler, notFoundHandler } from "./middleware"
 import { getAuth } from "./lib/auth"
@@ -65,6 +66,9 @@ app.route("/api/config", configRoutes)
 
 // Public registry endpoint (MCP server catalog)
 app.route("/api/registry", registryRoutes)
+
+// CLI auth routes (must be before Better Auth catch-all)
+app.route("/api/auth/cli", cliAuthRoutes)
 
 // Auth routes (delegates to Better Auth directly)
 app.on(
