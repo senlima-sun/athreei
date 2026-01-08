@@ -22,6 +22,7 @@ import {
   cliAuthRoutes,
   profileRoutes,
   sessionsRoutes,
+  dashboardRoutes,
 } from "./routes"
 import { errorHandler, notFoundHandler } from "./middleware"
 import { getAuth } from "./lib/auth"
@@ -111,6 +112,9 @@ app.route("/api/profile", profileRoutes)
 
 // Sessions routes (protected)
 app.route("/api/sessions", sessionsRoutes)
+
+// Dashboard routes (protected)
+app.route("/api/dashboard", dashboardRoutes)
 
 // =============================================================================
 // Error Handling
