@@ -6,7 +6,7 @@ import { LoginFlow } from "./components/login-flow.js"
 import { AuthStatus } from "./components/auth-status.js"
 import { getAuthManager } from "./auth/manager.js"
 import { OrgList, OrgSwitch, OrgCurrent } from "./commands/org.js"
-import { McpList, McpUpdate, McpDelete } from "./commands/mcp.js"
+import { McpList, McpUpdate, McpDelete, McpCreate } from "./commands/mcp.js"
 
 const program = new Command()
 
@@ -125,6 +125,41 @@ mcp
           search={options.search}
           status={options.status}
           transport={options.transport}
+        />
+      )
+      await waitUntilExit()
+    }
+  )
+
+mcp
+  .command("create")
+  .description("Create a new MCP server")
+  .option("-n, --name <name>", "Server name")
+  .option("-d, --description <desc>", "Server description")
+  .option(
+    "-t, --transport <type>",
+    "Transport type (stdio, sse, streamable-http)"
+  )
+  .option("-c, --command <cmd>", "Command to run (required for stdio)")
+  .option("-a, --args <args>", "Arguments for the command (for stdio)")
+  .option("-u, --url <url>", "Server URL (required for sse/streamable-http)")
+  .action(
+    async (options: {
+      name?: string
+      description?: string
+      transport?: string
+      command?: string
+      args?: string
+      url?: string
+    }) => {
+      const { waitUntilExit } = render(
+        <McpCreate
+          name={options.name}
+          description={options.description}
+          transport={options.transport}
+          command={options.command}
+          args={options.args}
+          url={options.url}
         />
       )
       await waitUntilExit()
