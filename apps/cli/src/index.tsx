@@ -24,6 +24,14 @@ import {
   ConfigGet,
   ConfigValidate,
 } from "./commands/config.js"
+import {
+  GatewayStatus,
+  GatewayStart,
+  GatewayStop,
+  GatewayLogs,
+  GatewayConfigShow,
+  GatewayConfigSet,
+} from "./commands/gateway.js"
 
 const program = new Command()
 
@@ -357,6 +365,91 @@ config
   .description("Validate configuration file against schema")
   .action(async () => {
     const { waitUntilExit } = render(<ConfigValidate />)
+    await waitUntilExit()
+  })
+
+// Gateway commands
+const gateway = program
+  .command("gateway")
+  .description("Manage the local MCP gateway")
+
+gateway
+  .command("status")
+  .description("Check if the gateway is running")
+  .action(async () => {
+    const { waitUntilExit } = render(<GatewayStatus />)
+    await waitUntilExit()
+  })
+
+gateway
+  .command("start")
+  .description("Start the gateway process")
+  .option("-p, --port <port>", "Port to run the gateway on", (val) =>
+    parseInt(val, 10)
+  )
+  .action(async (options: { port?: number }) => {
+    const { waitUntilExit } = render(<GatewayStart port={options.port} />)
+    await waitUntilExit()
+  })
+
+gateway
+  .command("stop")
+  .description("Stop the gateway process")
+  .option("-f, --force", "Force kill the gateway if graceful shutdown fails")
+  .action(async (options: { force?: boolean }) => {
+    const { waitUntilExit } = render(<GatewayStop force={options.force} />)
+    await waitUntilExit()
+  })
+
+gateway
+  .command("logs")
+  .description("View gateway logs")
+  .option("-f, --follow", "Follow log output (like tail -f)")
+  .option(
+    "-n, --lines <count>",
+    "Number of lines to show",
+    (val) => parseInt(val, 10),
+    50
+  )
+  .option(
+    "-l, --level <level>",
+    "Filter by log level (error, warn, info, debug)"
+  )
+  .action(
+    async (options: { follow?: boolean; lines?: number; level?: string }) => {
+      const { waitUntilExit } = render(
+        <GatewayLogs
+          follow={options.follow}
+          lines={options.lines}
+          level={options.level}
+        />
+      )
+      await waitUntilExit()
+    }
+  )
+
+// Gateway config subcommands
+const gatewayConfig = gateway
+  .command("config")
+  .description("Manage gateway configuration")
+
+gatewayConfig
+  .command("show")
+  .description("Display gateway configuration")
+  .action(async () => {
+    const { waitUntilExit } = render(<GatewayConfigShow />)
+    await waitUntilExit()
+  })
+
+gatewayConfig
+  .command("set")
+  .description("Set a gateway configuration value")
+  .argument("<key>", "Config key (port, logLevel)")
+  .argument("<value>", "Value to set")
+  .action(async (key: string, value: string) => {
+    const { waitUntilExit } = render(
+      <GatewayConfigSet configKey={key} value={value} />
+    )
     await waitUntilExit()
   })
 
