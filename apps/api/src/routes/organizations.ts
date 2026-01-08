@@ -19,6 +19,7 @@ import {
   createOrganizationSchema,
   updateOrganizationSchema,
   inviteMemberSchema,
+  updateMemberRoleSchema,
 } from "../schemas/organizations"
 
 const organizations = new Hono()
@@ -297,6 +298,142 @@ organizations.get("/:id/members", async (c) => {
     members: data.members || [],
     invitations: data.invitations || [],
   })
+})
+
+/**
+ * PATCH /api/organizations/:id/members/:memberId
+ * Update a member's role in the organization
+ *
+ * Proxies to Better Auth: POST /api/auth/organization/update-member-role
+ */
+organizations.patch(
+  "/:id/members/:memberId",
+  zValidator("json", updateMemberRoleSchema),
+  async (c) => {
+    const auth = getAuth()
+    const organizationId = c.req.param("id")
+    const memberId = c.req.param("memberId")
+    const { role } = c.req.valid("json")
+
+    const request = createProxyRequest(
+      c,
+      "/api/auth/organization/update-member-role",
+      {
+        method: "POST",
+        body: {
+          organizationId,
+          memberId,
+          role,
+        },
+      }
+    )
+
+    const response = await auth.handler(request)
+    const data = await handleAuthResponse(response)
+
+    return c.json(data)
+  }
+)
+
+/**
+ * POST /api/organizations/:id/invitations/:invitationId/resend
+ * Resend an invitation
+ *
+ * Better Auth doesn't have a dedicated resend endpoint, so we use
+ * invite-member with resend: true. We first need to get the invitation
+ * details to know the email and role.
+ *
+ * Proxies to Better Auth: POST /api/auth/organization/invite-member
+ */
+organizations.post("/:id/invitations/:invitationId/resend", async (c) => {
+  const auth = getAuth()
+  const organizationId = c.req.param("id")
+  const invitationId = c.req.param("invitationId")
+
+  // First, get the full organization to find the invitation
+  const authBaseUrl = process.env.AUTH_BASE_URL || "http://localhost:3001"
+  const getOrgUrl = new URL(
+    "/api/auth/organization/get-full-organization",
+    authBaseUrl
+  )
+  getOrgUrl.searchParams.set("organizationId", organizationId)
+
+  const headers = new Headers(c.req.raw.headers)
+  const getOrgRequest = new Request(getOrgUrl.toString(), {
+    method: "GET",
+    headers,
+  })
+
+  const getOrgResponse = await auth.handler(getOrgRequest)
+  const orgData = await handleAuthResponse<{
+    invitations?: Array<{
+      id: string
+      email: string
+      role: string
+      status: string
+      expiresAt: string
+    }>
+  }>(getOrgResponse)
+
+  // Find the invitation
+  const invitation = orgData.invitations?.find((inv) => inv.id === invitationId)
+  if (!invitation) {
+    throw ApiError.notFound("Invitation not found")
+  }
+
+  // Check if invitation is still pending
+  if (invitation.status !== "pending") {
+    throw ApiError.badRequest(
+      `Cannot resend invitation with status: ${invitation.status}`
+    )
+  }
+
+  // Resend the invitation using invite-member with resend: true
+  const resendRequest = createProxyRequest(
+    c,
+    "/api/auth/organization/invite-member",
+    {
+      method: "POST",
+      body: {
+        organizationId,
+        email: invitation.email,
+        role: invitation.role,
+        resend: true,
+      },
+    }
+  )
+
+  const resendResponse = await auth.handler(resendRequest)
+  const data = await handleAuthResponse(resendResponse)
+
+  return c.json(data)
+})
+
+/**
+ * DELETE /api/organizations/:id/invitations/:invitationId
+ * Cancel/delete an invitation
+ *
+ * Proxies to Better Auth: POST /api/auth/organization/cancel-invitation
+ */
+organizations.delete("/:id/invitations/:invitationId", async (c) => {
+  const auth = getAuth()
+  const invitationId = c.req.param("invitationId")
+
+  const request = createProxyRequest(
+    c,
+    "/api/auth/organization/cancel-invitation",
+    {
+      method: "POST",
+      body: {
+        invitationId,
+      },
+    }
+  )
+
+  const response = await auth.handler(request)
+  await handleAuthResponse(response)
+
+  return c.json({ message: "Invitation cancelled successfully" })
 })
 
 export default organizations
