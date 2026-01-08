@@ -17,17 +17,41 @@ import {
   ExternalLink,
   Lock,
   CheckCircle,
+  Play,
+  Square,
+  AlertCircle,
 } from "lucide-react"
-import { useVaultLock, useMemoryCount } from "@/hooks"
+import {
+  useVaultLock,
+  useMemoryCount,
+  useMcpStatus,
+  useMcpStart,
+  useMcpStop,
+} from "@/hooks"
 import { ErrorDisplay } from "@/components/error-display"
 
 export function SettingsPage(): React.ReactElement {
   const vaultLock = useVaultLock()
   const { data: memoryCount = 0 } = useMemoryCount()
 
+  // MCP server state
+  const { data: mcpStatus, isLoading: mcpLoading } = useMcpStatus()
+  const mcpStart = useMcpStart()
+  const mcpStop = useMcpStop()
+
   const handleLockVault = async (): Promise<void> => {
     await vaultLock.mutateAsync()
   }
+
+  const handleMcpToggle = async (): Promise<void> => {
+    if (mcpStatus?.running) {
+      await mcpStop.mutateAsync()
+    } else {
+      await mcpStart.mutateAsync()
+    }
+  }
+
+  const mcpError = mcpStart.error || mcpStop.error
 
   return (
     <div className="space-y-6">
@@ -115,33 +139,76 @@ export function SettingsPage(): React.ReactElement {
                 </CardDescription>
               </div>
             </div>
-            <Badge variant="success">Running</Badge>
+            {mcpLoading ? (
+              <Badge variant="secondary">Loading...</Badge>
+            ) : mcpStatus?.running ? (
+              <Badge variant="success" className="gap-1">
+                <CheckCircle className="h-3 w-3" />
+                Running
+              </Badge>
+            ) : (
+              <Badge variant="secondary" className="gap-1">
+                <AlertCircle className="h-3 w-3" />
+                Stopped
+              </Badge>
+            )}
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
             <div>
-              <p className="text-sm font-medium">Server Status</p>
+              <p className="text-sm font-medium">Server Control</p>
               <p className="text-xs text-muted-foreground">
-                Listening on stdio for Claude Desktop
+                {mcpStatus?.running
+                  ? `Running with ${mcpStatus.transport} transport`
+                  : "Start the server to allow AI apps to connect"}
               </p>
             </div>
-            <Button variant="outline" size="sm" className="gap-2">
-              <RefreshCw className="h-4 w-4" />
-              Restart
+            <Button
+              variant={mcpStatus?.running ? "destructive" : "default"}
+              size="sm"
+              className="gap-2"
+              onClick={handleMcpToggle}
+              loading={mcpStart.isPending || mcpStop.isPending}
+            >
+              {mcpStatus?.running ? (
+                <>
+                  <Square className="h-4 w-4" />
+                  Stop
+                </>
+              ) : (
+                <>
+                  <Play className="h-4 w-4" />
+                  Start
+                </>
+              )}
             </Button>
+          </div>
+
+          {mcpError && <ErrorDisplay error={mcpError} />}
+
+          <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
+            <div>
+              <p className="text-sm font-medium">Transport</p>
+              <p className="text-xs text-muted-foreground">
+                {mcpStatus?.transport === "stdio"
+                  ? "stdio - for Claude Desktop"
+                  : "HTTP/SSE - for web clients"}
+              </p>
+            </div>
+            <Badge variant="outline">{mcpStatus?.transport ?? "stdio"}</Badge>
           </div>
 
           <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
             <div>
-              <p className="text-sm font-medium">Connected Apps</p>
+              <p className="text-sm font-medium">Setup Guide</p>
               <p className="text-xs text-muted-foreground">
-                0 AI apps currently connected
+                Learn how to connect Claude Desktop
               </p>
             </div>
             <Button variant="outline" size="sm" className="gap-2">
               <ExternalLink className="h-4 w-4" />
-              Setup Guide
+              View Guide
             </Button>
           </div>
         </CardContent>
@@ -170,8 +237,8 @@ export function SettingsPage(): React.ReactElement {
                 Sync encrypted memories to athreei cloud
               </p>
             </div>
-            <Button variant="outline" size="sm">
-              Enable
+            <Button variant="outline" size="sm" disabled>
+              Coming Soon
             </Button>
           </div>
 
@@ -186,27 +253,6 @@ export function SettingsPage(): React.ReactElement {
               <HardDrive className="mr-1 h-3 w-3" />
               {memoryCount} memories
             </Badge>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Account */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Account</CardTitle>
-          <CardDescription>
-            Manage your athreei account settings
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
-            <div>
-              <p className="text-sm font-medium">Sign In</p>
-              <p className="text-xs text-muted-foreground">
-                Sign in to enable cloud features
-              </p>
-            </div>
-            <Button size="sm">Sign In</Button>
           </div>
         </CardContent>
       </Card>

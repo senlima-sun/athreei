@@ -28,3 +28,6 @@ export {
   useSearchMemories,
   useTags,
 } from "./use-memories"
+
+// MCP hooks
+export { useMcpStatus, useMcpStart, useMcpStop } from "./use-mcp"
