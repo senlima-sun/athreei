@@ -86,3 +86,15 @@ export {
 
 // Registry
 export { registryQuerySchema, type RegistryQuery } from "./registry"
+
+// Audit
+export {
+  auditActions,
+  targetTypes,
+  listAuditQuerySchema,
+  createAuditSchema,
+  type AuditAction,
+  type TargetType,
+  type ListAuditQuery,
+  type CreateAuditInput,
+} from "./audit"

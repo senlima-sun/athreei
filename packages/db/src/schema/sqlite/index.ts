@@ -3,6 +3,7 @@
  */
 
 export * from "./auth"
+export * from "./audit-log"
 export * from "./cli-tokens"
 export * from "./mcp-servers"
 export * from "./namespaces"
