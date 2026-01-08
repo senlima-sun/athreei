@@ -8,14 +8,15 @@
  * - GET /endpoints/:endpointId/keys - List API keys for an endpoint (masked values)
  * - POST /endpoints/:endpointId/keys - Create key (return plain key once)
  * - DELETE /endpoints/:endpointId/keys/:keyId - Revoke key
+ * - GET /endpoints/:endpointId/keys/:keyId/stats - Get usage stats for a key
  */
 
 import { Hono } from "hono"
 import { zValidator } from "@hono/zod-validator"
-import { eq, and, isNull } from "drizzle-orm"
+import { eq, and, isNull, gte, sql } from "drizzle-orm"
 import { authMiddleware, getAuthContext, ApiError } from "../middleware"
 import { getDb, type DatabaseClient } from "../lib/db"
-import { apiKey, endpoint } from "@athreei/db"
+import { apiKey, endpoint, trace } from "@athreei/db"
 import { createApiKeySchema } from "../schemas/api-keys"
 import {
   generateApiKey,
@@ -204,6 +205,145 @@ apiKeys.delete("/:endpointId/keys/:keyId", async (c) => {
     .where(eq(apiKey.id, keyId))
 
   return c.json({ message: "API key revoked successfully" })
+})
+
+// =============================================================================
+// Stats Endpoint
+// =============================================================================
+
+/**
+ * Helper to generate array of past N days as YYYY-MM-DD strings
+ */
+function getPastDays(days: number): string[] {
+  const result: string[] = []
+  const now = new Date()
+  for (let i = 0; i < days; i++) {
+    const date = new Date(now)
+    date.setDate(date.getDate() - i)
+    result.push(date.toISOString().split("T")[0])
+  }
+  return result
+}
+
+/**
+ * GET /endpoints/:endpointId/keys/:keyId/stats
+ * Get usage statistics for a specific API key
+ */
+apiKeys.get("/:endpointId/keys/:keyId/stats", async (c) => {
+  const db = getDb()
+  const auth = getAuthContext(c)
+  const endpointId = c.req.param("endpointId")
+  const keyId = c.req.param("keyId")
+
+  // Verify access to endpoint
+  await verifyEndpointAccess(db, endpointId, auth.userId)
+
+  // Check if the key exists and belongs to this endpoint
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const existingKey = await (db as any).query.apiKey.findFirst({
+    where: and(
+      eq(apiKey.id, keyId),
+      eq(apiKey.endpointId, endpointId),
+      isNull(apiKey.revokedAt)
+    ),
+  })
+
+  if (!existingKey) {
+    throw ApiError.notFound("API key not found or revoked")
+  }
+
+  // Calculate date 7 days ago for daily breakdown
+  const sevenDaysAgo = new Date()
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+  sevenDaysAgo.setHours(0, 0, 0, 0)
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const dbAny = db as any
+
+  // Query traces that have this API key in their attributes JSON
+  // The apiKeyId is stored in the attributes column as JSON: {"apiKeyId": "..."}
+  const apiKeyJsonPattern = `%"apiKeyId":"${keyId}"%`
+
+  // Get total usage count
+  const totalCountResult = await dbAny
+    .select({ count: sql<number>`count(*)` })
+    .from(trace)
+    .where(sql`${trace.attributes} LIKE ${apiKeyJsonPattern}`)
+
+  const totalUsage = Number(totalCountResult[0]?.count ?? 0)
+
+  // Get error count for error rate calculation
+  const errorCountResult = await dbAny
+    .select({ count: sql<number>`count(*)` })
+    .from(trace)
+    .where(
+      and(
+        sql`${trace.attributes} LIKE ${apiKeyJsonPattern}`,
+        eq(trace.status, "error")
+      )
+    )
+
+  const totalErrors = Number(errorCountResult[0]?.count ?? 0)
+  const errorRate = totalUsage > 0 ? (totalErrors / totalUsage) * 100 : 0
+
+  // Get last 7 days breakdown
+  const pastDays = getPastDays(7)
+  const last7Days: Array<{ date: string; count: number; errors: number }> = []
+
+  for (const dateStr of pastDays) {
+    const dayStart = new Date(dateStr)
+    dayStart.setHours(0, 0, 0, 0)
+    const dayEnd = new Date(dateStr)
+    dayEnd.setHours(23, 59, 59, 999)
+
+    // Count total traces for this day
+    const dayCountResult = await dbAny
+      .select({ count: sql<number>`count(*)` })
+      .from(trace)
+      .where(
+        and(
+          sql`${trace.attributes} LIKE ${apiKeyJsonPattern}`,
+          gte(trace.startTime, dayStart),
+          sql`${trace.startTime} <= ${dayEnd}`
+        )
+      )
+
+    // Count error traces for this day
+    const dayErrorResult = await dbAny
+      .select({ count: sql<number>`count(*)` })
+      .from(trace)
+      .where(
+        and(
+          sql`${trace.attributes} LIKE ${apiKeyJsonPattern}`,
+          eq(trace.status, "error"),
+          gte(trace.startTime, dayStart),
+          sql`${trace.startTime} <= ${dayEnd}`
+        )
+      )
+
+    last7Days.push({
+      date: dateStr,
+      count: Number(dayCountResult[0]?.count ?? 0),
+      errors: Number(dayErrorResult[0]?.count ?? 0),
+    })
+  }
+
+  // Get most recent trace timestamp
+  const lastTraceResult = await dbAny
+    .select({ startTime: trace.startTime })
+    .from(trace)
+    .where(sql`${trace.attributes} LIKE ${apiKeyJsonPattern}`)
+    .orderBy(sql`${trace.startTime} DESC`)
+    .limit(1)
+
+  const lastUsed = lastTraceResult[0]?.startTime?.toISOString() ?? null
+
+  return c.json({
+    totalUsage,
+    last7Days,
+    errorRate: Math.round(errorRate * 100) / 100, // Round to 2 decimal places
+    lastUsed,
+  })
 })
 
 export default apiKeys
