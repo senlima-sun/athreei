@@ -1,4 +1,5 @@
-import { useParams, Link } from "react-router-dom"
+import { useState } from "react"
+import { useParams, Link, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -11,24 +12,82 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import {
   ArrowLeft,
-  Filter,
   Calendar,
   Tag,
   Search,
   FileText,
+  Globe,
+  Trash2,
+  AlertTriangle,
 } from "lucide-react"
+import {
+  useSpace,
+  useMemories,
+  useSearchMemories,
+  useDeleteMemory,
+} from "@/hooks"
+import { PageLoading } from "@/components/loading-spinner"
+import { PageError, ErrorDisplay } from "@/components/error-display"
+import { EmptyState } from "@/components/empty-state"
+import type { Memory } from "@/lib/types"
 
 export function SpaceDetailPage(): React.ReactElement {
   const { id } = useParams<{ id: string }>()
+  const navigate = useNavigate()
+  const [searchQuery, setSearchQuery] = useState("")
 
-  // Placeholder - will be replaced with actual data fetching
-  const space = {
-    id: id ?? "unknown",
-    name: id === "work" ? "Work Projects" : "Personal",
-    description:
-      id === "work"
-        ? "Professional tasks, meetings, and code reviews"
-        : "Personal notes, ideas, and learning",
+  // Fetch space details
+  const {
+    data: space,
+    isLoading: spaceLoading,
+    error: spaceError,
+  } = useSpace(id ?? "")
+
+  // Fetch memories for this space
+  const {
+    data: memories = [],
+    isLoading: memoriesLoading,
+    error: memoriesError,
+    refetch: refetchMemories,
+  } = useMemories(id, 100)
+
+  // Search memories
+  const { data: searchResults, isLoading: searchLoading } = useSearchMemories(
+    searchQuery,
+    id
+  )
+
+  // Use search results if searching, otherwise use all memories
+  const displayMemories =
+    searchQuery.length > 0 ? (searchResults ?? []) : memories
+
+  // Loading state
+  if (spaceLoading) {
+    return <PageLoading message="Loading space..." />
+  }
+
+  // Error state
+  if (spaceError) {
+    return <PageError error={spaceError} onRetry={() => navigate("/spaces")} />
+  }
+
+  // Not found
+  if (!space) {
+    return (
+      <div className="space-y-6">
+        <Link
+          to="/spaces"
+          className="flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Back to Spaces
+        </Link>
+        <PageError
+          error={new Error("Space not found")}
+          onRetry={() => navigate("/spaces")}
+        />
+      </div>
+    )
   }
 
   return (
@@ -44,9 +103,16 @@ export function SpaceDetailPage(): React.ReactElement {
         </Link>
       </div>
 
-      <div>
-        <h2 className="text-2xl font-semibold">{space.name}</h2>
-        <p className="mt-1 text-muted-foreground">{space.description}</p>
+      <div className="flex items-start gap-3">
+        {space.icon && (
+          <div className="rounded-lg bg-muted p-2 text-2xl">{space.icon}</div>
+        )}
+        <div>
+          <h2 className="text-2xl font-semibold">{space.name}</h2>
+          {space.source_rules && (
+            <p className="mt-1 text-muted-foreground">{space.source_rules}</p>
+          )}
+        </div>
       </div>
 
       {/* Filters */}
@@ -59,6 +125,8 @@ export function SpaceDetailPage(): React.ReactElement {
               <Input
                 placeholder="Search memories..."
                 className="pl-9"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
 
@@ -71,10 +139,6 @@ export function SpaceDetailPage(): React.ReactElement {
               <Tag className="h-4 w-4" />
               Tags
             </Button>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Filter className="h-4 w-4" />
-              Source
-            </Button>
           </div>
         </CardContent>
       </Card>
@@ -84,27 +148,167 @@ export function SpaceDetailPage(): React.ReactElement {
         <CardHeader>
           <CardTitle>Memories</CardTitle>
           <CardDescription>
-            All captured memories in this space
+            {searchQuery
+              ? `Search results for "${searchQuery}"`
+              : "All captured memories in this space"}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="mb-4 rounded-full bg-muted p-4">
-              <FileText className="h-8 w-8 text-muted-foreground" />
+          {memoriesLoading || searchLoading ? (
+            <PageLoading message="Loading memories..." />
+          ) : memoriesError ? (
+            <ErrorDisplay error={memoriesError} onRetry={refetchMemories} />
+          ) : displayMemories.length === 0 ? (
+            <EmptyState
+              icon={FileText}
+              title={searchQuery ? "No results found" : "No memories yet"}
+              description={
+                searchQuery
+                  ? `No memories match "${searchQuery}". Try a different search.`
+                  : "Memories will appear here when you use AI tools connected through MCP, or when you save manual notes."
+              }
+            />
+          ) : (
+            <div className="space-y-3">
+              {displayMemories.map((memory) => (
+                <MemoryCard key={memory.id} memory={memory} />
+              ))}
             </div>
-            <h3 className="mb-2 text-lg font-medium">No memories yet</h3>
-            <p className="max-w-sm text-sm text-muted-foreground">
-              Memories will appear here when you use AI tools connected through
-              MCP, or when you save manual notes.
-            </p>
-          </div>
+          )}
         </CardContent>
       </Card>
 
       {/* Active filters display */}
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-sm text-muted-foreground">Active filters:</span>
-        <Badge variant="outline">None</Badge>
+      {searchQuery && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm text-muted-foreground">Active filters:</span>
+          <Badge
+            variant="secondary"
+            className="cursor-pointer"
+            onClick={() => setSearchQuery("")}
+          >
+            Search: {searchQuery}
+            <span className="ml-1">&times;</span>
+          </Badge>
+        </div>
+      )}
+    </div>
+  )
+}
+
+interface MemoryCardProps {
+  memory: Memory
+}
+
+function MemoryCard({ memory }: MemoryCardProps): React.ReactElement {
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const deleteMemory = useDeleteMemory()
+
+  const time = new Date(memory.created_at * 1000)
+  const dateString = time.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  })
+  const timeString = time.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  })
+
+  const handleDelete = async (): Promise<void> => {
+    await deleteMemory.mutateAsync(memory.id)
+    setShowDeleteConfirm(false)
+  }
+
+  if (showDeleteConfirm) {
+    return (
+      <div className="flex items-center gap-3 rounded-lg border border-destructive/50 bg-destructive/5 p-3">
+        <AlertTriangle className="h-5 w-5 shrink-0 text-destructive" />
+        <div className="flex-1">
+          <p className="text-sm font-medium">Delete this memory?</p>
+          <p className="text-xs text-muted-foreground">
+            This action cannot be undone.
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowDeleteConfirm(false)}
+        >
+          Cancel
+        </Button>
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={handleDelete}
+          loading={deleteMemory.isPending}
+        >
+          Delete
+        </Button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="group flex items-start gap-3 rounded-lg border border-border bg-card/50 p-4 transition-colors hover:bg-card">
+      <div className="mt-0.5 rounded-md bg-muted p-2">
+        <Globe className="h-4 w-4 text-muted-foreground" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <h5 className="truncate font-medium">
+                {memory.title || memory.source || "Untitled"}
+              </h5>
+              <Badge variant="outline" className="shrink-0 text-xs">
+                {memory.source}
+              </Badge>
+            </div>
+            {memory.summary && (
+              <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                {memory.summary}
+              </p>
+            )}
+          </div>
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="shrink-0 rounded-md p-1 opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+            title="Delete memory"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Content preview */}
+        {memory.content && (
+          <div className="mt-2 rounded-md bg-muted/50 p-2">
+            <p className="line-clamp-3 text-xs text-muted-foreground">
+              {memory.content}
+            </p>
+          </div>
+        )}
+
+        {/* Metadata */}
+        <div className="mt-2 flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">
+            {dateString} at {timeString}
+          </span>
+          {memory.tags.length > 0 && (
+            <div className="flex items-center gap-1">
+              {memory.tags.slice(0, 3).map((tag) => (
+                <Badge key={tag} variant="secondary" className="text-xs">
+                  {tag}
+                </Badge>
+              ))}
+              {memory.tags.length > 3 && (
+                <span className="text-xs text-muted-foreground">
+                  +{memory.tags.length - 3}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

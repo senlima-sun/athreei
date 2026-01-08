@@ -11,11 +11,29 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
+import { useVaultStatus, useVaultIsSetup } from "@/hooks"
+import { UnlockScreen } from "@/components/unlock-screen"
+import { FullPageLoading } from "@/components/loading-spinner"
+import { FullPageError } from "@/components/error-display"
 
 export function Layout(): React.ReactElement {
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [mcpConnected, setMcpConnected] = useState(false)
+
+  // Vault status queries
+  const {
+    data: isUnlocked,
+    isLoading: isStatusLoading,
+    error: statusError,
+    refetch: refetchStatus,
+  } = useVaultStatus()
+  const {
+    data: isSetup,
+    isLoading: isSetupLoading,
+    error: setupError,
+    refetch: refetchSetup,
+  } = useVaultIsSetup()
 
   // Get page title based on current route
   const getPageTitle = (): string => {
@@ -50,6 +68,29 @@ export function Layout(): React.ReactElement {
     }
     checkMcpStatus()
   }, [])
+
+  // Show loading state while checking vault status
+  if (isStatusLoading || isSetupLoading) {
+    return <FullPageLoading message="Checking vault status..." />
+  }
+
+  // Show error state if vault status check fails
+  if (statusError || setupError) {
+    return (
+      <FullPageError
+        error={statusError || setupError}
+        onRetry={() => {
+          refetchStatus()
+          refetchSetup()
+        }}
+      />
+    )
+  }
+
+  // Show unlock screen if vault is locked or not set up
+  if (!isUnlocked) {
+    return <UnlockScreen isFirstTime={!isSetup} />
+  }
 
   return (
     <div className="dark flex h-screen bg-background text-foreground">
@@ -87,13 +128,25 @@ export function Layout(): React.ReactElement {
 
         {/* Navigation Links */}
         <nav className="flex-1 space-y-1">
-          <SidebarLink to="/" icon={<Home className="h-4 w-4" />} onClick={closeSidebar}>
+          <SidebarLink
+            to="/"
+            icon={<Home className="h-4 w-4" />}
+            onClick={closeSidebar}
+          >
             Today
           </SidebarLink>
-          <SidebarLink to="/spaces" icon={<FolderOpen className="h-4 w-4" />} onClick={closeSidebar}>
+          <SidebarLink
+            to="/spaces"
+            icon={<FolderOpen className="h-4 w-4" />}
+            onClick={closeSidebar}
+          >
             Spaces
           </SidebarLink>
-          <SidebarLink to="/settings" icon={<Settings className="h-4 w-4" />} onClick={closeSidebar}>
+          <SidebarLink
+            to="/settings"
+            icon={<Settings className="h-4 w-4" />}
+            onClick={closeSidebar}
+          >
             Settings
           </SidebarLink>
         </nav>
