@@ -18,6 +18,12 @@ import {
   McpEnvDelete,
 } from "./commands/mcp.js"
 import {
+  EndpointList,
+  EndpointDetails,
+  EndpointCreate,
+  EndpointDelete,
+} from "./commands/endpoint.js"
+import {
   ConfigInit,
   ConfigShow,
   ConfigSet,
@@ -33,6 +39,7 @@ import {
   GatewayConfigSet,
 } from "./commands/gateway.js"
 import { SyncStatus, SyncPull, SyncPush, SyncDiff } from "./commands/sync.js"
+import { ApiKeyList, ApiKeyCreate, ApiKeyRevoke } from "./commands/apikey.js"
 
 const program = new Command()
 
@@ -501,5 +508,117 @@ sync
     )
     await waitUntilExit()
   })
+
+// Endpoint commands
+const endpoint = program
+  .command("endpoint")
+  .description("Manage endpoints (MCP server aggregations with API keys)")
+
+endpoint
+  .command("list")
+  .description("List configured endpoints")
+  .option("--json", "Output in JSON format")
+  .action(async (options: { json?: boolean }) => {
+    const { waitUntilExit } = render(<EndpointList json={options.json} />)
+    await waitUntilExit()
+  })
+
+endpoint
+  .command("create")
+  .description("Create a new endpoint")
+  .option("-n, --name <name>", "Endpoint name")
+  .option(
+    "-s, --slug <slug>",
+    "Endpoint slug (auto-generated from name if not provided)"
+  )
+  .option("--namespace <id>", "Namespace ID")
+  .action(
+    async (options: { name?: string; slug?: string; namespace?: string }) => {
+      const { waitUntilExit } = render(
+        <EndpointCreate
+          name={options.name}
+          slug={options.slug}
+          namespace={options.namespace}
+        />
+      )
+      await waitUntilExit()
+    }
+  )
+
+endpoint
+  .command("details")
+  .description("Show endpoint details")
+  .argument("<id>", "Endpoint ID")
+  .action(async (id: string) => {
+    const { waitUntilExit } = render(<EndpointDetails id={id} />)
+    await waitUntilExit()
+  })
+
+endpoint
+  .command("delete")
+  .description("Delete an endpoint")
+  .argument("<id>", "Endpoint ID to delete")
+  .option("--confirm", "Skip interactive confirmation")
+  .action(async (id: string, options: { confirm?: boolean }) => {
+    const { waitUntilExit } = render(
+      <EndpointDelete id={id} confirm={options.confirm} />
+    )
+    await waitUntilExit()
+  })
+
+// API Key commands
+const apikey = program
+  .command("apikey")
+  .description("Manage API keys for endpoints")
+
+apikey
+  .command("list")
+  .description("List API keys for an endpoint")
+  .option("-e, --endpoint <id>", "Endpoint ID to filter by")
+  .option("--json", "Output in JSON format")
+  .action(async (options: { endpoint?: string; json?: boolean }) => {
+    const { waitUntilExit } = render(
+      <ApiKeyList endpointId={options.endpoint} json={options.json} />
+    )
+    await waitUntilExit()
+  })
+
+apikey
+  .command("create")
+  .description("Create a new API key")
+  .option("-n, --name <name>", "API key name")
+  .option("-e, --endpoint <id>", "Endpoint ID")
+  .option("--expires <date>", "Expiration date (ISO format)")
+  .action(
+    async (options: { name?: string; endpoint?: string; expires?: string }) => {
+      const { waitUntilExit } = render(
+        <ApiKeyCreate
+          name={options.name}
+          endpointId={options.endpoint}
+          expires={options.expires}
+        />
+      )
+      await waitUntilExit()
+    }
+  )
+
+apikey
+  .command("revoke")
+  .description("Revoke an API key")
+  .argument("<id>", "API key ID to revoke")
+  .option("-e, --endpoint <id>", "Endpoint ID")
+  .option("--confirm", "Skip interactive confirmation")
+  .action(
+    async (id: string, options: { endpoint?: string; confirm?: boolean }) => {
+      const { waitUntilExit } = render(
+        <ApiKeyRevoke
+          keyId={id}
+          endpointId={options.endpoint}
+          confirm={options.confirm}
+        />
+      )
+      await waitUntilExit()
+    }
+  )
 
 program.parse()
