@@ -1,9 +1,11 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
-import { Server, Settings } from "lucide-react"
+import { Server, Settings, Activity, Loader2 } from "lucide-react"
 import { McpTransportType } from "./mcp-type-selector"
 import { TRANSPORT_ICONS, TRANSPORT_LABELS, STATUS_STYLES } from "@/constants"
+import { fetchApi } from "@/lib/api"
 
 export type McpServerStatus = "active" | "inactive" | "error"
 
@@ -19,23 +21,65 @@ export interface McpServer {
   // SSE/HTTP config
   url?: string
   envKeys?: string[]
+  lastSeenAt?: string
   createdAt?: Date
   updatedAt?: Date
+}
+
+interface HealthStatus {
+  status: "healthy" | "unhealthy"
+  latency?: number
+  lastSeen?: string
+  error?: string
 }
 
 interface McpServerCardProps {
   server: McpServer
   href?: string
   showActions?: boolean
+  organizationId?: string
 }
 
 export function McpServerCard({
   server,
   href,
   showActions = true,
+  organizationId,
 }: McpServerCardProps) {
   const TransportIcon = TRANSPORT_ICONS[server.transportType]
   const statusStyle = STATUS_STYLES[server.status]
+  const [healthStatus, setHealthStatus] = useState<HealthStatus | null>(null)
+  const [isCheckingHealth, setIsCheckingHealth] = useState(false)
+
+  const checkHealth = async () => {
+    if (server.transportType === "stdio") return // Can't check STDIO remotely
+    setIsCheckingHealth(true)
+    try {
+      const result = await fetchApi<HealthStatus>(
+        `/api/mcp-servers/${server.id}/health`,
+        { organizationId }
+      )
+      setHealthStatus(result)
+    } catch {
+      setHealthStatus({ status: "unhealthy", error: "Health check failed" })
+    } finally {
+      setIsCheckingHealth(false)
+    }
+  }
+
+  const formatLastSeen = (dateStr?: string) => {
+    if (!dateStr) return null
+    const date = new Date(dateStr)
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffMins = Math.floor(diffMs / 60000)
+    const diffHours = Math.floor(diffMs / 3600000)
+
+    if (diffMins < 1) return "Just now"
+    if (diffMins < 60) return `${diffMins}m ago`
+    if (diffHours < 24) return `${diffHours}h ago`
+    return date.toLocaleDateString()
+  }
 
   const CardContent = () => (
     <>
@@ -85,6 +129,59 @@ export function McpServerCard({
         )}
       </div>
 
+      {/* Health status section */}
+      {server.transportType !== "stdio" && (
+        <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-3">
+          <div className="flex items-center gap-2">
+            {healthStatus ? (
+              <span
+                className={`inline-flex items-center gap-1 text-xs ${
+                  healthStatus.status === "healthy"
+                    ? "text-green-600"
+                    : "text-red-600"
+                }`}
+              >
+                <span
+                  className={`h-1.5 w-1.5 rounded-full ${
+                    healthStatus.status === "healthy"
+                      ? "bg-green-500"
+                      : "bg-red-500"
+                  }`}
+                />
+                {healthStatus.status === "healthy" ? "Healthy" : "Unhealthy"}
+                {healthStatus.latency && (
+                  <span className="text-gray-400">
+                    ({healthStatus.latency}ms)
+                  </span>
+                )}
+              </span>
+            ) : server.lastSeenAt ? (
+              <span className="text-xs text-gray-500">
+                Last seen: {formatLastSeen(server.lastSeenAt)}
+              </span>
+            ) : (
+              <span className="text-xs text-gray-400">
+                Health status unknown
+              </span>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={checkHealth}
+            disabled={isCheckingHealth}
+            className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs text-gray-500 hover:bg-gray-100 disabled:opacity-50"
+            title="Check health"
+          >
+            {isCheckingHealth ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <Activity className="h-3 w-3" />
+            )}
+            Check
+          </button>
+        </div>
+      )}
+
       {showActions && (
         <div className="mt-3 flex items-center justify-end gap-2">
           {href && (
@@ -123,12 +220,14 @@ interface McpServerCardGridProps {
   servers: McpServer[]
   baseHref?: string
   showActions?: boolean
+  organizationId?: string
 }
 
 export function McpServerCardGrid({
   servers,
   baseHref,
   showActions = true,
+  organizationId,
 }: McpServerCardGridProps) {
   if (servers.length === 0) {
     return (
@@ -152,6 +251,7 @@ export function McpServerCardGrid({
           server={server}
           href={baseHref ? `${baseHref}/${server.id}` : undefined}
           showActions={showActions}
+          organizationId={organizationId}
         />
       ))}
     </div>
