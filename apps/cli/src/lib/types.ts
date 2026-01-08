@@ -1,5 +1,12 @@
 // API Response Types for CLI
 
+// Environment variable (value masked by default)
+export interface EnvVar {
+  key: string
+  masked: boolean
+  value?: string // Only present if unmasked
+}
+
 export interface McpServer {
   id: string
   name: string
@@ -11,6 +18,8 @@ export interface McpServer {
   url?: string // For SSE/HTTP
   organizationId: string
   namespaceId?: string | null
+  toolsCount?: number
+  envVars?: EnvVar[]
   createdAt: string
   updatedAt: string
 }
@@ -100,11 +109,4 @@ export interface VerifyResult {
   latency?: number
   toolCount?: number
   error?: string
-}
-
-// Environment variable (value masked by default)
-export interface EnvVar {
-  key: string
-  masked: boolean
-  value?: string // Only present if unmasked
 }
