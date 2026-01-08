@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useParams, Link, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import {
@@ -12,8 +12,6 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import {
   ArrowLeft,
-  Calendar,
-  Tag,
   Search,
   FileText,
   Globe,
@@ -25,16 +23,31 @@ import {
   useMemories,
   useSearchMemories,
   useDeleteMemory,
+  useTags,
+  useMemoryFilters,
 } from "@/hooks"
 import { PageLoading } from "@/components/loading-spinner"
 import { PageError, ErrorDisplay } from "@/components/error-display"
 import { EmptyState } from "@/components/empty-state"
+import { MemoryFilters } from "@/components/memory-filters"
 import type { Memory } from "@/lib/types"
 
 export function SpaceDetailPage(): React.ReactElement {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState("")
+
+  // Filter state
+  const {
+    filters,
+    filterMemories,
+    clearFilters,
+    setDateRange,
+    setSource,
+    toggleTag,
+    activeFilterCount,
+    hasActiveFilters,
+  } = useMemoryFilters()
 
   // Fetch space details
   const {
@@ -51,15 +64,21 @@ export function SpaceDetailPage(): React.ReactElement {
     refetch: refetchMemories,
   } = useMemories(id, 100)
 
+  // Fetch tags for filter dropdown
+  const { data: tags = [] } = useTags()
+
   // Search memories
   const { data: searchResults, isLoading: searchLoading } = useSearchMemories(
     searchQuery,
     id
   )
 
-  // Use search results if searching, otherwise use all memories
-  const displayMemories =
-    searchQuery.length > 0 ? (searchResults ?? []) : memories
+  // Apply search first, then filters
+  const baseMemories = searchQuery.length > 0 ? (searchResults ?? []) : memories
+  const displayMemories = useMemo(
+    () => filterMemories(baseMemories),
+    [filterMemories, baseMemories]
+  )
 
   // Loading state
   if (spaceLoading) {
@@ -115,12 +134,12 @@ export function SpaceDetailPage(): React.ReactElement {
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Search and Filters */}
       <Card>
         <CardContent className="p-4">
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="space-y-4">
             {/* Search */}
-            <div className="relative flex-1">
+            <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Search memories..."
@@ -130,15 +149,17 @@ export function SpaceDetailPage(): React.ReactElement {
               />
             </div>
 
-            {/* Filter buttons */}
-            <Button variant="outline" size="sm" className="gap-2">
-              <Calendar className="h-4 w-4" />
-              Date Range
-            </Button>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Tag className="h-4 w-4" />
-              Tags
-            </Button>
+            {/* Filters */}
+            <MemoryFilters
+              filters={filters}
+              memories={memories}
+              tags={tags}
+              onDateRangeChange={setDateRange}
+              onSourceChange={setSource}
+              onTagToggle={toggleTag}
+              onClearAll={clearFilters}
+              activeFilterCount={activeFilterCount}
+            />
           </div>
         </CardContent>
       </Card>
@@ -146,11 +167,22 @@ export function SpaceDetailPage(): React.ReactElement {
       {/* Memories List */}
       <Card>
         <CardHeader>
-          <CardTitle>Memories</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Memories</CardTitle>
+            {(searchQuery || hasActiveFilters) && (
+              <Badge variant="outline" className="text-xs">
+                {displayMemories.length} of {memories.length}
+              </Badge>
+            )}
+          </div>
           <CardDescription>
-            {searchQuery
-              ? `Search results for "${searchQuery}"`
-              : "All captured memories in this space"}
+            {searchQuery && hasActiveFilters
+              ? `Filtered search results for "${searchQuery}"`
+              : searchQuery
+                ? `Search results for "${searchQuery}"`
+                : hasActiveFilters
+                  ? "Filtered memories in this space"
+                  : "All captured memories in this space"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -178,17 +210,17 @@ export function SpaceDetailPage(): React.ReactElement {
         </CardContent>
       </Card>
 
-      {/* Active filters display */}
+      {/* Active search display */}
       {searchQuery && (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm text-muted-foreground">Active filters:</span>
+          <span className="text-sm text-muted-foreground">Search:</span>
           <Badge
             variant="secondary"
-            className="cursor-pointer"
+            className="cursor-pointer gap-1"
             onClick={() => setSearchQuery("")}
           >
-            Search: {searchQuery}
-            <span className="ml-1">&times;</span>
+            {searchQuery}
+            <span>&times;</span>
           </Badge>
         </div>
       )}

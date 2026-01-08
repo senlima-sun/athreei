@@ -35,6 +35,12 @@ export { useMcpStatus, useMcpStart, useMcpStop } from "./use-mcp"
 // Utility hooks
 export { useDebounce } from "./use-debounce"
 export { useSearch } from "./use-search"
+export {
+  useMemoryFilters,
+  DATE_RANGE_OPTIONS,
+  type MemoryFilters,
+  type DateRange,
+} from "./use-memory-filters"
 
 // Stats hooks
 export { useStats } from "./use-stats"
