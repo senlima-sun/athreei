@@ -31,3 +31,10 @@ export {
 
 // MCP hooks
 export { useMcpStatus, useMcpStart, useMcpStop } from "./use-mcp"
+
+// Utility hooks
+export { useDebounce } from "./use-debounce"
+export { useSearch } from "./use-search"
+
+// Stats hooks
+export { useStats } from "./use-stats"

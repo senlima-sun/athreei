@@ -8,11 +8,22 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { FileText, Sparkles, Clock, Globe } from "lucide-react"
-import { useMemories } from "@/hooks"
+import {
+  FileText,
+  Sparkles,
+  Clock,
+  Globe,
+  Database,
+  Calendar,
+  CalendarDays,
+  Folder,
+} from "lucide-react"
+import { useMemories, useStats } from "@/hooks"
 import { PageLoading } from "@/components/loading-spinner"
 import { ErrorDisplay } from "@/components/error-display"
 import { EmptyState } from "@/components/empty-state"
+import { StatsCard } from "@/components/stats-card"
+import { ActivityChart } from "@/components/activity-chart"
 import type { Memory } from "@/lib/types"
 
 /**
@@ -61,6 +72,8 @@ export function HomePage(): React.ReactElement {
     refetch,
   } = useMemories(undefined, 100) // Fetch recent 100 memories
 
+  const { stats, weeklyData, isLoading: isLoadingStats } = useStats()
+
   // Filter to today's memories
   const todayStart = useMemo(() => getTodayStart(), [])
   const todayMemories = useMemo(
@@ -90,6 +103,41 @@ export function HomePage(): React.ReactElement {
           Save Manual Note
         </Button>
       </div>
+
+      {/* Activity Stats */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatsCard
+          icon={Database}
+          value={isLoadingStats ? "-" : stats.totalMemories}
+          label="Total Memories"
+        />
+        <StatsCard
+          icon={Calendar}
+          value={isLoadingStats ? "-" : stats.memoriesToday}
+          label="Today"
+        />
+        <StatsCard
+          icon={CalendarDays}
+          value={isLoadingStats ? "-" : stats.memoriesThisWeek}
+          label="This Week"
+        />
+        <StatsCard
+          icon={Folder}
+          value={
+            isLoadingStats
+              ? "-"
+              : (stats.mostActiveSpace?.name ?? "No activity")
+          }
+          label="Most Active Space"
+        />
+      </div>
+
+      {/* Weekly Activity Chart */}
+      <Card>
+        <CardContent className="pt-6">
+          <ActivityChart data={weeklyData} />
+        </CardContent>
+      </Card>
 
       {/* Today's Timeline */}
       <Card>
