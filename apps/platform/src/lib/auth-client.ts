@@ -3,6 +3,7 @@
 import { createAuthClient } from "better-auth/react"
 import { organizationClient } from "better-auth/client/plugins"
 import { API_URL } from "@/constants"
+import { isLocalMode } from "./mode"
 
 /**
  * Auth client instance for the platform
@@ -25,3 +26,20 @@ export const { useSession, signIn, signOut, signUp } = authClient
  */
 export const { useActiveOrganization, useListOrganizations, organization } =
   authClient
+
+/**
+ * Safe organization hook that works in both local and cloud modes
+ * Returns a mock organization in local mode
+ */
+export function useActiveOrganizationSafe() {
+  const cloudOrg = useActiveOrganization()
+
+  if (isLocalMode()) {
+    return {
+      data: { id: "local", name: "Local", slug: "local" },
+      isLoading: false,
+    }
+  }
+
+  return cloudOrg
+}

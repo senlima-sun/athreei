@@ -1,6 +1,7 @@
 "use client"
 
 import { API_URL } from "@/constants"
+import { isLocalMode, getApiUrl } from "./mode"
 
 export interface AppConfig {
   features: {
@@ -41,4 +42,34 @@ export async function getConfig(): Promise<AppConfig> {
 export async function isEmailVerificationEnabled(): Promise<boolean> {
   const config = await getConfig()
   return config.features.emailVerification
+}
+
+/**
+ * Mode-aware API client for fetching data
+ * Handles local vs cloud mode differences automatically
+ */
+export async function fetchApi<T>(
+  path: string,
+  options?: RequestInit & { organizationId?: string }
+): Promise<T> {
+  const base = getApiUrl()
+  const url = new URL(path, base)
+
+  // Add organizationId for cloud mode requests
+  if (!isLocalMode() && options?.organizationId) {
+    url.searchParams.set("organizationId", options.organizationId)
+  }
+
+  const { organizationId: _, ...fetchOptions } = options ?? {}
+
+  const res = await fetch(url.toString(), {
+    ...fetchOptions,
+    credentials: isLocalMode() ? "omit" : "include",
+  })
+
+  if (!res.ok) {
+    throw new Error(`API error: ${res.status}`)
+  }
+
+  return res.json()
 }

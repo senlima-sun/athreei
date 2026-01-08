@@ -3,6 +3,7 @@
 import { ReactNode } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { useListOrganizations, useSession } from "@/lib/auth-client"
+import { isLocalMode } from "@/lib/mode"
 import { Loader2 } from "lucide-react"
 
 interface OnboardingGuardProps {
@@ -14,12 +15,19 @@ interface OnboardingGuardProps {
  *
  * This component wraps dashboard content and ensures users complete the onboarding
  * flow (creating their first organization) before accessing the dashboard.
+ *
+ * In local mode, this guard is bypassed entirely.
  */
 export function OnboardingGuard({ children }: OnboardingGuardProps) {
   const router = useRouter()
   const pathname = usePathname()
   const { data: session, isPending: sessionPending } = useSession()
   const { data: orgList, isPending: orgsPending } = useListOrganizations()
+
+  // Local mode bypass - no onboarding required
+  if (isLocalMode()) {
+    return <>{children}</>
+  }
 
   // Skip check if already on onboarding route
   if (pathname.startsWith("/onboarding")) {
