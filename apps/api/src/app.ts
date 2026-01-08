@@ -21,6 +21,7 @@ import {
   registryRoutes,
   cliAuthRoutes,
   profileRoutes,
+  sessionsRoutes,
 } from "./routes"
 import { errorHandler, notFoundHandler } from "./middleware"
 import { getAuth } from "./lib/auth"
@@ -107,6 +108,9 @@ app.route("/api/tools", toolsRoutes)
 
 // Profile routes (protected)
 app.route("/api/profile", profileRoutes)
+
+// Sessions routes (protected)
+app.route("/api/sessions", sessionsRoutes)
 
 // =============================================================================
 // Error Handling
