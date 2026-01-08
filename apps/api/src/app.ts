@@ -24,6 +24,7 @@ import {
   sessionsRoutes,
   dashboardRoutes,
   auditRoutes,
+  permissionsRoutes,
 } from "./routes"
 import { errorHandler, notFoundHandler } from "./middleware"
 import { getAuth } from "./lib/auth"
@@ -119,6 +120,9 @@ app.route("/api/dashboard", dashboardRoutes)
 
 // Audit routes (protected)
 app.route("/api/audit", auditRoutes)
+
+// Permissions routes (protected)
+app.route("/api/permissions", permissionsRoutes)
 
 // =============================================================================
 // Error Handling
