@@ -13,9 +13,24 @@ import {
   AlertCircle,
   Eye,
   EyeOff,
+  Monitor,
+  Smartphone,
+  X,
 } from "lucide-react"
 
 type SettingsTab = "profile" | "security" | "notifications"
+
+// Auth session type from the sessions API
+interface AuthSession {
+  id: string
+  device: string | null
+  browser: string | null
+  lastActive: string
+  current: boolean
+  ipAddress: string | null
+  userAgent: string | null
+  createdAt: string
+}
 
 interface TabProps {
   id: SettingsTab
@@ -326,9 +341,7 @@ function SecuritySettings() {
                   )}
                 </button>
               </div>
-              <p className="mt-1 text-xs text-gray-500">
-                Minimum 8 characters
-              </p>
+              <p className="mt-1 text-xs text-gray-500">Minimum 8 characters</p>
             </div>
 
             <div>
@@ -383,15 +396,146 @@ function SecuritySettings() {
         )}
       </div>
 
-      <div className="rounded-lg border border-gray-200 bg-white p-6">
-        <h4 className="font-medium text-gray-900">Sessions</h4>
-        <p className="mt-1 text-sm text-gray-500">
-          Manage your active sessions across devices.
-        </p>
-        <div className="mt-4 rounded-md border border-gray-100 bg-gray-50 p-3">
-          <p className="text-sm text-gray-600">Current session</p>
-          <p className="mt-0.5 text-xs text-gray-500">Active now</p>
+      <SessionsSection />
+    </div>
+  )
+}
+
+function SessionsSection() {
+  const [sessions, setSessions] = useState<AuthSession[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [revokingId, setRevokingId] = useState<string | null>(null)
+
+  const fetchSessions = async () => {
+    try {
+      setError(null)
+      const response = await fetchApi<{ sessions: AuthSession[] }>(
+        "/api/sessions"
+      )
+      setSessions(response.sessions || [])
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load sessions")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchSessions()
+  }, [])
+
+  const handleRevokeSession = async (sessionId: string) => {
+    setRevokingId(sessionId)
+    setError(null)
+    try {
+      await fetchApi(`/api/sessions/${sessionId}`, { method: "DELETE" })
+      await fetchSessions()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to revoke session")
+    } finally {
+      setRevokingId(null)
+    }
+  }
+
+  const formatLastActive = (dateStr: string) => {
+    const date = new Date(dateStr)
+    const now = new Date()
+    const diffMs = now.getTime() - date.getTime()
+    const diffMins = Math.floor(diffMs / 60000)
+    const diffHours = Math.floor(diffMs / 3600000)
+    const diffDays = Math.floor(diffMs / 86400000)
+
+    if (diffMins < 1) return "Just now"
+    if (diffMins < 60) return `${diffMins}m ago`
+    if (diffHours < 24) return `${diffHours}h ago`
+    if (diffDays < 7) return `${diffDays}d ago`
+    return date.toLocaleDateString()
+  }
+
+  const getDeviceIcon = (device: string | null) => {
+    if (!device) return Monitor
+    const d = device.toLowerCase()
+    if (d.includes("iphone") || d.includes("android") || d.includes("mobile")) {
+      return Smartphone
+    }
+    return Monitor
+  }
+
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white p-6">
+      <h4 className="font-medium text-gray-900">Sessions</h4>
+      <p className="mt-1 text-sm text-gray-500">
+        Manage your active sessions across devices.
+      </p>
+
+      {error && (
+        <div className="mt-4 flex items-center gap-2 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+          <AlertCircle className="h-4 w-4" />
+          {error}
         </div>
+      )}
+
+      <div className="mt-4 space-y-3">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-4">
+            <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
+          </div>
+        ) : sessions.length === 0 ? (
+          <p className="py-4 text-center text-sm text-gray-500">
+            No active sessions found
+          </p>
+        ) : (
+          sessions.map((session) => {
+            const DeviceIcon = getDeviceIcon(session.device)
+            return (
+              <div
+                key={session.id}
+                className={`flex items-center justify-between rounded-md border p-3 ${
+                  session.current
+                    ? "border-green-200 bg-green-50"
+                    : "border-gray-100 bg-gray-50"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <DeviceIcon className="h-5 w-5 text-gray-400" />
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-gray-900">
+                        {session.browser || "Unknown browser"}
+                        {session.device && ` on ${session.device}`}
+                      </p>
+                      {session.current && (
+                        <span className="rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+                          Current
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-500">
+                      {formatLastActive(session.lastActive)}
+                      {session.ipAddress && ` • ${session.ipAddress}`}
+                    </p>
+                  </div>
+                </div>
+                {!session.current && (
+                  <button
+                    type="button"
+                    onClick={() => handleRevokeSession(session.id)}
+                    disabled={revokingId === session.id}
+                    className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:opacity-50"
+                    title="Revoke session"
+                  >
+                    {revokingId === session.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <X className="h-4 w-4" />
+                    )}
+                  </button>
+                )}
+              </div>
+            )
+          })
+        )}
       </div>
     </div>
   )
