@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useLocation } from "react-router-dom"
-import { useState, useEffect, type ReactNode } from "react"
+import { useState, useEffect, useCallback, type ReactNode } from "react"
 import {
   Home,
   FolderOpen,
@@ -15,11 +15,13 @@ import { useVaultStatus, useVaultIsSetup } from "@/hooks"
 import { UnlockScreen } from "@/components/unlock-screen"
 import { FullPageLoading } from "@/components/loading-spinner"
 import { FullPageError } from "@/components/error-display"
+import { SearchDialog } from "@/components/search-dialog"
 
 export function Layout(): React.ReactElement {
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [mcpConnected, setMcpConnected] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
 
   // Vault status queries
   const {
@@ -47,18 +49,23 @@ export function Layout(): React.ReactElement {
   // Close sidebar when route changes (for mobile)
   const closeSidebar = (): void => setSidebarOpen(false)
 
-  // Keyboard shortcut for search (Cmd+K)
+  // Open search dialog
+  const openSearch = useCallback((): void => {
+    setSearchOpen(true)
+  }, [])
+
+  // Keyboard shortcut for search (Cmd+K / Ctrl+K)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent): void => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault()
-        // TODO: Open search modal
+        openSearch()
       }
     }
 
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [])
+  }, [openSearch])
 
   // Simulate MCP connection status check
   useEffect(() => {
@@ -189,9 +196,7 @@ export function Layout(): React.ReactElement {
             {/* Search shortcut hint */}
             <button
               className="flex items-center gap-2 rounded-md border border-border bg-muted/50 px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted"
-              onClick={() => {
-                // TODO: Open search modal
-              }}
+              onClick={openSearch}
             >
               <Search className="h-4 w-4" />
               <span className="hidden sm:inline">Search</span>
@@ -207,6 +212,9 @@ export function Layout(): React.ReactElement {
           <Outlet />
         </main>
       </div>
+
+      {/* Search Dialog */}
+      <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
     </div>
   )
 }
