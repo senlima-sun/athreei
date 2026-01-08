@@ -1,21 +1,12 @@
 import React, { useState, useEffect } from "react"
 import { Box, Text, useApp } from "ink"
 import Spinner from "ink-spinner"
-import { getAuthManager } from "../auth/manager.js"
+import { getApiClient, ApiError } from "../lib/api.js"
 import { createCredentialStore } from "../auth/credentials.js"
+import { ErrorDisplay } from "../components/error.js"
+import type { McpServer } from "../lib/types.js"
 
-const API_URL = process.env.ATHREEI_API_URL || "http://localhost:3001"
-
-interface McpServer {
-  id: string
-  name: string
-  description: string | null
-  transport: "stdio" | "sse" | "streamable-http"
-  status: "active" | "inactive" | "pending"
-  lastSeenAt: string | null
-}
-
-interface ListResponse {
+interface McpServerListResponse {
   data: McpServer[]
   pagination: {
     limit: number
@@ -33,24 +24,17 @@ export function McpList(props: {
   const { exit } = useApp()
   const [loading, setLoading] = useState(true)
   const [servers, setServers] = useState<McpServer[]>([])
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<Error | ApiError | null>(null)
 
   useEffect(() => {
     async function load() {
-      const manager = getAuthManager()
       const store = createCredentialStore()
-      const session = await manager.getSession("athreei")
-
-      if (!session) {
-        setError("Not authenticated. Run: athreei auth login")
-        setLoading(false)
-        setTimeout(() => exit(), 100)
-        return
-      }
-
       const orgId = await store.getActiveOrg()
+
       if (!orgId) {
-        setError("No organization selected. Run: athreei org switch <name>")
+        setError(
+          new Error("No organization selected. Run: athreei org switch <name>")
+        )
         setLoading(false)
         setTimeout(() => exit(), 100)
         return
@@ -65,19 +49,14 @@ export function McpList(props: {
         if (props.status) params.append("status", props.status)
         if (props.transport) params.append("transport", props.transport)
 
-        const res = await fetch(
-          `${API_URL}/api/mcp-servers?${params.toString()}`,
-          {
-            headers: { Authorization: `Bearer ${session.accessToken}` },
-          }
+        const client = getApiClient()
+        const data = await client.get<McpServerListResponse>(
+          `/api/mcp-servers?${params.toString()}`
         )
-
-        if (!res.ok) throw new Error(`API error: ${res.statusText}`)
-        const data: ListResponse = await res.json()
         setServers(data.data)
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Failed to fetch MCP servers"
+          err instanceof Error ? err : new Error("Failed to fetch MCP servers")
         )
       }
 
@@ -100,11 +79,7 @@ export function McpList(props: {
   }
 
   if (error) {
-    return (
-      <Box padding={1}>
-        <Text color="red">Error: {error}</Text>
-      </Box>
-    )
+    return <ErrorDisplay error={error} context="fetching MCP servers" />
   }
 
   if (servers.length === 0) {
