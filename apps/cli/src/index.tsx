@@ -6,7 +6,14 @@ import { LoginFlow } from "./components/login-flow.js"
 import { AuthStatus } from "./components/auth-status.js"
 import { getAuthManager } from "./auth/manager.js"
 import { OrgList, OrgSwitch, OrgCurrent } from "./commands/org.js"
-import { McpList, McpUpdate, McpDelete, McpCreate } from "./commands/mcp.js"
+import {
+  McpList,
+  McpUpdate,
+  McpDelete,
+  McpCreate,
+  McpVerify,
+  McpTools,
+} from "./commands/mcp.js"
 
 const program = new Command()
 
@@ -218,6 +225,33 @@ mcp
     const { waitUntilExit } = render(
       <McpDelete id={id} confirm={options.confirm} />
     )
+    await waitUntilExit()
+  })
+
+mcp
+  .command("verify")
+  .description("Verify MCP server connectivity")
+  .argument("<id>", "MCP server ID to verify")
+  .option(
+    "-t, --timeout <ms>",
+    "Connection timeout in milliseconds",
+    (val) => parseInt(val, 10),
+    10000
+  )
+  .action(async (id: string, options: { timeout: number }) => {
+    const { waitUntilExit } = render(
+      <McpVerify id={id} timeout={options.timeout} />
+    )
+    await waitUntilExit()
+  })
+
+mcp
+  .command("tools")
+  .description("List tools exposed by an MCP server")
+  .argument("<id>", "MCP server ID")
+  .option("--json", "Output in JSON format")
+  .action(async (id: string, options: { json?: boolean }) => {
+    const { waitUntilExit } = render(<McpTools id={id} json={options.json} />)
     await waitUntilExit()
   })
 

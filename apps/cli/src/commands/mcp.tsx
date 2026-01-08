@@ -5,7 +5,7 @@ import SelectInput from "ink-select-input"
 import { getApiClient, ApiError } from "../lib/api.js"
 import { createCredentialStore } from "../auth/credentials.js"
 import { ErrorDisplay } from "../components/error.js"
-import type { McpServer, EnvVar } from "../lib/types.js"
+import type { McpServer, EnvVar, VerifyResult } from "../lib/types.js"
 
 type TransportType = "stdio" | "sse" | "streamable-http"
 
@@ -1249,6 +1249,247 @@ export function McpCreate(props: McpCreateProps) {
         <Spinner type="dots" />
       </Text>
       <Text> Validating...</Text>
+    </Box>
+  )
+}
+
+interface McpVerifyProps {
+  id: string
+  timeout?: number
+}
+
+interface VerifyResponse {
+  data: VerifyResult
+}
+
+type VerifyState =
+  | { phase: "verifying" }
+  | { phase: "success"; result: VerifyResult }
+  | { phase: "error"; error: Error | ApiError }
+
+export function McpVerify(props: McpVerifyProps) {
+  const { exit } = useApp()
+  const [state, setState] = useState<VerifyState>({ phase: "verifying" })
+  const timeout = props.timeout ?? 10000
+
+  useEffect(() => {
+    async function verify() {
+      try {
+        const client = getApiClient()
+        const response = await client.post<VerifyResponse>(
+          `/api/mcp-servers/${props.id}/verify`,
+          undefined,
+          { timeout }
+        )
+
+        if (response.data.success) {
+          setState({ phase: "success", result: response.data })
+        } else {
+          // API returned success: false - treat as verification failure
+          setState({ phase: "success", result: response.data })
+        }
+      } catch (err) {
+        setState({
+          phase: "error",
+          error:
+            err instanceof Error
+              ? err
+              : new Error("Failed to verify MCP server"),
+        })
+      }
+      setTimeout(() => exit(), 100)
+    }
+
+    verify()
+  }, [props.id, timeout, exit])
+
+  if (state.phase === "verifying") {
+    return (
+      <Box padding={1}>
+        <Text color="yellow">
+          <Spinner type="dots" />
+        </Text>
+        <Text> Verifying MCP server connectivity...</Text>
+      </Box>
+    )
+  }
+
+  if (state.phase === "error") {
+    return <ErrorDisplay error={state.error} context="verifying MCP server" />
+  }
+
+  if (state.phase === "success") {
+    const { result } = state
+
+    if (result.success) {
+      return (
+        <Box flexDirection="column" padding={1}>
+          <Box>
+            <Text color="green">✓ </Text>
+            <Text color="green" bold>
+              MCP server is reachable
+            </Text>
+          </Box>
+
+          {result.latency !== undefined && (
+            <Box marginLeft={2} marginTop={1}>
+              <Text dimColor>Latency: </Text>
+              <Text color="cyan">{result.latency}ms</Text>
+            </Box>
+          )}
+
+          {result.toolCount !== undefined && (
+            <Box marginLeft={2}>
+              <Text dimColor>Tools discovered: </Text>
+              <Text color="cyan">{result.toolCount}</Text>
+            </Box>
+          )}
+        </Box>
+      )
+    } else {
+      return (
+        <Box flexDirection="column" padding={1}>
+          <Box>
+            <Text color="red">✗ </Text>
+            <Text color="red" bold>
+              MCP server verification failed
+            </Text>
+          </Box>
+
+          {result.error && (
+            <Box marginLeft={2} marginTop={1}>
+              <Text dimColor>Error: </Text>
+              <Text color="yellow">{result.error}</Text>
+            </Box>
+          )}
+
+          {result.latency !== undefined && (
+            <Box marginLeft={2} marginTop={1}>
+              <Text dimColor>Latency: </Text>
+              <Text color="cyan">{result.latency}ms</Text>
+            </Box>
+          )}
+        </Box>
+      )
+    }
+  }
+
+  return null
+}
+
+// Types for the tools response
+interface ToolInputSchema {
+  type: "object"
+  properties?: Record<string, { type: string; description?: string }>
+  required?: string[]
+}
+
+interface McpToolItem {
+  name: string
+  description: string
+  inputSchema: ToolInputSchema
+}
+
+interface McpToolsResponse {
+  tools: McpToolItem[]
+}
+
+function formatSchemaType(schema: ToolInputSchema): string {
+  if (!schema.properties) return "(no parameters)"
+
+  const props = Object.entries(schema.properties)
+  if (props.length === 0) return "(no parameters)"
+
+  const required = new Set(schema.required ?? [])
+  return props
+    .map(([name, prop]) => {
+      const isRequired = required.has(name)
+      return `${name}${isRequired ? "" : "?"}: ${prop.type}`
+    })
+    .join(", ")
+}
+
+export function McpTools(props: { id: string; json?: boolean }) {
+  const { exit } = useApp()
+  const [loading, setLoading] = useState(true)
+  const [tools, setTools] = useState<McpToolItem[]>([])
+  const [error, setError] = useState<Error | ApiError | null>(null)
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const client = getApiClient()
+        const data = await client.get<McpToolsResponse>(
+          `/api/mcp-servers/${props.id}/tools`
+        )
+        setTools(data.tools)
+      } catch (err) {
+        setError(
+          err instanceof Error ? err : new Error("Failed to fetch MCP tools")
+        )
+      }
+
+      setLoading(false)
+      setTimeout(() => exit(), 100)
+    }
+
+    load()
+  }, [exit, props.id])
+
+  if (loading) {
+    return (
+      <Box padding={1}>
+        <Text color="yellow">
+          <Spinner type="dots" />
+        </Text>
+        <Text> Loading MCP server tools...</Text>
+      </Box>
+    )
+  }
+
+  if (error) {
+    return <ErrorDisplay error={error} context="fetching MCP server tools" />
+  }
+
+  // JSON output mode
+  if (props.json) {
+    console.log(JSON.stringify({ tools }, null, 2))
+    return null
+  }
+
+  if (tools.length === 0) {
+    return (
+      <Box padding={1}>
+        <Text color="yellow">No tools found for this MCP server</Text>
+      </Box>
+    )
+  }
+
+  return (
+    <Box flexDirection="column" padding={1}>
+      <Box marginBottom={1}>
+        <Text bold color="cyan">
+          MCP Server Tools ({tools.length})
+        </Text>
+      </Box>
+      {tools.map((tool) => (
+        <Box key={tool.name} flexDirection="column" marginBottom={1}>
+          <Box>
+            <Text bold color="green">
+              {tool.name}
+            </Text>
+          </Box>
+          {tool.description && (
+            <Box marginLeft={2}>
+              <Text>{tool.description}</Text>
+            </Box>
+          )}
+          <Box marginLeft={2}>
+            <Text dimColor>Parameters: </Text>
+            <Text color="magenta">{formatSchemaType(tool.inputSchema)}</Text>
+          </Box>
+        </Box>
+      ))}
     </Box>
   )
 }
