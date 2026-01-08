@@ -2,51 +2,51 @@
 import React, { useState, useEffect } from "react"
 import { Box, Text, useApp } from "ink"
 import Spinner from "ink-spinner"
-import { getAuthManager } from "../auth/manager.js"
+import { getApiClient, ApiError, AuthError } from "../lib/api.js"
 import { createCredentialStore } from "../auth/credentials.js"
+import { ErrorDisplay } from "../components/error.js"
 
-const API_URL = process.env.ATHREEI_API_URL || "http://localhost:3001"
-
-interface Organization {
+// Extended Organization type with role from verify response
+interface OrganizationWithRole {
   id: string
   name: string
   slug: string
   role: string
 }
 
+interface VerifyResponse {
+  valid: boolean
+  user?: {
+    id: string
+    email: string
+    name: string | null
+  }
+  currentOrganization?: string
+  organizations?: OrganizationWithRole[]
+  error?: string
+}
+
 export function OrgList() {
   const { exit } = useApp()
   const [loading, setLoading] = useState(true)
-  const [orgs, setOrgs] = useState<Organization[]>([])
+  const [orgs, setOrgs] = useState<OrganizationWithRole[]>([])
   const [currentOrg, setCurrentOrg] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<Error | null>(null)
 
   useEffect(() => {
     async function load() {
-      const manager = getAuthManager()
-      const session = await manager.getSession("athreei")
-
-      if (!session) {
-        setError("Not authenticated. Run: athreei auth login")
-        setLoading(false)
-        setTimeout(() => exit(), 100)
-        return
-      }
-
       try {
-        const res = await fetch(`${API_URL}/api/auth/cli/verify`, {
-          headers: { Authorization: `Bearer ${session.accessToken}` },
-        })
-        const data = await res.json()
+        const api = getApiClient()
+        const data = await api.get<VerifyResponse>("/api/auth/cli/verify")
 
         if (!data.valid) {
-          setError("Session expired. Run: athreei auth login")
-        } else {
-          setOrgs(data.organizations)
-          setCurrentOrg(data.currentOrganization)
+          throw new AuthError(data.error ?? "Session expired")
         }
-      } catch {
-        setError("Failed to fetch organizations")
+
+        setOrgs(data.organizations ?? [])
+        setCurrentOrg(data.currentOrganization ?? null)
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error(String(err)))
       }
 
       setLoading(false)
@@ -68,11 +68,7 @@ export function OrgList() {
   }
 
   if (error) {
-    return (
-      <Box padding={1}>
-        <Text color="red">Error: {error}</Text>
-      </Box>
-    )
+    return <ErrorDisplay error={error} context="loading organizations" />
   }
 
   return (
@@ -101,42 +97,34 @@ export function OrgSwitch({ orgName }: { orgName: string }) {
   const [status, setStatus] = useState<"loading" | "success" | "error">(
     "loading"
   )
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<Error | null>(null)
 
   useEffect(() => {
     async function switchOrg() {
-      const manager = getAuthManager()
-      const store = createCredentialStore()
-      const session = await manager.getSession("athreei")
-
-      if (!session) {
-        setError("Not authenticated")
-        setStatus("error")
-        setTimeout(() => exit(), 100)
-        return
-      }
-
       try {
-        const res = await fetch(`${API_URL}/api/auth/cli/verify`, {
-          headers: { Authorization: `Bearer ${session.accessToken}` },
-        })
-        const data = await res.json()
+        const api = getApiClient()
+        const store = createCredentialStore()
 
-        const org = data.organizations.find(
-          (o: Organization) =>
+        const data = await api.get<VerifyResponse>("/api/auth/cli/verify")
+
+        if (!data.valid) {
+          throw new AuthError(data.error ?? "Session expired")
+        }
+
+        const org = data.organizations?.find(
+          (o) =>
             o.name.toLowerCase() === orgName.toLowerCase() ||
             o.slug.toLowerCase() === orgName.toLowerCase()
         )
 
         if (!org) {
-          setError(`Organization "${orgName}" not found`)
-          setStatus("error")
-        } else {
-          await store.setActiveOrg(org.id)
-          setStatus("success")
+          throw new ApiError(404, `Organization "${orgName}" not found`)
         }
-      } catch {
-        setError("Failed to switch organization")
+
+        await store.setActiveOrg(org.id)
+        setStatus("success")
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error(String(err)))
         setStatus("error")
       }
 
@@ -157,12 +145,8 @@ export function OrgSwitch({ orgName }: { orgName: string }) {
     )
   }
 
-  if (status === "error") {
-    return (
-      <Box padding={1}>
-        <Text color="red">Error: {error}</Text>
-      </Box>
-    )
+  if (status === "error" && error) {
+    return <ErrorDisplay error={error} context="switching organization" />
   }
 
   return (
@@ -176,34 +160,25 @@ export function OrgCurrent() {
   const { exit } = useApp()
   const [loading, setLoading] = useState(true)
   const [orgName, setOrgName] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<Error | null>(null)
 
   useEffect(() => {
     async function load() {
-      const manager = getAuthManager()
-      const store = createCredentialStore()
-      const session = await manager.getSession("athreei")
-
-      if (!session) {
-        setError("Not authenticated")
-        setLoading(false)
-        setTimeout(() => exit(), 100)
-        return
-      }
-
       try {
-        const currentOrgId = await store.getActiveOrg()
-        const res = await fetch(`${API_URL}/api/auth/cli/verify`, {
-          headers: { Authorization: `Bearer ${session.accessToken}` },
-        })
-        const data = await res.json()
+        const api = getApiClient()
+        const store = createCredentialStore()
 
-        const org = data.organizations.find(
-          (o: Organization) => o.id === currentOrgId
-        )
-        setOrgName(org?.name || data.organizations[0]?.name || "None")
-      } catch {
-        setError("Failed to get current organization")
+        const currentOrgId = await store.getActiveOrg()
+        const data = await api.get<VerifyResponse>("/api/auth/cli/verify")
+
+        if (!data.valid) {
+          throw new AuthError(data.error ?? "Session expired")
+        }
+
+        const org = data.organizations?.find((o) => o.id === currentOrgId)
+        setOrgName(org?.name || data.organizations?.[0]?.name || "None")
+      } catch (err) {
+        setError(err instanceof Error ? err : new Error(String(err)))
       }
 
       setLoading(false)
@@ -224,11 +199,7 @@ export function OrgCurrent() {
   }
 
   if (error) {
-    return (
-      <Box padding={1}>
-        <Text color="red">{error}</Text>
-      </Box>
-    )
+    return <ErrorDisplay error={error} context="getting current organization" />
   }
 
   return (
