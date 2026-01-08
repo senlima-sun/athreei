@@ -643,4 +643,44 @@ apikey
     }
   )
 
+// Completion commands
+const completion = program
+  .command("completion")
+  .description("Generate shell completion scripts")
+  .addHelpText(
+    "after",
+    `
+Usage:
+  # Bash: Add to ~/.bashrc
+  eval "$(athreei completion bash)"
+
+  # Zsh: Add to ~/.zshrc
+  eval "$(athreei completion zsh)"
+
+  # Fish: Add to ~/.config/fish/config.fish
+  athreei completion fish | source
+`
+  )
+
+completion
+  .command("bash")
+  .description("Generate bash completion script")
+  .action(() => {
+    outputBashCompletion()
+  })
+
+completion
+  .command("zsh")
+  .description("Generate zsh completion script")
+  .action(() => {
+    outputZshCompletion()
+  })
+
+completion
+  .command("fish")
+  .description("Generate fish completion script")
+  .action(() => {
+    outputFishCompletion()
+  })
+
 program.parse()
