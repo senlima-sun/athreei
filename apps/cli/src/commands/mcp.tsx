@@ -1493,3 +1493,282 @@ export function McpTools(props: { id: string; json?: boolean }) {
     </Box>
   )
 }
+
+// ============================================
+// Environment Variable Commands
+// ============================================
+
+interface EnvVarListResponse {
+  data: EnvVar[]
+}
+
+interface EnvVarResponse {
+  data: EnvVar
+}
+
+export function McpEnvList(props: { id: string; show?: boolean }) {
+  const { exit } = useApp()
+  const [loading, setLoading] = useState(true)
+  const [envVars, setEnvVars] = useState<EnvVar[]>([])
+  const [serverName, setServerName] = useState<string>("")
+  const [error, setError] = useState<Error | ApiError | null>(null)
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const client = getApiClient()
+        const params = props.show ? "?showValues=true" : ""
+        const data = await client.get<EnvVarListResponse>(
+          `/api/mcp-servers/${props.id}/env${params}`
+        )
+        setEnvVars(data.data)
+
+        // Also fetch server name for display
+        const serverResponse = await client.get<McpServerResponse>(
+          `/api/mcp-servers/${props.id}`
+        )
+        setServerName(serverResponse.data.name)
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err
+            : new Error("Failed to fetch environment variables")
+        )
+      }
+
+      setLoading(false)
+      setTimeout(() => exit(), 100)
+    }
+
+    load()
+  }, [exit, props.id, props.show])
+
+  if (loading) {
+    return (
+      <Box padding={1}>
+        <Text color="yellow">
+          <Spinner type="dots" />
+        </Text>
+        <Text> Loading environment variables...</Text>
+      </Box>
+    )
+  }
+
+  if (error) {
+    return (
+      <ErrorDisplay error={error} context="fetching environment variables" />
+    )
+  }
+
+  if (envVars.length === 0) {
+    return (
+      <Box flexDirection="column" padding={1}>
+        <Box marginBottom={1}>
+          <Text bold color="cyan">
+            Environment Variables: {serverName || props.id}
+          </Text>
+        </Box>
+        <Text dimColor>No environment variables configured</Text>
+      </Box>
+    )
+  }
+
+  return (
+    <Box flexDirection="column" padding={1}>
+      <Box marginBottom={1}>
+        <Text bold color="cyan">
+          Environment Variables: {serverName || props.id}
+        </Text>
+        {!props.show && <Text dimColor> (use --show to reveal values)</Text>}
+      </Box>
+      {envVars.map((envVar) => (
+        <Box key={envVar.key}>
+          <Text color="cyan">{envVar.key}</Text>
+          <Text dimColor>=</Text>
+          <Text color={props.show ? "yellow" : "gray"}>
+            {props.show && envVar.value ? envVar.value : "********"}
+          </Text>
+        </Box>
+      ))}
+    </Box>
+  )
+}
+
+type EnvSetPhase = "setting" | "success" | "error"
+
+export function McpEnvSet(props: {
+  id: string
+  envKey: string
+  value: string
+}) {
+  const { exit } = useApp()
+  const [phase, setPhase] = useState<EnvSetPhase>("setting")
+  const [error, setError] = useState<Error | ApiError | null>(null)
+
+  useEffect(() => {
+    async function setEnvVar() {
+      try {
+        const client = getApiClient()
+        await client.post<EnvVarResponse>(`/api/mcp-servers/${props.id}/env`, {
+          key: props.envKey,
+          value: props.value,
+        })
+        setPhase("success")
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err
+            : new Error("Failed to set environment variable")
+        )
+        setPhase("error")
+      }
+      setTimeout(() => exit(), 100)
+    }
+
+    setEnvVar()
+  }, [exit, props.id, props.envKey, props.value])
+
+  if (phase === "setting") {
+    return (
+      <Box padding={1}>
+        <Text color="yellow">
+          <Spinner type="dots" />
+        </Text>
+        <Text> Setting environment variable...</Text>
+      </Box>
+    )
+  }
+
+  if (phase === "error" && error) {
+    return <ErrorDisplay error={error} context="setting environment variable" />
+  }
+
+  return (
+    <Box padding={1}>
+      <Text color="green">✓ </Text>
+      <Text>
+        Environment variable <Text color="cyan">{props.envKey}</Text> set
+        successfully
+      </Text>
+    </Box>
+  )
+}
+
+type EnvDeletePhase =
+  | "confirming"
+  | "deleting"
+  | "success"
+  | "cancelled"
+  | "error"
+
+export function McpEnvDelete(props: {
+  id: string
+  envKey: string
+  confirm?: boolean
+}) {
+  const { exit } = useApp()
+  const [phase, setPhase] = useState<EnvDeletePhase>(
+    props.confirm ? "deleting" : "confirming"
+  )
+  const [error, setError] = useState<Error | ApiError | null>(null)
+
+  // Handle deletion
+  useEffect(() => {
+    if (phase !== "deleting") return
+
+    async function deleteEnvVar() {
+      try {
+        const client = getApiClient()
+        await client.delete(
+          `/api/mcp-servers/${props.id}/env/${encodeURIComponent(props.envKey)}`
+        )
+        setPhase("success")
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err
+            : new Error("Failed to delete environment variable")
+        )
+        setPhase("error")
+      }
+      setTimeout(() => exit(), 100)
+    }
+
+    deleteEnvVar()
+  }, [phase, props.id, props.envKey, exit])
+
+  // Handle keyboard input for confirmation
+  useInput(
+    (input) => {
+      if (phase !== "confirming") return
+
+      if (input.toLowerCase() === "y") {
+        setPhase("deleting")
+      } else if (input.toLowerCase() === "n" || input === "\x1B") {
+        setPhase("cancelled")
+        setTimeout(() => exit(), 100)
+      }
+    },
+    { isActive: phase === "confirming" }
+  )
+
+  if (phase === "confirming") {
+    return (
+      <Box flexDirection="column" padding={1}>
+        <Box marginBottom={1}>
+          <Text bold color="red">
+            Delete Environment Variable
+          </Text>
+        </Box>
+        <Box marginBottom={1}>
+          <Text>
+            Are you sure you want to delete{" "}
+            <Text color="cyan">{props.envKey}</Text>?
+          </Text>
+        </Box>
+        <Box>
+          <Text color="yellow">(y/n)</Text>
+        </Box>
+      </Box>
+    )
+  }
+
+  if (phase === "deleting") {
+    return (
+      <Box padding={1}>
+        <Text color="yellow">
+          <Spinner type="dots" />
+        </Text>
+        <Text> Deleting environment variable...</Text>
+      </Box>
+    )
+  }
+
+  if (phase === "success") {
+    return (
+      <Box padding={1}>
+        <Text color="green">✓ </Text>
+        <Text>
+          Environment variable <Text color="cyan">{props.envKey}</Text> deleted
+        </Text>
+      </Box>
+    )
+  }
+
+  if (phase === "cancelled") {
+    return (
+      <Box padding={1}>
+        <Text color="yellow">Cancelled. </Text>
+        <Text dimColor>Environment variable was not deleted.</Text>
+      </Box>
+    )
+  }
+
+  if (phase === "error" && error) {
+    return (
+      <ErrorDisplay error={error} context="deleting environment variable" />
+    )
+  }
+
+  return null
+}

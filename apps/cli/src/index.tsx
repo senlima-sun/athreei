@@ -13,6 +13,9 @@ import {
   McpCreate,
   McpVerify,
   McpTools,
+  McpEnvList,
+  McpEnvSet,
+  McpEnvDelete,
 } from "./commands/mcp.js"
 
 const program = new Command()
@@ -252,6 +255,47 @@ mcp
   .option("--json", "Output in JSON format")
   .action(async (id: string, options: { json?: boolean }) => {
     const { waitUntilExit } = render(<McpTools id={id} json={options.json} />)
+    await waitUntilExit()
+  })
+
+// Environment variable subcommands
+const mcpEnv = mcp
+  .command("env")
+  .description("Manage MCP server environment variables")
+
+mcpEnv
+  .command("list")
+  .description("List environment variables for an MCP server")
+  .argument("<id>", "MCP server ID")
+  .option("--show", "Reveal environment variable values")
+  .action(async (id: string, options: { show?: boolean }) => {
+    const { waitUntilExit } = render(<McpEnvList id={id} show={options.show} />)
+    await waitUntilExit()
+  })
+
+mcpEnv
+  .command("set")
+  .description("Set an environment variable for an MCP server")
+  .argument("<id>", "MCP server ID")
+  .argument("<key>", "Environment variable name")
+  .argument("<value>", "Environment variable value")
+  .action(async (id: string, key: string, value: string) => {
+    const { waitUntilExit } = render(
+      <McpEnvSet id={id} envKey={key} value={value} />
+    )
+    await waitUntilExit()
+  })
+
+mcpEnv
+  .command("delete")
+  .description("Delete an environment variable from an MCP server")
+  .argument("<id>", "MCP server ID")
+  .argument("<key>", "Environment variable name")
+  .option("--confirm", "Skip interactive confirmation")
+  .action(async (id: string, key: string, options: { confirm?: boolean }) => {
+    const { waitUntilExit } = render(
+      <McpEnvDelete id={id} envKey={key} confirm={options.confirm} />
+    )
     await waitUntilExit()
   })
 
