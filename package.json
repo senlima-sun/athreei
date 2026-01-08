@@ -8,6 +8,7 @@
     "apps/*",
     "experimental/*"
   ],
+  "type": "module",
   "scripts": {
     "dev": "bun run --filter '*' dev",
     "dev:platform": "bun run --filter 'api' --filter 'platform' dev",
@@ -20,10 +21,12 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
-    "typecheck:all": "bun run --filter '*' typecheck"
+    "typecheck:all": "bun run --filter '*' typecheck",
+    "cli": "bun run --filter @athreei/cli dev"
   },
   "devDependencies": {
     "@types/bun": "latest",
+    "@types/node": "^20.0.0",
     "@typescript-eslint/eslint-plugin": "^8.18.0",
     "@typescript-eslint/parser": "^8.18.0",
     "eslint": "^9.17.0",
