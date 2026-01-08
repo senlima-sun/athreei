@@ -5,6 +5,7 @@ import React from "react"
 import { LoginFlow } from "./components/login-flow.js"
 import { AuthStatus } from "./components/auth-status.js"
 import { getAuthManager } from "./auth/manager.js"
+import { setVerbose, setQuiet, debug } from "./lib/output.js"
 import { OrgList, OrgSwitch, OrgCurrent } from "./commands/org.js"
 import {
   McpList,
@@ -40,6 +41,11 @@ import {
 } from "./commands/gateway.js"
 import { SyncStatus, SyncPull, SyncPush, SyncDiff } from "./commands/sync.js"
 import { ApiKeyList, ApiKeyCreate, ApiKeyRevoke } from "./commands/apikey.js"
+import {
+  outputBashCompletion,
+  outputZshCompletion,
+  outputFishCompletion,
+} from "./commands/completion.js"
 
 const program = new Command()
 
@@ -48,6 +54,22 @@ program
   .description("Athreei CLI - Universal MCP Gateway")
   .version("0.1.0")
   .option("-p, --profile <name>", "Use a specific profile", "default")
+  .option("-v, --verbose", "Enable verbose output for debugging")
+  .option("-q, --quiet", "Suppress non-essential output")
+  .hook("preAction", (thisCommand) => {
+    const opts = thisCommand.opts()
+    if (opts.verbose && opts.quiet) {
+      console.error("Error: --verbose and --quiet cannot be used together")
+      process.exit(1)
+    }
+    if (opts.verbose) {
+      setVerbose(true)
+      debug("Verbose mode enabled")
+    }
+    if (opts.quiet) {
+      setQuiet(true)
+    }
+  })
 
 const auth = program.command("auth").description("Manage authentication")
 

@@ -1,4 +1,5 @@
 import { getAuthManager } from "../auth/manager.js"
+import { debug } from "./output.js"
 
 const DEFAULT_BASE_URL = "http://localhost:3001"
 const DEFAULT_TIMEOUT = 30000
@@ -86,12 +87,20 @@ export class ApiClient {
         const timeoutId = setTimeout(() => controller.abort(), timeout)
 
         try {
-          const response = await fetch(`${this.baseUrl}${path}`, {
+          const url = `${this.baseUrl}${path}`
+          debug(`${method} ${url}`)
+          if (body !== undefined) {
+            debug("Request body:", body)
+          }
+
+          const response = await fetch(url, {
             method,
             headers,
             body: body !== undefined ? JSON.stringify(body) : undefined,
             signal: controller.signal,
           })
+
+          debug(`Response: ${response.status} ${response.statusText}`)
 
           clearTimeout(timeoutId)
 
