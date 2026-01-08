@@ -5,6 +5,8 @@
 use tauri::Manager;
 
 mod commands;
+pub mod encryption;
+pub mod storage;
 
 /// Run the Tauri application
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
