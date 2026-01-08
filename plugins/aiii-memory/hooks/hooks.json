@@ -1,0 +1,28 @@
+{
+  "description": "Auto-capture conversations to aiii memory",
+  "hooks": {
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "The session is ending. Please summarize the key work done in this session and save it to aiii memory using the save_memory MCP tool. Consider:\n\n1. What were the main tasks accomplished?\n2. What decisions were made?\n3. Are there any follow-up items?\n\nSave the summary to the appropriate space based on the content (e.g., Work for coding tasks, Health for health discussions).\n\nSession context: $ARGUMENTS",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/detect-git-commit.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

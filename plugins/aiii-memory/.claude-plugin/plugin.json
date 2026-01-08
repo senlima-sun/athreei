@@ -1,0 +1,15 @@
+{
+  "$schema": "https://code.claude.com/schemas/plugin.json",
+  "name": "aiii-memory",
+  "version": "0.1.0",
+  "displayName": "aiii Memory",
+  "description": "Personal AI memory layer. Auto-capture and recall memories across AI conversations.",
+  "author": "athreei",
+  "homepage": "https://athreei.com",
+  "repository": "https://github.com/athreei/athreei",
+  "license": "MIT",
+  "keywords": ["memory", "context", "mcp", "recall", "standup"],
+  "engines": {
+    "claude-code": ">=1.0.0"
+  }
+}
