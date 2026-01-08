@@ -30,6 +30,7 @@ export const { useActiveOrganization, useListOrganizations, organization } =
 /**
  * Safe organization hook that works in both local and cloud modes
  * Returns a mock organization in local mode
+ * Uses isPending for consistency with better-auth hooks
  */
 export function useActiveOrganizationSafe() {
   const cloudOrg = useActiveOrganization()
@@ -37,7 +38,7 @@ export function useActiveOrganizationSafe() {
   if (isLocalMode()) {
     return {
       data: { id: "local", name: "Local", slug: "local" },
-      isLoading: false,
+      isPending: false,
     }
   }
 
