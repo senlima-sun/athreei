@@ -26,7 +26,11 @@ interface VerifyResponse {
   error?: string
 }
 
-export function OrgList() {
+interface OrgListProps {
+  json?: boolean
+}
+
+export function OrgList(props: OrgListProps) {
   const { exit } = useApp()
   const [loading, setLoading] = useState(true)
   const [orgs, setOrgs] = useState<OrganizationWithRole[]>([])
@@ -69,6 +73,18 @@ export function OrgList() {
 
   if (error) {
     return <ErrorDisplay error={error} context="loading organizations" />
+  }
+
+  // JSON output mode
+  if (props.json) {
+    console.log(
+      JSON.stringify(
+        { organizations: orgs, currentOrganization: currentOrg },
+        null,
+        2
+      )
+    )
+    return null
   }
 
   return (

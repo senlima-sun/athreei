@@ -136,8 +136,9 @@ const org = program.command("org").description("Manage organizations")
 org
   .command("list")
   .description("List available organizations")
-  .action(async () => {
-    const { waitUntilExit } = render(<OrgList />)
+  .option("--json", "Output in JSON format")
+  .action(async (options: { json?: boolean }) => {
+    const { waitUntilExit } = render(<OrgList json={options.json} />)
     await waitUntilExit()
   })
 
@@ -169,17 +170,20 @@ mcp
     "--transport <type>",
     "Filter by transport (stdio, sse, streamable-http)"
   )
+  .option("--json", "Output in JSON format")
   .action(
     async (options: {
       search?: string
       status?: string
       transport?: string
+      json?: boolean
     }) => {
       const { waitUntilExit } = render(
         <McpList
           search={options.search}
           status={options.status}
           transport={options.transport}
+          json={options.json}
         />
       )
       await waitUntilExit()

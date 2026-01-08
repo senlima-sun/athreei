@@ -53,6 +53,7 @@ export function McpList(props: {
   search?: string
   status?: string
   transport?: string
+  json?: boolean
 }) {
   const { exit } = useApp()
   const [loading, setLoading] = useState(true)
@@ -113,6 +114,12 @@ export function McpList(props: {
 
   if (error) {
     return <ErrorDisplay error={error} context="fetching MCP servers" />
+  }
+
+  // JSON output mode
+  if (props.json) {
+    console.log(JSON.stringify({ servers }, null, 2))
+    return null
   }
 
   if (servers.length === 0) {
