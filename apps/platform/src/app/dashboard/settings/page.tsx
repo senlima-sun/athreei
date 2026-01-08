@@ -3,7 +3,17 @@
 import { useState, useEffect } from "react"
 import { PageHeader } from "@/components/dashboard/page-header"
 import { useSession } from "@/lib/auth-client"
-import { User, Shield, Bell, Loader2, Check } from "lucide-react"
+import { fetchApi } from "@/lib/api"
+import {
+  User,
+  Shield,
+  Bell,
+  Loader2,
+  Check,
+  AlertCircle,
+  Eye,
+  EyeOff,
+} from "lucide-react"
 
 type SettingsTab = "profile" | "security" | "notifications"
 
@@ -33,10 +43,11 @@ function Tab({ id, label, icon: Icon, active, onClick }: TabProps) {
 }
 
 function ProfileSettings() {
-  const { data: session, isPending } = useSession()
+  const { data: session, isPending, refetch } = useSession()
   const [name, setName] = useState("")
   const [isSaving, setIsSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   // Initialize name from session
   useEffect(() => {
@@ -57,11 +68,21 @@ function ProfileSettings() {
 
   const handleSave = async () => {
     setIsSaving(true)
-    // TODO: Implement profile update API
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    setIsSaving(false)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+    setError(null)
+    try {
+      await fetchApi("/api/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+      })
+      await refetch()
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save profile")
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   return (
@@ -134,12 +155,20 @@ function ProfileSettings() {
           </div>
         </div>
 
+        {/* Error message */}
+        {error && (
+          <div className="mt-4 flex items-center gap-2 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+            <AlertCircle className="h-4 w-4" />
+            {error}
+          </div>
+        )}
+
         {/* Save button */}
         <div className="mt-6 flex items-center gap-3">
           <button
             type="button"
             onClick={handleSave}
-            disabled={isSaving}
+            disabled={isSaving || name === user?.name}
             className="inline-flex items-center gap-2 rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isSaving ? (
@@ -156,6 +185,59 @@ function ProfileSettings() {
 }
 
 function SecuritySettings() {
+  const [showPasswordForm, setShowPasswordForm] = useState(false)
+  const [currentPassword, setCurrentPassword] = useState("")
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [isChangingPassword, setIsChangingPassword] = useState(false)
+  const [passwordError, setPasswordError] = useState<string | null>(null)
+  const [passwordSuccess, setPasswordSuccess] = useState(false)
+
+  const handlePasswordChange = async () => {
+    setPasswordError(null)
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError("Passwords do not match")
+      return
+    }
+
+    if (newPassword.length < 8) {
+      setPasswordError("Password must be at least 8 characters")
+      return
+    }
+
+    setIsChangingPassword(true)
+    try {
+      await fetchApi("/api/profile/password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      })
+      setPasswordSuccess(true)
+      setShowPasswordForm(false)
+      setCurrentPassword("")
+      setNewPassword("")
+      setConfirmPassword("")
+      setTimeout(() => setPasswordSuccess(false), 3000)
+    } catch (err) {
+      setPasswordError(
+        err instanceof Error ? err.message : "Failed to change password"
+      )
+    } finally {
+      setIsChangingPassword(false)
+    }
+  }
+
+  const handleCancelPasswordChange = () => {
+    setShowPasswordForm(false)
+    setCurrentPassword("")
+    setNewPassword("")
+    setConfirmPassword("")
+    setPasswordError(null)
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -170,12 +252,135 @@ function SecuritySettings() {
         <p className="mt-1 text-sm text-gray-500">
           Change your password to keep your account secure.
         </p>
-        <button
-          type="button"
-          className="mt-4 rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-        >
-          Change password
-        </button>
+
+        {passwordSuccess && (
+          <div className="mt-4 flex items-center gap-2 rounded-md bg-green-50 px-3 py-2 text-sm text-green-700">
+            <Check className="h-4 w-4" />
+            Password changed successfully
+          </div>
+        )}
+
+        {!showPasswordForm ? (
+          <button
+            type="button"
+            onClick={() => setShowPasswordForm(true)}
+            className="mt-4 rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          >
+            Change password
+          </button>
+        ) : (
+          <div className="mt-4 space-y-4">
+            <div>
+              <label
+                htmlFor="currentPassword"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Current password
+              </label>
+              <div className="relative mt-1">
+                <input
+                  type={showCurrentPassword ? "text" : "password"}
+                  id="currentPassword"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className="block w-full rounded-md border border-gray-300 px-3 py-2 pr-10 text-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                >
+                  {showCurrentPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label
+                htmlFor="newPassword"
+                className="block text-sm font-medium text-gray-700"
+              >
+                New password
+              </label>
+              <div className="relative mt-1">
+                <input
+                  type={showNewPassword ? "text" : "password"}
+                  id="newPassword"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="block w-full rounded-md border border-gray-300 px-3 py-2 pr-10 text-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+                >
+                  {showNewPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
+              </div>
+              <p className="mt-1 text-xs text-gray-500">
+                Minimum 8 characters
+              </p>
+            </div>
+
+            <div>
+              <label
+                htmlFor="confirmPassword"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Confirm new password
+              </label>
+              <input
+                type="password"
+                id="confirmPassword"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
+              />
+            </div>
+
+            {passwordError && (
+              <div className="flex items-center gap-2 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+                <AlertCircle className="h-4 w-4" />
+                {passwordError}
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={handlePasswordChange}
+                disabled={
+                  isChangingPassword ||
+                  !currentPassword ||
+                  !newPassword ||
+                  !confirmPassword
+                }
+                className="inline-flex items-center gap-2 rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isChangingPassword && (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                )}
+                Change password
+              </button>
+              <button
+                type="button"
+                onClick={handleCancelPasswordChange}
+                className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="rounded-lg border border-gray-200 bg-white p-6">
