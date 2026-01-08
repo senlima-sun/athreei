@@ -225,7 +225,11 @@ export default function EndpointDetailPage() {
             </button>
           </div>
           <div className="p-4">
-            <ApiKeyList apiKeys={apiKeys} onRevoke={handleRevokeApiKey} />
+            <ApiKeyList
+              apiKeys={apiKeys}
+              endpointId={endpointId}
+              onRevoke={handleRevokeApiKey}
+            />
           </div>
         </div>
 
