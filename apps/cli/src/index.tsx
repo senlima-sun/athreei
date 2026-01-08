@@ -6,7 +6,7 @@ import { LoginFlow } from "./components/login-flow.js"
 import { AuthStatus } from "./components/auth-status.js"
 import { getAuthManager } from "./auth/manager.js"
 import { OrgList, OrgSwitch, OrgCurrent } from "./commands/org.js"
-import { McpList } from "./commands/mcp.js"
+import { McpList, McpUpdate } from "./commands/mcp.js"
 
 const program = new Command()
 
@@ -109,10 +109,7 @@ mcp
   .command("list")
   .description("List configured MCP servers")
   .option("-s, --search <query>", "Search by name or description")
-  .option(
-    "--status <status>",
-    "Filter by status (active, inactive, pending)"
-  )
+  .option("--status <status>", "Filter by status (active, inactive, pending)")
   .option(
     "--transport <type>",
     "Filter by transport (stdio, sse, streamable-http)"
@@ -128,6 +125,49 @@ mcp
           search={options.search}
           status={options.status}
           transport={options.transport}
+        />
+      )
+      await waitUntilExit()
+    }
+  )
+
+mcp
+  .command("update")
+  .description("Update an existing MCP server")
+  .argument("<id>", "MCP server ID to update")
+  .option("-n, --name <name>", "New server name")
+  .option("-d, --description <desc>", "New description")
+  .option(
+    "-t, --transport <type>",
+    "Transport type (stdio, sse, streamable-http)"
+  )
+  .option("-c, --command <cmd>", "Command to run (for stdio)")
+  .option("-a, --args <args...>", "Arguments for the command (for stdio)")
+  .option("-u, --url <url>", "Server URL (for sse/streamable-http)")
+  .option("-y, --yes", "Skip confirmation prompt")
+  .action(
+    async (
+      id: string,
+      options: {
+        name?: string
+        description?: string
+        transport?: "stdio" | "sse" | "streamable-http"
+        command?: string
+        args?: string[]
+        url?: string
+        yes?: boolean
+      }
+    ) => {
+      const { waitUntilExit } = render(
+        <McpUpdate
+          id={id}
+          name={options.name}
+          description={options.description}
+          transport={options.transport}
+          command={options.command}
+          args={options.args}
+          url={options.url}
+          yes={options.yes}
         />
       )
       await waitUntilExit()
