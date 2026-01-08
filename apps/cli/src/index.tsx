@@ -17,6 +17,13 @@ import {
   McpEnvSet,
   McpEnvDelete,
 } from "./commands/mcp.js"
+import {
+  ConfigInit,
+  ConfigShow,
+  ConfigSet,
+  ConfigGet,
+  ConfigValidate,
+} from "./commands/config.js"
 
 const program = new Command()
 
@@ -296,6 +303,60 @@ mcpEnv
     const { waitUntilExit } = render(
       <McpEnvDelete id={id} envKey={key} confirm={options.confirm} />
     )
+    await waitUntilExit()
+  })
+
+// Config commands
+const config = program
+  .command("config")
+  .description("Manage configuration files")
+
+config
+  .command("init")
+  .description("Initialize a new athreei.config.json file")
+  .option("-p, --path <path>", "Custom path for config file")
+  .action(async (options: { path?: string }) => {
+    const { waitUntilExit } = render(<ConfigInit path={options.path} />)
+    await waitUntilExit()
+  })
+
+config
+  .command("show")
+  .description("Display current configuration")
+  .option("--show-secrets", "Reveal sensitive values")
+  .action(async (options: { showSecrets?: boolean }) => {
+    const { waitUntilExit } = render(
+      <ConfigShow showSecrets={options.showSecrets} />
+    )
+    await waitUntilExit()
+  })
+
+config
+  .command("set")
+  .description("Set a configuration value")
+  .argument("<key>", "Config key (supports dot notation, e.g., gateway.port)")
+  .argument("<value>", "Value to set")
+  .action(async (key: string, value: string) => {
+    const { waitUntilExit } = render(
+      <ConfigSet configKey={key} value={value} />
+    )
+    await waitUntilExit()
+  })
+
+config
+  .command("get")
+  .description("Get a configuration value")
+  .argument("<key>", "Config key (supports dot notation, e.g., gateway.port)")
+  .action(async (key: string) => {
+    const { waitUntilExit } = render(<ConfigGet configKey={key} />)
+    await waitUntilExit()
+  })
+
+config
+  .command("validate")
+  .description("Validate configuration file against schema")
+  .action(async () => {
+    const { waitUntilExit } = render(<ConfigValidate />)
     await waitUntilExit()
   })
 
