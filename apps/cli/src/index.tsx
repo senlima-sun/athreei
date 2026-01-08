@@ -32,6 +32,7 @@ import {
   GatewayConfigShow,
   GatewayConfigSet,
 } from "./commands/gateway.js"
+import { SyncStatus, SyncPull, SyncPush, SyncDiff } from "./commands/sync.js"
 
 const program = new Command()
 
@@ -449,6 +450,54 @@ gatewayConfig
   .action(async (key: string, value: string) => {
     const { waitUntilExit } = render(
       <GatewayConfigSet configKey={key} value={value} />
+    )
+    await waitUntilExit()
+  })
+
+// Sync commands
+const sync = program
+  .command("sync")
+  .description("Synchronize local config with cloud organization")
+
+sync
+  .command("status")
+  .description("Check sync status between local and cloud configurations")
+  .action(async () => {
+    const { waitUntilExit } = render(<SyncStatus />)
+    await waitUntilExit()
+  })
+
+sync
+  .command("diff")
+  .description(
+    "Show detailed differences between local and cloud configurations"
+  )
+  .option("--json", "Output in JSON format")
+  .action(async (options: { json?: boolean }) => {
+    const { waitUntilExit } = render(<SyncDiff json={options.json} />)
+    await waitUntilExit()
+  })
+
+sync
+  .command("pull")
+  .description("Pull MCP server configurations from cloud to local config")
+  .option("-y, --yes", "Skip confirmation prompts")
+  .action(async (options: { yes?: boolean }) => {
+    const { waitUntilExit } = render(<SyncPull yes={options.yes} />)
+    await waitUntilExit()
+  })
+
+sync
+  .command("push")
+  .description("Push local MCP server configurations to cloud")
+  .option("-y, --yes", "Skip confirmation prompts")
+  .option(
+    "--delete",
+    "Delete cloud servers that are not in local config (dangerous)"
+  )
+  .action(async (options: { yes?: boolean; delete?: boolean }) => {
+    const { waitUntilExit } = render(
+      <SyncPush yes={options.yes} delete={options.delete} />
     )
     await waitUntilExit()
   })
