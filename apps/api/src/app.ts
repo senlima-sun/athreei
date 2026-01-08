@@ -20,6 +20,7 @@ import {
   toolsRoutes,
   registryRoutes,
   cliAuthRoutes,
+  profileRoutes,
 } from "./routes"
 import { errorHandler, notFoundHandler } from "./middleware"
 import { getAuth } from "./lib/auth"
@@ -103,6 +104,9 @@ app.route("/api/traces", tracesRoutes)
 
 // Tools routes (protected)
 app.route("/api/tools", toolsRoutes)
+
+// Profile routes (protected)
+app.route("/api/profile", profileRoutes)
 
 // =============================================================================
 // Error Handling
