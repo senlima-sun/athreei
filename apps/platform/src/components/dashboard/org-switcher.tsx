@@ -2,12 +2,13 @@
 
 import { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { ChevronDown, Plus, Building2, Check } from "lucide-react"
+import { ChevronDown, Plus, Building2, Check, Monitor } from "lucide-react"
 import {
   useActiveOrganization,
   useListOrganizations,
   organization,
 } from "@/lib/auth-client"
+import { isLocalMode } from "@/lib/mode"
 
 interface Organization {
   id: string
@@ -21,6 +22,7 @@ export function OrgSwitcher() {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const localMode = isLocalMode()
 
   const { data: activeOrg, isPending: isActiveOrgPending } =
     useActiveOrganization()
@@ -54,6 +56,16 @@ export function OrgSwitcher() {
   const handleCreateOrg = () => {
     setOpen(false)
     router.push("/dashboard/organizations/new")
+  }
+
+  // In local mode, show static indicator instead of org dropdown
+  if (localMode) {
+    return (
+      <div className="flex items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-1.5 text-sm font-medium text-gray-600">
+        <Monitor className="h-4 w-4 text-gray-500" />
+        <span>Local</span>
+      </div>
+    )
   }
 
   if (isPending) {

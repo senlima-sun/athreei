@@ -13,9 +13,12 @@ import {
   X,
   Globe,
   HardDrive,
+  FileText,
+  Shield,
 } from "lucide-react"
 import { useState } from "react"
 import { OrgSwitcher } from "./org-switcher"
+import { isLocalMode } from "@/lib/mode"
 
 interface NavItem {
   label: string
@@ -28,31 +31,67 @@ interface NavSection {
   items: NavItem[]
 }
 
-const navSections: NavSection[] = [
-  {
-    items: [{ label: "Home", href: "/dashboard", icon: Home }],
-  },
-  {
-    title: "MCP",
-    items: [
-      { label: "Registry", href: "/dashboard/registry", icon: Globe },
-      { label: "My Servers", href: "/dashboard/mcp-servers", icon: HardDrive },
-      { label: "Namespaces", href: "/dashboard/namespaces", icon: Boxes },
-      { label: "Endpoints", href: "/dashboard/endpoints", icon: Server },
-    ],
-  },
-  {
-    items: [
-      { label: "Traces", href: "/dashboard/traces", icon: Activity },
-      { label: "Team", href: "/dashboard/organizations", icon: Users },
-      { label: "Settings", href: "/dashboard/settings", icon: Settings },
-    ],
-  },
+// Shared items available in both modes
+const sharedItems: NavItem[] = [
+  { label: "Dashboard", href: "/dashboard", icon: Home },
+  { label: "Traces", href: "/dashboard/traces", icon: Activity },
+  { label: "Servers", href: "/dashboard/servers", icon: Server },
+  { label: "Logs", href: "/dashboard/logs", icon: FileText },
+  { label: "Permissions", href: "/dashboard/permissions", icon: Shield },
+  { label: "Sessions", href: "/dashboard/sessions", icon: Users },
 ]
+
+// Cloud-only items
+const cloudOnlyItems: NavItem[] = [
+  { label: "Endpoints", href: "/dashboard/endpoints", icon: Globe },
+  { label: "My Servers", href: "/dashboard/mcp-servers", icon: HardDrive },
+  { label: "Namespaces", href: "/dashboard/namespaces", icon: Boxes },
+  { label: "Registry", href: "/dashboard/registry", icon: Globe },
+  { label: "Organizations", href: "/dashboard/organizations", icon: Users },
+]
+
+const settingsItem: NavItem = {
+  label: "Settings",
+  href: "/dashboard/settings",
+  icon: Settings,
+}
+
+// Build navigation sections based on mode
+const getNavSections = (): NavSection[] => {
+  if (isLocalMode()) {
+    return [{ items: sharedItems }, { items: [settingsItem] }]
+  }
+
+  return [
+    { items: [{ label: "Home", href: "/dashboard", icon: Home }] },
+    {
+      title: "MCP",
+      items: [
+        { label: "Registry", href: "/dashboard/registry", icon: Globe },
+        {
+          label: "My Servers",
+          href: "/dashboard/mcp-servers",
+          icon: HardDrive,
+        },
+        { label: "Namespaces", href: "/dashboard/namespaces", icon: Boxes },
+        { label: "Endpoints", href: "/dashboard/endpoints", icon: Server },
+      ],
+    },
+    {
+      items: [
+        { label: "Traces", href: "/dashboard/traces", icon: Activity },
+        { label: "Team", href: "/dashboard/organizations", icon: Users },
+        { label: "Settings", href: "/dashboard/settings", icon: Settings },
+      ],
+    },
+  ]
+}
 
 export function Sidebar() {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const navSections = getNavSections()
+  const localMode = isLocalMode()
 
   const isActive = (href: string) => {
     if (href === "/dashboard") {
@@ -122,6 +161,13 @@ export function Sidebar() {
               <OrgSwitcher />
             </div>
           </div>
+
+          {/* Local mode indicator */}
+          {localMode && (
+            <div className="mx-3 mt-3 rounded-md bg-amber-100 px-3 py-1.5 text-center text-xs font-medium text-amber-800">
+              Local Mode
+            </div>
+          )}
 
           {/* Navigation */}
           <nav className="flex-1 space-y-6 px-3 py-4">
