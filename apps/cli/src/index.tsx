@@ -6,7 +6,7 @@ import { LoginFlow } from "./components/login-flow.js"
 import { AuthStatus } from "./components/auth-status.js"
 import { getAuthManager } from "./auth/manager.js"
 import { OrgList, OrgSwitch, OrgCurrent } from "./commands/org.js"
-import { McpList, McpUpdate } from "./commands/mcp.js"
+import { McpList, McpUpdate, McpDelete } from "./commands/mcp.js"
 
 const program = new Command()
 
@@ -173,5 +173,17 @@ mcp
       await waitUntilExit()
     }
   )
+
+mcp
+  .command("delete")
+  .description("Delete an MCP server")
+  .argument("<id>", "MCP server ID to delete")
+  .option("--confirm", "Skip interactive confirmation")
+  .action(async (id: string, options: { confirm?: boolean }) => {
+    const { waitUntilExit } = render(
+      <McpDelete id={id} confirm={options.confirm} />
+    )
+    await waitUntilExit()
+  })
 
 program.parse()

@@ -664,7 +664,9 @@ export function McpDelete(props: { id: string; confirm?: boolean }) {
         setState({
           phase: "error",
           error:
-            err instanceof Error ? err : new Error("Failed to fetch MCP server"),
+            err instanceof Error
+              ? err
+              : new Error("Failed to fetch MCP server"),
         })
         setTimeout(() => exit(), 100)
       }
@@ -677,11 +679,13 @@ export function McpDelete(props: { id: string; confirm?: boolean }) {
   useEffect(() => {
     if (state.phase !== "deleting") return
 
+    const serverName = state.server.name
+
     async function deleteServer() {
       try {
         const client = getApiClient()
         await client.delete(`/api/mcp-servers/${props.id}`)
-        setState({ phase: "success", serverName: state.server.name })
+        setState({ phase: "success", serverName })
       } catch (err) {
         setState({
           phase: "error",
