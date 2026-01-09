@@ -241,7 +241,9 @@ export function ApiKeyList({ apiKeys, endpointId, onRevoke }: ApiKeyListProps) {
                               >
                                 <div
                                   className={`w-full rounded-t ${
-                                    day.errors > 0 ? "bg-red-400" : "bg-gray-400"
+                                    day.errors > 0
+                                      ? "bg-red-400"
+                                      : "bg-gray-400"
                                   }`}
                                   style={{ height: `${height}px` }}
                                 />

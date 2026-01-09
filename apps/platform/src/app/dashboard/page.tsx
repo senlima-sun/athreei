@@ -151,10 +151,19 @@ export default function DashboardPage() {
         ) : (
           <>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <StatCard label="Active Endpoints" value={stats?.activeEndpoints ?? null} />
+              <StatCard
+                label="Active Endpoints"
+                value={stats?.activeEndpoints ?? null}
+              />
               <StatCard label="MCP Servers" value={stats?.mcpServers ?? null} />
-              <StatCard label="Total Traces" value={stats?.totalTraces ?? null} />
-              <StatCard label="Team Members" value={stats?.teamMembers ?? null} />
+              <StatCard
+                label="Total Traces"
+                value={stats?.totalTraces ?? null}
+              />
+              <StatCard
+                label="Team Members"
+                value={stats?.teamMembers ?? null}
+              />
             </div>
             {!stats && (
               <p className="mt-3 text-sm text-gray-500">
