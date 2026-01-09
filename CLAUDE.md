@@ -144,7 +144,7 @@ cd apps/platform
 bun run dev       # Next.js dev server with Turbopack
 
 # Desktop App (Tauri)
-cd apps/aiii-desktop
+cd apps/desktop
 bun run tauri:dev     # Development mode
 bun run tauri:build   # Build for current platform
 
@@ -188,7 +188,7 @@ bun run dev       # Docs dev server
 - `apps/api` - API server (Hono + Better Auth + Drizzle) on :3001
 - `apps/platform` - Platform frontend (Next.js 15 + Turbopack)
 - `apps/web` - Marketing site (Next.js 15)
-- `apps/aiii-desktop` - Desktop application (Tauri 2.0 + React)
+- `apps/desktop` - Desktop application (Tauri 2.0 + React)
 - `apps/cli` - Unified CLI (`athreei` command) with local/cloud mode support (React Ink)
 - `apps/docs` - Documentation site (Fumadocs + Next.js)
 
