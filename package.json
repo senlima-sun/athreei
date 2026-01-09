@@ -22,7 +22,7 @@
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
     "typecheck:all": "bun run --filter '*' typecheck",
-    "cli": "bun run --filter @athreei/cli dev"
+    "cli": "bun run --filter a3i dev"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
