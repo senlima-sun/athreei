@@ -42,3 +42,7 @@ test-results/
 
 # Compiled binaries
 packages/native-host/dist/athreei-host*
+
+# Tauri build artifacts
+target
+**/src-tauri/gen/
