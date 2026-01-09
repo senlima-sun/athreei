@@ -50,9 +50,22 @@ AI Apps (Claude Desktop, ChatGPT, Cursor)
     Multiple MCP Servers (Figma, Sentry, Linear, custom, etc.)
 ```
 
-**Two CLIs:**
-- `a3i` (packages/cli) - Local MCP server management, encrypted token storage
-- `athreei` (apps/cli) - Cloud platform CLI for auth, sync, organizations
+**CLI (`athreei`):**
+
+The unified CLI supports both local and cloud modes:
+
+```bash
+# Local mode (offline, file-based config)
+athreei --local mcp list
+athreei --local mcp add --name myserver --transport stdio --command npx ...
+
+# Cloud mode (connected to Platform)
+athreei mcp list
+athreei auth login
+athreei org switch myorg
+```
+
+Mode detection priority: `--local`/`--cloud` flags > `ATHREEI_MODE` env var > config shape
 
 ## Tech Stack Documentation
 
@@ -164,7 +177,6 @@ bun run dev       # Docs dev server
 
 - `packages/gateway` - Local MCP gateway (compiled binary via `bun build --compile`)
 - `packages/gateway-core` - Shared gateway logic and MCP protocol handling
-- `packages/cli` - Local MCP server management CLI (`a3i` command)
 
 ### Packages (Cloud/Hosted)
 
@@ -177,7 +189,7 @@ bun run dev       # Docs dev server
 - `apps/platform` - Platform frontend (Next.js 15 + Turbopack)
 - `apps/web` - Marketing site (Next.js 15)
 - `apps/aiii-desktop` - Desktop application (Tauri 2.0 + React)
-- `apps/cli` - Terminal UI CLI (`athreei` command, React Ink)
+- `apps/cli` - Unified CLI (`athreei` command) with local/cloud mode support (React Ink)
 - `apps/docs` - Documentation site (Fumadocs + Next.js)
 
 ### Experimental
