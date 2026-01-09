@@ -8,8 +8,8 @@ use thiserror::Error;
 #[derive(Debug, Error)]
 pub enum VaultError {
     /// The provided passphrase is invalid
-    #[error("Invalid passphrase")]
-    InvalidPassphrase,
+    #[error("Invalid passphrase: {0}")]
+    InvalidPassphrase(String),
 
     /// Encryption operation failed
     #[error("Encryption failed: {0}")]

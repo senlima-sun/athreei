@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import * as api from "@/lib/api"
 import type { CreateMemoryInput } from "@/lib/types"
+import type { UpdateMemoryInput } from "@/lib/api"
 
 /**
  * Query memories with optional space filter and pagination
@@ -96,5 +97,22 @@ export function useTags() {
   return useQuery({
     queryKey: ["tags"],
     queryFn: api.listTags,
+  })
+}
+
+/**
+ * Mutation to update a memory
+ */
+export function useUpdateMemory() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (input: UpdateMemoryInput) => api.updateMemory(input),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["memories"] })
+      queryClient.invalidateQueries({
+        queryKey: ["memories", "detail", variables.id],
+      })
+      queryClient.invalidateQueries({ queryKey: ["spaces"] })
+    },
   })
 }

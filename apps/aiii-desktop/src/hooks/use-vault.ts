@@ -66,3 +66,24 @@ export function useVaultSetup() {
     },
   })
 }
+
+/**
+ * Mutation to change the vault passphrase
+ */
+export function useVaultChangePassphrase() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      oldPassphrase,
+      newPassphrase,
+    }: {
+      oldPassphrase: string
+      newPassphrase: string
+    }) => api.vaultChangePassphrase(oldPassphrase, newPassphrase),
+    onSuccess: () => {
+      // Invalidate everything as data has been re-encrypted
+      queryClient.invalidateQueries({ queryKey: ["vault"] })
+      queryClient.invalidateQueries({ queryKey: ["memories"] })
+    },
+  })
+}

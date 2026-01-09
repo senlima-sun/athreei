@@ -49,6 +49,30 @@ export const vaultSetup = (passphrase: string): Promise<void> =>
  */
 export const vaultIsSetup = (): Promise<boolean> => invoke("vault_is_setup")
 
+/**
+ * Result of changing the passphrase
+ */
+export interface ChangePassphraseResult {
+  memories_re_encrypted: number
+  total_memories: number
+  errors: string[]
+}
+
+/**
+ * Change the vault passphrase
+ *
+ * This will re-encrypt all memories with the new passphrase.
+ *
+ * @param oldPassphrase - Current passphrase
+ * @param newPassphrase - New passphrase (min 8 characters)
+ * @returns Result of the operation
+ */
+export const vaultChangePassphrase = (
+  oldPassphrase: string,
+  newPassphrase: string
+): Promise<ChangePassphraseResult> =>
+  invoke("vault_change_passphrase", { oldPassphrase, newPassphrase })
+
 // ==================== Spaces API ====================
 
 /**
@@ -555,3 +579,64 @@ export const settingsCleanupOldMemories = (): Promise<number> =>
  */
 export const settingsGetAppInfo = (): Promise<AppInfo> =>
   invoke("settings_get_app_info")
+
+// ==================== Backup API ====================
+
+/**
+ * Backup header/metadata
+ */
+export interface BackupHeader {
+  version: number
+  created_at: number
+  spaces_count: number
+  memories_count: number
+  description: string | null
+}
+
+/**
+ * Result of an import operation
+ */
+export interface ImportResult {
+  spaces_imported: number
+  spaces_skipped: number
+  memories_imported: number
+  memories_skipped: number
+}
+
+/**
+ * Import strategy
+ */
+export type ImportStrategy = "replace" | "merge" | "skip"
+
+/**
+ * Information about a backup file
+ */
+export interface BackupInfo {
+  version: number
+  created_at: number
+  spaces_count: number
+  memories_count: number
+  file_size: number
+  is_compatible: boolean
+}
+
+/**
+ * Export all data to a backup file
+ */
+export const backupExport = (path: string): Promise<BackupHeader> =>
+  invoke("backup_export", { path })
+
+/**
+ * Import data from a backup file
+ */
+export const backupImport = (
+  path: string,
+  strategy: ImportStrategy
+): Promise<ImportResult> =>
+  invoke("backup_import", { path, strategy })
+
+/**
+ * Get information about a backup file
+ */
+export const backupInfo = (path: string): Promise<BackupInfo> =>
+  invoke("backup_info", { path })

@@ -36,7 +36,9 @@ impl AiiiMcpServer {
         ServerInfo {
             name: "aiii-memory".to_string(),
             version: env!("CARGO_PKG_VERSION").to_string(),
-            description: "Personal AI memory layer. Save and retrieve memories across AI conversations.".to_string(),
+            description:
+                "Personal AI memory layer. Save and retrieve memories across AI conversations."
+                    .to_string(),
         }
     }
 }
@@ -59,9 +61,7 @@ mod tests {
 
         let db = Database::in_memory().unwrap();
         db.init_schema().unwrap();
-        let db_state = Arc::new(DatabaseState {
-            db: Mutex::new(db),
-        });
+        let db_state = Arc::new(DatabaseState { db: Mutex::new(db), path: std::path::PathBuf::from(":memory:") });
         let vault_state = Arc::new(VaultState::new());
 
         AiiiMcpServer::new(db_state, vault_state)

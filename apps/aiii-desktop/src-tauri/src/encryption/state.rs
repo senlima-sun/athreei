@@ -60,7 +60,9 @@ impl VaultState {
                     drop(salt_guard);
                     let new_salt = generate_salt();
                     let mut salt_write = self.salt.write().map_err(|_| {
-                        VaultError::KeyDerivationFailed("Failed to acquire salt write lock".to_string())
+                        VaultError::KeyDerivationFailed(
+                            "Failed to acquire salt write lock".to_string(),
+                        )
                     })?;
                     *salt_write = Some(new_salt);
                     new_salt
@@ -110,10 +112,9 @@ impl VaultState {
     /// # Errors
     /// Returns `VaultLocked` if the vault is not unlocked
     pub fn encrypt(&self, plaintext: &[u8], aad: &[u8]) -> Result<Vec<u8>, VaultError> {
-        let guard = self
-            .inner
-            .read()
-            .map_err(|_| VaultError::EncryptionFailed("Failed to acquire vault lock".to_string()))?;
+        let guard = self.inner.read().map_err(|_| {
+            VaultError::EncryptionFailed("Failed to acquire vault lock".to_string())
+        })?;
 
         match &*guard {
             Some(vault) => vault.encrypt(plaintext, aad),
@@ -133,15 +134,115 @@ impl VaultState {
     /// # Errors
     /// Returns `VaultLocked` if the vault is not unlocked
     pub fn decrypt(&self, encrypted: &[u8], aad: &[u8]) -> Result<Vec<u8>, VaultError> {
-        let guard = self
-            .inner
-            .read()
-            .map_err(|_| VaultError::DecryptionFailed("Failed to acquire vault lock".to_string()))?;
+        let guard = self.inner.read().map_err(|_| {
+            VaultError::DecryptionFailed("Failed to acquire vault lock".to_string())
+        })?;
 
         match &*guard {
             Some(vault) => vault.decrypt(encrypted, aad),
             None => Err(VaultError::VaultLocked),
         }
+    }
+
+    /// Change the vault passphrase
+    ///
+    /// This creates a new salt and re-initializes the vault with the new passphrase.
+    /// The caller is responsible for re-encrypting all existing data.
+    ///
+    /// # Arguments
+    /// * `old_passphrase` - The current passphrase (for verification)
+    /// * `new_passphrase` - The new passphrase
+    ///
+    /// # Returns
+    /// The new salt used for key derivation
+    ///
+    /// # Errors
+    /// Returns error if:
+    /// - Old passphrase is incorrect
+    /// - Vault is locked
+    /// - New passphrase is empty
+    pub fn change_passphrase(
+        &self,
+        old_passphrase: &str,
+        new_passphrase: &str,
+    ) -> Result<[u8; SALT_LENGTH], VaultError> {
+        // Validate new passphrase
+        if new_passphrase.is_empty() {
+            return Err(VaultError::InvalidPassphrase(
+                "New passphrase cannot be empty".to_string(),
+            ));
+        }
+
+        // Check passphrase requirements
+        if new_passphrase.len() < 8 {
+            return Err(VaultError::InvalidPassphrase(
+                "Passphrase must be at least 8 characters".to_string(),
+            ));
+        }
+
+        // Verify old passphrase by trying to unlock with it
+        let old_salt = self.get_salt().ok_or(VaultError::VaultLocked)?;
+
+        // Try to unlock with old passphrase to verify it's correct
+        let old_vault = Vault::unlock(old_passphrase, &old_salt)?;
+
+        // Test encryption/decryption with old vault to verify passphrase
+        let test_data = b"passphrase_verification_test";
+        let test_aad = b"verification";
+        let encrypted = old_vault.encrypt(test_data, test_aad)?;
+        old_vault.decrypt(&encrypted, test_aad)?;
+
+        // Generate new salt
+        let new_salt = generate_salt();
+
+        // Create new vault with new passphrase
+        let new_vault = Vault::unlock(new_passphrase, &new_salt)?;
+
+        // Update vault state
+        {
+            let mut inner = self.inner.write().map_err(|_| {
+                VaultError::KeyDerivationFailed("Failed to acquire vault write lock".to_string())
+            })?;
+            *inner = Some(new_vault);
+        }
+
+        {
+            let mut salt_guard = self.salt.write().map_err(|_| {
+                VaultError::KeyDerivationFailed("Failed to acquire salt write lock".to_string())
+            })?;
+            *salt_guard = Some(new_salt);
+        }
+
+        Ok(new_salt)
+    }
+
+    /// Re-encrypt data from old vault to new vault
+    ///
+    /// This is used during passphrase change to re-encrypt existing data.
+    ///
+    /// # Arguments
+    /// * `encrypted` - Data encrypted with old passphrase
+    /// * `old_passphrase` - The old passphrase
+    /// * `old_salt` - The salt used with old passphrase
+    /// * `aad` - Additional authenticated data (must be same for both operations)
+    ///
+    /// # Returns
+    /// Data re-encrypted with the current vault key
+    pub fn re_encrypt(
+        &self,
+        encrypted: &[u8],
+        old_passphrase: &str,
+        old_salt: &[u8],
+        aad: &[u8],
+    ) -> Result<Vec<u8>, VaultError> {
+        // Create old vault to decrypt
+        let old_vault = Vault::unlock(old_passphrase, old_salt)?;
+
+        // Decrypt with old vault
+        let plaintext = old_vault.decrypt(encrypted, aad)?;
+
+        // Encrypt with current vault
+        self.encrypt(&plaintext, aad)
     }
 }
 

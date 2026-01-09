@@ -28,7 +28,8 @@ impl Database {
         conn.execute_batch("PRAGMA foreign_keys = ON;")?;
 
         // Use WAL mode for better concurrency
-        conn.execute_batch("PRAGMA journal_mode = WAL;")?;
+        // journal_mode returns the new mode, so use query_row to handle the result
+        conn.query_row("PRAGMA journal_mode = WAL;", [], |_| Ok(()))?;
 
         Ok(Self { conn })
     }
@@ -63,6 +64,15 @@ impl Database {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tempfile::tempdir;
+
+    #[test]
+    fn test_file_based_database() {
+        let dir = tempdir().expect("Failed to create temp dir");
+        let db_path = dir.path().join("test.db");
+        let db = Database::new(&db_path).expect("Failed to create file-based database");
+        db.init_schema().expect("Failed to initialize schema");
+    }
 
     #[test]
     fn test_in_memory_database() {

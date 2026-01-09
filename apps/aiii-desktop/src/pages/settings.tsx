@@ -20,6 +20,10 @@ import {
   Play,
   Square,
   AlertCircle,
+  Download,
+  Upload,
+  Archive,
+  Loader2,
 } from "lucide-react"
 import {
   useVaultLock,
@@ -30,12 +34,19 @@ import {
   useSyncStatus,
   useSyncNow,
   useSyncPendingCount,
+  useExportBackup,
+  useImportBackup,
 } from "@/hooks"
+import { useState } from "react"
+import type { ImportStrategy } from "@/lib/api"
 import { ErrorDisplay } from "@/components/error-display"
+import { ChangePassphraseDialog } from "@/components/change-passphrase-dialog"
 
 export function SettingsPage(): React.ReactElement {
   const vaultLock = useVaultLock()
   const { data: memoryCount = 0 } = useMemoryCount()
+  const [importStrategy, setImportStrategy] = useState<ImportStrategy>("skip")
+  const [showChangePassphrase, setShowChangePassphrase] = useState(false)
 
   // MCP server state
   const { data: mcpStatus, isLoading: mcpLoading } = useMcpStatus()
@@ -63,6 +74,46 @@ export function SettingsPage(): React.ReactElement {
 
   const handleSyncNow = async (): Promise<void> => {
     await syncNow.mutateAsync()
+  }
+
+  // Backup state
+  const exportBackup = useExportBackup()
+  const importBackup = useImportBackup()
+  const [exportSuccess, setExportSuccess] = useState<string | null>(null)
+  const [importSuccess, setImportSuccess] = useState<string | null>(null)
+
+  const handleExport = async (): Promise<void> => {
+    // Use Tauri dialog to get save path
+    const { save } = await import("@tauri-apps/plugin-dialog")
+    const path = await save({
+      defaultPath: `aiii-backup-${new Date().toISOString().split("T")[0]}.aiii`,
+      filters: [{ name: "aiii Backup", extensions: ["aiii"] }],
+    })
+
+    if (path) {
+      const result = await exportBackup.mutateAsync(path)
+      setExportSuccess(
+        `Exported ${result.spaces_count} spaces and ${result.memories_count} memories`
+      )
+      setTimeout(() => setExportSuccess(null), 5000)
+    }
+  }
+
+  const handleImport = async (): Promise<void> => {
+    // Use Tauri dialog to get file path
+    const { open } = await import("@tauri-apps/plugin-dialog")
+    const path = await open({
+      multiple: false,
+      filters: [{ name: "aiii Backup", extensions: ["aiii"] }],
+    })
+
+    if (path && typeof path === "string") {
+      const result = await importBackup.mutateAsync({ path, strategy: importStrategy })
+      setImportSuccess(
+        `Imported ${result.spaces_imported} spaces and ${result.memories_imported} memories`
+      )
+      setTimeout(() => setImportSuccess(null), 5000)
+    }
   }
 
   const formatLastSync = (timestamp: number | null): string => {
@@ -135,8 +186,12 @@ export function SettingsPage(): React.ReactElement {
                 Update your vault passphrase
               </p>
             </div>
-            <Button variant="outline" size="sm" disabled>
-              Coming Soon
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowChangePassphrase(true)}
+            >
+              Change
             </Button>
           </div>
         </CardContent>
@@ -333,6 +388,106 @@ export function SettingsPage(): React.ReactElement {
         </CardContent>
       </Card>
 
+      {/* Backup & Restore */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="rounded-lg bg-muted p-2">
+              <Archive className="h-5 w-5" />
+            </div>
+            <div>
+              <CardTitle>Backup & Restore</CardTitle>
+              <CardDescription>
+                Export and import your memories
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
+            <div>
+              <p className="text-sm font-medium">Export Backup</p>
+              <p className="text-xs text-muted-foreground">
+                Save all your memories to a compressed file
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={handleExport}
+              disabled={exportBackup.isPending}
+            >
+              {exportBackup.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="h-4 w-4" />
+              )}
+              Export
+            </Button>
+          </div>
+
+          {exportBackup.error && <ErrorDisplay error={exportBackup.error} />}
+
+          {exportSuccess && (
+            <div className="flex items-center gap-2 rounded-lg bg-green-500/10 p-3 text-sm text-green-600">
+              <CheckCircle className="h-4 w-4" />
+              {exportSuccess}
+            </div>
+          )}
+
+          <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
+            <div>
+              <p className="text-sm font-medium">Import Backup</p>
+              <p className="text-xs text-muted-foreground">
+                Restore memories from a backup file
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={handleImport}
+              disabled={importBackup.isPending}
+            >
+              {importBackup.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Upload className="h-4 w-4" />
+              )}
+              Import
+            </Button>
+          </div>
+
+          {importBackup.error && <ErrorDisplay error={importBackup.error} />}
+
+          {importSuccess && (
+            <div className="flex items-center gap-2 rounded-lg bg-green-500/10 p-3 text-sm text-green-600">
+              <CheckCircle className="h-4 w-4" />
+              {importSuccess}
+            </div>
+          )}
+
+          <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
+            <div>
+              <p className="text-sm font-medium">Import Strategy</p>
+              <p className="text-xs text-muted-foreground">
+                How to handle existing data when importing
+              </p>
+            </div>
+            <select
+              value={importStrategy}
+              onChange={(e) => setImportStrategy(e.target.value as ImportStrategy)}
+              className="rounded-md border border-input bg-transparent px-2 py-1 text-sm"
+            >
+              <option value="skip">Skip existing</option>
+              <option value="merge">Merge (add new only)</option>
+              <option value="replace">Replace all</option>
+            </select>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* About */}
       <Card>
         <CardHeader>
@@ -352,6 +507,12 @@ export function SettingsPage(): React.ReactElement {
           </div>
         </CardContent>
       </Card>
+
+      {/* Dialogs */}
+      <ChangePassphraseDialog
+        open={showChangePassphrase}
+        onOpenChange={setShowChangePassphrase}
+      />
     </div>
   )
 }

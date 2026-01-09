@@ -9,6 +9,7 @@ use tauri::{
     Manager, WindowEvent,
 };
 
+pub mod backup;
 mod commands;
 pub mod encryption;
 pub mod mcp;
@@ -117,6 +118,7 @@ pub fn run() {
             commands::vault_status,
             commands::vault_setup,
             commands::vault_is_setup,
+            commands::vault_change_passphrase,
             // Space commands
             commands::list_spaces,
             commands::get_space,
@@ -167,6 +169,10 @@ pub fn run() {
             commands::settings_get_data_retention,
             commands::settings_cleanup_old_memories,
             commands::settings_get_app_info,
+            // Backup commands
+            commands::backup_export,
+            commands::backup_import,
+            commands::backup_info,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

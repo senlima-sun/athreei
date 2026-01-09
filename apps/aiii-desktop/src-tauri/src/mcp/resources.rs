@@ -944,7 +944,7 @@ mod tests {
 
         let db = Database::in_memory().unwrap();
         db.init_schema().unwrap();
-        let db_state = Arc::new(DatabaseState { db: Mutex::new(db) });
+        let db_state = Arc::new(DatabaseState { db: Mutex::new(db), path: std::path::PathBuf::from(":memory:") });
         let vault_state = Arc::new(VaultState::new());
 
         let resources = AiiiResources::new(db_state, vault_state);

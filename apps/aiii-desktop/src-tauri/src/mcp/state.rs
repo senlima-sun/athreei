@@ -9,7 +9,6 @@ use tokio::sync::{mpsc, RwLock};
 use crate::encryption::VaultState;
 use crate::state::DatabaseState;
 
-use super::server::AiiiMcpServer;
 use super::transport::run_stdio_server;
 
 /// Server status information
@@ -90,11 +89,10 @@ impl McpServerState {
 
         // Check vault is unlocked
         if !self.vault.is_unlocked() {
-            return Err("Cannot start MCP server: vault is locked. Please unlock it first.".to_string());
+            return Err(
+                "Cannot start MCP server: vault is locked. Please unlock it first.".to_string(),
+            );
         }
-
-        // Create the MCP server
-        let server = AiiiMcpServer::new(self.db.clone(), self.vault.clone());
 
         // Create shutdown channel
         let (shutdown_tx, shutdown_rx) = mpsc::channel::<()>(1);
@@ -109,17 +107,19 @@ impl McpServerState {
         // Clone state refs for the spawned task
         let running = self.running.clone();
         let shutdown_tx_ref = self.shutdown_tx.clone();
+        let db = self.db.clone();
+        let vault = self.vault.clone();
 
         // Spawn the server task
         tokio::spawn(async move {
-            let result = run_stdio_server(server, shutdown_rx).await;
+            let result = run_stdio_server(db, vault, shutdown_rx).await;
 
             // Update state when server stops
             *running.write().await = false;
             *shutdown_tx_ref.write().await = None;
 
             if let Err(e) = result {
-                eprintln!("MCP server error: {e}");
+                eprintln!("[aiii-mcp] Server error: {e}");
             }
         });
 
@@ -158,9 +158,7 @@ mod tests {
     fn create_test_state() -> McpServerState {
         let db = Database::in_memory().unwrap();
         db.init_schema().unwrap();
-        let db_state = Arc::new(DatabaseState {
-            db: Mutex::new(db),
-        });
+        let db_state = Arc::new(DatabaseState { db: Mutex::new(db), path: std::path::PathBuf::from(":memory:") });
         let vault_state = Arc::new(VaultState::new());
 
         McpServerState::new(db_state, vault_state)

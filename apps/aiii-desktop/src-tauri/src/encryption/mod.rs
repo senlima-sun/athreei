@@ -40,6 +40,9 @@ mod state;
 mod vault;
 
 pub use error::VaultError;
-pub use key::{derive_key, generate_salt, ARGON2_ITERATIONS, ARGON2_MEMORY_KB, ARGON2_PARALLELISM, KEY_LENGTH, SALT_LENGTH};
+pub use key::{
+    derive_key, generate_salt, ARGON2_ITERATIONS, ARGON2_MEMORY_KB, ARGON2_PARALLELISM, KEY_LENGTH,
+    SALT_LENGTH,
+};
 pub use state::VaultState;
 pub use vault::{Vault, NONCE_LENGTH};

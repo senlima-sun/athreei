@@ -21,7 +21,10 @@ pub async fn vault_unlock(
 ) -> Result<(), String> {
     // Try to load existing salt from database
     let existing_salt = {
-        let db_guard = db.db.lock().map_err(|e| format!("Database lock error: {e}"))?;
+        let db_guard = db
+            .db
+            .lock()
+            .map_err(|e| format!("Database lock error: {e}"))?;
         load_salt(&db_guard).map_err(|e| format!("Failed to load salt: {e}"))?
     };
 
@@ -33,7 +36,9 @@ pub async fn vault_unlock(
             .map_err(|e| format!("Failed to unlock vault: {e}"))?;
 
         // Copy the unlocked state to the managed vault
-        vault.unlock(&passphrase).map_err(|e| format!("Failed to unlock vault: {e}"))?;
+        vault
+            .unlock(&passphrase)
+            .map_err(|e| format!("Failed to unlock vault: {e}"))?;
     } else {
         // First-time setup: unlock creates new salt
         let new_salt = vault
@@ -41,7 +46,10 @@ pub async fn vault_unlock(
             .map_err(|e| format!("Failed to unlock vault: {e}"))?;
 
         // Store the salt in database
-        let db_guard = db.db.lock().map_err(|e| format!("Database lock error: {e}"))?;
+        let db_guard = db
+            .db
+            .lock()
+            .map_err(|e| format!("Database lock error: {e}"))?;
         store_salt(&db_guard, &new_salt).map_err(|e| format!("Failed to store salt: {e}"))?;
     }
 
@@ -73,7 +81,10 @@ pub async fn vault_setup(
 ) -> Result<(), String> {
     // Check if vault is already set up
     let existing_salt = {
-        let db_guard = db.db.lock().map_err(|e| format!("Database lock error: {e}"))?;
+        let db_guard = db
+            .db
+            .lock()
+            .map_err(|e| format!("Database lock error: {e}"))?;
         load_salt(&db_guard).map_err(|e| format!("Failed to check vault status: {e}"))?
     };
 
@@ -87,7 +98,10 @@ pub async fn vault_setup(
         .map_err(|e| format!("Failed to set up vault: {e}"))?;
 
     // Store the salt in database
-    let db_guard = db.db.lock().map_err(|e| format!("Database lock error: {e}"))?;
+    let db_guard = db
+        .db
+        .lock()
+        .map_err(|e| format!("Database lock error: {e}"))?;
     store_salt(&db_guard, &new_salt).map_err(|e| format!("Failed to store salt: {e}"))?;
 
     Ok(())
@@ -96,9 +110,139 @@ pub async fn vault_setup(
 /// Check if a vault has been set up (salt exists in database)
 #[tauri::command]
 pub async fn vault_is_setup(db: State<'_, Arc<DatabaseState>>) -> Result<bool, String> {
-    let db_guard = db.db.lock().map_err(|e| format!("Database lock error: {e}"))?;
+    let db_guard = db
+        .db
+        .lock()
+        .map_err(|e| format!("Database lock error: {e}"))?;
     let salt = load_salt(&db_guard).map_err(|e| format!("Failed to check vault status: {e}"))?;
     Ok(salt.is_some())
+}
+
+/// Change the vault passphrase
+///
+/// This will:
+/// 1. Verify the old passphrase
+/// 2. Re-encrypt all memories with the new passphrase
+/// 3. Store the new salt
+#[tauri::command]
+pub async fn vault_change_passphrase(
+    old_passphrase: String,
+    new_passphrase: String,
+    vault: State<'_, Arc<VaultState>>,
+    db: State<'_, Arc<DatabaseState>>,
+) -> Result<ChangePassphraseResult, String> {
+    // Validate inputs
+    if new_passphrase.len() < 8 {
+        return Err("New passphrase must be at least 8 characters".to_string());
+    }
+
+    // Get the old salt before changing
+    let old_salt = vault
+        .get_salt()
+        .ok_or_else(|| "Vault is not set up".to_string())?;
+
+    // Change passphrase (this updates the vault state with new key)
+    let new_salt = vault
+        .change_passphrase(&old_passphrase, &new_passphrase)
+        .map_err(|e| format!("Failed to change passphrase: {e}"))?;
+
+    // Re-encrypt all memories
+    let db_guard = db
+        .db
+        .lock()
+        .map_err(|e| format!("Database lock error: {e}"))?;
+
+    let memories = db_guard
+        .list_memories(None, usize::MAX, 0)
+        .map_err(|e| format!("Failed to list memories: {e}"))?;
+
+    let mut re_encrypted_count = 0;
+    let mut errors = Vec::new();
+
+    for memory in &memories {
+        let aad = format!(
+            "memory:{}|space:{}",
+            memory.id,
+            memory.space_id.as_deref().unwrap_or("none")
+        )
+        .into_bytes();
+
+        // Re-encrypt each encrypted field
+        let new_title = if let Some(encrypted) = &memory.title {
+            match vault.re_encrypt(encrypted, &old_passphrase, &old_salt, &aad) {
+                Ok(new_encrypted) => Some(new_encrypted),
+                Err(e) => {
+                    errors.push(format!("Failed to re-encrypt title for {}: {}", memory.id, e));
+                    continue;
+                }
+            }
+        } else {
+            None
+        };
+
+        let new_summary = if let Some(encrypted) = &memory.summary {
+            match vault.re_encrypt(encrypted, &old_passphrase, &old_salt, &aad) {
+                Ok(new_encrypted) => Some(new_encrypted),
+                Err(e) => {
+                    errors.push(format!("Failed to re-encrypt summary for {}: {}", memory.id, e));
+                    continue;
+                }
+            }
+        } else {
+            None
+        };
+
+        let new_content = if let Some(encrypted) = &memory.content {
+            match vault.re_encrypt(encrypted, &old_passphrase, &old_salt, &aad) {
+                Ok(new_encrypted) => Some(new_encrypted),
+                Err(e) => {
+                    errors.push(format!("Failed to re-encrypt content for {}: {}", memory.id, e));
+                    continue;
+                }
+            }
+        } else {
+            None
+        };
+
+        // Update memory with re-encrypted data
+        let updated_memory = crate::storage::Memory {
+            id: memory.id.clone(),
+            space_id: memory.space_id.clone(),
+            source: memory.source.clone(),
+            source_id: memory.source_id.clone(),
+            title: new_title,
+            summary: new_summary,
+            content: new_content,
+            metadata: memory.metadata.clone(),
+            created_at: memory.created_at,
+            updated_at: memory.updated_at,
+        };
+
+        if let Err(e) = db_guard.update_memory(&updated_memory) {
+            errors.push(format!("Failed to update memory {}: {}", memory.id, e));
+            continue;
+        }
+
+        re_encrypted_count += 1;
+    }
+
+    // Store the new salt
+    store_salt(&db_guard, &new_salt)
+        .map_err(|e| format!("Failed to store new salt: {e}"))?;
+
+    Ok(ChangePassphraseResult {
+        memories_re_encrypted: re_encrypted_count,
+        total_memories: memories.len(),
+        errors,
+    })
+}
+
+/// Result of changing the passphrase
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct ChangePassphraseResult {
+    pub memories_re_encrypted: usize,
+    pub total_memories: usize,
+    pub errors: Vec<String>,
 }
 
 // ==================== Salt Storage Helpers ====================

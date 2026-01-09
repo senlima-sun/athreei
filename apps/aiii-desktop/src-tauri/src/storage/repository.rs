@@ -94,13 +94,7 @@ impl Database {
         self.connection().execute(
             "UPDATE spaces SET name = ?2, icon = ?3, source_rules = ?4, updated_at = ?5
              WHERE id = ?1",
-            params![
-                space.id,
-                space.name,
-                space.icon,
-                space.source_rules,
-                now(),
-            ],
+            params![space.id, space.name, space.icon, space.source_rules, now(),],
         )?;
         Ok(())
     }
@@ -177,7 +171,8 @@ impl Database {
         };
 
         let mut stmt = self.connection().prepare(sql)?;
-        let params_refs: Vec<&dyn rusqlite::ToSql> = params_vec.iter().map(|p| p.as_ref()).collect();
+        let params_refs: Vec<&dyn rusqlite::ToSql> =
+            params_vec.iter().map(|p| p.as_ref()).collect();
         let rows = stmt.query_map(params_refs.as_slice(), |row| row_to_memory(row))?;
 
         rows.collect()
@@ -229,7 +224,8 @@ impl Database {
         };
 
         let mut stmt = self.connection().prepare(sql)?;
-        let params_refs: Vec<&dyn rusqlite::ToSql> = params_vec.iter().map(|p| p.as_ref()).collect();
+        let params_refs: Vec<&dyn rusqlite::ToSql> =
+            params_vec.iter().map(|p| p.as_ref()).collect();
         let rows = stmt.query_map(params_refs.as_slice(), |row| row_to_memory(row))?;
 
         rows.collect()
@@ -357,9 +353,9 @@ impl Database {
         let tags_str = tags.join(" ");
 
         // Get current memory data
-        let mut stmt = self.connection().prepare(
-            "SELECT source, source_id, metadata FROM memories WHERE id = ?1",
-        )?;
+        let mut stmt = self
+            .connection()
+            .prepare("SELECT source, source_id, metadata FROM memories WHERE id = ?1")?;
 
         let result = stmt.query_row(params![memory_id], |row| {
             Ok((
@@ -638,11 +634,12 @@ mod tests {
         db.create_memory(&memory2).expect("Failed to create memory");
 
         // Search for rust
-        let results = db
-            .search_memories("rust", None)
-            .expect("Failed to search");
+        let results = db.search_memories("rust", None).expect("Failed to search");
         assert_eq!(results.len(), 1);
-        assert_eq!(results[0].source_id, Some("https://rust-lang.org".to_string()));
+        assert_eq!(
+            results[0].source_id,
+            Some("https://rust-lang.org".to_string())
+        );
     }
 
     #[test]
@@ -672,9 +669,7 @@ mod tests {
         assert_eq!(total, 5);
 
         // Count in space
-        let in_space = db
-            .count_memories(Some(&space.id))
-            .expect("Failed to count");
+        let in_space = db.count_memories(Some(&space.id)).expect("Failed to count");
         assert_eq!(in_space, 3);
     }
 

@@ -17,6 +17,7 @@ import {
   Globe,
   Trash2,
   AlertTriangle,
+  Pencil,
 } from "lucide-react"
 import {
   useSpace,
@@ -30,12 +31,14 @@ import { PageLoading } from "@/components/loading-spinner"
 import { PageError, ErrorDisplay } from "@/components/error-display"
 import { EmptyState } from "@/components/empty-state"
 import { MemoryFilters } from "@/components/memory-filters"
+import { EditMemoryDialog } from "@/components/edit-memory-dialog"
 import type { Memory } from "@/lib/types"
 
 export function SpaceDetailPage(): React.ReactElement {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState("")
+  const [editingMemory, setEditingMemory] = useState<Memory | null>(null)
 
   // Filter state
   const {
@@ -203,7 +206,11 @@ export function SpaceDetailPage(): React.ReactElement {
           ) : (
             <div className="space-y-3">
               {displayMemories.map((memory) => (
-                <MemoryCard key={memory.id} memory={memory} />
+                <MemoryCard
+                  key={memory.id}
+                  memory={memory}
+                  onEdit={() => setEditingMemory(memory)}
+                />
               ))}
             </div>
           )}
@@ -224,15 +231,23 @@ export function SpaceDetailPage(): React.ReactElement {
           </Badge>
         </div>
       )}
+
+      {/* Edit dialog */}
+      <EditMemoryDialog
+        open={editingMemory !== null}
+        onOpenChange={(open) => !open && setEditingMemory(null)}
+        memory={editingMemory}
+      />
     </div>
   )
 }
 
 interface MemoryCardProps {
   memory: Memory
+  onEdit?: () => void
 }
 
-function MemoryCard({ memory }: MemoryCardProps): React.ReactElement {
+function MemoryCard({ memory, onEdit }: MemoryCardProps): React.ReactElement {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const deleteMemory = useDeleteMemory()
 
@@ -303,13 +318,24 @@ function MemoryCard({ memory }: MemoryCardProps): React.ReactElement {
               </p>
             )}
           </div>
-          <button
-            onClick={() => setShowDeleteConfirm(true)}
-            className="shrink-0 rounded-md p-1 opacity-0 transition-opacity hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
-            title="Delete memory"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-1 shrink-0 opacity-0 transition-opacity group-hover:opacity-100">
+            {onEdit && (
+              <button
+                onClick={onEdit}
+                className="rounded-md p-1 hover:bg-accent"
+                title="Edit memory"
+              >
+                <Pencil className="h-4 w-4" />
+              </button>
+            )}
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="rounded-md p-1 hover:bg-destructive/10 hover:text-destructive"
+              title="Delete memory"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
         {/* Content preview */}

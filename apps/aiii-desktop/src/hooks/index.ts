@@ -5,6 +5,7 @@ export {
   useVaultUnlock,
   useVaultLock,
   useVaultSetup,
+  useVaultChangePassphrase,
 } from "./use-vault"
 
 // Spaces hooks
@@ -27,6 +28,7 @@ export {
   useUpdateMemoryTags,
   useSearchMemories,
   useTags,
+  useUpdateMemory,
 } from "./use-memories"
 
 // MCP hooks
@@ -59,7 +61,7 @@ export {
 } from "./use-sync"
 
 // Bulk operations hooks
-export { useBulkOperations, useUpdateMemory } from "./use-bulk-operations"
+export { useBulkOperations } from "./use-bulk-operations"
 
 // Settings hooks
 export {
@@ -79,3 +81,6 @@ export {
   AUTO_LOCK_OPTIONS,
   DATA_RETENTION_OPTIONS,
 } from "./use-settings"
+
+// Backup hooks
+export { useExportBackup, useImportBackup, useBackupInfo } from "./use-backup"
