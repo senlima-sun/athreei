@@ -2,7 +2,7 @@
 //!
 //! Provides thread-safe state containers for Tauri dependency injection.
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 
 use crate::storage::Database;
@@ -13,6 +13,8 @@ use crate::storage::Database;
 pub struct DatabaseState {
     /// The database connection protected by a Mutex
     pub db: Mutex<Database>,
+    /// Path to the database file
+    pub path: PathBuf,
 }
 
 impl DatabaseState {
@@ -32,13 +34,15 @@ impl DatabaseState {
             .map_err(|e| format!("Failed to create app directory: {e}"))?;
 
         let db_path = app_dir.join("aiii.db");
-        let db =
-            Database::new(&db_path).map_err(|e| format!("Failed to create database: {e}"))?;
+        let db = Database::new(&db_path).map_err(|e| format!("Failed to create database: {e}"))?;
 
         db.init_schema()
             .map_err(|e| format!("Failed to initialize schema: {e}"))?;
 
-        Ok(Self { db: Mutex::new(db) })
+        Ok(Self {
+            db: Mutex::new(db),
+            path: db_path,
+        })
     }
 
     /// Create a DatabaseState with an in-memory database
@@ -51,7 +55,10 @@ impl DatabaseState {
         db.init_schema()
             .map_err(|e| format!("Failed to initialize schema: {e}"))?;
 
-        Ok(Self { db: Mutex::new(db) })
+        Ok(Self {
+            db: Mutex::new(db),
+            path: PathBuf::from(":memory:"),
+        })
     }
 }
 

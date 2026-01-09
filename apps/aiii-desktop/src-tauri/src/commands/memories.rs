@@ -3,8 +3,8 @@
 //! Provides CRUD operations for memories with encryption support.
 //! All encrypted fields are decrypted before being sent to the frontend.
 
-use std::sync::Arc;
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 use tauri::State;
 
 use crate::encryption::VaultState;
@@ -108,10 +108,17 @@ pub async fn list_memories(
         return Err("Vault is locked".to_string());
     }
 
-    let db_guard = db.db.lock().map_err(|e| format!("Database lock error: {e}"))?;
+    let db_guard = db
+        .db
+        .lock()
+        .map_err(|e| format!("Database lock error: {e}"))?;
 
     let memories = db_guard
-        .list_memories(space_id.as_deref(), limit.unwrap_or(50), offset.unwrap_or(0))
+        .list_memories(
+            space_id.as_deref(),
+            limit.unwrap_or(50),
+            offset.unwrap_or(0),
+        )
         .map_err(|e| format!("Failed to list memories: {e}"))?;
 
     let mut decrypted_memories = Vec::with_capacity(memories.len());
@@ -136,7 +143,10 @@ pub async fn get_memory(
         return Err("Vault is locked".to_string());
     }
 
-    let db_guard = db.db.lock().map_err(|e| format!("Database lock error: {e}"))?;
+    let db_guard = db
+        .db
+        .lock()
+        .map_err(|e| format!("Database lock error: {e}"))?;
 
     let memory = db_guard
         .get_memory(&id)
@@ -218,7 +228,10 @@ pub async fn create_memory(
         updated_at: now,
     };
 
-    let db_guard = db.db.lock().map_err(|e| format!("Database lock error: {e}"))?;
+    let db_guard = db
+        .db
+        .lock()
+        .map_err(|e| format!("Database lock error: {e}"))?;
 
     db_guard
         .create_memory(&memory)
@@ -260,7 +273,10 @@ pub async fn search_memories(
         return Err("Vault is locked".to_string());
     }
 
-    let db_guard = db.db.lock().map_err(|e| format!("Database lock error: {e}"))?;
+    let db_guard = db
+        .db
+        .lock()
+        .map_err(|e| format!("Database lock error: {e}"))?;
 
     let memories = db_guard
         .search_memories(&query, space_id.as_deref())
@@ -280,9 +296,14 @@ pub async fn search_memories(
 /// Delete a memory by ID
 #[tauri::command]
 pub async fn delete_memory(id: String, db: State<'_, Arc<DatabaseState>>) -> Result<(), String> {
-    let db_guard = db.db.lock().map_err(|e| format!("Database lock error: {e}"))?;
+    let db_guard = db
+        .db
+        .lock()
+        .map_err(|e| format!("Database lock error: {e}"))?;
 
-    db_guard.delete_memory(&id).map_err(|e| format!("Failed to delete memory: {e}"))
+    db_guard
+        .delete_memory(&id)
+        .map_err(|e| format!("Failed to delete memory: {e}"))
 }
 
 /// Update memory tags
@@ -292,7 +313,10 @@ pub async fn update_memory_tags(
     tags: Vec<String>,
     db: State<'_, Arc<DatabaseState>>,
 ) -> Result<(), String> {
-    let db_guard = db.db.lock().map_err(|e| format!("Database lock error: {e}"))?;
+    let db_guard = db
+        .db
+        .lock()
+        .map_err(|e| format!("Database lock error: {e}"))?;
 
     // Get current tags
     let current_tags = db_guard
@@ -325,7 +349,10 @@ pub async fn update_memory_tags(
 /// Get all tags with usage counts
 #[tauri::command]
 pub async fn list_tags(db: State<'_, Arc<DatabaseState>>) -> Result<Vec<(String, i64)>, String> {
-    let db_guard = db.db.lock().map_err(|e| format!("Database lock error: {e}"))?;
+    let db_guard = db
+        .db
+        .lock()
+        .map_err(|e| format!("Database lock error: {e}"))?;
 
     db_guard
         .list_tags_with_counts()
@@ -338,11 +365,195 @@ pub async fn count_memories(
     space_id: Option<String>,
     db: State<'_, Arc<DatabaseState>>,
 ) -> Result<i64, String> {
-    let db_guard = db.db.lock().map_err(|e| format!("Database lock error: {e}"))?;
+    let db_guard = db
+        .db
+        .lock()
+        .map_err(|e| format!("Database lock error: {e}"))?;
 
     db_guard
         .count_memories(space_id.as_deref())
         .map_err(|e| format!("Failed to count memories: {e}"))
+}
+
+// ==================== Bulk Operations ====================
+
+/// Delete multiple memories by ID
+#[tauri::command]
+pub async fn delete_memories(ids: Vec<String>, db: State<'_, Arc<DatabaseState>>) -> Result<usize, String> {
+    let db_guard = db
+        .db
+        .lock()
+        .map_err(|e| format!("Database lock error: {e}"))?;
+
+    let mut deleted_count = 0;
+    for id in &ids {
+        if db_guard.delete_memory(id).is_ok() {
+            deleted_count += 1;
+        }
+    }
+
+    Ok(deleted_count)
+}
+
+/// Move multiple memories to a different space
+#[tauri::command]
+pub async fn move_memories(
+    ids: Vec<String>,
+    target_space_id: Option<String>,
+    db: State<'_, Arc<DatabaseState>>,
+    vault: State<'_, Arc<VaultState>>,
+) -> Result<usize, String> {
+    if !vault.is_unlocked() {
+        return Err("Vault is locked".to_string());
+    }
+
+    let db_guard = db
+        .db
+        .lock()
+        .map_err(|e| format!("Database lock error: {e}"))?;
+
+    let mut moved_count = 0;
+    for id in &ids {
+        if let Ok(Some(mut memory)) = db_guard.get_memory(id) {
+            memory.space_id = target_space_id.clone();
+            if db_guard.update_memory(&memory).is_ok() {
+                moved_count += 1;
+            }
+        }
+    }
+
+    Ok(moved_count)
+}
+
+/// Add tags to multiple memories
+#[tauri::command]
+pub async fn tag_memories(
+    ids: Vec<String>,
+    tags: Vec<String>,
+    db: State<'_, Arc<DatabaseState>>,
+) -> Result<usize, String> {
+    let db_guard = db
+        .db
+        .lock()
+        .map_err(|e| format!("Database lock error: {e}"))?;
+
+    let mut tagged_count = 0;
+    for id in &ids {
+        if db_guard.add_tags(id, &tags).is_ok() {
+            tagged_count += 1;
+        }
+    }
+
+    Ok(tagged_count)
+}
+
+/// Remove tags from multiple memories
+#[tauri::command]
+pub async fn untag_memories(
+    ids: Vec<String>,
+    tags: Vec<String>,
+    db: State<'_, Arc<DatabaseState>>,
+) -> Result<usize, String> {
+    let db_guard = db
+        .db
+        .lock()
+        .map_err(|e| format!("Database lock error: {e}"))?;
+
+    let mut untagged_count = 0;
+    for id in &ids {
+        let mut success = true;
+        for tag in &tags {
+            if db_guard.remove_tag(id, tag).is_err() {
+                success = false;
+            }
+        }
+        if success {
+            untagged_count += 1;
+        }
+    }
+
+    Ok(untagged_count)
+}
+
+/// Input for updating a memory
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UpdateMemoryInput {
+    pub id: String,
+    pub space_id: Option<Option<String>>,
+    pub title: Option<String>,
+    pub summary: Option<String>,
+    pub content: Option<String>,
+    pub metadata: Option<String>,
+}
+
+/// Update an existing memory
+#[tauri::command]
+pub async fn update_memory(
+    input: UpdateMemoryInput,
+    db: State<'_, Arc<DatabaseState>>,
+    vault: State<'_, Arc<VaultState>>,
+) -> Result<DecryptedMemory, String> {
+    if !vault.is_unlocked() {
+        return Err("Vault is locked".to_string());
+    }
+
+    let db_guard = db
+        .db
+        .lock()
+        .map_err(|e| format!("Database lock error: {e}"))?;
+
+    // Get existing memory
+    let mut memory = db_guard
+        .get_memory(&input.id)
+        .map_err(|e| format!("Failed to get memory: {e}"))?
+        .ok_or("Memory not found")?;
+
+    let aad = build_aad(&memory.id, memory.space_id.as_deref());
+
+    // Update fields if provided
+    if let Some(space_id_opt) = input.space_id {
+        memory.space_id = space_id_opt;
+    }
+
+    if let Some(title) = &input.title {
+        memory.title = Some(
+            vault
+                .encrypt(title.as_bytes(), &aad)
+                .map_err(|e| format!("Failed to encrypt title: {e}"))?,
+        );
+    }
+
+    if let Some(summary) = &input.summary {
+        memory.summary = Some(
+            vault
+                .encrypt(summary.as_bytes(), &aad)
+                .map_err(|e| format!("Failed to encrypt summary: {e}"))?,
+        );
+    }
+
+    if let Some(content) = &input.content {
+        memory.content = Some(
+            vault
+                .encrypt(content.as_bytes(), &aad)
+                .map_err(|e| format!("Failed to encrypt content: {e}"))?,
+        );
+    }
+
+    if let Some(metadata) = &input.metadata {
+        memory.metadata = Some(metadata.clone());
+    }
+
+    // Update in database
+    db_guard
+        .update_memory(&memory)
+        .map_err(|e| format!("Failed to update memory: {e}"))?;
+
+    // Get tags and return decrypted
+    let tags = db_guard
+        .get_tags(&memory.id)
+        .map_err(|e| format!("Failed to get tags: {e}"))?;
+
+    decrypt_memory(&memory, tags, &vault)
 }
 
 #[cfg(test)]
@@ -354,7 +565,10 @@ mod tests {
     fn create_test_setup() -> (DatabaseState, VaultState) {
         let db = Database::in_memory().unwrap();
         db.init_schema().unwrap();
-        let db_state = DatabaseState { db: Mutex::new(db) };
+        let db_state = DatabaseState {
+            db: Mutex::new(db),
+            path: std::path::PathBuf::from(":memory:"),
+        };
 
         let vault_state = VaultState::new();
         vault_state.unlock("test-passphrase").unwrap();

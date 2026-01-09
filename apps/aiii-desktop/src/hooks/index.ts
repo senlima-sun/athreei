@@ -44,3 +44,38 @@ export {
 
 // Stats hooks
 export { useStats } from "./use-stats"
+
+// Sync hooks
+export {
+  useSyncStatus,
+  useSyncConfig,
+  useSyncConflicts,
+  useSyncPendingCount,
+  useSyncEnable,
+  useSyncDisable,
+  useSyncNow,
+  useSyncResolveConflict,
+  useSyncSetConfig,
+} from "./use-sync"
+
+// Bulk operations hooks
+export { useBulkOperations, useUpdateMemory } from "./use-bulk-operations"
+
+// Settings hooks
+export {
+  useSettings,
+  useDatabasePath,
+  useAutoLockTimeout,
+  useLaunchAtStartup,
+  useKeyboardShortcuts,
+  useDataRetention,
+  useAppInfo,
+  useUpdateSettings,
+  useSetAutoLockTimeout,
+  useSetLaunchAtStartup,
+  useSetKeyboardShortcuts,
+  useSetDataRetention,
+  useCleanupOldMemories,
+  AUTO_LOCK_OPTIONS,
+  DATA_RETENTION_OPTIONS,
+} from "./use-settings"

@@ -14,10 +14,13 @@ pub mod encryption;
 pub mod mcp;
 pub mod state;
 pub mod storage;
+pub mod sync;
 
+use commands::SettingsState;
 use encryption::VaultState;
 use mcp::McpServerState;
 use state::DatabaseState;
+use sync::SyncManagerState;
 
 /// Run the Tauri application
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -42,11 +45,20 @@ pub fn run() {
             // Initialize MCP server state with shared references
             let mcp_state = McpServerState::new(db_state.clone(), vault_state.clone());
 
+            // Initialize sync manager
+            let sync_db_path = app_dir.join("sync.db");
+            let sync_manager = SyncManagerState::new(sync_db_path.to_str().unwrap());
+
+            // Initialize settings state
+            let settings_state = SettingsState::new(&app_dir);
+
             // Manage states
             // Note: We manage the Arc'd versions for direct access too
             app.manage(db_state);
             app.manage(vault_state);
             app.manage(mcp_state);
+            app.manage(sync_manager);
+            app.manage(settings_state);
 
             // Setup system tray
             let show = MenuItem::with_id(app, "show", "Show Window", true, None::<&str>)?;
@@ -121,10 +133,40 @@ pub fn run() {
             commands::update_memory_tags,
             commands::list_tags,
             commands::count_memories,
+            commands::update_memory,
+            // Bulk memory commands
+            commands::delete_memories,
+            commands::move_memories,
+            commands::tag_memories,
+            commands::untag_memories,
             // MCP server commands
             commands::mcp_start,
             commands::mcp_stop,
             commands::mcp_status,
+            // Sync commands
+            commands::sync_status,
+            commands::sync_enable,
+            commands::sync_disable,
+            commands::sync_now,
+            commands::sync_get_conflicts,
+            commands::sync_resolve_conflict,
+            commands::sync_get_config,
+            commands::sync_set_config,
+            commands::sync_pending_count,
+            // Settings commands
+            commands::settings_get_database_path,
+            commands::settings_get,
+            commands::settings_set,
+            commands::settings_set_auto_lock,
+            commands::settings_get_auto_lock,
+            commands::settings_set_launch_at_startup,
+            commands::settings_get_launch_at_startup,
+            commands::settings_set_shortcuts,
+            commands::settings_get_shortcuts,
+            commands::settings_set_data_retention,
+            commands::settings_get_data_retention,
+            commands::settings_cleanup_old_memories,
+            commands::settings_get_app_info,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

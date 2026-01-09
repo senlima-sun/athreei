@@ -27,6 +27,9 @@ import {
   useMcpStatus,
   useMcpStart,
   useMcpStop,
+  useSyncStatus,
+  useSyncNow,
+  useSyncPendingCount,
 } from "@/hooks"
 import { ErrorDisplay } from "@/components/error-display"
 
@@ -52,6 +55,21 @@ export function SettingsPage(): React.ReactElement {
   }
 
   const mcpError = mcpStart.error || mcpStop.error
+
+  // Sync state
+  const { data: syncStatus } = useSyncStatus()
+  const { data: pendingCount = 0 } = useSyncPendingCount()
+  const syncNow = useSyncNow()
+
+  const handleSyncNow = async (): Promise<void> => {
+    await syncNow.mutateAsync()
+  }
+
+  const formatLastSync = (timestamp: number | null): string => {
+    if (!timestamp) return "Never"
+    const date = new Date(timestamp)
+    return date.toLocaleString()
+  }
 
   return (
     <div className="space-y-6">
@@ -217,16 +235,29 @@ export function SettingsPage(): React.ReactElement {
       {/* Sync */}
       <Card>
         <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-muted p-2">
-              <Cloud className="h-5 w-5" />
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-muted p-2">
+                <Cloud className="h-5 w-5" />
+              </div>
+              <div>
+                <CardTitle>Sync</CardTitle>
+                <CardDescription>
+                  Sync your memories across devices
+                </CardDescription>
+              </div>
             </div>
-            <div>
-              <CardTitle>Sync</CardTitle>
-              <CardDescription>
-                Sync your memories across devices
-              </CardDescription>
-            </div>
+            {syncStatus?.enabled ? (
+              <Badge variant="success" className="gap-1">
+                <CheckCircle className="h-3 w-3" />
+                Enabled
+              </Badge>
+            ) : (
+              <Badge variant="secondary" className="gap-1">
+                <AlertCircle className="h-3 w-3" />
+                Disabled
+              </Badge>
+            )}
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -234,13 +265,58 @@ export function SettingsPage(): React.ReactElement {
             <div>
               <p className="text-sm font-medium">Cloud Sync</p>
               <p className="text-xs text-muted-foreground">
-                Sync encrypted memories to athreei cloud
+                {syncStatus?.enabled
+                  ? `Last sync: ${formatLastSync(syncStatus.last_sync)}`
+                  : "Sync encrypted memories to athreei cloud"}
               </p>
             </div>
-            <Button variant="outline" size="sm" disabled>
-              Coming Soon
-            </Button>
+            {syncStatus?.enabled ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={handleSyncNow}
+                loading={syncNow.isPending}
+              >
+                <RefreshCw className="h-4 w-4" />
+                Sync Now
+              </Button>
+            ) : (
+              <Button variant="outline" size="sm" disabled>
+                Coming Soon
+              </Button>
+            )}
           </div>
+
+          {syncNow.error && <ErrorDisplay error={syncNow.error} />}
+
+          {syncStatus?.enabled && pendingCount > 0 && (
+            <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
+              <div>
+                <p className="text-sm font-medium">Pending Changes</p>
+                <p className="text-xs text-muted-foreground">
+                  Local changes waiting to sync
+                </p>
+              </div>
+              <Badge variant="secondary">{pendingCount} pending</Badge>
+            </div>
+          )}
+
+          {syncStatus?.conflicts_count && syncStatus.conflicts_count > 0 && (
+            <div className="flex items-center justify-between rounded-lg border border-amber-500/50 bg-amber-500/10 p-3">
+              <div>
+                <p className="text-sm font-medium text-amber-600">
+                  Sync Conflicts
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {syncStatus.conflicts_count} conflict(s) need resolution
+                </p>
+              </div>
+              <Button variant="outline" size="sm">
+                Resolve
+              </Button>
+            </div>
+          )}
 
           <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
             <div>
