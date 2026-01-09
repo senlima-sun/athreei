@@ -482,7 +482,11 @@ function EnvVarDisplay({
   )
 }
 
-export function McpDetails(props: { id: string; showEnv?: boolean }) {
+export function McpDetails(props: {
+  id: string
+  showEnv?: boolean
+  json?: boolean
+}) {
   const { exit } = useApp()
   const [loading, setLoading] = useState(true)
   const [server, setServer] = useState<McpServer | null>(null)
@@ -524,7 +528,17 @@ export function McpDetails(props: { id: string; showEnv?: boolean }) {
   }
 
   if (error) {
+    if (props.json) {
+      console.log(JSON.stringify({ error: error.message }, null, 2))
+      return null
+    }
     return <ErrorDisplay error={error} context="fetching MCP server details" />
+  }
+
+  // JSON output mode
+  if (props.json) {
+    console.log(JSON.stringify({ server }, null, 2))
+    return null
   }
 
   if (!server) {

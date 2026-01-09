@@ -9,6 +9,7 @@ import { setVerbose, setQuiet, debug } from "./lib/output.js"
 import { OrgList, OrgSwitch, OrgCurrent } from "./commands/org.js"
 import {
   McpList,
+  McpDetails,
   McpUpdate,
   McpDelete,
   McpCreate,
@@ -281,6 +282,21 @@ mcp
   })
 
 mcp
+  .command("details")
+  .description("Show MCP server details")
+  .argument("<id>", "MCP server ID")
+  .option("--show-env", "Reveal environment variable values")
+  .option("--json", "Output in JSON format")
+  .action(
+    async (id: string, options: { showEnv?: boolean; json?: boolean }) => {
+      const { waitUntilExit } = render(
+        <McpDetails id={id} showEnv={options.showEnv} json={options.json} />
+      )
+      await waitUntilExit()
+    }
+  )
+
+mcp
   .command("verify")
   .description("Verify MCP server connectivity")
   .argument("<id>", "MCP server ID to verify")
@@ -366,9 +382,10 @@ config
   .command("show")
   .description("Display current configuration")
   .option("--show-secrets", "Reveal sensitive values")
-  .action(async (options: { showSecrets?: boolean }) => {
+  .option("--json", "Output in JSON format")
+  .action(async (options: { showSecrets?: boolean; json?: boolean }) => {
     const { waitUntilExit } = render(
-      <ConfigShow showSecrets={options.showSecrets} />
+      <ConfigShow showSecrets={options.showSecrets} json={options.json} />
     )
     await waitUntilExit()
   })
@@ -410,8 +427,9 @@ const gateway = program
 gateway
   .command("status")
   .description("Check if the gateway is running")
-  .action(async () => {
-    const { waitUntilExit } = render(<GatewayStatus />)
+  .option("--json", "Output in JSON format")
+  .action(async (options: { json?: boolean }) => {
+    const { waitUntilExit } = render(<GatewayStatus json={options.json} />)
     await waitUntilExit()
   })
 
@@ -495,8 +513,9 @@ const sync = program
 sync
   .command("status")
   .description("Check sync status between local and cloud configurations")
-  .action(async () => {
-    const { waitUntilExit } = render(<SyncStatus />)
+  .option("--json", "Output in JSON format")
+  .action(async (options: { json?: boolean }) => {
+    const { waitUntilExit } = render(<SyncStatus json={options.json} />)
     await waitUntilExit()
   })
 

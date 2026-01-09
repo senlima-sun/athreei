@@ -178,7 +178,11 @@ function formatUptime(startTime: Date): string {
 // GatewayStatus - Check gateway status
 // ============================================
 
-export function GatewayStatus() {
+interface GatewayStatusProps {
+  json?: boolean
+}
+
+export function GatewayStatus(props: GatewayStatusProps) {
   const { exit } = useApp()
   const [loading, setLoading] = useState(true)
   const [status, setStatus] = useState<{
@@ -241,7 +245,31 @@ export function GatewayStatus() {
   }
 
   if (error) {
+    if (props.json) {
+      console.log(JSON.stringify({ error: error.message }, null, 2))
+      return null
+    }
     return <ErrorDisplay error={error} context="checking gateway status" />
+  }
+
+  // JSON output mode
+  if (props.json) {
+    console.log(
+      JSON.stringify(
+        {
+          running: status?.running ?? false,
+          pid: status?.pid ?? null,
+          port: status?.port ?? null,
+          uptime: status?.uptime ?? null,
+          endpoint: status?.running
+            ? `http://localhost:${status?.port ?? 8080}`
+            : null,
+        },
+        null,
+        2
+      )
+    )
+    return null
   }
 
   if (!status?.running) {

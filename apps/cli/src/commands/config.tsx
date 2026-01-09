@@ -275,6 +275,7 @@ export function ConfigInit(props: ConfigInitProps) {
 
 interface ConfigShowProps {
   showSecrets?: boolean
+  json?: boolean
 }
 
 export function ConfigShow(props: ConfigShowProps) {
@@ -323,7 +324,26 @@ export function ConfigShow(props: ConfigShowProps) {
   }
 
   if (error) {
+    if (props.json) {
+      console.log(JSON.stringify({ error: error.message }, null, 2))
+      return null
+    }
     return <ErrorDisplay error={error} context="loading config" />
+  }
+
+  // JSON output mode
+  if (props.json) {
+    console.log(
+      JSON.stringify(
+        {
+          path: configPath,
+          config: config,
+        },
+        null,
+        2
+      )
+    )
+    return null
   }
 
   if (!config) {

@@ -44,7 +44,11 @@ interface McpServerResponse {
 
 type StatusPhase = "loading" | "comparing" | "complete" | "error"
 
-export function SyncStatus() {
+interface SyncStatusProps {
+  json?: boolean
+}
+
+export function SyncStatus(props: SyncStatusProps) {
   const { exit } = useApp()
   const [phase, setPhase] = useState<StatusPhase>("loading")
   const [diff, setDiff] = useState<SyncDiffResult | null>(null)
@@ -126,11 +130,36 @@ export function SyncStatus() {
   }
 
   if (phase === "error" && error) {
+    if (props.json) {
+      console.log(JSON.stringify({ error: error.message }, null, 2))
+      return null
+    }
     return <ErrorDisplay error={error} context="checking sync status" />
   }
 
   if (phase === "complete" && diff) {
     const { summary } = diff
+
+    // JSON output mode
+    if (props.json) {
+      console.log(
+        JSON.stringify(
+          {
+            isInSync: summary.isInSync,
+            inSyncCount: summary.inSyncCount,
+            localOnlyCount: summary.localOnlyCount,
+            cloudOnlyCount: summary.cloudOnlyCount,
+            conflictCount: summary.conflictCount,
+            localOnly: diff.localOnly.map((item) => item.name),
+            cloudOnly: diff.cloudOnly.map((item) => item.name),
+            conflicts: diff.conflicts.map((item) => item.name),
+          },
+          null,
+          2
+        )
+      )
+      return null
+    }
 
     return (
       <Box flexDirection="column" padding={1}>
