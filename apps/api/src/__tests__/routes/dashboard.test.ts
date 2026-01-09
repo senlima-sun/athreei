@@ -28,7 +28,11 @@ vi.mock("../../lib/db", () => ({
 
 vi.mock("@athreei/db", () => ({
   endpoint: { organizationId: "organizationId", status: "status" },
-  mcpServer: { organizationId: "organizationId", createdAt: "createdAt", status: "status" },
+  mcpServer: {
+    organizationId: "organizationId",
+    createdAt: "createdAt",
+    status: "status",
+  },
   trace: { organizationId: "organizationId", startTime: "startTime" },
   member: { organizationId: "organizationId", createdAt: "createdAt" },
 }))

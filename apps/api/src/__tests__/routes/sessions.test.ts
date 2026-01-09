@@ -16,7 +16,10 @@ import type { ContentfulStatusCode } from "hono/utils/http-status"
 const testErrorHandler: ErrorHandler = (err: Error, c: Context) => {
   const statusCode =
     (err as Error & { statusCode?: ContentfulStatusCode }).statusCode || 500
-  return c.json({ error: err.message, code: (err as Error & { code?: string }).code }, statusCode)
+  return c.json(
+    { error: err.message, code: (err as Error & { code?: string }).code },
+    statusCode
+  )
 }
 
 // Mock modules before importing the routes
@@ -118,7 +121,8 @@ const mockSessions = [
     id: "session_789",
     userId: "user_123",
     ipAddress: "172.16.0.1",
-    userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0",
+    userAgent:
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0",
     createdAt: new Date(Date.now() - 48 * 60 * 60 * 1000),
     updatedAt: new Date(Date.now() - 4 * 60 * 60 * 1000),
     expiresAt: futureDate,

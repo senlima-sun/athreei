@@ -16,7 +16,13 @@ import { Hono } from "hono"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { eq, and } from "drizzle-orm"
-import { cliAuthSession, cliToken, member, user, organization } from "@athreei/db"
+import {
+  cliAuthSession,
+  cliToken,
+  member,
+  user,
+  organization,
+} from "@athreei/db"
 import { getDb } from "../lib/db"
 import { getAuth } from "../lib/auth"
 import { generateId, ID_PREFIXES } from "../services"
