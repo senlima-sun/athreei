@@ -20,4 +20,4 @@ export type {
   PermissionsResponse,
 } from "./permission"
 
-export type { Session, SessionsResponse } from "./session"
+export type { Session } from "./session"

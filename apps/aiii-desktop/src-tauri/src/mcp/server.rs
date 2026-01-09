@@ -2,9 +2,6 @@
 //!
 //! This module provides the core MCP server that exposes memory functionality
 //! to AI applications through the Model Context Protocol.
-//!
-//! Note: Full rmcp integration is in progress. This is a placeholder
-//! that will be replaced with proper rmcp ServerHandler implementation.
 
 use std::sync::Arc;
 

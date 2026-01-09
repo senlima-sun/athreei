@@ -10,8 +10,8 @@ import {
 import { isLocalMode } from "@/lib/mode"
 import { fetchApi } from "@/lib/api"
 import { useActiveOrganizationSafe } from "@/lib/auth-client"
-import { Activity, Square } from "lucide-react"
-import type { Session, SessionsResponse } from "@/types"
+import { Monitor, Smartphone, Laptop, Square, Check } from "lucide-react"
+import type { Session } from "@/types"
 
 export default function SessionsPage() {
   const { data: activeOrg, isPending: isOrgPending } =
@@ -20,13 +20,7 @@ export default function SessionsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Tab state
-  const [activeTab, setActiveTab] = useState<"active" | "past">("active")
-
-  // Filter state
-  const [originFilter, setOriginFilter] = useState("")
-
-  // Fetch sessions
+  // Fetch sessions - API returns array directly
   const fetchSessions = async () => {
     if (!isLocalMode() && (!activeOrg || isOrgPending)) {
       setIsLoading(false)
@@ -37,10 +31,10 @@ export default function SessionsPage() {
     setError(null)
 
     try {
-      const response = await fetchApi<SessionsResponse>("/api/sessions", {
+      const response = await fetchApi<Session[]>("/api/sessions", {
         organizationId: activeOrg?.id,
       })
-      setSessions(response.data || [])
+      setSessions(response || [])
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch sessions")
     } finally {
@@ -53,9 +47,17 @@ export default function SessionsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeOrg?.id, isOrgPending])
 
-  // Handle end session
-  const handleEndSession = async (session: Session) => {
-    if (!confirm(`End session for ${session.origin}?`)) {
+  // Handle revoke session
+  const handleRevokeSession = async (session: Session) => {
+    if (session.current) {
+      setError("Cannot revoke your current session. Please use sign out.")
+      return
+    }
+
+    const deviceInfo = [session.device, session.browser]
+      .filter(Boolean)
+      .join(" / ")
+    if (!confirm(`Revoke session${deviceInfo ? ` on ${deviceInfo}` : ""}?`)) {
       return
     }
 
@@ -67,26 +69,20 @@ export default function SessionsPage() {
       })
       await fetchSessions()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to end session")
+      setError(err instanceof Error ? err.message : "Failed to revoke session")
     }
   }
 
-  // Split sessions by active/past
-  const activeSessions = sessions.filter((s) => !s.endedAt)
-  const pastSessions = sessions.filter((s) => s.endedAt)
-
-  // Apply filter
-  const filterSessions = (list: Session[]) =>
-    list.filter(
-      (s) =>
-        !originFilter ||
-        s.origin.toLowerCase().includes(originFilter.toLowerCase())
-    )
-
-  const filteredActive = filterSessions(activeSessions)
-  const filteredPast = filterSessions(pastSessions)
-  const displayedSessions =
-    activeTab === "active" ? filteredActive : filteredPast
+  // Get device icon
+  const DeviceIcon = ({ device }: { device?: string }) => {
+    if (device === "iPhone" || device === "iPad" || device === "Android") {
+      return <Smartphone className="h-4 w-4" />
+    }
+    if (device === "Mac" || device === "Windows" || device === "Linux") {
+      return <Laptop className="h-4 w-4" />
+    }
+    return <Monitor className="h-4 w-4" />
+  }
 
   // Loading state
   if (isOrgPending || isLoading) {
@@ -94,7 +90,7 @@ export default function SessionsPage() {
       <div>
         <PageHeader
           title="Sessions"
-          description="Monitor active and past AI interaction sessions"
+          description="Manage your active login sessions across devices"
         />
         <LoadingState />
       </div>
@@ -107,10 +103,10 @@ export default function SessionsPage() {
       <div>
         <PageHeader
           title="Sessions"
-          description="Monitor active and past AI interaction sessions"
+          description="Manage your active login sessions across devices"
         />
         <EmptyState
-          icon={Activity}
+          icon={Monitor}
           title="No organization selected"
           description="Select an organization to view its sessions."
         />
@@ -124,7 +120,7 @@ export default function SessionsPage() {
       <div>
         <PageHeader
           title="Sessions"
-          description="Monitor active and past AI interaction sessions"
+          description="Manage your active login sessions across devices"
         />
         <ErrorState message={error} />
       </div>
@@ -135,56 +131,15 @@ export default function SessionsPage() {
     <div>
       <PageHeader
         title="Sessions"
-        description="Monitor active and past AI interaction sessions"
+        description="Manage your active login sessions across devices"
       />
 
-      {/* Tabs */}
-      <div className="mb-4 flex border-b border-gray-200">
-        <button
-          onClick={() => setActiveTab("active")}
-          className={`border-b-2 px-4 py-2 text-sm font-medium ${
-            activeTab === "active"
-              ? "border-blue-500 text-blue-600"
-              : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-          }`}
-        >
-          Active Sessions ({filteredActive.length})
-        </button>
-        <button
-          onClick={() => setActiveTab("past")}
-          className={`border-b-2 px-4 py-2 text-sm font-medium ${
-            activeTab === "past"
-              ? "border-blue-500 text-blue-600"
-              : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
-          }`}
-        >
-          Past Sessions ({filteredPast.length})
-        </button>
-      </div>
-
-      {/* Filter */}
-      <div className="mb-6">
-        <input
-          type="text"
-          placeholder="Filter by origin..."
-          value={originFilter}
-          onChange={(e) => setOriginFilter(e.target.value)}
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-        />
-      </div>
-
-      {/* Sessions Table */}
-      {displayedSessions.length === 0 ? (
+      {/* Sessions List */}
+      {sessions.length === 0 ? (
         <EmptyState
-          icon={Activity}
-          title={
-            activeTab === "active" ? "No active sessions" : "No past sessions"
-          }
-          description={
-            activeTab === "active"
-              ? "Active sessions will appear here when AI apps connect through athreei."
-              : "Past sessions will be displayed here after they end."
-          }
+          icon={Monitor}
+          title="No active sessions"
+          description="Your login sessions will appear here."
         />
       ) : (
         <div className="overflow-hidden rounded-lg border border-gray-200">
@@ -192,74 +147,69 @@ export default function SessionsPage() {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Session ID
+                  Device / Browser
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Origin
+                  Last Active
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Started
+                  IP Address
                 </th>
-                {activeTab === "past" && (
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Ended
-                  </th>
-                )}
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Duration
+                  Status
                 </th>
-                {activeTab === "active" && (
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                    Actions
-                  </th>
-                )}
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 bg-white">
-              {displayedSessions.map((session) => {
-                const duration = session.endedAt
-                  ? session.endedAt - session.startedAt
-                  : Date.now() - session.startedAt
-
-                return (
-                  <tr key={session.id} className="hover:bg-gray-50">
-                    <td className="whitespace-nowrap px-4 py-3">
-                      <code className="rounded bg-gray-100 px-1 py-0.5 text-sm">
-                        {session.id.substring(0, 8)}...
-                      </code>
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3">
-                      <code className="rounded bg-gray-100 px-1 py-0.5 text-sm">
-                        {session.origin}
-                      </code>
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
-                      {new Date(session.startedAt).toLocaleString()}
-                    </td>
-                    {activeTab === "past" && (
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
-                        {session.endedAt
-                          ? new Date(session.endedAt).toLocaleString()
-                          : "N/A"}
-                      </td>
+              {sessions.map((session) => (
+                <tr key={session.id} className="hover:bg-gray-50">
+                  <td className="whitespace-nowrap px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <DeviceIcon device={session.device} />
+                      <div>
+                        <div className="font-medium text-gray-900">
+                          {session.device || "Unknown Device"}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {session.browser || "Unknown Browser"}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
+                    {formatRelativeTime(session.lastActive)}
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3">
+                    <code className="rounded bg-gray-100 px-1 py-0.5 text-sm">
+                      {session.ipAddress || "N/A"}
+                    </code>
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3">
+                    {session.current ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-700">
+                        <Check className="h-3 w-3" />
+                        Current
+                      </span>
+                    ) : (
+                      <span className="text-sm text-gray-500">Active</span>
                     )}
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
-                      {formatDuration(duration)}
-                    </td>
-                    {activeTab === "active" && (
-                      <td className="whitespace-nowrap px-4 py-3">
-                        <button
-                          onClick={() => handleEndSession(session)}
-                          className="inline-flex items-center gap-1 rounded-md bg-red-100 px-2 py-1 text-sm font-medium text-red-700 hover:bg-red-200"
-                        >
-                          <Square className="h-3.5 w-3.5" />
-                          End Session
-                        </button>
-                      </td>
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3">
+                    {!session.current && (
+                      <button
+                        onClick={() => handleRevokeSession(session)}
+                        className="inline-flex items-center gap-1 rounded-md bg-red-100 px-2 py-1 text-sm font-medium text-red-700 hover:bg-red-200"
+                      >
+                        <Square className="h-3.5 w-3.5" />
+                        Revoke
+                      </button>
                     )}
-                  </tr>
-                )
-              })}
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
@@ -269,18 +219,28 @@ export default function SessionsPage() {
 }
 
 /**
- * Format milliseconds to human-readable duration
+ * Format ISO date string to relative time (e.g., "2 hours ago")
  */
-function formatDuration(ms: number): string {
-  const seconds = Math.floor(ms / 1000)
-  const minutes = Math.floor(seconds / 60)
-  const hours = Math.floor(minutes / 60)
+function formatRelativeTime(isoString: string): string {
+  const date = new Date(isoString)
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffSec = Math.floor(diffMs / 1000)
+  const diffMin = Math.floor(diffSec / 60)
+  const diffHours = Math.floor(diffMin / 60)
+  const diffDays = Math.floor(diffHours / 24)
 
-  if (hours > 0) {
-    return `${hours}h ${minutes % 60}m`
+  if (diffSec < 60) {
+    return "Just now"
   }
-  if (minutes > 0) {
-    return `${minutes}m ${seconds % 60}s`
+  if (diffMin < 60) {
+    return `${diffMin} minute${diffMin === 1 ? "" : "s"} ago`
   }
-  return `${seconds}s`
+  if (diffHours < 24) {
+    return `${diffHours} hour${diffHours === 1 ? "" : "s"} ago`
+  }
+  if (diffDays < 7) {
+    return `${diffDays} day${diffDays === 1 ? "" : "s"} ago`
+  }
+  return date.toLocaleDateString()
 }
