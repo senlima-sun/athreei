@@ -3,7 +3,12 @@
  *
  * Note: MCP tool schemas are in ./mcp-tools.ts
  * Note: aiii:* event schemas are in ./aiii-events.ts
+ * Note: Server/CLI config types are in ./server-config.ts and ./cli-config.ts
  */
+
+// Re-export server and CLI configuration types
+export * from "./server-config.js"
+export * from "./cli-config.js"
 
 // ============================================================================
 // Permission Model
