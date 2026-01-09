@@ -24,6 +24,7 @@ Help users view and manage their memory spaces.
    - Include memory counts for each
 
 2. **Present in a clear format**:
+
    ```
    ## Your Memory Spaces
 
@@ -54,6 +55,7 @@ Help users view and manage their memory spaces.
    - Personal, Family, Relationships
 
 3. **Create the space**:
+
    ```json
    {
      "name": "Space Name",
@@ -70,12 +72,12 @@ Help users view and manage their memory spaces.
 
 For new users, suggest these starter spaces:
 
-| Space | Icon | Purpose |
-|-------|------|---------|
-| Work | 💼 | Professional tasks, coding, meetings |
-| Health | 🏥 | Medical, fitness, nutrition |
-| Learning | 📚 | New skills, courses, reading |
-| Finance | 💰 | Budget, investments, purchases |
+| Space    | Icon | Purpose                              |
+| -------- | ---- | ------------------------------------ |
+| Work     | 💼   | Professional tasks, coding, meetings |
+| Health   | 🏥   | Medical, fitness, nutrition          |
+| Learning | 📚   | New skills, courses, reading         |
+| Finance  | 💰   | Budget, investments, purchases       |
 
 ## Example Interactions
 

@@ -30,6 +30,7 @@ Always remind users that this is contextual information from their own records, 
    - Fitness goals or limitations
 
 2. **Query Health space**:
+
    ```json
    {
      "query": "relevant health terms",
@@ -46,6 +47,7 @@ Always remind users that this is contextual information from their own records, 
    - Previous reactions or experiences
 
 4. **Present context before advice**:
+
    ```
    Based on your health notes:
    - You mentioned sensitive skin (Nov 2025)
@@ -70,6 +72,7 @@ Always remind users that this is contextual information from their own records, 
 **User:** "Is this retinol serum safe for me?"
 
 **Claude:**
+
 1. Identifies: skincare, retinol
 2. Queries Health space for: retinol, skin, sensitivity, allergies
 3. Finds: "User mentioned sensitive skin", "Had reaction to retinol before"
@@ -80,6 +83,7 @@ Always remind users that this is contextual information from their own records, 
 ## No Health Context
 
 If no relevant health memories found:
+
 1. State that no relevant health history was found
 2. Ask clarifying questions about relevant health factors
 3. Provide general guidance with appropriate caveats

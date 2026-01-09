@@ -27,13 +27,13 @@ Or manually add to your Claude Code plugins directory.
 
 ## Skills
 
-| Skill | Trigger | Description |
-|-------|---------|-------------|
-| `save-to-memory` | "save this", "remember this" | Save current conversation |
-| `recall-memory` | "what did we discuss", "find my notes" | Search memories |
-| `generate-standup` | "standup", "daily report" | Generate standup notes |
-| `health-context` | Health product questions | Retrieve health history |
-| `manage-spaces` | "show my spaces", "create space" | Manage memory organization |
+| Skill              | Trigger                                | Description                |
+| ------------------ | -------------------------------------- | -------------------------- |
+| `save-to-memory`   | "save this", "remember this"           | Save current conversation  |
+| `recall-memory`    | "what did we discuss", "find my notes" | Search memories            |
+| `generate-standup` | "standup", "daily report"              | Generate standup notes     |
+| `health-context`   | Health product questions               | Retrieve health history    |
+| `manage-spaces`    | "show my spaces", "create space"       | Manage memory organization |
 
 ## Hooks
 
@@ -67,6 +67,7 @@ Create custom spaces as needed.
 ## Privacy
 
 All memories are:
+
 - Stored locally on your machine
 - Encrypted with AES-256-GCM
 - Protected by your passphrase

@@ -55,15 +55,18 @@ Generate formatted daily standup notes from aiii memories.
 ## Standup - January 8, 2026
 
 ### Done
+
 - Fixed authentication bug in PR #234
 - Reviewed rate limiting implementation
 - Updated API documentation
 
 ### Working On
+
 - Continuing API refactoring
 - Writing tests for new endpoints
 
 ### Blockers
+
 - None currently
 ```
 
@@ -77,6 +80,7 @@ Generate formatted daily standup notes from aiii memories.
 **User:** "Generate my standup"
 
 **Claude:**
+
 1. Determines: yesterday + today
 2. Queries Work space memories for those dates
 3. Finds 4 memories from yesterday, 1 from today
@@ -87,6 +91,7 @@ Generate formatted daily standup notes from aiii memories.
 ## No Work Memories
 
 If no Work memories found for the period:
+
 1. State clearly that no work was recorded
 2. Suggest the user may need to:
    - Enable session auto-capture

@@ -28,10 +28,11 @@ Search and retrieve previously saved memories from aiii's local store.
    - Determine result limit (default 5-10)
 
 3. **Call recall_memories tool**:
+
    ```json
    {
      "query": "search terms",
-     "space_id": "space_xxx",  // optional
+     "space_id": "space_xxx", // optional
      "limit": 10
    }
    ```
@@ -70,6 +71,7 @@ Search and retrieve previously saved memories from aiii's local store.
 ## No Results Handling
 
 If no memories match:
+
 1. Acknowledge the search found nothing
 2. Suggest broadening search terms
 3. List available spaces that might contain relevant info
@@ -80,6 +82,7 @@ If no memories match:
 **User:** "What did we discuss about authentication last week?"
 
 **Claude:**
+
 1. Parses: topic="authentication", time="last week"
 2. Searches: `query: "authentication", limit: 10`
 3. Finds 2 results in Work space

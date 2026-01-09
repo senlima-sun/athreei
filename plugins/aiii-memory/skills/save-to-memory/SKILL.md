@@ -48,6 +48,7 @@ Save the current conversation or specific content to aiii's local encrypted memo
    - Include outcomes and next steps if applicable
 
 6. **Call the save_memory tool**:
+
    ```json
    {
      "content": "Full conversation summary...",
@@ -69,6 +70,7 @@ Save the current conversation or specific content to aiii's local encrypted memo
 **User:** "Save this conversation about the auth refactoring"
 
 **Claude:**
+
 1. Analyzes conversation → Found auth refactoring discussion
 2. Identifies space → Work
 3. Generates title → "Auth refactoring: JWT to session-based"

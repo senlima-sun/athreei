@@ -12,7 +12,7 @@ aiii Personal gives your AI apps memory — organized by the parts of your life 
 
 ### Core Differentiators
 
-- Not another AI app — works *with* your existing AI apps (Claude, ChatGPT, Cursor)
+- Not another AI app — works _with_ your existing AI apps (Claude, ChatGPT, Cursor)
 - Local-first — your personal data stays on your machine
 - Space-based organization — categorize by life domain (Work, Health, Finance, Learning)
 - AI writes, you query — no manual logging, AI apps record automatically
@@ -20,6 +20,7 @@ aiii Personal gives your AI apps memory — organized by the parts of your life 
 ### Target User
 
 Power users who use AI daily across multiple contexts and want:
+
 - Continuity between sessions ("remember what I worked on yesterday")
 - Cross-context awareness ("my health history when evaluating products")
 - Effortless summaries ("generate my standup notes")
@@ -64,11 +65,11 @@ aiii is the memory backend. AI apps provide the intelligence.
 
 ### Components
 
-| Component | Purpose |
-|-----------|---------|
-| **Rust Backend** | Storage, encryption, MCP server, categorization |
-| **React Frontend** | Browse spaces, timeline, search, settings |
-| **MCP Server** | Exposes resources, tools, prompts to AI apps |
+| Component              | Purpose                                           |
+| ---------------------- | ------------------------------------------------- |
+| **Rust Backend**       | Storage, encryption, MCP server, categorization   |
+| **React Frontend**     | Browse spaces, timeline, search, settings         |
+| **MCP Server**         | Exposes resources, tools, prompts to AI apps      |
 | **Claude Code Plugin** | Hooks (auto-capture) + Skills (explicit commands) |
 
 ---
@@ -116,14 +117,14 @@ memory_tags (
 
 ### Encryption Strategy
 
-| Data | Encrypted | Reason |
-|------|-----------|--------|
-| Memory content | Yes | Sensitive user data |
-| Memory summary | Yes | May contain sensitive info |
-| Memory title | Yes | May reveal content |
-| Tags | No | Needed for unencrypted queries |
-| Space names | No | Non-sensitive metadata |
-| Timestamps | No | Needed for timeline queries |
+| Data           | Encrypted | Reason                         |
+| -------------- | --------- | ------------------------------ |
+| Memory content | Yes       | Sensitive user data            |
+| Memory summary | Yes       | May contain sensitive info     |
+| Memory title   | Yes       | May reveal content             |
+| Tags           | No        | Needed for unencrypted queries |
+| Space names    | No        | Non-sensitive metadata         |
+| Timestamps     | No        | Needed for timeline queries    |
 
 ---
 
@@ -131,34 +132,34 @@ memory_tags (
 
 ### Resources (read-only context)
 
-| Resource URI | Returns |
-|--------------|---------|
-| `aiii://spaces` | List of all spaces with metadata |
-| `aiii://spaces/{id}` | Space details + recent memories summary |
-| `aiii://spaces/{id}/memories` | Paginated memory list |
-| `aiii://memories/{id}` | Full memory content |
-| `aiii://rules` | Auto-categorization rules |
-| `aiii://today` | Today's memories across all spaces |
+| Resource URI                  | Returns                                 |
+| ----------------------------- | --------------------------------------- |
+| `aiii://spaces`               | List of all spaces with metadata        |
+| `aiii://spaces/{id}`          | Space details + recent memories summary |
+| `aiii://spaces/{id}/memories` | Paginated memory list                   |
+| `aiii://memories/{id}`        | Full memory content                     |
+| `aiii://rules`                | Auto-categorization rules               |
+| `aiii://today`                | Today's memories across all spaces      |
 
 ### Prompts (templated workflows)
 
-| Prompt | Arguments | Output |
-|--------|-----------|--------|
-| `daily-standup` | `date?` | Formatted standup from Work space |
-| `week-summary` | `space?`, `week?` | Summary of specified period |
-| `search-memories` | `query`, `space?` | Guided search with formatted results |
+| Prompt              | Arguments         | Output                                 |
+| ------------------- | ----------------- | -------------------------------------- |
+| `daily-standup`     | `date?`           | Formatted standup from Work space      |
+| `week-summary`      | `space?`, `week?` | Summary of specified period            |
+| `search-memories`   | `query`, `space?` | Guided search with formatted results   |
 | `save-conversation` | `space`, `title?` | Structured save flow with confirmation |
-| `health-context` | `topic` | Relevant health history for decisions |
+| `health-context`    | `topic`           | Relevant health history for decisions  |
 
 ### Tools (actions requiring approval)
 
-| Tool | Purpose | Parameters |
-|------|---------|------------|
-| `save_memory` | Store new memory | `content`, `space_id?`, `title?`, `tags?` |
-| `create_space` | Create new space | `name`, `icon?`, `source_rules?` |
-| `update_memory` | Edit memory | `id`, `space_id?`, `title?`, `tags?` |
-| `delete_memory` | Remove memory | `id` |
-| `update_rules` | Modify auto-categorization | `space_id`, `rules` |
+| Tool            | Purpose                    | Parameters                                |
+| --------------- | -------------------------- | ----------------------------------------- |
+| `save_memory`   | Store new memory           | `content`, `space_id?`, `title?`, `tags?` |
+| `create_space`  | Create new space           | `name`, `icon?`, `source_rules?`          |
+| `update_memory` | Edit memory                | `id`, `space_id?`, `title?`, `tags?`      |
+| `delete_memory` | Remove memory              | `id`                                      |
+| `update_rules`  | Modify auto-categorization | `space_id`, `rules`                       |
 
 ---
 
@@ -393,6 +394,7 @@ The MCP server is embedded and toggleable:
 - **Connected** — Shows which AI apps are currently using it
 
 Security constraints:
+
 - Localhost only (`127.0.0.1`)
 - User must explicitly enable
 - Shows connected clients in UI
@@ -462,11 +464,11 @@ Device A                              Device B
 
 ### Pricing (Future)
 
-| Tier | Storage | Price |
-|------|---------|-------|
-| Free | 100 MB | $0 |
-| Personal | 1 GB | $5/month |
-| Pro | 10 GB | $15/month |
+| Tier     | Storage | Price     |
+| -------- | ------- | --------- |
+| Free     | 100 MB  | $0        |
+| Personal | 1 GB    | $5/month  |
+| Pro      | 10 GB   | $15/month |
 
 ---
 
