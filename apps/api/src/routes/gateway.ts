@@ -1,14 +1,3 @@
-/**
- * Gateway routes
- *
- * API endpoints for the athreei Gateway to fetch configuration.
- * The gateway uses these endpoints to:
- * 1. Fetch namespace configuration (servers to connect to)
- * 2. Report traces (optional)
- *
- * Authentication: API key in Authorization header (Bearer token)
- */
-
 import { Hono } from "hono"
 import { zValidator } from "@hono/zod-validator"
 import { eq, and } from "drizzle-orm"
@@ -32,20 +21,9 @@ import {
 
 const gateway = new Hono()
 
-// =============================================================================
-// Helper Functions
-// =============================================================================
+const RATE_LIMIT_WINDOW_MS = 60_000
+const DEFAULT_RATE_LIMIT = 60
 
-/**
- * Rate limiting configuration
- */
-const RATE_LIMIT_WINDOW_MS = 60_000 // 1 minute
-const DEFAULT_RATE_LIMIT = 60 // requests per minute
-
-/**
- * Apply rate limiting for an API key with optional per-endpoint override
- * Returns rate limit info with headers to set, or null if rate limited (returns 429 response)
- */
 function applyRateLimit(
   c: import("hono").Context,
   apiKeyHash: string,
@@ -54,7 +32,6 @@ function applyRateLimit(
   const limit = endpointRateLimit ?? DEFAULT_RATE_LIMIT
   const info = checkRateLimit(apiKeyHash, limit, RATE_LIMIT_WINDOW_MS)
 
-  // Set rate limit headers
   const now = Date.now()
   c.header("X-RateLimit-Limit", String(limit))
   c.header("X-RateLimit-Remaining", String(Math.max(0, limit - info.current)))
@@ -68,25 +45,12 @@ function applyRateLimit(
   return { limited: false }
 }
 
-// =============================================================================
-// Routes
-// =============================================================================
-
-/**
- * GET /api/gateway/config?endpoint={name}
- *
- * Fetch namespace configuration for a gateway endpoint.
- * Returns the list of MCP servers to connect to.
- *
- * Authentication: Bearer token (API key)
- */
 gateway.get("/config", zValidator("query", getConfigQuerySchema), async (c) => {
   const db = getDb()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const dbQuery = (db as any).query
   const { endpoint: endpointSlug } = c.req.valid("query")
 
-  // Parse API key from Authorization header
   const authHeader = c.req.header("Authorization")
   const apiKeyValue = parseAuthHeader(authHeader)
 
@@ -94,7 +58,6 @@ gateway.get("/config", zValidator("query", getConfigQuerySchema), async (c) => {
     return c.json({ error: "Authorization header required" }, 401)
   }
 
-  // Validate API key
   const validation = await validateApiKey(db, apiKeyValue)
   if (!validation.valid) {
     return c.json({ error: validation.error }, 401)
@@ -114,12 +77,10 @@ gateway.get("/config", zValidator("query", getConfigQuerySchema), async (c) => {
     )
   }
 
-  // Extract slug from endpoint URL (e.g., "https://athreei.com/mcp/my-tools/sse" → "my-tools")
   const urlParts = endpointRecord.url.split("/")
   const mcpIndex = urlParts.indexOf("mcp")
   const endpointSlugFromUrl = mcpIndex !== -1 ? urlParts[mcpIndex + 1] : null
 
-  // Verify the requested endpoint matches the API key's endpoint
   if (endpointSlugFromUrl !== endpointSlug) {
     return c.json(
       { error: `API key does not have access to endpoint "${endpointSlug}"` },
@@ -127,7 +88,6 @@ gateway.get("/config", zValidator("query", getConfigQuerySchema), async (c) => {
     )
   }
 
-  // Get the namespace resource mapping for this endpoint
   const resourceMapping = (await dbQuery.namespaceResource.findFirst({
     where: and(
       eq(namespaceResource.resourceType, "endpoint"),
@@ -139,7 +99,6 @@ gateway.get("/config", zValidator("query", getConfigQuerySchema), async (c) => {
     return c.json({ error: "Endpoint is not assigned to a namespace" }, 404)
   }
 
-  // Get the namespace
   const namespaceRecord = (await dbQuery.namespace.findFirst({
     where: eq(namespace.id, resourceMapping.namespaceId),
   })) as typeof namespace.$inferSelect | undefined
@@ -148,7 +107,6 @@ gateway.get("/config", zValidator("query", getConfigQuerySchema), async (c) => {
     return c.json({ error: "Namespace not found" }, 404)
   }
 
-  // Get all MCP servers in this namespace
   const serverMappings = (await dbQuery.namespaceResource.findMany({
     where: and(
       eq(namespaceResource.namespaceId, namespaceRecord.id),
@@ -168,7 +126,6 @@ gateway.get("/config", zValidator("query", getConfigQuerySchema), async (c) => {
     }
   }
 
-  // Fetch tools for all servers
   const serverTools = new Map<string, Array<typeof mcpTool.$inferSelect>>()
   for (const server of servers) {
     const tools = (await dbQuery.mcpTool.findMany({
@@ -177,7 +134,6 @@ gateway.get("/config", zValidator("query", getConfigQuerySchema), async (c) => {
     serverTools.set(server.id, tools)
   }
 
-  // Build the response
   const configVersion = generateConfigVersion(
     namespaceRecord.updatedAt,
     servers
@@ -226,14 +182,7 @@ gateway.get("/config", zValidator("query", getConfigQuerySchema), async (c) => {
   })
 })
 
-/**
- * POST /api/gateway/traces
- *
- * Receive traces from the gateway for monitoring/analytics.
- * Authentication: Bearer token (API key)
- */
 gateway.post("/traces", zValidator("json", postTracesSchema), async (c) => {
-  // Parse API key from Authorization header
   const authHeader = c.req.header("Authorization")
   const apiKeyValue = parseAuthHeader(authHeader)
 
@@ -243,7 +192,6 @@ gateway.post("/traces", zValidator("json", postTracesSchema), async (c) => {
 
   const db = getDb()
 
-  // Validate API key
   const validation = await validateApiKey(db, apiKeyValue)
   if (!validation.valid) {
     return c.json({ error: validation.error }, 401)
@@ -268,16 +216,13 @@ gateway.post("/traces", zValidator("json", postTracesSchema), async (c) => {
   const now = new Date()
   const insertedIds: string[] = []
 
-  // Store each trace in the database
   for (const traceData of traces) {
     const id = generateTraceId()
     const spanId = generateSpanId()
 
-    // Determine status from error presence
     const status = traceData.error ? "error" : "success"
     const statusMessage = traceData.error || undefined
 
-    // Build attributes JSON with extra fields (size-limited for security)
     const attributesObj = {
       aggregatedToolName: traceData.aggregatedToolName,
       serverName: traceData.serverName,
@@ -289,7 +234,6 @@ gateway.post("/traces", zValidator("json", postTracesSchema), async (c) => {
     }
     const attributes = JSON.stringify(attributesObj)
 
-    // Prevent DoS via oversized payloads (1MB limit)
     const MAX_ATTRIBUTES_SIZE = 1_000_000
     if (attributes.length > MAX_ATTRIBUTES_SIZE) {
       console.warn(
@@ -322,10 +266,8 @@ gateway.post("/traces", zValidator("json", postTracesSchema), async (c) => {
 
       insertedIds.push(id)
     } catch (error) {
-      // Sanitize error to avoid leaking sensitive information in logs
       const errorMsg = error instanceof Error ? error.message : "Unknown error"
       console.error(`Failed to insert trace ${traceData.traceId}: ${errorMsg}`)
-      // Continue with other traces even if one fails
     }
   }
 

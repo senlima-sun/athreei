@@ -143,7 +143,6 @@ import {
   CardFooter,
   CardAction,
 } from "@athreei/ui"
-
 ;<Card>
   <CardHeader>
     <CardTitle>Settings</CardTitle>
@@ -162,7 +161,6 @@ import {
 
 // Or use LegacyCard for simpler cases
 import { LegacyCard } from "@athreei/ui"
-
 ;<LegacyCard title="Settings" actions={<Button size="sm">Edit</Button>}>
   {/* Content */}
 </LegacyCard>
@@ -180,7 +178,6 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@athreei/ui"
-
 ;<Dialog>
   <DialogTrigger asChild>
     <Button>Open Dialog</Button>
@@ -199,7 +196,6 @@ import {
 
 // Or use Modal for controlled dialogs
 import { Modal, Button } from "@athreei/ui"
-
 ;<Modal
   isOpen={isOpen}
   onClose={() => setIsOpen(false)}
@@ -302,7 +298,6 @@ import { StatusIndicator } from "@athreei/ui"
 
 ```tsx
 import { EmptyState, SearchIcon } from "@athreei/ui"
-
 ;<EmptyState
   icon={<SearchIcon />}
   title="No results found"
@@ -318,7 +313,6 @@ import { EmptyState, SearchIcon } from "@athreei/ui"
 
 ```tsx
 import { SearchInput } from "@athreei/ui"
-
 ;<SearchInput
   value={search}
   onChange={setSearch}

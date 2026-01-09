@@ -1,12 +1,3 @@
-/**
- * Endpoint routes
- *
- * CRUD operations for MCP endpoints (public connection points for AI apps).
- * Each endpoint is associated with a namespace within an organization.
- *
- * URL format: https://athreei.com/mcp/{endpoint-slug}/sse
- */
-
 import { Hono } from "hono"
 import { zValidator } from "@hono/zod-validator"
 import { eq, and } from "drizzle-orm"
@@ -29,22 +20,8 @@ import {
 
 const endpoints = new Hono()
 
-// Apply auth middleware to all endpoint routes
 endpoints.use("*", authMiddleware)
 
-// =============================================================================
-// Routes
-// =============================================================================
-
-/**
- * GET /api/endpoints
- * List all endpoints for the current organization
- *
- * Query params:
- * - organizationId: required - the organization to list endpoints for
- * - namespaceId: optional - filter by namespace
- * - status: optional - filter by status
- */
 endpoints.get("/", async (c) => {
   const db = getDb()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -58,7 +35,6 @@ endpoints.get("/", async (c) => {
     throw ApiError.badRequest("organizationId query parameter is required")
   }
 
-  // Verify user is a member of the organization
   const isMember = await verifyOrganizationMembership(
     db,
     auth.userId,
@@ -68,18 +44,15 @@ endpoints.get("/", async (c) => {
     throw ApiError.forbidden("You do not have access to this organization")
   }
 
-  // Get all endpoints for the organization
   const allEndpoints = (await dbQuery.endpoint.findMany({
     where: eq(endpoint.organizationId, organizationId),
   })) as Array<typeof endpoint.$inferSelect>
 
-  // Filter by status if provided
   let filteredEndpoints = allEndpoints
   if (status) {
     filteredEndpoints = filteredEndpoints.filter((ep) => ep.status === status)
   }
 
-  // If namespaceId filter is provided, filter by namespace resource mapping
   if (namespaceId) {
     const resourceMappings = (await dbQuery.namespaceResource.findMany({
       where: and(
@@ -91,7 +64,6 @@ endpoints.get("/", async (c) => {
     filteredEndpoints = filteredEndpoints.filter((ep) => mappedIds.has(ep.id))
   }
 
-  // Get namespace mappings for all endpoints
   const endpointIds = filteredEndpoints.map((ep) => ep.id)
   const allResourceMappings = (await dbQuery.namespaceResource.findMany({
     where: eq(namespaceResource.resourceType, "endpoint"),
@@ -112,10 +84,6 @@ endpoints.get("/", async (c) => {
   })
 })
 
-/**
- * POST /api/endpoints
- * Create a new endpoint
- */
 endpoints.post("/", zValidator("json", createEndpointSchema), async (c) => {
   const db = getDb()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -123,15 +91,12 @@ endpoints.post("/", zValidator("json", createEndpointSchema), async (c) => {
   const auth = getAuthContext(c)
   const body = c.req.valid("json")
 
-  // Verify namespace exists and user has access
   const ns = await getNamespaceWithAccess(db, body.namespaceId, auth.userId)
 
-  // Generate unique slug from name
   const baseSlug = generateSlug(body.name)
   let slug = baseSlug
   let counter = 1
 
-  // Check for slug uniqueness and increment if needed
   while (true) {
     const existing = await dbQuery.endpoint.findFirst({
       where: eq(endpoint.url, buildEndpointUrl(slug)),
@@ -148,7 +113,6 @@ endpoints.post("/", zValidator("json", createEndpointSchema), async (c) => {
   const endpointId = generateEndpointId()
   const endpointUrl = buildEndpointUrl(slug)
 
-  // Create the endpoint
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (db as any).insert(endpoint).values({
     id: endpointId,
@@ -164,7 +128,6 @@ endpoints.post("/", zValidator("json", createEndpointSchema), async (c) => {
     updatedAt: now,
   })
 
-  // Create namespace resource mapping
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (db as any).insert(namespaceResource).values({
     id: generateNamespaceResourceId(),
@@ -174,7 +137,6 @@ endpoints.post("/", zValidator("json", createEndpointSchema), async (c) => {
     createdAt: now,
   })
 
-  // Fetch the created endpoint
   const created = (await dbQuery.endpoint.findFirst({
     where: eq(endpoint.id, endpointId),
   })) as typeof endpoint.$inferSelect
@@ -191,10 +153,6 @@ endpoints.post("/", zValidator("json", createEndpointSchema), async (c) => {
   )
 })
 
-/**
- * GET /api/endpoints/:id
- * Get endpoint details with connection configuration
- */
 endpoints.get("/:id", async (c) => {
   const db = getDb()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -202,7 +160,6 @@ endpoints.get("/:id", async (c) => {
   const auth = getAuthContext(c)
   const endpointId = c.req.param("id")
 
-  // Get the endpoint
   const ep = (await dbQuery.endpoint.findFirst({
     where: eq(endpoint.id, endpointId),
   })) as typeof endpoint.$inferSelect | undefined
@@ -221,7 +178,6 @@ endpoints.get("/:id", async (c) => {
     throw ApiError.forbidden("You do not have access to this endpoint")
   }
 
-  // Get namespace mapping
   const resourceMapping = (await dbQuery.namespaceResource.findFirst({
     where: and(
       eq(namespaceResource.resourceType, "endpoint"),
@@ -229,7 +185,6 @@ endpoints.get("/:id", async (c) => {
     ),
   })) as typeof namespaceResource.$inferSelect | undefined
 
-  // Get namespace details if mapped
   let namespaceDetails: typeof namespace.$inferSelect | null = null
   if (resourceMapping) {
     namespaceDetails = (await dbQuery.namespace.findFirst({
@@ -253,10 +208,6 @@ endpoints.get("/:id", async (c) => {
   })
 })
 
-/**
- * PATCH /api/endpoints/:id
- * Update an endpoint
- */
 endpoints.patch("/:id", zValidator("json", updateEndpointSchema), async (c) => {
   const db = getDb()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -265,7 +216,6 @@ endpoints.patch("/:id", zValidator("json", updateEndpointSchema), async (c) => {
   const endpointId = c.req.param("id")
   const updates = c.req.valid("json")
 
-  // Get the endpoint
   const ep = (await dbQuery.endpoint.findFirst({
     where: eq(endpoint.id, endpointId),
   })) as typeof endpoint.$inferSelect | undefined
@@ -274,7 +224,6 @@ endpoints.patch("/:id", zValidator("json", updateEndpointSchema), async (c) => {
     throw ApiError.notFound("Endpoint not found")
   }
 
-  // Verify user has access to the organization
   const isMember = await verifyOrganizationMembership(
     db,
     auth.userId,
@@ -284,7 +233,6 @@ endpoints.patch("/:id", zValidator("json", updateEndpointSchema), async (c) => {
     throw ApiError.forbidden("You do not have access to this endpoint")
   }
 
-  // Build update object
   const updateData: Partial<typeof endpoint.$inferInsert> = {
     updatedAt: new Date(),
   }
@@ -305,19 +253,16 @@ endpoints.patch("/:id", zValidator("json", updateEndpointSchema), async (c) => {
     updateData.status = updates.status
   }
 
-  // Update the endpoint
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (db as any)
     .update(endpoint)
     .set(updateData)
     .where(eq(endpoint.id, endpointId))
 
-  // Fetch the updated endpoint
   const updated = (await dbQuery.endpoint.findFirst({
     where: eq(endpoint.id, endpointId),
   })) as typeof endpoint.$inferSelect
 
-  // Get namespace mapping
   const resourceMapping = (await dbQuery.namespaceResource.findFirst({
     where: and(
       eq(namespaceResource.resourceType, "endpoint"),
@@ -333,10 +278,6 @@ endpoints.patch("/:id", zValidator("json", updateEndpointSchema), async (c) => {
   })
 })
 
-/**
- * DELETE /api/endpoints/:id
- * Delete an endpoint
- */
 endpoints.delete("/:id", async (c) => {
   const db = getDb()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -344,7 +285,6 @@ endpoints.delete("/:id", async (c) => {
   const auth = getAuthContext(c)
   const endpointId = c.req.param("id")
 
-  // Get the endpoint
   const ep = (await dbQuery.endpoint.findFirst({
     where: eq(endpoint.id, endpointId),
   })) as typeof endpoint.$inferSelect | undefined
@@ -363,7 +303,6 @@ endpoints.delete("/:id", async (c) => {
     throw ApiError.forbidden("You do not have access to this endpoint")
   }
 
-  // Delete namespace resource mapping first (due to foreign key constraints)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (db as any)
     .delete(namespaceResource)
@@ -374,7 +313,6 @@ endpoints.delete("/:id", async (c) => {
       )
     )
 
-  // Delete the endpoint
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (db as any).delete(endpoint).where(eq(endpoint.id, endpointId))
 

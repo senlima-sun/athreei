@@ -1,14 +1,3 @@
-/**
- * Traces API routes
- *
- * Routes for viewing trace data (tool calls and their results).
- * Traces are stored via POST /api/gateway/traces from the gateway.
- *
- * Routes:
- * - GET /api/traces - List traces for an organization with filtering
- * - GET /api/traces/:id - Get a single trace with full details
- */
-
 import { Hono } from "hono"
 import { zValidator } from "@hono/zod-validator"
 import { eq, and, desc, gte, lte, like, sql } from "drizzle-orm"
@@ -20,12 +9,8 @@ import { verifyOrganizationMembership } from "../services"
 
 const traces = new Hono()
 
-// Apply auth middleware to all trace routes
 traces.use("*", authMiddleware)
 
-/**
- * Safely parse JSON or return null
- */
 function safeJsonParse(value: string | null): unknown {
   if (!value) return null
   try {
@@ -35,21 +20,12 @@ function safeJsonParse(value: string | null): unknown {
   }
 }
 
-// =============================================================================
-// Routes
-// =============================================================================
-
-/**
- * GET /api/traces
- * List traces for an organization with filtering and pagination
- */
 traces.get("/", zValidator("query", listTracesQuerySchema), async (c) => {
   const db = getDb()
   const auth = getAuthContext(c)
   const { organizationId, limit, offset, status, startDate, endDate, search } =
     c.req.valid("query")
 
-  // Verify user is member of organization
   const isMember = await verifyOrganizationMembership(
     db,
     auth.userId,
@@ -60,7 +36,6 @@ traces.get("/", zValidator("query", listTracesQuerySchema), async (c) => {
     throw ApiError.forbidden("Access denied")
   }
 
-  // Build query conditions
   const conditions = [eq(trace.organizationId, organizationId)]
 
   if (status) {
@@ -75,7 +50,6 @@ traces.get("/", zValidator("query", listTracesQuerySchema), async (c) => {
     conditions.push(lte(trace.startTime, new Date(endDate)))
   }
 
-  // Apply search filter at database level (case-insensitive)
   if (search) {
     conditions.push(like(trace.name, `%${search}%`))
   }
@@ -83,7 +57,6 @@ traces.get("/", zValidator("query", listTracesQuerySchema), async (c) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const dbQuery = (db as any).query
 
-  // Fetch traces with pagination
   const tracesResult = await dbQuery.trace.findMany({
     where: and(...conditions),
     orderBy: [desc(trace.startTime)],
@@ -91,7 +64,6 @@ traces.get("/", zValidator("query", listTracesQuerySchema), async (c) => {
     offset,
   })
 
-  // Get total count for pagination
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const countResult = await (db as any)
     .select({ count: sql<number>`count(*)` })
@@ -118,10 +90,6 @@ traces.get("/", zValidator("query", listTracesQuerySchema), async (c) => {
   })
 })
 
-/**
- * GET /api/traces/:id
- * Get a single trace with full details
- */
 traces.get("/:id", zValidator("param", traceIdParamSchema), async (c) => {
   const db = getDb()
   const auth = getAuthContext(c)
@@ -138,7 +106,6 @@ traces.get("/:id", zValidator("param", traceIdParamSchema), async (c) => {
     throw ApiError.notFound("Trace not found")
   }
 
-  // Verify user has access to this organization
   const isMember = await verifyOrganizationMembership(
     db,
     auth.userId,

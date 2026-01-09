@@ -1,16 +1,3 @@
-/**
- * Organization routes
- *
- * Proxy endpoints for Better Auth organization operations.
- * These routes provide a cleaner API interface while delegating
- * to Better Auth's organization plugin for actual operations.
- *
- * Better Auth organization plugin handles:
- * - /api/auth/organization/* endpoints
- *
- * We expose cleaner REST-style endpoints here and proxy to Better Auth.
- */
-
 import { Hono } from "hono"
 import { zValidator } from "@hono/zod-validator"
 import { authMiddleware, ApiError } from "../middleware"
@@ -24,16 +11,8 @@ import {
 
 const organizations = new Hono()
 
-// Apply auth middleware to all organization routes
 organizations.use("*", authMiddleware)
 
-// =============================================================================
-// Helper Functions
-// =============================================================================
-
-/**
- * Create a new request to proxy to Better Auth
- */
 function createProxyRequest(
   c: { req: { raw: Request } },
   path: string,
@@ -55,9 +34,6 @@ function createProxyRequest(
   })
 }
 
-/**
- * Handle Better Auth response and convert errors
- */
 async function handleAuthResponse<T>(response: Response): Promise<T> {
   const data = (await response.json()) as
     | T
@@ -85,16 +61,6 @@ async function handleAuthResponse<T>(response: Response): Promise<T> {
   return data as T
 }
 
-// =============================================================================
-// Routes
-// =============================================================================
-
-/**
- * POST /api/organizations
- * Create a new organization
- *
- * Proxies to Better Auth: POST /api/auth/organization/create
- */
 organizations.post(
   "/",
   zValidator("json", createOrganizationSchema),
@@ -119,12 +85,6 @@ organizations.post(
   }
 )
 
-/**
- * GET /api/organizations
- * List all organizations the user belongs to
- *
- * Proxies to Better Auth: GET /api/auth/organization/list
- */
 organizations.get("/", async (c) => {
   const auth = getAuth()
 
@@ -138,17 +98,10 @@ organizations.get("/", async (c) => {
   return c.json(data)
 })
 
-/**
- * GET /api/organizations/:id
- * Get organization details
- *
- * Proxies to Better Auth: GET /api/auth/organization/get-full-organization
- */
 organizations.get("/:id", async (c) => {
   const auth = getAuth()
   const organizationId = c.req.param("id")
 
-  // Better Auth uses query params for this endpoint
   const authBaseUrl = process.env.AUTH_BASE_URL || "http://localhost:3001"
   const url = new URL(
     "/api/auth/organization/get-full-organization",
@@ -169,12 +122,6 @@ organizations.get("/:id", async (c) => {
   return c.json(data)
 })
 
-/**
- * PATCH /api/organizations/:id
- * Update organization details
- *
- * Proxies to Better Auth: POST /api/auth/organization/update
- */
 organizations.patch(
   "/:id",
   zValidator("json", updateOrganizationSchema),
@@ -205,12 +152,6 @@ organizations.patch(
   }
 )
 
-/**
- * DELETE /api/organizations/:id
- * Delete an organization
- *
- * Proxies to Better Auth: POST /api/auth/organization/delete
- */
 organizations.delete("/:id", async (c) => {
   const auth = getAuth()
   const organizationId = c.req.param("id")
@@ -228,12 +169,6 @@ organizations.delete("/:id", async (c) => {
   return c.json({ message: "Organization deleted successfully" })
 })
 
-/**
- * POST /api/organizations/:id/invite
- * Invite a member to the organization
- *
- * Proxies to Better Auth: POST /api/auth/organization/invite-member
- */
 organizations.post(
   "/:id/invite",
   zValidator("json", inviteMemberSchema),
@@ -262,13 +197,6 @@ organizations.post(
   }
 )
 
-/**
- * GET /api/organizations/:id/members
- * List all members of an organization
- *
- * Proxies to Better Auth: GET /api/auth/organization/get-full-organization
- * Then extracts just the members
- */
 organizations.get("/:id/members", async (c) => {
   const auth = getAuth()
   const organizationId = c.req.param("id")
@@ -293,19 +221,12 @@ organizations.get("/:id/members", async (c) => {
     invitations?: unknown[]
   }>(response)
 
-  // Return just the members and invitations
   return c.json({
     members: data.members || [],
     invitations: data.invitations || [],
   })
 })
 
-/**
- * PATCH /api/organizations/:id/members/:memberId
- * Update a member's role in the organization
- *
- * Proxies to Better Auth: POST /api/auth/organization/update-member-role
- */
 organizations.patch(
   "/:id/members/:memberId",
   zValidator("json", updateMemberRoleSchema),
@@ -335,22 +256,11 @@ organizations.patch(
   }
 )
 
-/**
- * POST /api/organizations/:id/invitations/:invitationId/resend
- * Resend an invitation
- *
- * Better Auth doesn't have a dedicated resend endpoint, so we use
- * invite-member with resend: true. We first need to get the invitation
- * details to know the email and role.
- *
- * Proxies to Better Auth: POST /api/auth/organization/invite-member
- */
 organizations.post("/:id/invitations/:invitationId/resend", async (c) => {
   const auth = getAuth()
   const organizationId = c.req.param("id")
   const invitationId = c.req.param("invitationId")
 
-  // First, get the full organization to find the invitation
   const authBaseUrl = process.env.AUTH_BASE_URL || "http://localhost:3001"
   const getOrgUrl = new URL(
     "/api/auth/organization/get-full-organization",
@@ -375,20 +285,17 @@ organizations.post("/:id/invitations/:invitationId/resend", async (c) => {
     }>
   }>(getOrgResponse)
 
-  // Find the invitation
   const invitation = orgData.invitations?.find((inv) => inv.id === invitationId)
   if (!invitation) {
     throw ApiError.notFound("Invitation not found")
   }
 
-  // Check if invitation is still pending
   if (invitation.status !== "pending") {
     throw ApiError.badRequest(
       `Cannot resend invitation with status: ${invitation.status}`
     )
   }
 
-  // Resend the invitation using invite-member with resend: true
   const resendRequest = createProxyRequest(
     c,
     "/api/auth/organization/invite-member",
@@ -409,12 +316,6 @@ organizations.post("/:id/invitations/:invitationId/resend", async (c) => {
   return c.json(data)
 })
 
-/**
- * DELETE /api/organizations/:id/invitations/:invitationId
- * Cancel/delete an invitation
- *
- * Proxies to Better Auth: POST /api/auth/organization/cancel-invitation
- */
 organizations.delete("/:id/invitations/:invitationId", async (c) => {
   const auth = getAuth()
   const invitationId = c.req.param("invitationId")

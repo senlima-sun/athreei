@@ -1,16 +1,6 @@
-/**
- * Email callbacks for Better Auth integration
- *
- * Provides email sending functions for password reset and email verification
- * using Resend and React Email templates.
- */
-
 import { sendEmail, PasswordResetEmail, VerifyEmail } from "@athreei/email"
 import type { EmailCallbacks } from "@athreei/auth"
 
-/**
- * Email callbacks to be passed to createAuth()
- */
 export const emailCallbacks: EmailCallbacks = {
   sendResetPassword: async ({ user, url }) => {
     await sendEmail({

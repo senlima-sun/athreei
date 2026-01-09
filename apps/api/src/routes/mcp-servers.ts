@@ -1,10 +1,3 @@
-/**
- * MCP Server routes
- *
- * CRUD API for MCP Server registry management.
- * Supports listing public registry servers and organization's private servers.
- */
-
 import { Hono } from "hono"
 import { zValidator } from "@hono/zod-validator"
 import { eq, and, or, like, sql } from "drizzle-orm"
@@ -47,40 +40,18 @@ import {
 
 const mcpServers = new Hono()
 
-// Apply auth middleware to all MCP server routes
 mcpServers.use("*", authMiddleware)
-
-// =============================================================================
-// Helper Functions
-// =============================================================================
 
 function now(): Date {
   return new Date()
 }
 
-// =============================================================================
-// Routes
-// =============================================================================
-
-/**
- * GET /api/mcp-servers
- * List available MCP servers (org's private servers)
- *
- * Query params:
- * - organizationId: Required - filter by organization
- * - status: Filter by status (active, inactive, pending)
- * - transport: Filter by transport type (stdio, sse, streamable-http)
- * - search: Search by name or description
- * - limit: Max results (default 20, max 100)
- * - offset: Pagination offset (default 0)
- */
 mcpServers.get("/", zValidator("query", listQuerySchema), async (c) => {
   const db = getDb()
   const auth = getAuthContext(c)
   const { status, transport, search, limit, offset, organizationId } =
     c.req.valid("query")
 
-  // Verify user is a member of the organization
   const isMember = await verifyOrganizationMembership(
     db,
     auth.userId,
@@ -90,7 +61,6 @@ mcpServers.get("/", zValidator("query", listQuerySchema), async (c) => {
     throw ApiError.forbidden("You do not have access to this organization")
   }
 
-  // Build the query conditions
   const conditions = [eq(mcpServer.organizationId, organizationId)]
 
   if (status) {
@@ -111,7 +81,6 @@ mcpServers.get("/", zValidator("query", listQuerySchema), async (c) => {
     )
   }
 
-  // Execute query with filters
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const servers = await (db as any)
     .select()
@@ -121,7 +90,6 @@ mcpServers.get("/", zValidator("query", listQuerySchema), async (c) => {
     .offset(offset)
     .orderBy(mcpServer.createdAt)
 
-  // Get total count for pagination
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const countResult = await (db as any)
     .select({ count: sql<number>`count(*)` })
@@ -141,16 +109,11 @@ mcpServers.get("/", zValidator("query", listQuerySchema), async (c) => {
   })
 })
 
-/**
- * GET /api/mcp-servers/:id
- * Get MCP server details including its tools
- */
 mcpServers.get("/:id", async (c) => {
   const db = getDb()
   const auth = getAuthContext(c)
   const serverId = c.req.param("id")
 
-  // Fetch server
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const server = await (db as any).query.mcpServer.findFirst({
     where: eq(mcpServer.id, serverId),
@@ -160,7 +123,6 @@ mcpServers.get("/:id", async (c) => {
     throw ApiError.notFound("MCP server not found")
   }
 
-  // Verify user has access to the organization
   const isMember = await verifyOrganizationMembership(
     db,
     auth.userId,
@@ -170,13 +132,11 @@ mcpServers.get("/:id", async (c) => {
     throw ApiError.forbidden("You do not have access to this server")
   }
 
-  // Fetch associated tools
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const tools = await (db as any).query.mcpTool.findMany({
     where: eq(mcpTool.serverId, serverId),
   })
 
-  // Extract env var keys (not values) if encrypted env exists
   let envKeys: string[] = []
   if (server.encryptedEnv && isEncryptionConfigured()) {
     try {
@@ -205,29 +165,17 @@ mcpServers.get("/:id", async (c) => {
   })
 })
 
-/**
- * GET /api/mcp-servers/:id/env
- * Get decrypted environment variables for an MCP server
- * Used by gateway-cloud to fetch credentials for server connections
- *
- * Security features:
- * - Rate limited: 10 requests per minute per user+server
- * - Audit logged: All access attempts are logged to stderr
- */
 mcpServers.get("/:id/env", async (c) => {
   const db = getDb()
   const auth = getAuthContext(c)
   const serverId = c.req.param("id")
 
-  // Rate limiting - check BEFORE credential access
   const rateLimitKey = `${auth.userId}:${serverId}`
   const rateLimitResult = checkEnvRateLimit(rateLimitKey)
 
-  // Set rate limit headers
   setEnvRateLimitHeaders(c, rateLimitResult)
 
   if (!rateLimitResult.allowed) {
-    // Log rate limit violation
     logRateLimitViolation({
       endpoint: "env_access",
       userId: auth.userId,
@@ -245,14 +193,12 @@ mcpServers.get("/:id/env", async (c) => {
     )
   }
 
-  // Fetch server
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const server = await (db as any).query.mcpServer.findFirst({
     where: eq(mcpServer.id, serverId),
   })
 
   if (!server) {
-    // Log failed access attempt (server not found)
     logEnvAccess({
       serverId,
       userId: auth.userId,
@@ -270,7 +216,6 @@ mcpServers.get("/:id/env", async (c) => {
     server.organizationId
   )
   if (!isMember) {
-    // Log failed access attempt (unauthorized)
     logEnvAccess({
       serverId,
       userId: auth.userId,
@@ -281,9 +226,7 @@ mcpServers.get("/:id/env", async (c) => {
     throw ApiError.notFound("MCP server not found")
   }
 
-  // Check if server has encrypted env vars
   if (!server.encryptedEnv) {
-    // Log successful access (no env vars to return)
     logEnvAccess({
       serverId,
       userId: auth.userId,
@@ -294,9 +237,7 @@ mcpServers.get("/:id/env", async (c) => {
     return c.json({ env: {} })
   }
 
-  // Verify encryption is configured
   if (!isEncryptionConfigured()) {
-    // Log failed access attempt (encryption not configured)
     logEnvAccess({
       serverId,
       userId: auth.userId,
@@ -307,11 +248,9 @@ mcpServers.get("/:id/env", async (c) => {
     throw ApiError.badRequest("Encryption is not configured")
   }
 
-  // Decrypt and return env vars
   try {
     const env = decryptEnv(server.encryptedEnv)
 
-    // Log successful access - DO NOT log actual env values!
     logEnvAccess({
       serverId,
       userId: auth.userId,
@@ -321,7 +260,6 @@ mcpServers.get("/:id/env", async (c) => {
 
     return c.json({ env })
   } catch {
-    // Log failed access attempt (decryption error)
     logEnvAccess({
       serverId,
       userId: auth.userId,
@@ -333,23 +271,17 @@ mcpServers.get("/:id/env", async (c) => {
   }
 })
 
-/**
- * POST /api/mcp-servers
- * Create a new custom MCP server (private to organization)
- */
 mcpServers.post("/", zValidator("json", createServerSchema), async (c) => {
   const db = getDb()
   const auth = getAuthContext(c)
   const body = c.req.valid("json")
 
-  // Get organizationId from query parameter
   const organizationId = c.req.query("organizationId")
 
   if (!organizationId) {
     throw ApiError.badRequest("organizationId query parameter is required")
   }
 
-  // Verify user is a member of the organization
   const isMember = await verifyOrganizationMembership(
     db,
     auth.userId,
@@ -359,7 +291,6 @@ mcpServers.post("/", zValidator("json", createServerSchema), async (c) => {
     throw ApiError.forbidden("You do not have access to this organization")
   }
 
-  // Validate transport-specific fields
   if (body.transport === "stdio" && !body.command) {
     throw ApiError.badRequest("Command is required for stdio transport")
   }
@@ -374,7 +305,6 @@ mcpServers.post("/", zValidator("json", createServerSchema), async (c) => {
   const timestamp = now()
   const id = generateUUID()
 
-  // Handle environment variable encryption
   let encryptedEnv: string | null = null
   let envKeyVersion: number | null = null
 
@@ -441,7 +371,6 @@ mcpServers.patch("/:id", zValidator("json", updateServerSchema), async (c) => {
     throw ApiError.notFound("MCP server not found")
   }
 
-  // Verify user has access to the organization
   const isMember = await verifyOrganizationMembership(
     db,
     auth.userId,
@@ -451,7 +380,6 @@ mcpServers.patch("/:id", zValidator("json", updateServerSchema), async (c) => {
     throw ApiError.forbidden("You do not have access to this server")
   }
 
-  // Validate transport-specific fields if transport is being updated
   const transport = updates.transport ?? existing.transport
   const command =
     updates.command !== undefined ? updates.command : existing.command
@@ -465,7 +393,6 @@ mcpServers.patch("/:id", zValidator("json", updateServerSchema), async (c) => {
     throw ApiError.badRequest("URL is required for SSE/HTTP transport")
   }
 
-  // Build update object, excluding undefined values
   const updateData: Record<string, unknown> = {
     updatedAt: now(),
   }
@@ -482,10 +409,8 @@ mcpServers.patch("/:id", zValidator("json", updateServerSchema), async (c) => {
   if (updates.capabilities !== undefined)
     updateData.capabilities = updates.capabilities
 
-  // Handle environment variable updates
   if (updates.env !== undefined) {
     if (updates.env === null) {
-      // Clear env vars
       updateData.encryptedEnv = null
       updateData.envKeyVersion = null
     } else if (Object.keys(updates.env).length > 0) {
@@ -505,13 +430,11 @@ mcpServers.patch("/:id", zValidator("json", updateServerSchema), async (c) => {
     .set(updateData)
     .where(eq(mcpServer.id, serverId))
 
-  // Fetch updated server
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updated = await (db as any).query.mcpServer.findFirst({
     where: eq(mcpServer.id, serverId),
   })
 
-  // Extract env var keys (not values) for response
   let envKeys: string[] = []
   if (updated.encryptedEnv && isEncryptionConfigured()) {
     try {
@@ -526,7 +449,6 @@ mcpServers.patch("/:id", zValidator("json", updateServerSchema), async (c) => {
     }
   }
 
-  // Remove sensitive fields from response
   const {
     encryptedEnv: _encryptedEnv,
     envKeyVersion: _envKeyVersion,
@@ -536,16 +458,11 @@ mcpServers.patch("/:id", zValidator("json", updateServerSchema), async (c) => {
   return c.json({ ...serverData, envKeys })
 })
 
-/**
- * DELETE /api/mcp-servers/:id
- * Delete an MCP server
- */
 mcpServers.delete("/:id", async (c) => {
   const db = getDb()
   const auth = getAuthContext(c)
   const serverId = c.req.param("id")
 
-  // Verify server exists
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const existing = await (db as any).query.mcpServer.findFirst({
     where: eq(mcpServer.id, serverId),
@@ -555,7 +472,6 @@ mcpServers.delete("/:id", async (c) => {
     throw ApiError.notFound("MCP server not found")
   }
 
-  // Verify user has access to the organization
   const isMember = await verifyOrganizationMembership(
     db,
     auth.userId,
@@ -565,23 +481,17 @@ mcpServers.delete("/:id", async (c) => {
     throw ApiError.forbidden("You do not have access to this server")
   }
 
-  // Delete server (tools will be cascade deleted via foreign key)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (db as any).delete(mcpServer).where(eq(mcpServer.id, serverId))
 
   return c.json({ message: "MCP server deleted successfully" })
 })
 
-/**
- * GET /api/mcp-servers/:id/tools
- * List all tools for an MCP server
- */
 mcpServers.get("/:id/tools", async (c) => {
   const db = getDb()
   const auth = getAuthContext(c)
   const serverId = c.req.param("id")
 
-  // Verify server exists
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const server = await (db as any).query.mcpServer.findFirst({
     where: eq(mcpServer.id, serverId),
@@ -591,7 +501,6 @@ mcpServers.get("/:id/tools", async (c) => {
     throw ApiError.notFound("MCP server not found")
   }
 
-  // Verify user has access to the organization
   const isMember = await verifyOrganizationMembership(
     db,
     auth.userId,
@@ -601,7 +510,6 @@ mcpServers.get("/:id/tools", async (c) => {
     throw ApiError.forbidden("You do not have access to this server")
   }
 
-  // Fetch tools
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const tools = await (db as any).query.mcpTool.findMany({
     where: eq(mcpTool.serverId, serverId),
@@ -613,20 +521,9 @@ mcpServers.get("/:id/tools", async (c) => {
   })
 })
 
-// =============================================================================
-// Health Check Constants
-// =============================================================================
-
-/** Connection timeout for health checks */
 const HEALTH_CHECK_TIMEOUT_MS = 5_000
-
-/** Rate limit for batch health check: 1 request per minute per user */
 const BATCH_HEALTH_RATE_LIMIT = 1
 const BATCH_HEALTH_RATE_WINDOW_MS = 60_000
-
-// =============================================================================
-// Health Check Types
-// =============================================================================
 
 type HealthStatus = {
   status: "healthy" | "unhealthy"
@@ -635,14 +532,6 @@ type HealthStatus = {
   error?: string
 }
 
-// =============================================================================
-// Health Check Helper Functions
-// =============================================================================
-
-/**
- * Perform a health check on a single MCP server
- * Attempts to connect and list tools to verify server is responsive
- */
 async function performHealthCheck(
   server: {
     id: string
@@ -652,7 +541,6 @@ async function performHealthCheck(
   },
   db: ReturnType<typeof getDb>
 ): Promise<HealthStatus> {
-  // Only SSE transport is supported for remote health checks currently
   if (server.transport !== "sse" || !server.url) {
     return {
       status: "unhealthy",
@@ -707,7 +595,6 @@ async function performHealthCheck(
 
     await Promise.race([connectPromise, timeoutPromise])
 
-    // Try to list tools (basic ping)
     const listToolsPromise = client.listTools()
     const listToolsTimeout = new Promise<never>((_, reject) => {
       setTimeout(
@@ -718,10 +605,8 @@ async function performHealthCheck(
 
     await Promise.race([listToolsPromise, listToolsTimeout])
 
-    // Calculate latency
     const latency = Date.now() - startTime
 
-    // Update lastSeenAt in database
     const timestamp = new Date()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (db as any)
@@ -729,7 +614,6 @@ async function performHealthCheck(
       .set({ lastSeenAt: timestamp, updatedAt: timestamp })
       .where(eq(mcpServer.id, server.id))
 
-    // Close connection
     await client.close()
 
     return {
@@ -738,16 +622,12 @@ async function performHealthCheck(
       lastSeen: timestamp.toISOString(),
     }
   } catch (error) {
-    // Ensure cleanup
     try {
       await client.close()
-    } catch {
-      // Ignore cleanup errors
-    }
+    } catch {}
 
     const errorMessage = error instanceof Error ? error.message : String(error)
 
-    // Provide user-friendly error messages
     let friendlyError = errorMessage
     if (errorMessage.includes("timeout")) {
       friendlyError = "Connection timeout"
@@ -770,20 +650,11 @@ async function performHealthCheck(
   }
 }
 
-// =============================================================================
-// Health Check Endpoints
-// =============================================================================
-
-/**
- * GET /api/mcp-servers/:id/health
- * Check health of a single MCP server
- */
 mcpServers.get("/:id/health", async (c) => {
   const db = getDb()
   const auth = getAuthContext(c)
   const serverId = c.req.param("id")
 
-  // Fetch server
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const server = await (db as any).query.mcpServer.findFirst({
     where: eq(mcpServer.id, serverId),
@@ -793,7 +664,6 @@ mcpServers.get("/:id/health", async (c) => {
     throw ApiError.notFound("MCP server not found")
   }
 
-  // Verify user has access to the organization
   const isMember = await verifyOrganizationMembership(
     db,
     auth.userId,
@@ -803,18 +673,11 @@ mcpServers.get("/:id/health", async (c) => {
     throw ApiError.forbidden("You do not have access to this server")
   }
 
-  // Perform health check
   const health = await performHealthCheck(server, db)
 
   return c.json(health)
 })
 
-/**
- * POST /api/mcp-servers/health-check
- * Batch health check for multiple MCP servers
- *
- * Rate limited: 1 request per minute per user
- */
 mcpServers.post(
   "/health-check",
   zValidator("json", batchHealthCheckSchema),
@@ -823,7 +686,6 @@ mcpServers.post(
     const auth = getAuthContext(c)
     const { serverIds } = c.req.valid("json")
 
-    // Rate limiting
     const rateLimitKey = `batch-health:${auth.userId}`
     const rateLimitInfo = checkRateLimit(
       rateLimitKey,
@@ -831,7 +693,6 @@ mcpServers.post(
       BATCH_HEALTH_RATE_WINDOW_MS
     )
 
-    // Set rate limit headers
     c.header("X-RateLimit-Limit", String(BATCH_HEALTH_RATE_LIMIT))
     c.header(
       "X-RateLimit-Remaining",
@@ -854,7 +715,6 @@ mcpServers.post(
       )
     }
 
-    // Fetch all requested servers
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const servers = await (db as any).query.mcpServer.findMany({
       where: sql`${mcpServer.id} IN (${sql.join(
@@ -863,7 +723,6 @@ mcpServers.post(
       )})`,
     })
 
-    // Filter to only servers the user has access to
     const accessibleServers: typeof servers = []
     for (const server of servers) {
       const isMember = await verifyOrganizationMembership(
@@ -876,7 +735,6 @@ mcpServers.post(
       }
     }
 
-    // Run health checks in parallel
     const healthChecks = await Promise.all(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       accessibleServers.map(async (server: any) => {
@@ -885,13 +743,11 @@ mcpServers.post(
       })
     )
 
-    // Build result map
     const results: Record<string, HealthStatus> = {}
     for (const { serverId, health } of healthChecks) {
       results[serverId] = health
     }
 
-    // Add "not found" status for servers that weren't accessible
     for (const requestedId of serverIds) {
       if (!results[requestedId]) {
         results[requestedId] = {
@@ -905,20 +761,11 @@ mcpServers.post(
   }
 )
 
-// =============================================================================
-// Tool Management Endpoints
-// =============================================================================
-
-/**
- * POST /api/mcp-servers/:id/tools/refresh
- * Clear cached tools and re-fetch from the server
- */
 mcpServers.post("/:id/tools/refresh", async (c) => {
   const db = getDb()
   const auth = getAuthContext(c)
   const serverId = c.req.param("id")
 
-  // Fetch server
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const server = await (db as any).query.mcpServer.findFirst({
     where: eq(mcpServer.id, serverId),
@@ -928,7 +775,6 @@ mcpServers.post("/:id/tools/refresh", async (c) => {
     throw ApiError.notFound("MCP server not found")
   }
 
-  // Verify user has access to the organization
   const isMember = await verifyOrganizationMembership(
     db,
     auth.userId,
@@ -938,7 +784,6 @@ mcpServers.post("/:id/tools/refresh", async (c) => {
     throw ApiError.forbidden("You do not have access to this server")
   }
 
-  // Only SSE transport is supported for remote tool refresh
   if (server.transport !== "sse" || !server.url) {
     throw ApiError.badRequest(
       `Tool refresh not supported for ${server.transport} transport`
@@ -980,7 +825,6 @@ mcpServers.post("/:id/tools/refresh", async (c) => {
       },
     })
 
-    // Connect with timeout
     const connectPromise = client.connect(transport)
     const timeoutPromise = new Promise<never>((_, reject) => {
       setTimeout(
@@ -991,7 +835,6 @@ mcpServers.post("/:id/tools/refresh", async (c) => {
 
     await Promise.race([connectPromise, timeoutPromise])
 
-    // List tools
     const listToolsPromise = client.listTools()
     const listToolsTimeout = new Promise<never>((_, reject) => {
       setTimeout(
@@ -1006,16 +849,13 @@ mcpServers.post("/:id/tools/refresh", async (c) => {
     ])
     const fetchedTools = toolsResponse.tools || []
 
-    // Close connection
     await client.close()
 
-    // Get existing tools to preserve overrides
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const existingTools = await (db as any).query.mcpTool.findMany({
       where: eq(mcpTool.serverId, serverId),
     })
 
-    // Build map of existing tool overrides
     const existingOverrides = new Map<
       string,
       {
@@ -1032,11 +872,9 @@ mcpServers.post("/:id/tools/refresh", async (c) => {
       })
     }
 
-    // Delete existing tools
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (db as any).delete(mcpTool).where(eq(mcpTool.serverId, serverId))
 
-    // Insert new tools, preserving any overrides
     const timestamp = now()
     const newTools = fetchedTools.map(
       (tool: { name: string; description?: string; inputSchema?: unknown }) => {
@@ -1082,16 +920,12 @@ mcpServers.post("/:id/tools/refresh", async (c) => {
       total: newTools.length,
     })
   } catch (error) {
-    // Ensure cleanup
     try {
       await client.close()
-    } catch {
-      // Ignore cleanup errors
-    }
+    } catch {}
 
     const errorMessage = error instanceof Error ? error.message : String(error)
 
-    // Provide user-friendly error messages
     let friendlyError = errorMessage
     if (errorMessage.includes("timeout")) {
       friendlyError =
@@ -1113,10 +947,6 @@ mcpServers.post("/:id/tools/refresh", async (c) => {
   }
 })
 
-/**
- * PATCH /api/mcp-servers/:id/tools/:toolName
- * Update tool overrides (custom description, enabled status)
- */
 mcpServers.patch(
   "/:id/tools/:toolName",
   zValidator("json", updateToolSchema),
@@ -1127,7 +957,6 @@ mcpServers.patch(
     const toolName = c.req.param("toolName")
     const updates = c.req.valid("json")
 
-    // Fetch server
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const server = await (db as any).query.mcpServer.findFirst({
       where: eq(mcpServer.id, serverId),
@@ -1137,7 +966,6 @@ mcpServers.patch(
       throw ApiError.notFound("MCP server not found")
     }
 
-    // Verify user has access to the organization
     const isMember = await verifyOrganizationMembership(
       db,
       auth.userId,
@@ -1147,7 +975,6 @@ mcpServers.patch(
       throw ApiError.forbidden("You do not have access to this server")
     }
 
-    // Find the tool
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const tool = await (db as any).query.mcpTool.findFirst({
       where: and(eq(mcpTool.serverId, serverId), eq(mcpTool.name, toolName)),
@@ -1157,7 +984,6 @@ mcpServers.patch(
       throw ApiError.notFound(`Tool '${toolName}' not found on this server`)
     }
 
-    // Build update object
     const updateData: Record<string, unknown> = {
       updatedAt: now(),
     }
@@ -1170,14 +996,12 @@ mcpServers.patch(
       updateData.isEnabled = updates.enabled ? "true" : "false"
     }
 
-    // Update the tool
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (db as any)
       .update(mcpTool)
       .set(updateData)
       .where(eq(mcpTool.id, tool.id))
 
-    // Fetch updated tool
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updated = await (db as any).query.mcpTool.findFirst({
       where: eq(mcpTool.id, tool.id),
@@ -1196,26 +1020,10 @@ mcpServers.patch(
   }
 )
 
-// =============================================================================
-// Verification Constants
-// =============================================================================
-
-/** Rate limit for verify endpoint: 20 requests per minute */
 const VERIFY_RATE_LIMIT = 20
 const VERIFY_RATE_WINDOW_MS = 60_000
-
-/** Connection timeout for MCP server verification */
 const VERIFY_TIMEOUT_MS = 10_000
 
-/**
- * POST /api/mcp-servers/verify
- * Test MCP server connection with provided auth token
- *
- * Security features:
- * - Rate limited: 20 requests per minute per user
- * - Authentication required
- * - 10 second timeout
- */
 mcpServers.post(
   "/verify",
   zValidator("json", verifyMcpServerSchema),
@@ -1223,7 +1031,6 @@ mcpServers.post(
     const auth = getAuthContext(c)
     const { serverUrl, authToken } = c.req.valid("json")
 
-    // Rate limiting - check before making external connection
     const rateLimitKey = `verify:${auth.userId}`
     const rateLimitInfo = checkRateLimit(
       rateLimitKey,
@@ -1231,7 +1038,6 @@ mcpServers.post(
       VERIFY_RATE_WINDOW_MS
     )
 
-    // Set rate limit headers
     c.header("X-RateLimit-Limit", String(VERIFY_RATE_LIMIT))
     c.header(
       "X-RateLimit-Remaining",
@@ -1253,7 +1059,6 @@ mcpServers.post(
       )
     }
 
-    // Create MCP client and attempt connection
     const client = new Client(
       {
         name: "athreei-verify",
@@ -1267,7 +1072,6 @@ mcpServers.post(
     let transport: SSEClientTransport | null = null
 
     try {
-      // Create SSE transport with auth token
       transport = new SSEClientTransport(new URL(serverUrl), {
         requestInit: {
           headers: {
@@ -1276,7 +1080,6 @@ mcpServers.post(
         },
       })
 
-      // Connect with timeout
       const connectPromise = client.connect(transport)
       const timeoutPromise = new Promise<never>((_, reject) => {
         setTimeout(
@@ -1287,7 +1090,6 @@ mcpServers.post(
 
       await Promise.race([connectPromise, timeoutPromise])
 
-      // List tools with timeout
       const listToolsPromise = client.listTools()
       const listToolsTimeout = new Promise<never>((_, reject) => {
         setTimeout(
@@ -1302,10 +1104,8 @@ mcpServers.post(
       ])
       const tools = toolsResponse.tools || []
 
-      // Extract tool names
       const toolNames = tools.map((tool: { name: string }) => tool.name)
 
-      // Close the connection
       await client.close()
 
       return c.json({
@@ -1314,17 +1114,13 @@ mcpServers.post(
         toolCount: toolNames.length,
       })
     } catch (error) {
-      // Ensure cleanup on error
       try {
         await client.close()
-      } catch {
-        // Ignore cleanup errors
-      }
+      } catch {}
 
       const errorMessage =
         error instanceof Error ? error.message : String(error)
 
-      // Provide user-friendly error messages
       let friendlyError = errorMessage
       if (errorMessage.includes("timeout")) {
         friendlyError =

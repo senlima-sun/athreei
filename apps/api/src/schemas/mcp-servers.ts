@@ -1,21 +1,7 @@
-/**
- * MCP Server validation schemas
- *
- * Zod schemas for MCP server CRUD operations.
- */
-
 import { z } from "zod"
-
-// =============================================================================
-// Constants
-// =============================================================================
 
 export const transportTypes = ["stdio", "sse", "streamable-http"] as const
 export const statusTypes = ["active", "inactive", "pending"] as const
-
-// =============================================================================
-// Schemas
-// =============================================================================
 
 export const createServerSchema = z.object({
   name: z.string().min(1, "Name is required").max(100, "Name too long"),
@@ -61,20 +47,12 @@ export const listQuerySchema = z.object({
   organizationId: z.string().min(1, "Organization ID is required"),
 })
 
-// =============================================================================
-// Type Exports
-// =============================================================================
-
 export type TransportType = (typeof transportTypes)[number]
 export type StatusType = (typeof statusTypes)[number]
 export const verifyMcpServerSchema = z.object({
   serverUrl: z.string().url("Invalid server URL"),
   authToken: z.string().min(1, "Auth token is required"),
 })
-
-// =============================================================================
-// Health Check Schemas
-// =============================================================================
 
 export const batchHealthCheckSchema = z.object({
   serverIds: z
@@ -83,18 +61,10 @@ export const batchHealthCheckSchema = z.object({
     .max(20, "Maximum 20 servers per batch"),
 })
 
-// =============================================================================
-// Tool Update Schemas
-// =============================================================================
-
 export const updateToolSchema = z.object({
   description: z.string().max(1000, "Description too long").optional(),
   enabled: z.boolean().optional(),
 })
-
-// =============================================================================
-// Type Exports
-// =============================================================================
 
 export type CreateServerInput = z.infer<typeof createServerSchema>
 export type UpdateServerInput = z.infer<typeof updateServerSchema>

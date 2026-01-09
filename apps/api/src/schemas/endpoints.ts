@@ -1,21 +1,7 @@
-/**
- * Endpoint validation schemas
- *
- * Zod schemas for endpoint CRUD operations.
- */
-
 import { z } from "zod"
-
-// =============================================================================
-// Constants
-// =============================================================================
 
 export const authTypes = ["api_key", "bearer", "none"] as const
 export const endpointStatusTypes = ["active", "inactive", "deprecated"] as const
-
-// =============================================================================
-// Schemas
-// =============================================================================
 
 export const createEndpointSchema = z.object({
   name: z.string().min(1, "Name is required").max(100, "Name too long"),
@@ -32,10 +18,6 @@ export const updateEndpointSchema = z.object({
   rateLimit: z.number().int().positive().nullable().optional(),
   status: z.enum(endpointStatusTypes).optional(),
 })
-
-// =============================================================================
-// Type Exports
-// =============================================================================
 
 export type AuthType = (typeof authTypes)[number]
 export type EndpointStatusType = (typeof endpointStatusTypes)[number]

@@ -1,19 +1,9 @@
-/**
- * Auth instance setup
- *
- * Creates and exports the Better Auth instance for the API server.
- */
-
 import { createAuth, type Auth } from "@athreei/auth"
 import { getDb, detectDatabaseType } from "@athreei/db"
 import { emailCallbacks } from "./email"
 
 let _auth: Auth | null = null
 
-/**
- * Get the shared auth instance.
- * Creates a new instance if one doesn't exist.
- */
 export function getAuth(): Auth {
   if (!_auth) {
     const db = getDb()
@@ -32,17 +22,12 @@ export function getAuth(): Auth {
         "http://localhost:3000",
         "http://localhost:5173",
       ],
-      // Enable email callbacks only when RESEND_API_KEY is configured
       email: process.env.RESEND_API_KEY ? emailCallbacks : undefined,
     })
   }
   return _auth
 }
 
-/**
- * Reset the auth instance.
- * Useful for testing.
- */
 export function resetAuth(): void {
   _auth = null
 }

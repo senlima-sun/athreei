@@ -1,15 +1,7 @@
-/**
- * Health check endpoint
- */
-
 import { Hono } from "hono"
 
 const health = new Hono()
 
-/**
- * GET /health
- * Returns the health status of the API server
- */
 health.get("/", (c) => {
   return c.json({
     status: "ok",

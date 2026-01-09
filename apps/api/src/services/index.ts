@@ -1,29 +1,9 @@
-/**
- * Services barrel export
- *
- * Re-exports all shared service functions for easy importing:
- *
- * @example
- * ```typescript
- * import {
- *   verifyOrganizationMembership,
- *   generateId,
- *   validateApiKey,
- *   checkEnvRateLimit,
- *   logAuditEvent,
- *   buildEndpointUrl,
- * } from "../services"
- * ```
- */
-
-// Organization membership verification
 export {
   verifyOrganizationMembership,
   getNamespaceWithAccess,
   requireOrganizationMembership,
 } from "./organization"
 
-// ID generation utilities
 export {
   ID_PREFIXES,
   type IdPrefix,
@@ -37,7 +17,6 @@ export {
   generateSlug,
 } from "./id-generator"
 
-// API key utilities
 export {
   type ApiKeyValidationResult,
   generateApiKey,
@@ -48,7 +27,6 @@ export {
   parseAuthHeader,
 } from "./api-key"
 
-// Environment access rate limiting
 export {
   ENV_RATE_LIMIT_CONFIG,
   type EnvRateLimitResult,
@@ -60,7 +38,6 @@ export {
   setEnvRateLimitHeaders,
 } from "./env-rate-limit"
 
-// Audit logging
 export {
   type EnvAccessAuditEvent,
   type RateLimitViolationEvent,
@@ -81,7 +58,6 @@ export {
   generateTokenHash,
 } from "./audit-log"
 
-// Endpoint URL building
 export {
   type ClaudeDesktopConfig,
   type GenericConnectionConfig,

@@ -1,10 +1,3 @@
-/**
- * Tools routes
- *
- * API endpoints for managing MCP tool configurations.
- * Enables users to customize tool descriptions and prompts for AI apps.
- */
-
 import { Hono } from "hono"
 import { zValidator } from "@hono/zod-validator"
 import { eq } from "drizzle-orm"
@@ -16,17 +9,8 @@ import { verifyOrganizationMembership } from "../services"
 
 const tools = new Hono()
 
-// Apply auth middleware to all tool routes
 tools.use("*", authMiddleware)
 
-// =============================================================================
-// Routes
-// =============================================================================
-
-/**
- * GET /api/tools?serverId={id}
- * List all tools for an MCP server
- */
 tools.get("/", zValidator("query", listToolsQuerySchema), async (c) => {
   const auth = getAuthContext(c)
   const { serverId } = c.req.valid("query")
@@ -34,7 +18,6 @@ tools.get("/", zValidator("query", listToolsQuerySchema), async (c) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const dbQuery = (db as any).query
 
-  // Get the server to check organization
   const server = await dbQuery.mcpServer.findFirst({
     where: eq(mcpServer.id, serverId),
   })
@@ -54,7 +37,6 @@ tools.get("/", zValidator("query", listToolsQuerySchema), async (c) => {
     throw ApiError.forbidden("Access denied")
   }
 
-  // Get tools
   const toolsList = await dbQuery.mcpTool.findMany({
     where: eq(mcpTool.serverId, serverId),
   })
@@ -96,10 +78,6 @@ tools.get("/", zValidator("query", listToolsQuerySchema), async (c) => {
   })
 })
 
-/**
- * PATCH /api/tools/:id
- * Update tool custom configuration
- */
 tools.patch("/:id", zValidator("json", updateToolSchema), async (c) => {
   const auth = getAuthContext(c)
   const { id } = c.req.param()
@@ -108,7 +86,6 @@ tools.patch("/:id", zValidator("json", updateToolSchema), async (c) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const dbQuery = (db as any).query
 
-  // Get the tool
   const tool = await dbQuery.mcpTool.findFirst({
     where: eq(mcpTool.id, id),
   })
@@ -117,7 +94,6 @@ tools.patch("/:id", zValidator("json", updateToolSchema), async (c) => {
     throw ApiError.notFound("Tool not found")
   }
 
-  // Get the server to check organization
   const server = await dbQuery.mcpServer.findFirst({
     where: eq(mcpServer.id, tool.serverId),
   })
@@ -137,7 +113,6 @@ tools.patch("/:id", zValidator("json", updateToolSchema), async (c) => {
     throw ApiError.forbidden("Access denied")
   }
 
-  // Build update object
   const updateData: Record<string, unknown> = {
     updatedAt: new Date(),
   }
@@ -152,7 +127,6 @@ tools.patch("/:id", zValidator("json", updateToolSchema), async (c) => {
     updateData.isEnabled = updates.isEnabled ? "true" : "false"
   }
 
-  // Update the tool
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [updated] = await (db as any)
     .update(mcpTool)

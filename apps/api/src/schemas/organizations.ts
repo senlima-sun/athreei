@@ -1,20 +1,6 @@
-/**
- * Organization validation schemas
- *
- * Zod schemas for organization management.
- */
-
 import { z } from "zod"
 
-// =============================================================================
-// Constants
-// =============================================================================
-
 export const memberRoles = ["admin", "member"] as const
-
-// =============================================================================
-// Schemas
-// =============================================================================
 
 export const createOrganizationSchema = z.object({
   name: z.string().min(1, "Name is required").max(100, "Name too long"),
@@ -47,10 +33,6 @@ export const inviteMemberSchema = z.object({
 export const updateMemberRoleSchema = z.object({
   role: z.enum(memberRoles),
 })
-
-// =============================================================================
-// Type Exports
-// =============================================================================
 
 export type MemberRole = (typeof memberRoles)[number]
 export type CreateOrganizationInput = z.infer<typeof createOrganizationSchema>

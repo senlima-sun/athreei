@@ -1,14 +1,4 @@
-/**
- * Namespace validation schemas
- *
- * Zod schemas for namespace CRUD operations.
- */
-
 import { z } from "zod"
-
-// =============================================================================
-// Schemas
-// =============================================================================
 
 export const createNamespaceSchema = z.object({
   name: z.string().min(1, "Name is required").max(100, "Name too long"),
@@ -29,10 +19,6 @@ export const addServerSchema = z.object({
 export const updateServerMappingSchema = z.object({
   enabled: z.boolean(),
 })
-
-// =============================================================================
-// Type Exports
-// =============================================================================
 
 export type CreateNamespaceInput = z.infer<typeof createNamespaceSchema>
 export type UpdateNamespaceInput = z.infer<typeof updateNamespaceSchema>

@@ -1,7 +1,3 @@
-/**
- * Middleware exports
- */
-
 export {
   authMiddleware,
   getAuthContext,

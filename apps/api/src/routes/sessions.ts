@@ -1,13 +1,3 @@
-/**
- * Sessions routes
- *
- * Endpoints for managing user sessions.
- *
- * Routes:
- * - GET /api/sessions - List all active sessions
- * - DELETE /api/sessions/:sessionId - Revoke a specific session
- */
-
 import { Hono } from "hono"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -15,10 +5,6 @@ import { eq, and, gt } from "drizzle-orm"
 import { authMiddleware, getAuthContext, ApiError } from "../middleware"
 import { getDb } from "../lib/db"
 import { detectDatabaseType, getSchema } from "@athreei/db"
-
-// =============================================================================
-// Types
-// =============================================================================
 
 interface SessionResponse {
   id: string
@@ -31,21 +17,10 @@ interface SessionResponse {
   createdAt: string
 }
 
-// =============================================================================
-// Schemas
-// =============================================================================
-
 const sessionIdParamSchema = z.object({
   sessionId: z.string().min(1, "Session ID is required"),
 })
 
-// =============================================================================
-// Helpers
-// =============================================================================
-
-/**
- * Parse user agent string to extract device and browser info
- */
 function parseUserAgent(userAgent?: string | null): {
   device?: string
   browser?: string
@@ -88,19 +63,10 @@ function parseUserAgent(userAgent?: string | null): {
   return { device, browser }
 }
 
-// =============================================================================
-// Routes
-// =============================================================================
-
 const sessions = new Hono()
 
-// Apply auth middleware to all session routes
 sessions.use("*", authMiddleware)
 
-/**
- * GET /api/sessions
- * List all active sessions for the current user
- */
 sessions.get("/", async (c) => {
   const auth = getAuthContext(c)
 
@@ -109,7 +75,6 @@ sessions.get("/", async (c) => {
   const dbType = databaseUrl ? detectDatabaseType(databaseUrl) : "sqlite"
   const schema = getSchema(dbType)
 
-  // Query all sessions for the current user that haven't expired
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const userSessions = await (db as any)
     .select({
@@ -128,7 +93,6 @@ sessions.get("/", async (c) => {
       )
     )
 
-  // Transform sessions for response
   const sessionsResponse: SessionResponse[] = userSessions.map(
     (session: {
       id: string
@@ -144,7 +108,6 @@ sessions.get("/", async (c) => {
         id: session.id,
         device,
         browser,
-        // Use updatedAt as lastActive since sessions are updated on activity
         lastActive: session.updatedAt.toISOString(),
         current: session.id === auth.session.id,
         ipAddress: session.ipAddress ?? undefined,
@@ -154,7 +117,6 @@ sessions.get("/", async (c) => {
     }
   )
 
-  // Sort with current session first, then by lastActive descending
   sessionsResponse.sort((a, b) => {
     if (a.current) return -1
     if (b.current) return 1
@@ -164,10 +126,6 @@ sessions.get("/", async (c) => {
   return c.json(sessionsResponse)
 })
 
-/**
- * DELETE /api/sessions/:sessionId
- * Revoke (invalidate) a specific session
- */
 sessions.delete(
   "/:sessionId",
   zValidator("param", sessionIdParamSchema),
@@ -175,7 +133,6 @@ sessions.delete(
     const auth = getAuthContext(c)
     const { sessionId } = c.req.valid("param")
 
-    // Prevent revoking the current session
     if (sessionId === auth.session.id) {
       throw ApiError.badRequest(
         "Cannot revoke your current session. Please use sign out instead.",
@@ -188,7 +145,6 @@ sessions.delete(
     const dbType = databaseUrl ? detectDatabaseType(databaseUrl) : "sqlite"
     const schema = getSchema(dbType)
 
-    // First verify the session exists and belongs to the current user
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const existingSession = await (db as any).query.session.findFirst({
       where: and(
@@ -201,7 +157,6 @@ sessions.delete(
       throw ApiError.notFound("Session not found", "SESSION_NOT_FOUND")
     }
 
-    // Delete the session
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (db as any)
       .delete(schema.session)

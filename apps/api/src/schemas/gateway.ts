@@ -1,14 +1,4 @@
-/**
- * Gateway validation schemas
- *
- * Zod schemas for gateway configuration and trace reporting.
- */
-
 import { z } from "zod"
-
-// =============================================================================
-// Schemas
-// =============================================================================
 
 export const getConfigQuerySchema = z.object({
   endpoint: z.string().min(1, "Endpoint name is required"),
@@ -30,10 +20,6 @@ export const postTracesSchema = z.object({
     })
   ),
 })
-
-// =============================================================================
-// Type Exports
-// =============================================================================
 
 export type GetConfigQuery = z.infer<typeof getConfigQuerySchema>
 export type PostTracesInput = z.infer<typeof postTracesSchema>

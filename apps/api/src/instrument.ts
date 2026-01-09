@@ -1,10 +1,3 @@
-/**
- * Sentry Instrumentation
- *
- * Must be imported before any other modules to ensure proper instrumentation.
- * Sentry is disabled in development environments.
- */
-
 import * as Sentry from "@sentry/bun"
 
 const isDevMode =

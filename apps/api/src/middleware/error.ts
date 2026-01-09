@@ -1,27 +1,13 @@
-/**
- * Error handling middleware
- *
- * Provides consistent error responses across the API.
- * - Client errors (4xx): Logged to console only
- * - Server errors (5xx): Logged to console AND sent to Sentry
- */
-
 import * as Sentry from "@sentry/bun"
 import type { Context, ErrorHandler } from "hono"
 import type { ContentfulStatusCode } from "hono/utils/http-status"
 
-/**
- * Standard error response structure
- */
 export interface ErrorResponse {
   error: string
   details?: string
   code?: string
 }
 
-/**
- * Custom API error class with status code
- */
 export class ApiError extends Error {
   constructor(
     public statusCode: ContentfulStatusCode,
@@ -57,19 +43,10 @@ export class ApiError extends Error {
   }
 }
 
-/**
- * Global error handler for the API
- *
- * - Client errors (4xx, validation): console.error only
- * - Server errors (5xx, unexpected): console.error + Sentry
- */
 export const errorHandler: ErrorHandler = (err: Error, c: Context) => {
-  // Always log to console for debugging
   console.error("API Error:", err)
 
-  // Handle known API errors
   if (err instanceof ApiError) {
-    // Only send server errors (5xx) to Sentry
     if (err.statusCode >= 500) {
       Sentry.captureException(err, {
         tags: {
@@ -92,7 +69,6 @@ export const errorHandler: ErrorHandler = (err: Error, c: Context) => {
     return c.json(response, err.statusCode)
   }
 
-  // Handle Zod validation errors (client error - no Sentry)
   if (err.name === "ZodError") {
     return c.json<ErrorResponse>(
       {
@@ -104,7 +80,6 @@ export const errorHandler: ErrorHandler = (err: Error, c: Context) => {
     )
   }
 
-  // Handle unknown errors - always send to Sentry (these are bugs)
   Sentry.captureException(err, {
     tags: {
       errorType: "unhandled",
@@ -119,7 +94,6 @@ export const errorHandler: ErrorHandler = (err: Error, c: Context) => {
     error: "Internal server error",
   }
 
-  // Include details in development mode
   if (process.env.NODE_ENV === "development") {
     response.details = err.message
   }
@@ -127,9 +101,6 @@ export const errorHandler: ErrorHandler = (err: Error, c: Context) => {
   return c.json(response, 500)
 }
 
-/**
- * Not found handler
- */
 export function notFoundHandler(c: Context) {
   return c.json<ErrorResponse>(
     {

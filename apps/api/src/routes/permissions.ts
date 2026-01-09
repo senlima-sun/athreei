@@ -1,15 +1,3 @@
-/**
- * Permissions routes
- *
- * Routes for managing tool access permissions per origin.
- * Controls which AI applications can access specific tools.
- *
- * Routes:
- * - GET /permissions - List all permissions for an organization
- * - PUT /permissions/:id - Update a permission's level
- * - DELETE /permissions/:id - Delete a permission
- */
-
 import { Hono } from "hono"
 import { zValidator } from "@hono/zod-validator"
 import { eq } from "drizzle-orm"
@@ -21,24 +9,12 @@ import { verifyOrganizationMembership } from "../services"
 
 const permissions = new Hono()
 
-// Apply auth middleware to all permission routes
 permissions.use("*", authMiddleware)
-
-// =============================================================================
-// Schemas
-// =============================================================================
 
 const updatePermissionSchema = z.object({
   allowed: z.enum(["allowed", "denied", "ask"]),
 })
 
-// =============================================================================
-// Helper Functions
-// =============================================================================
-
-/**
- * Verify user has access to the permission's organization
- */
 async function verifyPermissionAccess(
   db: DatabaseClient,
   permissionId: string,
@@ -54,7 +30,6 @@ async function verifyPermissionAccess(
     throw ApiError.notFound("Permission not found")
   }
 
-  // Check if user is a member of the organization that owns this permission
   const isMember = await verifyOrganizationMembership(
     db,
     userId,
@@ -67,14 +42,6 @@ async function verifyPermissionAccess(
   return perm
 }
 
-// =============================================================================
-// Routes
-// =============================================================================
-
-/**
- * GET /permissions
- * List all permissions for an organization
- */
 permissions.get("/", async (c) => {
   const db = getDb()
   const auth = getAuthContext(c)
@@ -84,7 +51,6 @@ permissions.get("/", async (c) => {
     throw ApiError.badRequest("organizationId query parameter is required")
   }
 
-  // Verify user has access to this organization
   const isMember = await verifyOrganizationMembership(
     db,
     auth.userId,
@@ -94,13 +60,11 @@ permissions.get("/", async (c) => {
     throw ApiError.forbidden("You do not have access to this organization")
   }
 
-  // Get all permissions for this organization
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const perms = await (db as any).query.permission.findMany({
     where: eq(permission.organizationId, organizationId),
   })
 
-  // Transform to match expected response format
   const data = perms.map((p: typeof permission.$inferSelect) => ({
     id: p.id,
     origin: p.origin,
@@ -118,10 +82,6 @@ permissions.get("/", async (c) => {
   })
 })
 
-/**
- * PUT /permissions/:id
- * Update a permission's level
- */
 permissions.put(
   "/:id",
   zValidator("json", updatePermissionSchema),
@@ -131,10 +91,8 @@ permissions.put(
     const permissionId = c.req.param("id")
     const body = c.req.valid("json")
 
-    // Verify access to permission
     const perm = await verifyPermissionAccess(db, permissionId, auth.userId)
 
-    // Update the permission
     const now = new Date()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (db as any)
@@ -145,7 +103,6 @@ permissions.put(
       })
       .where(eq(permission.id, permissionId))
 
-    // Return updated permission
     return c.json({
       id: perm.id,
       origin: perm.origin,
@@ -160,19 +117,13 @@ permissions.put(
   }
 )
 
-/**
- * DELETE /permissions/:id
- * Delete a permission
- */
 permissions.delete("/:id", async (c) => {
   const db = getDb()
   const auth = getAuthContext(c)
   const permissionId = c.req.param("id")
 
-  // Verify access to permission
   await verifyPermissionAccess(db, permissionId, auth.userId)
 
-  // Delete the permission
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (db as any).delete(permission).where(eq(permission.id, permissionId))
 
