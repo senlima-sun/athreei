@@ -10,55 +10,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 4. **Respect code style** - Prettier (no semicolons, double quotes) and ESLint rules
 5. **Atomic commits** - one logical change per commit, conventional commit format
 
-## Product Vision
-
-**athreei is the universal MCP gateway** - one connection for AI apps, unified access to all your MCP servers.
-
-### Core Value Proposition
-
-| Audience       | Value                                                                                               |
-| -------------- | --------------------------------------------------------------------------------------------------- |
-| **End Users**  | One MCP config for all AI apps. See what AI actually did. Stop guessing, start iterating with data. |
-| **Developers** | Build MCP servers once, work with any AI app. Not locked to OpenAI/Anthropic ecosystems.            |
-| **Businesses** | Observability, data retention, compliance. Better DX for MCP development and inspection.            |
-
-### The Problem We Solve
-
-Today, context ownership is controlled by AI app providers. If you use Claude Desktop, Anthropic controls your MCP connections. If you use ChatGPT, OpenAI controls it. Users can't:
-
-- See what tools AI actually called or what data was returned
-- Iterate on tool prompts with real data (forced to blind prompt engineering)
-- Use the same MCP setup across different AI apps
-
-### How athreei Works
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                        AI Apps                                   │
-│         Claude Desktop    ChatGPT    Cursor    (any MCP app)    │
-└───────────────────────────────┬─────────────────────────────────┘
-                                │ Single MCP connection
-                                ▼
-┌─────────────────────────────────────────────────────────────────┐
-│                      athreei Gateway                             │
-│   ┌───────────┐  ┌───────────┐  ┌───────────┐  ┌───────────┐   │
-│   │ Aggregate │  │  Routing  │  │  Logging  │  │ Auth/ACL  │   │
-│   └───────────┘  └───────────┘  └───────────┘  └───────────┘   │
-└───────────────────────────────┬─────────────────────────────────┘
-                                │ Fan-out to many
-              ┌─────────────────┼─────────────────┐
-              ▼                 ▼                 ▼
-        ┌──────────┐      ┌──────────┐      ┌──────────┐
-        │  Figma   │      │  Sentry  │      │  Linear  │  ...
-        │   MCP    │      │   MCP    │      │   MCP    │
-        └──────────┘      └──────────┘      └──────────┘
-```
-
-### Deployment Modes
-
-- **Local (self-hosted):** Gateway binary runs on user's machine. Free, privacy-first.
-- **Cloud (hosted):** Gateway runs on athreei infrastructure. Paid B2B with data retention, analytics, and better DX.
-
 ### Key User Journeys
 
 **1. MCP Aggregation (connect once, access many)**
@@ -79,29 +30,29 @@ User → Uses AI app → Opens athreei dashboard → Views trace timeline → Se
 User → Spots issue in trace → Edits tool description/prompt → Retries → Validates improvement
 ```
 
-### Business Model
-
-- **Local:** Free/self-hosted for developers and privacy-conscious users
-- **Cloud:** Paid B2B targeting businesses who need:
-  - Data retention and audit logs
-  - MCP development/inspection tools
-  - Better DX for building and testing MCPs
-
 ## Project Overview
 
-athreei is an MCP aggregator platform available both locally and in the cloud. The browser extension (exposing browser capabilities via Native Messaging) is one example of an MCP server that can connect to athreei - not the core product.
+athreei is an MCP aggregator platform available both locally and in the cloud. Users connect their AI apps (Claude Desktop, Cursor, ChatGPT) to a single athreei gateway, which then fans out to multiple MCP servers. This provides unified access, observability, and tool management.
 
 **Architecture flow:**
 
 ```
-AI Apps (Claude, ChatGPT, Cursor, etc.)
+AI Apps (Claude Desktop, ChatGPT, Cursor)
             │
-            ▼ (single connection)
-    athreei Gateway (local or cloud)
+            ▼ (single MCP connection)
+    athreei Gateway (local binary or cloud service)
+            │
+            ├── Aggregates tools from all servers
+            ├── Namespaces tools (github__create_issue)
+            ├── Collects traces for observability
             │
             ▼ (fan-out)
-    Multiple MCP Servers (Figma, Sentry, Linear, Browser, custom, etc.)
+    Multiple MCP Servers (Figma, Sentry, Linear, custom, etc.)
 ```
+
+**Two CLIs:**
+- `a3i` (packages/cli) - Local MCP server management, encrypted token storage
+- `athreei` (apps/cli) - Cloud platform CLI for auth, sync, organizations
 
 ## Tech Stack Documentation
 
