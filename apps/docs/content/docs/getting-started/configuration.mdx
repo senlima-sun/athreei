@@ -50,14 +50,14 @@ For local/self-hosted usage without Platform sync, use `--local` flag with a dif
 
 Local mode server options:
 
-| Option      | Type     | Required | Description                                        |
-| ----------- | -------- | -------- | -------------------------------------------------- |
-| `name`      | string   | Yes      | Unique server name (used for tool namespacing)     |
+| Option      | Type     | Required | Description                                                    |
+| ----------- | -------- | -------- | -------------------------------------------------------------- |
+| `name`      | string   | Yes      | Unique server name (used for tool namespacing)                 |
 | `transport` | string   | No       | Transport type: `stdio` (default), `sse`, or `streamable-http` |
-| `command`   | string   | stdio    | Executable to run (required for stdio transport)   |
-| `args`      | string[] | No       | Command line arguments                             |
-| `url`       | string   | sse/http | Server URL (required for sse/streamable-http)      |
-| `headers`   | object   | No       | HTTP headers for sse/streamable-http transport     |
+| `command`   | string   | stdio    | Executable to run (required for stdio transport)               |
+| `args`      | string[] | No       | Command line arguments                                         |
+| `url`       | string   | sse/http | Server URL (required for sse/streamable-http)                  |
+| `headers`   | object   | No       | HTTP headers for sse/streamable-http transport                 |
 
 ### Platform Mode Configuration
 

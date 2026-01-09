@@ -26,13 +26,13 @@ The dev server runs on http://localhost:3003
 
 ## Available Commands
 
-| Command | Description |
-|---------|-------------|
-| `bun run dev` | Start dev server with Turbopack on port 3003 |
-| `bun run build` | Build for production |
-| `bun run start` | Run production build on port 3003 |
-| `bun run lint` | Run Next.js ESLint |
-| `bun run typecheck` | TypeScript type checking |
+| Command             | Description                                  |
+| ------------------- | -------------------------------------------- |
+| `bun run dev`       | Start dev server with Turbopack on port 3003 |
+| `bun run build`     | Build for production                         |
+| `bun run start`     | Run production build on port 3003            |
+| `bun run lint`      | Run Next.js ESLint                           |
+| `bun run typecheck` | TypeScript type checking                     |
 
 ## Project Structure
 
@@ -60,16 +60,16 @@ apps/web/
 
 The homepage (`src/app/page.tsx`) includes these sections:
 
-| Section | ID | Description |
-|---------|-----|-------------|
-| Hero | - | Main headline, tagline, CTA buttons |
-| Features | `#features` | 6 feature cards (Privacy, MCP Aggregation, Cross-Platform, etc.) |
-| How It Works | `#how-it-works` | Architecture diagram + 3-step setup |
-| What is MCP? | `#mcp` | MCP protocol explanation + config example |
-| Security | `#security` | 4 security feature highlights |
-| FAQ | `#faq` | Accordion with 6 common questions |
-| CTA | - | Final call-to-action |
-| Footer | - | Links to Features, FAQ, Docs, GitHub, Legal |
+| Section      | ID              | Description                                                      |
+| ------------ | --------------- | ---------------------------------------------------------------- |
+| Hero         | -               | Main headline, tagline, CTA buttons                              |
+| Features     | `#features`     | 6 feature cards (Privacy, MCP Aggregation, Cross-Platform, etc.) |
+| How It Works | `#how-it-works` | Architecture diagram + 3-step setup                              |
+| What is MCP? | `#mcp`          | MCP protocol explanation + config example                        |
+| Security     | `#security`     | 4 security feature highlights                                    |
+| FAQ          | `#faq`          | Accordion with 6 common questions                                |
+| CTA          | -               | Final call-to-action                                             |
+| Footer       | -               | Links to Features, FAQ, Docs, GitHub, Legal                      |
 
 ## Content Editing
 
@@ -80,7 +80,7 @@ Edit the `features` array in `src/app/page.tsx`:
 ```typescript
 const features = [
   {
-    icon: Lock,           // Lucide icon component
+    icon: Lock, // Lucide icon component
     title: "Privacy First",
     description: "All data stays on your machine...",
   },

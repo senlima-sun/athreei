@@ -29,13 +29,13 @@ athreei [command] [options]
 
 ### Global Options
 
-| Option | Description |
-|--------|-------------|
+| Option                 | Description                                 |
+| ---------------------- | ------------------------------------------- |
 | `-p, --profile <name>` | Use a specific profile (default: "default") |
-| `-v, --verbose` | Enable verbose output for debugging |
-| `-q, --quiet` | Suppress non-essential output |
-| `-V, --version` | Show version |
-| `-h, --help` | Show help |
+| `-v, --verbose`        | Enable verbose output for debugging         |
+| `-q, --quiet`          | Suppress non-essential output               |
+| `-V, --version`        | Show version                                |
+| `-h, --help`           | Show help                                   |
 
 ## Available Commands
 
@@ -313,11 +313,13 @@ src/
 **Interactive TUI Components**: Each command renders a React Ink component that handles user input and displays results in a terminal-friendly format.
 
 **State Machine Pattern**: Complex flows (like create/delete operations) use explicit state phases:
+
 ```typescript
 type Phase = "loading" | "confirm" | "executing" | "success" | "error"
 ```
 
 **JSON Output Mode**: Most list/status commands support `--json` for scripting:
+
 ```bash
 athreei mcp list --json | jq '.servers[].name'
 ```

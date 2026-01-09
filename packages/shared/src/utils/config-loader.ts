@@ -147,11 +147,7 @@ export function saveConfigSync(
   // Validate before saving
   const result = athreeiConfigSchema.safeParse(config)
   if (!result.success) {
-    throw new ConfigError(
-      "Invalid configuration",
-      path,
-      result.error
-    )
+    throw new ConfigError("Invalid configuration", path, result.error)
   }
 
   try {
@@ -285,10 +281,7 @@ export function loadLegacyConfigSync(): LocalConfig {
   const path = getLegacyConfigPath()
 
   if (!existsSync(path)) {
-    throw new ConfigError(
-      `Legacy config file not found: ${path}`,
-      path
-    )
+    throw new ConfigError(`Legacy config file not found: ${path}`, path)
   }
 
   let content: string

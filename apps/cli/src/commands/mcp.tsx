@@ -85,7 +85,9 @@ export function McpList(props: {
           // Apply filters
           if (props.search) {
             const query = props.search.toLowerCase()
-            servers = servers.filter((s) => s.name.toLowerCase().includes(query))
+            servers = servers.filter((s) =>
+              s.name.toLowerCase().includes(query)
+            )
           }
           if (props.transport) {
             servers = servers.filter(

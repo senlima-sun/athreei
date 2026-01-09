@@ -158,9 +158,7 @@ export function isCloudConfig(config: AthreeiConfig): config is CloudConfig {
  * @param config - Configuration to analyze
  * @returns "local" or "cloud"
  */
-export function detectModeFromConfig(
-  config: AthreeiConfig
-): "local" | "cloud" {
+export function detectModeFromConfig(config: AthreeiConfig): "local" | "cloud" {
   if (isCloudConfig(config)) {
     return "cloud"
   }

@@ -35,71 +35,71 @@ import "@athreei/ui/styles"
 
 ### Form Components
 
-| Component | Description |
-|-----------|-------------|
-| `Button` | Primary button with variants: default, primary, destructive, danger, outline, secondary, ghost, link |
-| `Input` | Text input field |
-| `Label` | Form label |
-| `Select` | Dropdown select with `SelectTrigger`, `SelectContent`, `SelectItem`, etc. |
-| `Switch` | Toggle switch |
-| `SearchInput` | Search input with debounce and clear button |
+| Component     | Description                                                                                          |
+| ------------- | ---------------------------------------------------------------------------------------------------- |
+| `Button`      | Primary button with variants: default, primary, destructive, danger, outline, secondary, ghost, link |
+| `Input`       | Text input field                                                                                     |
+| `Label`       | Form label                                                                                           |
+| `Select`      | Dropdown select with `SelectTrigger`, `SelectContent`, `SelectItem`, etc.                            |
+| `Switch`      | Toggle switch                                                                                        |
+| `SearchInput` | Search input with debounce and clear button                                                          |
 
 ### Layout Components
 
-| Component | Description |
-|-----------|-------------|
-| `Card` | Container with `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter`, `CardAction` |
-| `LegacyCard` | Simplified card with title and actions props |
-| `Separator` | Visual divider |
-| `Tabs` | Tab navigation with `TabsList`, `TabsTrigger`, `TabsContent` |
-| `LegacyTabs` | Simplified tabs with array-based API |
+| Component    | Description                                                                                            |
+| ------------ | ------------------------------------------------------------------------------------------------------ |
+| `Card`       | Container with `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter`, `CardAction` |
+| `LegacyCard` | Simplified card with title and actions props                                                           |
+| `Separator`  | Visual divider                                                                                         |
+| `Tabs`       | Tab navigation with `TabsList`, `TabsTrigger`, `TabsContent`                                           |
+| `LegacyTabs` | Simplified tabs with array-based API                                                                   |
 
 ### Feedback Components
 
-| Component | Description |
-|-----------|-------------|
-| `Badge` | Status badge with variants: default, secondary, destructive, outline |
-| `Spinner` | Loading spinner (sm, md, lg sizes) |
-| `LoadingState` | Centered loading spinner with message |
-| `Toast` | Toast notification |
-| `Toaster` | Toast container |
-| `StatusIndicator` | Status dot (online, offline, warning, error) |
-| `PermissionBadge` | Permission level badge (allowed, denied, ask) |
-| `EmptyState` | Empty state placeholder with icon, title, description, action |
+| Component         | Description                                                          |
+| ----------------- | -------------------------------------------------------------------- |
+| `Badge`           | Status badge with variants: default, secondary, destructive, outline |
+| `Spinner`         | Loading spinner (sm, md, lg sizes)                                   |
+| `LoadingState`    | Centered loading spinner with message                                |
+| `Toast`           | Toast notification                                                   |
+| `Toaster`         | Toast container                                                      |
+| `StatusIndicator` | Status dot (online, offline, warning, error)                         |
+| `PermissionBadge` | Permission level badge (allowed, denied, ask)                        |
+| `EmptyState`      | Empty state placeholder with icon, title, description, action        |
 
 ### Data Display
 
-| Component | Description |
-|-----------|-------------|
-| `Table` | HTML table with `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`, `TableFooter`, `TableCaption` |
-| `DataTable` | Feature-rich table with sorting, pagination (powered by TanStack Table) |
+| Component   | Description                                                                                                     |
+| ----------- | --------------------------------------------------------------------------------------------------------------- |
+| `Table`     | HTML table with `TableHeader`, `TableBody`, `TableRow`, `TableHead`, `TableCell`, `TableFooter`, `TableCaption` |
+| `DataTable` | Feature-rich table with sorting, pagination (powered by TanStack Table)                                         |
 
 ### Overlay Components
 
-| Component | Description |
-|-----------|-------------|
-| `Dialog` | Modal dialog with `DialogTrigger`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription`, `DialogFooter`, `DialogClose` |
-| `Modal` | Simplified modal wrapper with isOpen/onClose API |
+| Component | Description                                                                                                                           |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `Dialog`  | Modal dialog with `DialogTrigger`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription`, `DialogFooter`, `DialogClose` |
+| `Modal`   | Simplified modal wrapper with isOpen/onClose API                                                                                      |
 
 ### Icons (Empty State)
 
-| Icon | Usage |
-|------|-------|
-| `EmptyIcon` | Generic empty state |
-| `NoDataIcon` | No data available |
-| `SearchIcon` | No search results |
-| `LockIcon` | Access denied |
-| `ActivityIcon` | No activity |
+| Icon           | Usage               |
+| -------------- | ------------------- |
+| `EmptyIcon`    | Generic empty state |
+| `NoDataIcon`   | No data available   |
+| `SearchIcon`   | No search results   |
+| `LockIcon`     | Access denied       |
+| `ActivityIcon` | No activity         |
 
 ### Utilities
 
-| Export | Description |
-|--------|-------------|
-| `cn` | Class name merge utility (clsx + tailwind-merge) |
-| `useToast` | Toast hook for managing toasts |
-| `toast` | Imperative toast function with `toast.success()`, `toast.error()`, `toast.warning()`, `toast.info()` |
-| `buttonVariants` | CVA variants for Button |
-| `badgeVariants` | CVA variants for Badge |
+| Export           | Description                                                                                          |
+| ---------------- | ---------------------------------------------------------------------------------------------------- |
+| `cn`             | Class name merge utility (clsx + tailwind-merge)                                                     |
+| `useToast`       | Toast hook for managing toasts                                                                       |
+| `toast`          | Imperative toast function with `toast.success()`, `toast.error()`, `toast.warning()`, `toast.info()` |
+| `buttonVariants` | CVA variants for Button                                                                              |
+| `badgeVariants`  | CVA variants for Badge                                                                               |
 
 ## Usage Examples
 
@@ -144,17 +144,17 @@ import {
   CardAction,
 } from "@athreei/ui"
 
-<Card>
+;<Card>
   <CardHeader>
     <CardTitle>Settings</CardTitle>
     <CardDescription>Manage your account settings</CardDescription>
     <CardAction>
-      <Button variant="outline" size="sm">Edit</Button>
+      <Button variant="outline" size="sm">
+        Edit
+      </Button>
     </CardAction>
   </CardHeader>
-  <CardContent>
-    {/* Content */}
-  </CardContent>
+  <CardContent>{/* Content */}</CardContent>
   <CardFooter>
     <Button>Save Changes</Button>
   </CardFooter>
@@ -163,7 +163,7 @@ import {
 // Or use LegacyCard for simpler cases
 import { LegacyCard } from "@athreei/ui"
 
-<LegacyCard title="Settings" actions={<Button size="sm">Edit</Button>}>
+;<LegacyCard title="Settings" actions={<Button size="sm">Edit</Button>}>
   {/* Content */}
 </LegacyCard>
 ```
@@ -181,16 +181,14 @@ import {
   DialogFooter,
 } from "@athreei/ui"
 
-<Dialog>
+;<Dialog>
   <DialogTrigger asChild>
     <Button>Open Dialog</Button>
   </DialogTrigger>
   <DialogContent>
     <DialogHeader>
       <DialogTitle>Confirm Action</DialogTitle>
-      <DialogDescription>
-        Are you sure you want to proceed?
-      </DialogDescription>
+      <DialogDescription>Are you sure you want to proceed?</DialogDescription>
     </DialogHeader>
     <DialogFooter>
       <Button variant="outline">Cancel</Button>
@@ -202,13 +200,15 @@ import {
 // Or use Modal for controlled dialogs
 import { Modal, Button } from "@athreei/ui"
 
-<Modal
+;<Modal
   isOpen={isOpen}
   onClose={() => setIsOpen(false)}
   title="Confirm Action"
   footer={
     <>
-      <Button variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
+      <Button variant="outline" onClick={() => setIsOpen(false)}>
+        Cancel
+      </Button>
       <Button onClick={handleConfirm}>Confirm</Button>
     </>
   }
@@ -283,11 +283,7 @@ function handleError() {
 function Component() {
   const { toast } = useToast()
 
-  return (
-    <Button onClick={() => toast({ title: "Hello" })}>
-      Show Toast
-    </Button>
-  )
+  return <Button onClick={() => toast({ title: "Hello" })}>Show Toast</Button>
 }
 ```
 
@@ -307,7 +303,7 @@ import { StatusIndicator } from "@athreei/ui"
 ```tsx
 import { EmptyState, SearchIcon } from "@athreei/ui"
 
-<EmptyState
+;<EmptyState
   icon={<SearchIcon />}
   title="No results found"
   description="Try adjusting your search or filter criteria"
@@ -323,7 +319,7 @@ import { EmptyState, SearchIcon } from "@athreei/ui"
 ```tsx
 import { SearchInput } from "@athreei/ui"
 
-<SearchInput
+;<SearchInput
   value={search}
   onChange={setSearch}
   placeholder="Search users..."
@@ -337,30 +333,30 @@ The library uses CSS custom properties with OKLCH color space for theming. Color
 
 ### Color Tokens
 
-| Token | Usage |
-|-------|-------|
-| `--background` | Page background |
-| `--foreground` | Primary text |
-| `--primary` | Primary actions, links |
-| `--secondary` | Secondary elements |
-| `--muted` | Muted backgrounds |
-| `--muted-foreground` | Secondary text |
-| `--accent` | Hover states |
-| `--destructive` | Destructive actions |
-| `--success` | Success states |
-| `--warning` | Warning states |
-| `--error` | Error states |
-| `--info` | Informational states |
-| `--border` | Borders |
-| `--input` | Input backgrounds |
-| `--ring` | Focus rings |
+| Token                | Usage                  |
+| -------------------- | ---------------------- |
+| `--background`       | Page background        |
+| `--foreground`       | Primary text           |
+| `--primary`          | Primary actions, links |
+| `--secondary`        | Secondary elements     |
+| `--muted`            | Muted backgrounds      |
+| `--muted-foreground` | Secondary text         |
+| `--accent`           | Hover states           |
+| `--destructive`      | Destructive actions    |
+| `--success`          | Success states         |
+| `--warning`          | Warning states         |
+| `--error`            | Error states           |
+| `--info`             | Informational states   |
+| `--border`           | Borders                |
+| `--input`            | Input backgrounds      |
+| `--ring`             | Focus rings            |
 
 ### Dark Mode
 
 Add the `dark` class to your root element to enable dark mode:
 
 ```html
-<html class="dark">
+<html class="dark"></html>
 ```
 
 ### Customizing Colors
@@ -403,9 +399,7 @@ export interface MyComponentProps {
 }
 
 export function MyComponent({ className, ...props }: MyComponentProps) {
-  return (
-    <div className={cn("base-classes", className)} {...props} />
-  )
+  return <div className={cn("base-classes", className)} {...props} />
 }
 ```
 

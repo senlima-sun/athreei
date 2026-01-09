@@ -153,7 +153,9 @@ export function isHttpServer(
   server: ServerConfig
 ): server is ServerConfig & { url: string } {
   const transport = server.transport ?? "stdio"
-  return (transport === "sse" || transport === "streamable-http") && !!server.url
+  return (
+    (transport === "sse" || transport === "streamable-http") && !!server.url
+  )
 }
 
 // ============================================================================

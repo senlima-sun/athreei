@@ -91,13 +91,18 @@ The following helper functions are available in the source but not currently exp
 - `setMockResponse(tool, response)` - Set mock response for a tool
 - `getMockResponse(tool)` - Get mock response for a tool
 - `clearMockResponses()` - Clear all mock responses
-</Callout>
+  </Callout>
 
 ## Testing Example
 
 ```typescript
 import { describe, it, expect, beforeEach } from "vitest"
-import { enableMockMode, athreei, dispatchAiiiEvent, AIII_EVENT_NAMES } from "@athreei/site-sdk"
+import {
+  enableMockMode,
+  athreei,
+  dispatchAiiiEvent,
+  AIII_EVENT_NAMES,
+} from "@athreei/site-sdk"
 
 describe("ProductSearch integration", () => {
   beforeEach(() => {

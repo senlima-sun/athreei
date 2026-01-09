@@ -40,8 +40,8 @@ cp .env.example .env.local
 
 Configure the following variable:
 
-| Variable | Description | Default |
-|----------|-------------|---------|
+| Variable              | Description    | Default                 |
+| --------------------- | -------------- | ----------------------- |
 | `NEXT_PUBLIC_API_URL` | API server URL | `http://localhost:3001` |
 
 ### Development
@@ -80,44 +80,44 @@ Set `ATHREEI_MODE=local` and `NEXT_PUBLIC_ATHREEI_MODE=local` for local mode bui
 
 ### Authentication (`/`)
 
-| Route | Description |
-|-------|-------------|
-| `/login` | Sign in with email/password or OAuth |
-| `/register` | Create new account |
-| `/forgot-password` | Request password reset |
-| `/reset-password` | Reset password with token |
-| `/verify-email` | Email verification |
-| `/onboarding` | New user onboarding wizard |
-| `/auth/cli` | CLI authentication flow |
+| Route              | Description                          |
+| ------------------ | ------------------------------------ |
+| `/login`           | Sign in with email/password or OAuth |
+| `/register`        | Create new account                   |
+| `/forgot-password` | Request password reset               |
+| `/reset-password`  | Reset password with token            |
+| `/verify-email`    | Email verification                   |
+| `/onboarding`      | New user onboarding wizard           |
+| `/auth/cli`        | CLI authentication flow              |
 
 ### Dashboard (`/dashboard`)
 
-| Route | Description |
-|-------|-------------|
-| `/dashboard` | Home with stats and quick actions |
-| `/dashboard/traces` | View tool call traces and activity |
-| `/dashboard/traces/[id]` | Trace detail view |
-| `/dashboard/mcp-servers` | Manage MCP server configurations |
-| `/dashboard/mcp-servers/new` | Create new MCP server |
-| `/dashboard/mcp-servers/[id]` | Edit MCP server |
-| `/dashboard/endpoints` | Manage MCP endpoints and API keys |
-| `/dashboard/endpoints/new` | Create new endpoint |
-| `/dashboard/endpoints/[id]` | Endpoint details |
-| `/dashboard/namespaces` | Organize servers into namespaces |
-| `/dashboard/namespaces/new` | Create namespace |
-| `/dashboard/namespaces/[id]` | Namespace details |
-| `/dashboard/registry` | Browse MCP server registry |
-| `/dashboard/registry/[slug]` | Registry item details |
-| `/dashboard/organizations` | Manage organizations |
-| `/dashboard/organizations/new` | Create organization |
-| `/dashboard/organizations/[id]` | Organization details |
-| `/dashboard/organizations/[id]/members` | Team member management |
-| `/dashboard/servers` | View active servers |
-| `/dashboard/logs` | Server logs |
-| `/dashboard/permissions` | Permission management |
-| `/dashboard/sessions` | Active sessions |
-| `/dashboard/settings` | User settings |
-| `/dashboard/settings/profile` | Profile settings |
+| Route                                   | Description                        |
+| --------------------------------------- | ---------------------------------- |
+| `/dashboard`                            | Home with stats and quick actions  |
+| `/dashboard/traces`                     | View tool call traces and activity |
+| `/dashboard/traces/[id]`                | Trace detail view                  |
+| `/dashboard/mcp-servers`                | Manage MCP server configurations   |
+| `/dashboard/mcp-servers/new`            | Create new MCP server              |
+| `/dashboard/mcp-servers/[id]`           | Edit MCP server                    |
+| `/dashboard/endpoints`                  | Manage MCP endpoints and API keys  |
+| `/dashboard/endpoints/new`              | Create new endpoint                |
+| `/dashboard/endpoints/[id]`             | Endpoint details                   |
+| `/dashboard/namespaces`                 | Organize servers into namespaces   |
+| `/dashboard/namespaces/new`             | Create namespace                   |
+| `/dashboard/namespaces/[id]`            | Namespace details                  |
+| `/dashboard/registry`                   | Browse MCP server registry         |
+| `/dashboard/registry/[slug]`            | Registry item details              |
+| `/dashboard/organizations`              | Manage organizations               |
+| `/dashboard/organizations/new`          | Create organization                |
+| `/dashboard/organizations/[id]`         | Organization details               |
+| `/dashboard/organizations/[id]/members` | Team member management             |
+| `/dashboard/servers`                    | View active servers                |
+| `/dashboard/logs`                       | Server logs                        |
+| `/dashboard/permissions`                | Permission management              |
+| `/dashboard/sessions`                   | Active sessions                    |
+| `/dashboard/settings`                   | User settings                      |
+| `/dashboard/settings/profile`           | Profile settings                   |
 
 ## Development Commands
 
@@ -209,13 +209,13 @@ const { data: activeOrg, isPending } = useActiveOrganizationSafe()
 
 ## Related Packages
 
-| Package | Description |
-|---------|-------------|
-| `@athreei/auth` | Authentication configuration |
-| `@athreei/db` | Database client and schemas |
-| `apps/api` | Backend API server |
-| `packages/gateway` | Local MCP gateway |
-| `packages/gateway-cloud` | Cloud MCP gateway |
+| Package                  | Description                  |
+| ------------------------ | ---------------------------- |
+| `@athreei/auth`          | Authentication configuration |
+| `@athreei/db`            | Database client and schemas  |
+| `apps/api`               | Backend API server           |
+| `packages/gateway`       | Local MCP gateway            |
+| `packages/gateway-cloud` | Cloud MCP gateway            |
 
 ## Testing
 

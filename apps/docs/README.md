@@ -85,11 +85,11 @@ Edit the `meta.json` in the parent directory to include your new page:
 
 ## Project Structure
 
-| Route                     | Description                   |
-| ------------------------- | ----------------------------- |
-| `app/(home)`              | Landing page and other pages  |
-| `app/docs`                | Documentation layout & pages  |
-| `app/api/search/route.ts` | Search API route handler      |
+| Route                     | Description                  |
+| ------------------------- | ---------------------------- |
+| `app/(home)`              | Landing page and other pages |
+| `app/docs`                | Documentation layout & pages |
+| `app/api/search/route.ts` | Search API route handler     |
 
 ## Resources
 
