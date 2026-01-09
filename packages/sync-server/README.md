@@ -66,6 +66,14 @@ bun run dev
 - `GET /sync/settings` - Get sync preferences
 - `PUT /sync/settings` - Update sync preferences
 
+### Traces
+
+- `POST /traces` - Upload traces (batch)
+- `GET /traces` - List traces (paginated with filters)
+- `GET /traces/analytics` - Get trace analytics summary
+- `GET /traces/:uuid` - Get single trace
+- `DELETE /traces` - Delete traces (bulk)
+
 ## Database Schema
 
 The server uses PostgreSQL with the following tables:
@@ -75,6 +83,7 @@ The server uses PostgreSQL with the following tables:
 - `sync_items` - E2E encrypted data items
 - `sync_state` - Sync cursor state per device
 - `sync_settings` - Sync preferences per account
+- `traces` - E2E encrypted trace data for observability
 
 ## Conflict Resolution
 
@@ -106,11 +115,30 @@ bun run dev
 # Build for production
 bun run build
 
+# Run compiled version
+bun run start
+
 # Run tests
 bun run test
 
 # Run tests in watch mode
 bun run test:watch
+
+# Type check
+bun run typecheck
+```
+
+## Database Commands
+
+```bash
+# Run migrations (custom script)
+bun run migrate
+
+# Drizzle Kit commands
+bun run db:generate   # Generate migrations from schema
+bun run db:migrate    # Run Drizzle migrations
+bun run db:push       # Push schema changes directly
+bun run db:studio     # Open Drizzle Studio
 ```
 
 ## Environment Variables

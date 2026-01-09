@@ -94,6 +94,12 @@ Both PostgreSQL and SQLite schemas include identical table structures:
 - `apiKeys` - API key management
 - `traces` - Request/response traces
 
+### Additional Tables
+
+- `cliTokens` - CLI authentication tokens
+- `auditLog` - Audit log entries
+- `permissions` - Permission definitions
+
 ## Commands
 
 ```bash
@@ -113,7 +119,7 @@ bun run studio
 bun run seed
 
 # Run tests
-bun test
+bun run test
 
 # Type check
 bun run typecheck
@@ -153,17 +159,22 @@ src/
 │   ├── pg/            # PostgreSQL schemas
 │   │   ├── index.ts
 │   │   ├── auth.ts
+│   │   ├── audit-log.ts
+│   │   ├── cli-tokens.ts
 │   │   ├── mcp-servers.ts
 │   │   ├── namespaces.ts
 │   │   ├── endpoints.ts
+│   │   ├── permissions.ts
 │   │   └── traces.ts
-│   └── sqlite/        # SQLite schemas (identical structure)
+│   ├── sqlite/        # SQLite schemas (identical structure)
+│   └── _deprecated/   # Deprecated schemas
 ├── seeds/
 │   ├── index.ts
 │   ├── run.ts         # Seed runner
 │   └── mcp-registry.ts
 └── __tests__/
-    └── client.test.ts
+    ├── client.test.ts
+    └── schema/        # Schema tests
 ```
 
 ## API Reference
@@ -221,10 +232,10 @@ Returns the appropriate schema for the given database type.
 
 ```bash
 # Run all tests
-bun test
+bun run test
 
 # Watch mode
-bun test:watch
+bun run test:watch
 ```
 
 ## Dependencies

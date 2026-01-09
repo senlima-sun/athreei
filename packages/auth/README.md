@@ -63,14 +63,15 @@ import { createAuth, createAuthConfig } from "@athreei/auth/server"
 import type { AuthConfigOptions } from "@athreei/auth/config"
 
 const options: AuthConfigOptions = {
-  baseUrl: "https://api.example.com",
+  provider: "pg", // or "sqlite" (default)
+  baseURL: "https://api.example.com",
   trustedOrigins: ["https://app.example.com"],
-  emailCallbacks: {
-    sendVerificationEmail: async ({ user, url }) => {
+  email: {
+    sendVerificationEmail: async ({ user, url, token }) => {
       // Custom email sending logic
     },
-    sendPasswordResetEmail: async ({ user, url }) => {
-      // Custom email sending logic
+    sendResetPassword: async ({ user, url, token }) => {
+      // Custom password reset email logic
     },
   },
 }
@@ -105,18 +106,24 @@ Creates a client-side auth client.
 
 ```typescript
 type Auth = ReturnType<typeof betterAuth>
+type AuthClient = ReturnType<typeof createAuthClient>
+type DatabaseProvider = "sqlite" | "pg" | "mysql"
 
-interface AuthConfigOptions {
-  baseUrl?: string
-  trustedOrigins?: string[]
-  emailCallbacks?: EmailCallbacks
+interface AuthConfigOptions extends Partial<BetterAuthOptions> {
+  provider?: DatabaseProvider // Default: "sqlite"
+  email?: EmailCallbacks
 }
 
 interface EmailCallbacks {
-  sendVerificationEmail?: (params: { user: User; url: string }) => Promise<void>
-  sendPasswordResetEmail?: (params: {
-    user: User
+  sendVerificationEmail?: (params: {
+    user: { email: string; name: string }
     url: string
+    token: string
+  }) => Promise<void>
+  sendResetPassword?: (params: {
+    user: { email: string; name: string }
+    url: string
+    token: string
   }) => Promise<void>
 }
 ```
@@ -139,10 +146,10 @@ src/
 
 ```bash
 # Run tests
-bun test
+bun run test
 
 # Watch mode
-bun test:watch
+bun run test:watch
 
 # Type check
 bun run typecheck

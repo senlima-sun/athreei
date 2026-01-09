@@ -1,45 +1,98 @@
-# docs
+# athreei Documentation
 
-This is a Next.js application generated with
-[Create Fumadocs](https://github.com/fuma-nama/fumadocs).
+Documentation site for athreei built with [Fumadocs](https://fumadocs.dev) and Next.js 16.
 
-Run development server:
+## Tech Stack
+
+- **Framework**: Next.js 16 with Turbopack
+- **Docs Engine**: Fumadocs (core, ui, mdx)
+- **Styling**: Tailwind CSS v4
+- **Content**: MDX with frontmatter validation
+
+## Development
 
 ```bash
-npm run dev
-# or
-pnpm dev
-# or
-yarn dev
+# Run development server
+bun run dev
+
+# Build for production
+bun run build
+
+# Type check
+bun run types:check
 ```
 
-Open http://localhost:3000 with your browser to see the result.
+Open http://localhost:3000 to view the docs.
 
-## Explore
+## Content Structure
 
-In the project, you can see:
+Documentation lives in `content/docs/`:
 
-- `lib/source.ts`: Code for content source adapter, [`loader()`](https://fumadocs.dev/docs/headless/source-api) provides the interface to access your content.
-- `lib/layout.shared.tsx`: Shared options for layouts, optional but preferred to keep.
+```
+content/docs/
+├── index.mdx                    # Docs homepage
+├── meta.json                    # Root navigation
+├── getting-started/             # Installation, configuration
+├── concepts/                    # Local vs cloud, architecture
+├── gateway/                     # Local and cloud gateway docs
+├── browser-tools/               # Browser extension tools
+├── sdk/                         # SDK API reference
+├── events/                      # Custom event system
+├── audit-logs/                  # Traces and dashboard
+├── development/                 # Contributing, setup
+├── registry/                    # Tool registry
+└── tools/                       # Available tools
+```
 
-| Route                     | Description                                            |
-| ------------------------- | ------------------------------------------------------ |
-| `app/(home)`              | The route group for your landing page and other pages. |
-| `app/docs`                | The documentation layout and pages.                    |
-| `app/api/search/route.ts` | The Route Handler for search.                          |
+## Adding New Documentation
 
-### Fumadocs MDX
+### 1. Create an MDX file
 
-A `source.config.ts` config file has been included, you can customise different options like frontmatter schema.
+```bash
+# Example: Add a new guide
+touch content/docs/guides/my-guide.mdx
+```
 
-Read the [Introduction](https://fumadocs.dev/docs/mdx) for further details.
+### 2. Add frontmatter
 
-## Learn More
+```mdx
+---
+title: My Guide
+description: A helpful guide about something
+---
 
-To learn more about Next.js and Fumadocs, take a look at the following
-resources:
+# My Guide
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js
-  features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-- [Fumadocs](https://fumadocs.dev) - learn about Fumadocs
+Content goes here...
+```
+
+### 3. Update navigation
+
+Edit the `meta.json` in the parent directory to include your new page:
+
+```json
+{
+  "title": "Guides",
+  "pages": ["my-guide", "..."]
+}
+```
+
+## Configuration
+
+- `source.config.ts` - Fumadocs MDX configuration, frontmatter schema
+- `lib/source.ts` - Content source adapter
+- `lib/layout.shared.tsx` - Shared layout options
+
+## Project Structure
+
+| Route                     | Description                   |
+| ------------------------- | ----------------------------- |
+| `app/(home)`              | Landing page and other pages  |
+| `app/docs`                | Documentation layout & pages  |
+| `app/api/search/route.ts` | Search API route handler      |
+
+## Resources
+
+- [Fumadocs Documentation](https://fumadocs.dev)
+- [Fumadocs MDX Guide](https://fumadocs.dev/docs/mdx)
+- [Next.js Documentation](https://nextjs.org/docs)

@@ -56,33 +56,45 @@ bun run dev -- --debug
 Usage: athreei-gateway [options]
 
 Options:
-  -c, --config <path>   Config file path (default: ~/.athreei/config.json)
-  -t, --transport <type> Transport type: stdio (default) or sse
-  -p, --port <port>     Port for SSE transport (default: 3000)
-  -d, --debug           Enable debug logging
-  -h, --help            Show help message
-  -v, --version         Show version
+  -c, --config <path>     Config file path (default: ~/.athreei/config.json)
+  -t, --transport <type>  Transport type: stdio (default) or sse
+  -p, --port <port>       Port for SSE transport (default: 3000)
+  --api-port <port>       Port for HTTP API (default: 3001, local/mock mode only)
+  -l, --local             Run in local mode (no Platform sync, read servers from config)
+  -m, --mock              Run in mock mode (no servers, for testing)
+  -d, --debug             Enable debug logging
+  -h, --help              Show help message
+  -v, --version           Show version
 ```
 
 ### Configuration File
 
-Create a config file at `~/.athreei/config.json`:
+Create a config file at `~/.athreei/config.json`.
+
+**For Platform mode (default):**
 
 ```json
 {
-  "apiKey": "your-api-key",
-  "endpoint": "your-endpoint-id",
-  "platformUrl": "https://api.athreei.com",
+  "apiKey": "ak_your_api_key",
+  "endpoint": "your-endpoint-name",
+  "platformUrl": "https://athreei.com"
+}
+```
+
+**For local mode (`--local` flag):**
+
+```json
+{
   "servers": [
+    {
+      "name": "filesystem",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/dir"]
+    },
     {
       "name": "browser",
       "command": "npx",
       "args": ["-y", "@anthropic-ai/mcp-server-browser"]
-    },
-    {
-      "name": "filesystem",
-      "command": "npx",
-      "args": ["-y", "@anthropic-ai/mcp-server-filesystem", "/path/to/dir"]
     }
   ]
 }
@@ -137,6 +149,10 @@ src/
 ├── aggregator.ts      # Tool aggregation
 ├── trace-collector.ts # Trace collection
 ├── trace-sync.ts      # Trace synchronization
+├── sse.ts             # SSE transport handling
+├── session.ts         # Session management
+├── auth.ts            # Authentication utilities
+├── http-api.ts        # HTTP API for local/mock mode
 └── __tests__/         # Unit tests
 ```
 
@@ -152,17 +168,26 @@ bun run build:binary
 # Development mode (auto-restart)
 bun run dev
 
+# Development with SSE transport
+bun run dev:sse
+
+# Development with SSE and mock mode
+bun run dev:sse:mock
+
 # Run compiled version
 bun run start
 
 # Run tests
-bun test
+bun run test
 
 # Watch tests
-bun test:watch
+bun run test:watch
 
 # Type check
 bun run typecheck
+
+# Test SSE endpoint
+bun run test:sse
 ```
 
 ## Configuration for Claude Desktop
@@ -208,6 +233,9 @@ interface McpServerConfig {
 - **@modelcontextprotocol/sdk** - MCP protocol implementation
 - **@athreei/shared** - Shared types
 - **@athreei/gateway-core** - Core aggregation logic
+- **hono** - Web framework for SSE transport
+- **open** - Open URLs in default browser
+- **keytar** - Secure credential storage
 
 ## Related Packages
 

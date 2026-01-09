@@ -53,6 +53,7 @@ End-to-end encryption utilities for secure data sync:
 - **Key Derivation** - Argon2id password-based key derivation
 - **Encryption** - AES-256-GCM authenticated encryption
 - **Key Rotation** - Version-based key rotation support
+- **Trace Encryption** - Specialized encryption for trace data
 
 ```typescript
 import { deriveKey, encrypt, decrypt } from "@athreei/shared"
@@ -68,20 +69,50 @@ const reDerived = await deriveKey("user-password", encrypted.salt)
 const decrypted = decrypt(encrypted, reDerived.key)
 ```
 
+### Utilities (`utils/`)
+
+Security and logging utilities:
+
+- **Redaction** - Redact sensitive data from logs and outputs
+- **Secure Logger** - Logger that automatically redacts sensitive patterns
+
+```typescript
+import {
+  redact,
+  redactObject,
+  createSecureLogger,
+  SENSITIVE_PATTERNS,
+} from "@athreei/shared"
+
+// Redact sensitive strings
+const safe = redact("token: sk_live_abc123") // "token: [REDACTED]"
+
+// Redact sensitive fields from objects
+const safeObj = redactObject({ apiKey: "secret", name: "safe" })
+
+// Create a logger that auto-redacts sensitive data
+const logger = createSecureLogger(console)
+```
+
 ## Directory Structure
 
 ```
 src/
-├── crypto/                 # E2E encryption module
-│   ├── argon2.ts          # Argon2id key derivation
-│   ├── encryption.ts      # AES-256-GCM encryption
-│   ├── rotation.ts        # Key rotation utilities
-│   └── types.ts           # Crypto type definitions
-├── types/                 # Shared type definitions
-│   ├── index.ts           # Core types (permissions, audit, native messaging)
-│   ├── mcp-tools.ts       # MCP tool schemas and definitions
-│   └── aiii-events.ts     # Website integration event schemas
-└── index.ts               # Main entry point
+├── crypto/                     # E2E encryption module
+│   ├── argon2.ts              # Argon2id key derivation
+│   ├── encryption.ts          # AES-256-GCM encryption
+│   ├── rotation.ts            # Key rotation utilities
+│   ├── trace-encryption.ts    # Trace-specific encryption
+│   ├── types.ts               # Crypto type definitions
+│   └── index.ts               # Crypto module exports
+├── types/                     # Shared type definitions
+│   ├── index.ts               # Core types (permissions, audit, native messaging)
+│   ├── mcp-tools.ts           # MCP tool schemas and definitions
+│   └── aiii-events.ts         # Website integration event schemas
+├── utils/                     # Utility functions
+│   ├── redact.ts              # Sensitive data redaction
+│   └── index.ts               # Utils module exports
+└── index.ts                   # Main entry point
 ```
 
 ## Usage
@@ -105,6 +136,15 @@ import {
   deriveKey,
   encrypt,
   decrypt,
+
+  // Utils
+  redact,
+  redactObject,
+  createSecureLogger,
+  SENSITIVE_PATTERNS,
+
+  // Version
+  VERSION,
 } from "@athreei/shared"
 ```
 

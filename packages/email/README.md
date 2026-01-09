@@ -148,15 +148,13 @@ Sends an email using Resend.
 
 ```typescript
 interface SendEmailOptions {
-  to: string | string[]
+  to: string
   subject: string
-  react: React.ReactNode
-  from?: string
-  replyTo?: string
-  cc?: string | string[]
-  bcc?: string | string[]
+  react: ReactElement
 }
 ```
+
+**Note:** The `from` address is configured via the `EMAIL_FROM` environment variable (defaults to `noreply@athreei.com`).
 
 ### `getResendClient()`
 

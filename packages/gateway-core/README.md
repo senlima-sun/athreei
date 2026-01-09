@@ -22,6 +22,7 @@ All functionality is exported from the main entry point:
 ```typescript
 import {
   // Types
+  type OAuthConfig,
   type McpServerConfig,
   type ConnectedMcp,
   type AggregatedTool,
@@ -30,6 +31,11 @@ import {
   type ToolCallValidation,
   type RoutingInfo,
   type Logger,
+  type AggregateToolsOptions,
+  type RouteToolCallOptions,
+
+  // Utilities
+  noopLogger,
 
   // Aggregator functions
   sanitizeName,
@@ -154,17 +160,37 @@ createPrefixedName("browser", "navigate") // "browser__navigate"
 ### Types
 
 ```typescript
+interface OAuthConfig {
+  authorizationUrl: string
+  tokenUrl: string
+  clientId?: string
+  scopes?: string[]
+  usePKCE?: boolean
+}
+
 interface McpServerConfig {
+  id: string
   name: string
-  command: string
-  args?: string[]
+  description?: string
+  transport: "stdio" | "sse" | "streamable-http"
+  command?: string
+  args?: string
+  url?: string
+  headers?: Record<string, string>
   env?: Record<string, string>
+  version?: string
+  capabilities?: string
+  status: "active" | "inactive" | "pending"
+  oauth?: OAuthConfig
 }
 
 interface ConnectedMcp {
-  name: string
+  config: McpServerConfig
+  sanitizedName: string
   client: Client
   tools: Tool[]
+  connectedAt: Date
+  lastHeartbeat?: Date
 }
 
 interface AggregatedTool {
@@ -189,9 +215,13 @@ interface ToolCallValidation {
 
 interface RoutingInfo {
   serverName: string
-  tool: AggregatedTool
-  available: boolean
+  toolName: string
+  serverConfig: McpServerConfig
+  isConnected: boolean
 }
+
+// No-op logger for when no logger is provided
+const noopLogger: Logger
 ```
 
 ### Aggregator Functions

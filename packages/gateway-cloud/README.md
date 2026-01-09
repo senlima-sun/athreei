@@ -101,16 +101,16 @@ Establishes an SSE connection for MCP communication.
 
 ```
 src/
-├── index.ts           # Entry point with server setup
+├── index.ts           # Entry point with Hono app and server setup
 ├── instrument.ts      # Sentry instrumentation
-├── app.ts             # Hono app configuration
 ├── types.ts           # Type definitions
 ├── gateway/
-│   ├── session.ts     # Session management
-│   └── handler.ts     # Request handlers
-└── routes/
-    ├── health.ts      # Health check endpoint
-    └── sse.ts         # SSE endpoint
+│   └── session.ts     # Session management
+├── routes/
+│   ├── health.ts      # Health check endpoint
+│   └── sse.ts         # SSE endpoint
+└── services/
+    └── trace-recorder.ts  # Trace recording for observability
 ```
 
 ## Commands
