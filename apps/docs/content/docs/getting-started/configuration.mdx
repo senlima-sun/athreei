@@ -13,7 +13,7 @@ Create a configuration file at `~/.athreei/config.json`:
 
 ```json
 {
-  "apiKey": "ak_your_api_key_here",
+  "apiKey": "atr_your_api_key_here",
   "endpoint": "your-endpoint-name"
 }
 ```
@@ -27,7 +27,39 @@ Create a configuration file at `~/.athreei/config.json`:
 | `platformUrl`  | string | No       | Platform URL (default: `https://athreei.com`)        |
 | `syncInterval` | number | No       | Config sync interval in ms (default: 300000 / 5 min) |
 
-### Server Configuration
+### Local Mode Configuration
+
+For local/self-hosted usage without Platform sync, use `--local` flag with a different config format:
+
+```json
+{
+  "servers": [
+    {
+      "name": "filesystem",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/dir"]
+    },
+    {
+      "name": "remote-mcp",
+      "transport": "sse",
+      "url": "http://localhost:3001/mcp/sse"
+    }
+  ]
+}
+```
+
+Local mode server options:
+
+| Option      | Type     | Required | Description                                        |
+| ----------- | -------- | -------- | -------------------------------------------------- |
+| `name`      | string   | Yes      | Unique server name (used for tool namespacing)     |
+| `transport` | string   | No       | Transport type: `stdio` (default), `sse`, or `streamable-http` |
+| `command`   | string   | stdio    | Executable to run (required for stdio transport)   |
+| `args`      | string[] | No       | Command line arguments                             |
+| `url`       | string   | sse/http | Server URL (required for sse/streamable-http)      |
+| `headers`   | object   | No       | HTTP headers for sse/streamable-http transport     |
+
+### Platform Mode Configuration
 
 MCP servers are configured in the Platform dashboard, not in the local config file. The gateway fetches server configuration from the Platform API using your API key and endpoint.
 
@@ -95,10 +127,34 @@ See [Cloud Gateway](/docs/gateway/cloud) for details.
 athreei-gateway [OPTIONS]
 
 Options:
-  -c, --config <PATH>   Path to config file (default: ~/.athreei/config.json)
-  -d, --debug           Enable debug logging
-  -h, --help            Show help message
-  -v, --version         Show version number
+  -c, --config <PATH>     Path to config file (default: ~/.athreei/config.json)
+  -t, --transport <TYPE>  Transport type: stdio (default) or sse
+  -p, --port <PORT>       Port for SSE transport (default: 3000)
+  --api-port <PORT>       Port for HTTP API (default: 3001, local/mock mode only)
+  -l, --local             Run in local mode (no Platform sync, read servers from config)
+  -m, --mock              Run in mock mode (no servers, for testing)
+  -d, --debug             Enable debug logging
+  -h, --help              Show help message
+  -v, --version           Show version number
+```
+
+### Examples
+
+```bash
+# Start with Platform sync (requires API key)
+athreei-gateway
+
+# Local mode with servers from config file
+athreei-gateway --local
+
+# SSE transport on custom port
+athreei-gateway -t sse -p 3000
+
+# Use custom config file
+athreei-gateway -c /path/to/config.json
+
+# Mock mode for testing (no config required)
+athreei-gateway --mock
 ```
 
 ## Adding MCP Servers

@@ -79,6 +79,10 @@ Every tool call through the gateway is logged:
 
 ## Gateway Configuration
 
+The gateway supports two configuration modes:
+
+### Platform Mode (Cloud Sync)
+
 Create `~/.athreei/config.json` with your Platform credentials:
 
 ```json
@@ -88,7 +92,25 @@ Create `~/.athreei/config.json` with your Platform credentials:
 }
 ```
 
-MCP servers are configured via the [Platform dashboard](https://athreei.com), not in the local config file.
+MCP servers are configured via the [Platform dashboard](https://athreei.com) and synced automatically.
+
+### Local Mode (Self-hosted)
+
+For offline usage, create `~/.athreei/config.json` with servers directly:
+
+```json
+{
+  "servers": [
+    {
+      "name": "filesystem",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path"]
+    }
+  ]
+}
+```
+
+Run with `athreei-gateway --local` to use this mode.
 
 ## Gateway Types
 

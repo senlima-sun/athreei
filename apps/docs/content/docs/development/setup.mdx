@@ -177,25 +177,33 @@ The native host must be registered with Chrome:
 ### Run All Tests
 
 ```bash
-bun test
+bun run test
 ```
+
+**Important:** Do NOT use `bun test` directly - most tests use Vitest-specific APIs (`vi.hoisted`, `vi.mocked`, jsdom environment) that are incompatible with Bun's native test runner.
 
 ### Watch Mode
 
 ```bash
-bun test --watch
+bun run test:watch
 ```
 
 ### Specific Package
 
 ```bash
-bun test packages/mcp-server
+npx vitest run packages/mcp-server
+```
+
+### SQLite Tests
+
+```bash
+bun run test:sqlite
 ```
 
 ### Coverage
 
 ```bash
-bun test --coverage
+npx vitest run --coverage
 ```
 
 ## Code Quality

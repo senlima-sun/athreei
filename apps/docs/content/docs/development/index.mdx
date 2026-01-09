@@ -53,11 +53,15 @@ athreei/
 ### Root
 
 ```bash
-bun run dev        # All packages in watch mode
-bun run build      # Build all packages
-bun test           # Run all tests
-bun run lint       # Check linting
-bun run format     # Format code
+bun run dev           # All packages in watch mode
+bun run build         # Build all packages
+bun run test          # Run all tests (Vitest)
+bun run test:watch    # Watch mode
+bun run lint          # Check linting
+bun run lint:fix      # Auto-fix lint issues
+bun run format        # Format code
+bun run format:check  # Check formatting
+bun run typecheck:all # Type check all packages
 ```
 
 ### Individual Packages

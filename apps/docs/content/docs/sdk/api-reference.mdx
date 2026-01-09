@@ -1,18 +1,18 @@
 ---
 title: SDK API Reference
-description: Complete API reference for @athreei/sdk
+description: Complete API reference for @athreei/site-sdk
 ---
 
 # SDK API Reference
 
-Complete reference for the `@athreei/sdk` package.
+Complete reference for the `@athreei/site-sdk` package.
 
 ## Simple API
 
 The `athreei` singleton provides a convenient API for most use cases.
 
 ```typescript
-import { athreei } from "@athreei/sdk"
+import { athreei } from "@athreei/site-sdk"
 ```
 
 ### athreei.onReady(callback)
@@ -245,7 +245,7 @@ type ActionResultCallback = (result: {
 For advanced usage with more control.
 
 ```typescript
-import { AthreeiClient } from "@athreei/sdk"
+import { AthreeiClient } from "@athreei/site-sdk"
 
 const client = new AthreeiClient(options)
 ```
@@ -345,7 +345,7 @@ import type {
   AiiiActionBeforeEvent,
   AiiiActionAfterEvent,
   AiiiToolParameter,
-} from "@athreei/sdk"
+} from "@athreei/site-sdk"
 ```
 
 ---

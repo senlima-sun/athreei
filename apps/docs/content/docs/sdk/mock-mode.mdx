@@ -20,7 +20,7 @@ Mock mode allows you to develop and test your athreei integration without having
 </Callout>
 
 ```typescript
-import { enableMockMode, athreei } from "@athreei/sdk"
+import { enableMockMode, athreei } from "@athreei/site-sdk"
 
 // REQUIRED: mock must be explicitly true
 enableMockMode({
@@ -71,7 +71,7 @@ interface MockModeOptions {
 Enable mock mode with the specified options.
 
 ```typescript
-import { enableMockMode } from "@athreei/sdk"
+import { enableMockMode } from "@athreei/site-sdk"
 
 enableMockMode({
   mock: true,
@@ -82,90 +82,37 @@ enableMockMode({
 })
 ```
 
-### disableMockMode()
+<Callout type="info">
+The following helper functions are available in the source but not currently exported from the main SDK entry point. They can be accessed by importing directly from the mock module if needed:
 
-Disable mock mode and clean up.
-
-```typescript
-import { disableMockMode } from "@athreei/sdk"
-
-disableMockMode()
-```
-
-### isMockModeEnabled()
-
-Check if mock mode is currently active.
-
-```typescript
-import { isMockModeEnabled } from "@athreei/sdk"
-
-if (isMockModeEnabled()) {
-  console.log("Running in mock mode")
-}
-```
-
-### triggerMockRequest(tool, args)
-
-Manually trigger a mock tool request.
-
-```typescript
-import { triggerMockRequest } from "@athreei/sdk"
-
-// Simulate AI calling your tool
-triggerMockRequest("search_products", { query: "laptop" })
-```
-
-### setMockResponse(tool, response)
-
-Set or update a mock response for a tool.
-
-```typescript
-import { setMockResponse } from "@athreei/sdk"
-
-setMockResponse("get_user", { id: 123, name: "Test User" })
-```
-
-### getMockResponse(tool)
-
-Get the current mock response for a tool.
-
-```typescript
-import { getMockResponse } from "@athreei/sdk"
-
-const response = getMockResponse("get_user")
-```
-
-### clearMockResponses()
-
-Clear all mock responses.
-
-```typescript
-import { clearMockResponses } from "@athreei/sdk"
-
-clearMockResponses()
-```
+- `disableMockMode()` - Disable mock mode and clean up
+- `isMockModeEnabled()` - Check if mock mode is active
+- `triggerMockRequest(tool, args)` - Manually trigger a mock tool request
+- `setMockResponse(tool, response)` - Set mock response for a tool
+- `getMockResponse(tool)` - Get mock response for a tool
+- `clearMockResponses()` - Clear all mock responses
+</Callout>
 
 ## Testing Example
 
 ```typescript
-import { describe, it, expect, beforeEach, afterEach } from "vitest"
-import {
-  enableMockMode,
-  disableMockMode,
-  triggerMockRequest,
-  athreei,
-} from "@athreei/sdk"
+import { describe, it, expect, beforeEach } from "vitest"
+import { enableMockMode, athreei, dispatchAiiiEvent, AIII_EVENT_NAMES } from "@athreei/site-sdk"
 
 describe("ProductSearch integration", () => {
   beforeEach(() => {
     enableMockMode({
       mock: true,
       simulateDelay: 0, // No delay in tests
+      // Use autoTriggerTools to simulate AI requests
+      autoTriggerTools: [
+        {
+          tool: "search_products",
+          args: { query: "laptop" },
+          delay: 50,
+        },
+      ],
     })
-  })
-
-  afterEach(() => {
-    disableMockMode()
   })
 
   it("handles search_products tool", async () => {
@@ -184,18 +131,16 @@ describe("ProductSearch integration", () => {
     })
 
     // Capture responses
-    document.addEventListener("aiii:response", (e: CustomEvent) => {
-      results.push(e.detail)
+    document.addEventListener("aiii:response", (e: Event) => {
+      const customEvent = e as CustomEvent
+      results.push(customEvent.detail)
     })
 
-    // Trigger the tool
-    triggerMockRequest("search_products", { query: "laptop" })
-
-    // Wait for response
-    await new Promise((r) => setTimeout(r, 100))
+    // Wait for auto-triggered request and response
+    await new Promise((r) => setTimeout(r, 200))
 
     expect(results).toHaveLength(1)
-    expect(results[0].success).toBe(true)
+    expect((results[0] as { success: boolean }).success).toBe(true)
   })
 })
 ```

@@ -5,7 +5,7 @@ description: Make your website AI-capable with the athreei SDK
 
 # SDK
 
-The `@athreei/sdk` enables any website to become an MCP server. When users visit your site with athreei, your custom tools become available to their AI assistant.
+The `@athreei/site-sdk` enables any website to become an MCP server. When users visit your site with athreei, your custom tools become available to their AI assistant.
 
 ## Why Integrate?
 
@@ -43,21 +43,21 @@ Think of it like OpenAI's ChatGPT App Store, but for any website:
 ## Installation
 
 ```bash
-npm install @athreei/sdk
+npm install @athreei/site-sdk
 ```
 
 Or via CDN:
 
 ```html
 <script type="module">
-  import { athreei } from "https://unpkg.com/@athreei/sdk@latest/dist/index.js"
+  import { athreei } from "https://unpkg.com/@athreei/site-sdk@latest/dist/index.js"
 </script>
 ```
 
 ## Quick Start
 
 ```typescript
-import { athreei } from "@athreei/sdk"
+import { athreei } from "@athreei/site-sdk"
 
 // Wait for athreei to be ready
 athreei.onReady((info) => {
@@ -88,7 +88,7 @@ That's it. When a user with athreei visits your site, their AI can now search yo
 A singleton for quick integration:
 
 ```typescript
-import { athreei } from "@athreei/sdk"
+import { athreei } from "@athreei/site-sdk"
 
 athreei.onReady((info) => {
   /* ... */
@@ -103,7 +103,7 @@ athreei.registerTool({
 For more control:
 
 ```typescript
-import { AthreeiClient } from "@athreei/sdk"
+import { AthreeiClient } from "@athreei/site-sdk"
 
 const client = new AthreeiClient({ debug: true })
 await client.waitForReady()

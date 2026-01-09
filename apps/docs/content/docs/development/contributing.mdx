@@ -30,7 +30,7 @@ Thank you for your interest in contributing to athreei! This guide covers our co
 
 1. Make your changes in the appropriate package(s)
 2. Add tests for new functionality
-3. Run tests: `bun test`
+3. Run tests: `bun run test`
 4. Run linting: `bun run lint`
 5. Run type checking: `bun run typecheck:all`
 
@@ -39,7 +39,7 @@ Thank you for your interest in contributing to athreei! This guide covers our co
 Follow [Conventional Commits](https://www.conventionalcommits.org/):
 
 ```
-<type>: <description>
+<type>(<scope>): <description>
 
 [optional body]
 
@@ -54,21 +54,29 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/):
 | `docs` | Documentation only |
 | `style` | Formatting, no code change |
 | `refactor` | Code change that neither fixes nor adds |
+| `perf` | Performance improvement |
 | `test` | Adding or updating tests |
 | `chore` | Build, tooling, dependencies |
+
+**Scopes** (use package/app names):
+- `api`, `platform`, `web`
+- `mcp-server`, `extension`, `gateway`
+- `db`, `auth`, `shared`
 
 **Examples:**
 
 ```
-feat: add browser_hover tool for mouse hover actions
+feat(api): add rate limiting to gateway routes
 
-fix: resolve native messaging timeout on large responses
+fix(platform): resolve session handling bug
 
-docs: update SDK mock mode documentation
+docs(sdk): update mock mode documentation
 
-refactor: simplify accessibility tree builder
+refactor(gateway): simplify accessibility tree builder
 
-test: add unit tests for permission repository
+perf(mcp-server): optimize message batching
+
+test(api): add unit tests for permission repository
 ```
 
 ### Creating a Pull Request
@@ -90,6 +98,11 @@ test: add unit tests for permission repository
 4. **Wait for review** and address feedback
 
 ## Code Style
+
+### General
+
+- **Prettier** for formatting (no semicolons, double quotes)
+- **ESLint** for linting
 
 ### TypeScript
 
@@ -222,6 +235,11 @@ describe("browser_new_tool", () => {
 ```
 
 ## Testing Guidelines
+
+### Coverage Requirements
+
+- **80%+** coverage on API routes
+- **90%+** coverage on business logic
 
 ### Test Structure
 

@@ -74,7 +74,7 @@ Create config at `~/.athreei/config.json`:
 
 ```json
 {
-  "apiKey": "ak_your_api_key_here",
+  "apiKey": "atr_your_api_key_here",
   "endpoint": "your-endpoint-name"
 }
 ```
@@ -134,17 +134,45 @@ Spot an issue in a trace? Improve it:
 
 This is the iteration loop: see real data, make targeted improvements.
 
+## Alternative: Local Mode (No Account Required)
+
+For self-hosted usage without Platform sync, use local mode:
+
+1. Create config at `~/.athreei/config.json`:
+
+```json
+{
+  "servers": [
+    {
+      "name": "filesystem",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/dir"]
+    }
+  ]
+}
+```
+
+2. Start the gateway with `--local` flag:
+
+```bash
+athreei-gateway --local
+```
+
+3. Connect your AI app the same way as Platform mode.
+
+See [Configuration](/docs/getting-started/configuration) for more local mode options.
+
 ## Next Steps
 
 <Cards>
+  <Card title="Configuration" href="/docs/getting-started/configuration">
+    Advanced gateway configuration options
+  </Card>
   <Card title="Registry" href="/docs/registry">
     Browse and install more MCP servers
   </Card>
   <Card title="Tool Configuration" href="/docs/tools">
     Customize tool descriptions and prompts
-  </Card>
-  <Card title="Traces" href="/docs/audit-logs/traces">
-    Deep dive into trace analysis
   </Card>
   <Card title="Gateway Options" href="/docs/gateway">
     Local vs cloud gateway comparison
