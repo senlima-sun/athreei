@@ -72,7 +72,33 @@ export const verifyMcpServerSchema = z.object({
   authToken: z.string().min(1, "Auth token is required"),
 })
 
+// =============================================================================
+// Health Check Schemas
+// =============================================================================
+
+export const batchHealthCheckSchema = z.object({
+  serverIds: z
+    .array(z.string().min(1))
+    .min(1, "At least one server ID required")
+    .max(20, "Maximum 20 servers per batch"),
+})
+
+// =============================================================================
+// Tool Update Schemas
+// =============================================================================
+
+export const updateToolSchema = z.object({
+  description: z.string().max(1000, "Description too long").optional(),
+  enabled: z.boolean().optional(),
+})
+
+// =============================================================================
+// Type Exports
+// =============================================================================
+
 export type CreateServerInput = z.infer<typeof createServerSchema>
 export type UpdateServerInput = z.infer<typeof updateServerSchema>
 export type ListServersQuery = z.infer<typeof listQuerySchema>
 export type VerifyMcpServerInput = z.infer<typeof verifyMcpServerSchema>
+export type BatchHealthCheckInput = z.infer<typeof batchHealthCheckSchema>
+export type UpdateToolInput = z.infer<typeof updateToolSchema>
