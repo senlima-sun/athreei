@@ -695,4 +695,441 @@ mod tests {
             .memory_exists_by_source_id("browser", "nonexistent")
             .expect("Failed to check"));
     }
+
+    // ==================== Additional Integration Tests ====================
+
+    #[test]
+    fn test_space_update_preserves_fields() {
+        let db = setup_test_db();
+
+        // Create space with all fields
+        let space = Space::new(
+            "Original Name".to_string(),
+            Some("🏠".to_string()),
+            Some(r#"{"rule":"test"}"#.to_string()),
+        );
+        db.create_space(&space).expect("Failed to create space");
+
+        // Update only the name
+        let mut updated = space.clone();
+        updated.name = "Updated Name".to_string();
+        db.update_space(&updated).expect("Failed to update space");
+
+        // Verify other fields preserved
+        let fetched = db.get_space(&space.id).unwrap().unwrap();
+        assert_eq!(fetched.name, "Updated Name");
+        assert_eq!(fetched.icon, Some("🏠".to_string()));
+        assert_eq!(fetched.source_rules, Some(r#"{"rule":"test"}"#.to_string()));
+    }
+
+    #[test]
+    fn test_multiple_spaces_ordering() {
+        let db = setup_test_db();
+
+        // Create spaces in non-alphabetical order
+        let space_c = Space::new("Charlie".to_string(), None, None);
+        let space_a = Space::new("Alpha".to_string(), None, None);
+        let space_b = Space::new("Bravo".to_string(), None, None);
+
+        db.create_space(&space_c).expect("Failed to create space");
+        db.create_space(&space_a).expect("Failed to create space");
+        db.create_space(&space_b).expect("Failed to create space");
+
+        // List should return alphabetically
+        let spaces = db.list_spaces().expect("Failed to list spaces");
+        assert_eq!(spaces.len(), 3);
+        assert_eq!(spaces[0].name, "Alpha");
+        assert_eq!(spaces[1].name, "Bravo");
+        assert_eq!(spaces[2].name, "Charlie");
+    }
+
+    #[test]
+    fn test_memory_pagination() {
+        let db = setup_test_db();
+
+        // Create 10 memories
+        for i in 0..10 {
+            let memory = Memory::new(
+                None,
+                "test".to_string(),
+                Some(format!("source-{}", i)),
+                Some(format!("Title {}", i).into_bytes()),
+                None,
+                None,
+                None,
+            );
+            db.create_memory(&memory).expect("Failed to create memory");
+            // Small delay to ensure different timestamps
+            std::thread::sleep(std::time::Duration::from_millis(10));
+        }
+
+        // Get first page (5 items)
+        let page1 = db
+            .list_memories(None, 5, 0)
+            .expect("Failed to list memories");
+        assert_eq!(page1.len(), 5);
+
+        // Get second page (5 items)
+        let page2 = db
+            .list_memories(None, 5, 5)
+            .expect("Failed to list memories");
+        assert_eq!(page2.len(), 5);
+
+        // Ensure no overlap between pages
+        let page1_ids: Vec<_> = page1.iter().map(|m| &m.id).collect();
+        for m in &page2 {
+            assert!(!page1_ids.contains(&&m.id));
+        }
+    }
+
+    #[test]
+    fn test_memory_with_tags_integration() {
+        let db = setup_test_db();
+
+        // Create memory
+        let memory = Memory::new(
+            None,
+            "browser".to_string(),
+            Some("https://example.com".to_string()),
+            Some(b"Test Title".to_vec()),
+            None,
+            Some(b"Content".to_vec()),
+            Some(r#"{"key":"value"}"#.to_string()),
+        );
+        db.create_memory(&memory).expect("Failed to create memory");
+
+        // Add multiple tags
+        db.add_tags(&memory.id, &["rust".to_string(), "programming".to_string(), "test".to_string()])
+            .expect("Failed to add tags");
+
+        // Get memory with tags
+        let memory_with_tags = db
+            .get_memory_with_tags(&memory.id)
+            .expect("Failed to get memory")
+            .expect("Memory not found");
+
+        assert_eq!(memory_with_tags.tags.len(), 3);
+        assert!(memory_with_tags.tags.contains(&"rust".to_string()));
+        assert!(memory_with_tags.tags.contains(&"programming".to_string()));
+        assert!(memory_with_tags.tags.contains(&"test".to_string()));
+    }
+
+    #[test]
+    fn test_tag_idempotent_add() {
+        let db = setup_test_db();
+
+        let memory = Memory::new(
+            None,
+            "test".to_string(),
+            None,
+            None,
+            None,
+            None,
+            Some(r#"{"test":true}"#.to_string()),
+        );
+        db.create_memory(&memory).expect("Failed to create memory");
+
+        // Add the same tag twice
+        db.add_tags(&memory.id, &["duplicate".to_string()])
+            .expect("Failed to add tags");
+        db.add_tags(&memory.id, &["duplicate".to_string()])
+            .expect("Failed to add tags");
+
+        // Should only have one instance of the tag
+        let tags = db.get_tags(&memory.id).expect("Failed to get tags");
+        assert_eq!(tags.len(), 1);
+        assert_eq!(tags[0], "duplicate");
+    }
+
+    #[test]
+    fn test_list_tags_with_counts() {
+        let db = setup_test_db();
+
+        // Create multiple memories with different tags
+        for i in 0..3 {
+            let memory = Memory::new(
+                None,
+                "test".to_string(),
+                None,
+                None,
+                None,
+                None,
+                Some(r#"{"n":true}"#.to_string()),
+            );
+            db.create_memory(&memory).expect("Failed to create memory");
+
+            // All memories get "common" tag
+            db.add_tags(&memory.id, &["common".to_string()])
+                .expect("Failed to add tags");
+
+            // Only some get "rare" tag
+            if i == 0 {
+                db.add_tags(&memory.id, &["rare".to_string()])
+                    .expect("Failed to add tags");
+            }
+        }
+
+        let tags_with_counts = db.list_tags_with_counts().expect("Failed to list tags");
+
+        // Find common and rare tags
+        let common = tags_with_counts.iter().find(|(name, _)| name == "common");
+        let rare = tags_with_counts.iter().find(|(name, _)| name == "rare");
+
+        assert!(common.is_some());
+        assert!(rare.is_some());
+        assert_eq!(common.unwrap().1, 3);
+        assert_eq!(rare.unwrap().1, 1);
+    }
+
+    #[test]
+    fn test_cleanup_orphan_tags() {
+        let db = setup_test_db();
+
+        // Create memory with tag
+        let memory = Memory::new(
+            None,
+            "test".to_string(),
+            None,
+            None,
+            None,
+            None,
+            Some(r#"{"t":1}"#.to_string()),
+        );
+        db.create_memory(&memory).expect("Failed to create memory");
+        db.add_tags(&memory.id, &["orphan-tag".to_string()])
+            .expect("Failed to add tags");
+
+        // Delete the memory (this removes memory_tags but not tags)
+        db.delete_memory(&memory.id)
+            .expect("Failed to delete memory");
+
+        // Tag should now be orphan
+        let before_cleanup = db.list_tags_with_counts().expect("Failed to list tags");
+        let orphan_exists = before_cleanup.iter().any(|(name, count)| name == "orphan-tag" && *count == 0);
+        assert!(orphan_exists, "Orphan tag should exist before cleanup");
+
+        // Cleanup orphans
+        let cleaned = db.cleanup_orphan_tags().expect("Failed to cleanup");
+        assert!(cleaned > 0);
+
+        // Orphan should be gone
+        let after_cleanup = db.list_tags_with_counts().expect("Failed to list tags");
+        let orphan_still_exists = after_cleanup.iter().any(|(name, _)| name == "orphan-tag");
+        assert!(!orphan_still_exists, "Orphan tag should be gone after cleanup");
+    }
+
+    #[test]
+    fn test_get_memories_by_source() {
+        let db = setup_test_db();
+
+        // Create memories with different sources
+        for i in 0..3 {
+            let memory = Memory::new(
+                None,
+                "browser".to_string(),
+                Some(format!("url-{}", i)),
+                None,
+                None,
+                None,
+                None,
+            );
+            db.create_memory(&memory).expect("Failed to create memory");
+        }
+
+        for i in 0..2 {
+            let memory = Memory::new(
+                None,
+                "clipboard".to_string(),
+                Some(format!("clip-{}", i)),
+                None,
+                None,
+                None,
+                None,
+            );
+            db.create_memory(&memory).expect("Failed to create memory");
+        }
+
+        // Get browser memories
+        let browser_memories = db
+            .get_memories_by_source("browser", 10)
+            .expect("Failed to get memories");
+        assert_eq!(browser_memories.len(), 3);
+
+        // Get clipboard memories
+        let clipboard_memories = db
+            .get_memories_by_source("clipboard", 10)
+            .expect("Failed to get memories");
+        assert_eq!(clipboard_memories.len(), 2);
+
+        // Limit works
+        let limited = db
+            .get_memories_by_source("browser", 2)
+            .expect("Failed to get memories");
+        assert_eq!(limited.len(), 2);
+    }
+
+    #[test]
+    fn test_search_with_space_filter() {
+        let db = setup_test_db();
+
+        // Create two spaces
+        let space1 = Space::new("Work".to_string(), None, None);
+        let space2 = Space::new("Personal".to_string(), None, None);
+        db.create_space(&space1).expect("Failed to create space");
+        db.create_space(&space2).expect("Failed to create space");
+
+        // Create memories in different spaces with same metadata
+        let mem1 = Memory::new(
+            Some(space1.id.clone()),
+            "browser".to_string(),
+            Some("https://rust.com".to_string()),
+            None,
+            None,
+            None,
+            Some(r#"{"title":"rust programming"}"#.to_string()),
+        );
+        let mem2 = Memory::new(
+            Some(space2.id.clone()),
+            "browser".to_string(),
+            Some("https://rust.org".to_string()),
+            None,
+            None,
+            None,
+            Some(r#"{"title":"rust documentation"}"#.to_string()),
+        );
+        db.create_memory(&mem1).expect("Failed to create memory");
+        db.create_memory(&mem2).expect("Failed to create memory");
+
+        // Search all spaces
+        let all_results = db.search_memories("rust", None).expect("Failed to search");
+        assert_eq!(all_results.len(), 2);
+
+        // Search specific space
+        let space1_results = db
+            .search_memories("rust", Some(&space1.id))
+            .expect("Failed to search");
+        assert_eq!(space1_results.len(), 1);
+        assert_eq!(space1_results[0].space_id, Some(space1.id.clone()));
+    }
+
+    #[test]
+    fn test_search_empty_query() {
+        let db = setup_test_db();
+
+        let memory = Memory::new(
+            None,
+            "browser".to_string(),
+            Some("https://example.com".to_string()),
+            None,
+            None,
+            None,
+            Some(r#"{"title":"test"}"#.to_string()),
+        );
+        db.create_memory(&memory).expect("Failed to create memory");
+
+        // Empty query should return empty results
+        let results = db.search_memories("", None).expect("Failed to search");
+        assert!(results.is_empty());
+
+        // Whitespace-only query should return empty results
+        let results = db.search_memories("   ", None).expect("Failed to search");
+        assert!(results.is_empty());
+    }
+
+    #[test]
+    fn test_delete_space_sets_memory_space_id_to_null() {
+        let db = setup_test_db();
+
+        // Create space and memory
+        let space = Space::new("Test".to_string(), None, None);
+        db.create_space(&space).expect("Failed to create space");
+
+        let memory = Memory::new(
+            Some(space.id.clone()),
+            "test".to_string(),
+            None,
+            None,
+            None,
+            None,
+            None,
+        );
+        db.create_memory(&memory).expect("Failed to create memory");
+
+        // Delete space
+        db.delete_space(&space.id).expect("Failed to delete space");
+
+        // Memory should still exist but with space_id set to NULL (due to ON DELETE SET NULL)
+        let fetched = db.get_memory(&memory.id).expect("Failed to get memory");
+        assert!(fetched.is_some());
+        assert_eq!(fetched.unwrap().space_id, None); // ON DELETE SET NULL behavior
+    }
+
+    #[test]
+    fn test_memory_update_changes_updated_at() {
+        let db = setup_test_db();
+
+        // Create memory with a timestamp from the past
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs() as i64;
+
+        let past_timestamp = now - 10; // 10 seconds in the past
+
+        let memory = Memory {
+            id: nanoid::nanoid!(),
+            space_id: None,
+            source: "test".to_string(),
+            source_id: None,
+            title: None,
+            summary: None,
+            content: None,
+            metadata: None,
+            created_at: past_timestamp,
+            updated_at: past_timestamp,
+        };
+        db.create_memory(&memory).expect("Failed to create memory");
+
+        // Update memory
+        let mut updated = memory.clone();
+        updated.source = "updated".to_string();
+        db.update_memory(&updated).expect("Failed to update memory");
+
+        // Verify updated_at changed to a more recent time
+        let fetched = db.get_memory(&memory.id).unwrap().unwrap();
+        assert!(fetched.updated_at > past_timestamp);
+        assert!(fetched.updated_at >= now);
+    }
+
+    #[test]
+    fn test_get_nonexistent_space() {
+        let db = setup_test_db();
+
+        let result = db.get_space("nonexistent-id").expect("Failed to query");
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_get_nonexistent_memory() {
+        let db = setup_test_db();
+
+        let result = db.get_memory("nonexistent-id").expect("Failed to query");
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_get_memory_with_tags_nonexistent() {
+        let db = setup_test_db();
+
+        let result = db.get_memory_with_tags("nonexistent-id").expect("Failed to query");
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_count_memories_empty() {
+        let db = setup_test_db();
+
+        let count = db.count_memories(None).expect("Failed to count");
+        assert_eq!(count, 0);
+    }
 }

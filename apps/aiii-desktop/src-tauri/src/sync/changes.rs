@@ -360,4 +360,260 @@ mod tests {
         tracker.set_last_sync(1234567890).unwrap();
         assert_eq!(tracker.get_last_sync().unwrap(), Some(1234567890));
     }
+
+    // ==================== Additional Integration Tests ====================
+
+    #[test]
+    fn test_track_update() {
+        let (tracker, _dir) = create_test_tracker();
+
+        let op = tracker
+            .track_update(EntityType::Memory, "mem456", Some(r#"{"updated":true}"#))
+            .unwrap();
+
+        assert_eq!(op.operation_type, SyncOperationType::Update);
+        assert_eq!(op.entity_type, EntityType::Memory);
+        assert_eq!(op.entity_id, "mem456");
+        assert_eq!(op.data, Some(r#"{"updated":true}"#.to_string()));
+        assert!(!op.synced);
+    }
+
+    #[test]
+    fn test_track_delete() {
+        let (tracker, _dir) = create_test_tracker();
+
+        let op = tracker.track_delete(EntityType::Space, "space789").unwrap();
+
+        assert_eq!(op.operation_type, SyncOperationType::Delete);
+        assert_eq!(op.entity_type, EntityType::Space);
+        assert_eq!(op.entity_id, "space789");
+        assert!(op.data.is_none());
+        assert!(!op.synced);
+    }
+
+    #[test]
+    fn test_track_different_entity_types() {
+        let (tracker, _dir) = create_test_tracker();
+
+        // Track Memory
+        let mem_op = tracker
+            .track_create(EntityType::Memory, "mem1", None)
+            .unwrap();
+        assert_eq!(mem_op.entity_type, EntityType::Memory);
+
+        // Track Space
+        let space_op = tracker
+            .track_create(EntityType::Space, "space1", None)
+            .unwrap();
+        assert_eq!(space_op.entity_type, EntityType::Space);
+
+        // Track Tag
+        let tag_op = tracker
+            .track_create(EntityType::Tag, "tag1", None)
+            .unwrap();
+        assert_eq!(tag_op.entity_type, EntityType::Tag);
+
+        // All should be pending
+        assert_eq!(tracker.pending_count().unwrap(), 3);
+    }
+
+    #[test]
+    fn test_pending_changes_ordering() {
+        let (tracker, _dir) = create_test_tracker();
+
+        // Create operations with slight delays to ensure timestamp ordering
+        tracker.track_create(EntityType::Memory, "first", None).unwrap();
+        std::thread::sleep(std::time::Duration::from_millis(10));
+        tracker.track_create(EntityType::Memory, "second", None).unwrap();
+        std::thread::sleep(std::time::Duration::from_millis(10));
+        tracker.track_create(EntityType::Memory, "third", None).unwrap();
+
+        let pending = tracker.get_pending_changes().unwrap();
+        assert_eq!(pending.len(), 3);
+
+        // Should be ordered by timestamp ASC (oldest first)
+        assert_eq!(pending[0].entity_id, "first");
+        assert_eq!(pending[1].entity_id, "second");
+        assert_eq!(pending[2].entity_id, "third");
+    }
+
+    #[test]
+    fn test_mark_multiple_synced() {
+        let (tracker, _dir) = create_test_tracker();
+
+        let op1 = tracker.track_create(EntityType::Memory, "mem1", None).unwrap();
+        let op2 = tracker.track_create(EntityType::Memory, "mem2", None).unwrap();
+        let op3 = tracker.track_create(EntityType::Memory, "mem3", None).unwrap();
+
+        assert_eq!(tracker.pending_count().unwrap(), 3);
+
+        // Mark multiple as synced at once
+        tracker.mark_synced(&[op1.id, op3.id]).unwrap();
+
+        assert_eq!(tracker.pending_count().unwrap(), 1);
+
+        // Only op2 should remain pending
+        let pending = tracker.get_pending_changes().unwrap();
+        assert_eq!(pending.len(), 1);
+        assert_eq!(pending[0].id, op2.id);
+    }
+
+    #[test]
+    fn test_mark_synced_empty_list() {
+        let (tracker, _dir) = create_test_tracker();
+
+        // Should not error on empty list
+        tracker.mark_synced(&[]).unwrap();
+
+        tracker.track_create(EntityType::Memory, "mem1", None).unwrap();
+
+        // Marking empty should not affect existing
+        tracker.mark_synced(&[]).unwrap();
+        assert_eq!(tracker.pending_count().unwrap(), 1);
+    }
+
+    #[test]
+    fn test_cleanup_old_changes() {
+        let (tracker, _dir) = create_test_tracker();
+
+        // Create more than 1000 changes and mark them synced
+        let mut op_ids = Vec::new();
+        for i in 0..1050 {
+            let op = tracker
+                .track_create(EntityType::Memory, &format!("mem{}", i), None)
+                .unwrap();
+            op_ids.push(op.id);
+        }
+
+        // Mark all as synced
+        tracker.mark_synced(&op_ids).unwrap();
+
+        // Cleanup should remove old synced changes beyond 1000
+        let deleted = tracker.cleanup_old_changes().unwrap();
+        assert_eq!(deleted, 50); // 1050 - 1000 = 50 should be deleted
+    }
+
+    #[test]
+    fn test_state_persistence() {
+        let (tracker, _dir) = create_test_tracker();
+
+        // Set various state values
+        tracker.set_state("custom_key", "custom_value").unwrap();
+        tracker.set_cursor("abc123").unwrap();
+        tracker.set_last_sync(9999999).unwrap();
+
+        // Retrieve and verify
+        assert_eq!(tracker.get_state("custom_key").unwrap(), Some("custom_value".to_string()));
+        assert_eq!(tracker.get_cursor().unwrap(), Some("abc123".to_string()));
+        assert_eq!(tracker.get_last_sync().unwrap(), Some(9999999));
+    }
+
+    #[test]
+    fn test_state_overwrite() {
+        let (tracker, _dir) = create_test_tracker();
+
+        tracker.set_cursor("first").unwrap();
+        assert_eq!(tracker.get_cursor().unwrap(), Some("first".to_string()));
+
+        tracker.set_cursor("second").unwrap();
+        assert_eq!(tracker.get_cursor().unwrap(), Some("second".to_string()));
+    }
+
+    #[test]
+    fn test_get_nonexistent_state() {
+        let (tracker, _dir) = create_test_tracker();
+
+        let result = tracker.get_state("nonexistent").unwrap();
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_operations_have_unique_ids() {
+        let (tracker, _dir) = create_test_tracker();
+
+        let op1 = tracker.track_create(EntityType::Memory, "mem1", None).unwrap();
+        let op2 = tracker.track_create(EntityType::Memory, "mem1", None).unwrap(); // Same entity
+        let op3 = tracker.track_create(EntityType::Memory, "mem2", None).unwrap();
+
+        // All operation IDs should be unique
+        assert_ne!(op1.id, op2.id);
+        assert_ne!(op2.id, op3.id);
+        assert_ne!(op1.id, op3.id);
+    }
+
+    #[test]
+    fn test_operations_have_timestamps() {
+        let (tracker, _dir) = create_test_tracker();
+
+        let before = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_millis() as i64;
+
+        std::thread::sleep(std::time::Duration::from_millis(5));
+        let op = tracker.track_create(EntityType::Memory, "mem1", None).unwrap();
+        std::thread::sleep(std::time::Duration::from_millis(5));
+
+        let after = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_millis() as i64;
+
+        assert!(op.timestamp >= before);
+        assert!(op.timestamp <= after);
+    }
+
+    #[test]
+    fn test_pending_count_zero_when_empty() {
+        let (tracker, _dir) = create_test_tracker();
+
+        assert_eq!(tracker.pending_count().unwrap(), 0);
+    }
+
+    #[test]
+    fn test_synced_changes_not_in_pending() {
+        let (tracker, _dir) = create_test_tracker();
+
+        let op1 = tracker.track_create(EntityType::Memory, "mem1", None).unwrap();
+        let _op2 = tracker.track_create(EntityType::Memory, "mem2", None).unwrap();
+
+        // Mark op1 as synced
+        tracker.mark_synced(&[op1.id.clone()]).unwrap();
+
+        let pending = tracker.get_pending_changes().unwrap();
+
+        // op1 should not be in pending
+        assert!(!pending.iter().any(|op| op.id == op1.id));
+        assert_eq!(pending.len(), 1);
+    }
+
+    #[test]
+    fn test_data_preserved_in_operations() {
+        let (tracker, _dir) = create_test_tracker();
+
+        let json_data = r#"{"title":"Test","content":"Hello","tags":["a","b"]}"#;
+        let op = tracker
+            .track_create(EntityType::Memory, "mem1", Some(json_data))
+            .unwrap();
+
+        let pending = tracker.get_pending_changes().unwrap();
+        assert_eq!(pending.len(), 1);
+        assert_eq!(pending[0].data, Some(json_data.to_string()));
+    }
+
+    #[test]
+    fn test_schema_init_idempotent() {
+        let dir = tempdir().unwrap();
+        let db_path = dir.path().join("test.db");
+        let tracker = ChangeTracker::new(db_path.to_str().unwrap());
+
+        // Initialize schema multiple times
+        tracker.init_schema().unwrap();
+        tracker.init_schema().unwrap();
+        tracker.init_schema().unwrap();
+
+        // Should still work
+        tracker.track_create(EntityType::Memory, "mem1", None).unwrap();
+        assert_eq!(tracker.pending_count().unwrap(), 1);
+    }
 }
