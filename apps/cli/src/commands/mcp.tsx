@@ -6,6 +6,19 @@ import { getApiClient, ApiError } from "../lib/api.js"
 import { createCredentialStore } from "../auth/credentials.js"
 import { ErrorDisplay } from "../components/error.js"
 import type { McpServer, EnvVar, VerifyResult } from "../lib/types.js"
+import { getMode } from "../index.js"
+import {
+  listLocalServers,
+  addLocalServer,
+  removeLocalServer,
+  getLocalServer,
+} from "../lib/local-config.js"
+import {
+  verifyMcpServer,
+  listMcpTools,
+  type McpTool,
+} from "../lib/mcp-client.js"
+import type { ServerConfig } from "@athreei/shared"
 
 type TransportType = "stdio" | "sse" | "streamable-http"
 
@@ -58,10 +71,42 @@ export function McpList(props: {
   const { exit } = useApp()
   const [loading, setLoading] = useState(true)
   const [servers, setServers] = useState<McpServer[]>([])
+  const [localServers, setLocalServers] = useState<ServerConfig[]>([])
   const [error, setError] = useState<Error | ApiError | null>(null)
+  const mode = getMode()
 
   useEffect(() => {
     async function load() {
+      // Local mode: read from file
+      if (mode === "local") {
+        try {
+          let servers = listLocalServers()
+
+          // Apply filters
+          if (props.search) {
+            const query = props.search.toLowerCase()
+            servers = servers.filter((s) => s.name.toLowerCase().includes(query))
+          }
+          if (props.transport) {
+            servers = servers.filter(
+              (s) => (s.transport ?? "stdio") === props.transport
+            )
+          }
+
+          setLocalServers(servers)
+        } catch (err) {
+          setError(
+            err instanceof Error
+              ? err
+              : new Error("Failed to load local config")
+          )
+        }
+        setLoading(false)
+        setTimeout(() => exit(), 100)
+        return
+      }
+
+      // Cloud mode: API call
       const store = createCredentialStore()
       const orgId = await store.getActiveOrg()
 
@@ -99,7 +144,7 @@ export function McpList(props: {
     }
 
     load()
-  }, [exit, props.search, props.status, props.transport])
+  }, [exit, props.search, props.status, props.transport, mode])
 
   if (loading) {
     return (
@@ -118,10 +163,56 @@ export function McpList(props: {
 
   // JSON output mode
   if (props.json) {
-    console.log(JSON.stringify({ servers }, null, 2))
+    const data = mode === "local" ? { servers: localServers } : { servers }
+    console.log(JSON.stringify(data, null, 2))
     return null
   }
 
+  // Local mode rendering
+  if (mode === "local") {
+    if (localServers.length === 0) {
+      return (
+        <Box padding={1}>
+          <Text color="yellow">No MCP servers found in local config</Text>
+        </Box>
+      )
+    }
+
+    return (
+      <Box flexDirection="column" padding={1}>
+        <Box marginBottom={1}>
+          <Text bold color="cyan">
+            MCP Servers [local] ({localServers.length})
+          </Text>
+        </Box>
+        {localServers.map((server) => (
+          <Box key={server.name} flexDirection="column" marginBottom={1}>
+            <Box>
+              <Text bold>{server.name}</Text>
+            </Box>
+            <Box marginLeft={2}>
+              <Text dimColor>Transport: {server.transport ?? "stdio"}</Text>
+            </Box>
+            {server.command && (
+              <Box marginLeft={2}>
+                <Text dimColor>
+                  Command: {server.command}
+                  {server.args ? ` ${server.args.join(" ")}` : ""}
+                </Text>
+              </Box>
+            )}
+            {server.url && (
+              <Box marginLeft={2}>
+                <Text dimColor>URL: {server.url}</Text>
+              </Box>
+            )}
+          </Box>
+        ))}
+      </Box>
+    )
+  }
+
+  // Cloud mode rendering
   if (servers.length === 0) {
     return (
       <Box padding={1}>
