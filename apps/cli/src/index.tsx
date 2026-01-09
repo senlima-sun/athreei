@@ -6,6 +6,7 @@ import { LoginFlow } from "./components/login-flow.js"
 import { AuthStatus } from "./components/auth-status.js"
 import { getAuthManager } from "./auth/manager.js"
 import { setVerbose, setQuiet, debug } from "./lib/output.js"
+import { detectMode, type CliMode } from "./lib/mode.js"
 import { OrgList, OrgSwitch, OrgCurrent } from "./commands/org.js"
 import {
   McpList,
@@ -50,6 +51,17 @@ import {
 
 const program = new Command()
 
+// Global state for mode (set in preAction hook)
+let currentMode: CliMode = "local"
+
+/**
+ * Get the current CLI mode
+ * Use this in command handlers to determine local vs cloud behavior
+ */
+export function getMode(): CliMode {
+  return currentMode
+}
+
 program
   .name("athreei")
   .description("Athreei CLI - Universal MCP Gateway")
@@ -57,10 +69,16 @@ program
   .option("-p, --profile <name>", "Use a specific profile", "default")
   .option("-v, --verbose", "Enable verbose output for debugging")
   .option("-q, --quiet", "Suppress non-essential output")
+  .option("--local", "Run in local mode (offline, file-based config)")
+  .option("--cloud", "Run in cloud mode (connected to Platform)")
   .hook("preAction", (thisCommand) => {
     const opts = thisCommand.opts()
     if (opts.verbose && opts.quiet) {
       console.error("Error: --verbose and --quiet cannot be used together")
+      process.exit(1)
+    }
+    if (opts.local && opts.cloud) {
+      console.error("Error: --local and --cloud cannot be used together")
       process.exit(1)
     }
     if (opts.verbose) {
@@ -69,6 +87,11 @@ program
     }
     if (opts.quiet) {
       setQuiet(true)
+    }
+    // Detect and set mode
+    currentMode = detectMode({ local: opts.local, cloud: opts.cloud })
+    if (opts.verbose) {
+      debug(`Mode: ${currentMode}`)
     }
   })
 
