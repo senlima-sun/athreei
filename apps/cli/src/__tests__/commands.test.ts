@@ -59,6 +59,25 @@ vi.mock("../auth/credentials.js", () => ({
   createCredentialStore: vi.fn(() => mockCredentialStore),
 }))
 
+// Mock mode detection for mcp commands
+vi.mock("../index.js", () => ({
+  getMode: vi.fn(() => "cloud"),
+}))
+
+// Mock local config operations
+vi.mock("../lib/local-config.js", () => ({
+  listLocalServers: vi.fn(() => []),
+  addLocalServer: vi.fn(),
+  removeLocalServer: vi.fn(),
+  getLocalServer: vi.fn(),
+}))
+
+// Mock MCP client
+vi.mock("../lib/mcp-client.js", () => ({
+  verifyMcpServer: vi.fn(),
+  listMcpTools: vi.fn(),
+}))
+
 // Mock fs for gateway tests
 vi.mock("fs", async (importOriginal) => {
   const actual = await importOriginal<typeof import("fs")>()
