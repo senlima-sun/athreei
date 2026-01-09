@@ -155,50 +155,46 @@ bun run seed               # Seed database
 ### Package-specific Commands
 
 ```bash
-# MCP Server
-cd packages/mcp-server
-bun run dev       # Watch mode
-bun run start     # Run compiled
-
-# Extension
-cd packages/extension
-bun run build     # Build to dist/
-bun run dev       # Watch mode
-
-# Dashboard (local UI)
-cd packages/dashboard
-bun run dev       # Vite dev server on :5173
-
-# Native Host
-cd packages/native-host
-bun run build         # Current platform binary
-bun run build:all     # All platform binaries (macOS arm64/x64, Windows, Linux)
-
-# Sync Server
-cd packages/sync-server
-bun run dev       # Watch mode
-bun run migrate   # Run DB migrations
-
 # Gateway (local MCP gateway)
 cd packages/gateway
 bun run dev           # Watch mode
+bun run dev:sse       # SSE transport mode
 bun run build:binary  # Compile to binary
 
 # Gateway Cloud (hosted MCP gateway)
 cd packages/gateway-cloud
 bun run dev       # Watch mode
 
+# Sync Server
+cd packages/sync-server
+bun run dev       # Watch mode
+bun run db:migrate    # Run DB migrations
+bun run db:studio     # Open Drizzle Studio
+
 # API Server
 cd apps/api
 bun run dev       # Watch mode on :3001
 
-# Platform (Next.js auth frontend)
+# Platform (Next.js frontend)
 cd apps/platform
 bun run dev       # Next.js dev server with Turbopack
+
+# Desktop App (Tauri)
+cd apps/aiii-desktop
+bun run tauri:dev     # Development mode
+bun run tauri:build   # Build for current platform
+
+# CLI App
+cd apps/cli
+bun run dev       # Watch mode
 
 # Email templates
 cd packages/email
 bun run email:dev # Email preview on :3030
+
+# Docs site
+cd apps/docs
+bun run dev       # Docs dev server
 ```
 
 ## Architecture
@@ -207,20 +203,17 @@ bun run email:dev # Email preview on :3030
 
 ### Packages (Shared Libraries)
 
-- `packages/shared` - Shared types, protocols, and crypto utilities
+- `packages/shared` - Shared types, protocols, crypto utilities, Zod schemas
 - `packages/db` - Drizzle ORM with dual PostgreSQL/SQLite support
 - `packages/auth` - Better Auth configuration (server + client exports)
 - `packages/email` - Resend email templates with React Email
-- `packages/sdk` - Official SDK for website integration
+- `packages/ui` - shadcn/ui component library (Radix UI + Tailwind)
 
 ### Packages (Local/Self-hosted)
 
-- `packages/mcp-server` - Local MCP server exposing browser tools to AI apps
-- `packages/extension` - Chrome extension (Manifest V3) with content scripts
-- `packages/dashboard` - React + Vite local web dashboard
-- `packages/native-host` - Native messaging bridge (compiled binary via `bun build --compile`)
-- `packages/gateway` - Local MCP gateway (compiled binary)
-- `packages/gateway-core` - Shared gateway logic
+- `packages/gateway` - Local MCP gateway (compiled binary via `bun build --compile`)
+- `packages/gateway-core` - Shared gateway logic and MCP protocol handling
+- `packages/cli` - Local MCP server management CLI (`a3i` command)
 
 ### Packages (Cloud/Hosted)
 
@@ -229,41 +222,52 @@ bun run email:dev # Email preview on :3030
 
 ### Apps
 
-- `apps/api` - API server (Hono + Better Auth + Drizzle)
+- `apps/api` - API server (Hono + Better Auth + Drizzle) on :3001
 - `apps/platform` - Platform frontend (Next.js 15 + Turbopack)
-- `apps/web` - Marketing site (Preact + Vite)
+- `apps/web` - Marketing site (Next.js 15)
+- `apps/aiii-desktop` - Desktop application (Tauri 2.0 + React)
+- `apps/cli` - Terminal UI CLI (`athreei` command, React Ink)
+- `apps/docs` - Documentation site (Fumadocs + Next.js)
+
+### Experimental
+
+- `experimental/site-sdk` - Website integration SDK (`@athreei/site-sdk`)
 
 **Key communication patterns:**
 
-- AI App ↔ MCP Server: Standard MCP protocol (stdio for Claude Desktop, SSE for web apps)
-- MCP Server ↔ Extension: Chrome Native Messaging via native-host binary
-- Extension ↔ Websites: Content scripts + `aiii:*` custom events
+- AI App ↔ Gateway: MCP protocol (stdio for Claude Desktop, SSE for web apps)
+- Gateway ↔ MCP Servers: Fan-out to multiple servers, tool namespacing (e.g., `github__create_issue`)
+- Platform ↔ API: REST API with Better Auth sessions
+- Gateway ↔ Sync Server: E2E encrypted config sync and trace storage
 
 ## Code Patterns
 
-### Logging in MCP Server
+### Gateway Trace Collection
 
-All logs must go to `stderr` (via `console.error` or the logger utility) because `stdout` is reserved for JSON-RPC communication:
+The gateway collects tool call traces with optional E2E encryption:
 
 ```typescript
-import { logger } from "./utils/logger"
-logger.info("message") // Goes to stderr
+// packages/gateway/src/trace-collector.ts
+// Traces encrypted with XChaCha20-Poly1305 before sync
 ```
 
-### Adding MCP Tools
+### Tool Namespacing
 
-Define schema in `packages/shared/src/types/mcp-tools.ts`, then register in `packages/mcp-server/src/tools/browser.ts` using `server.registerTool()`.
+When aggregating multiple MCP servers, tools are namespaced to avoid conflicts:
 
-### Native Messaging Protocol
-
-Length-prefixed JSON (4-byte little-endian length + JSON payload). Max message size: 1MB.
+```
+Original: create_issue (from github server)
+Namespaced: github__create_issue
+```
 
 ### Website Integration via `aiii:*` Events
 
-- `aiii:ready` - Extension → Page (extension ready)
-- `aiii:request` - Extension → Page (AI requesting action)
-- `aiii:response` - Page → Extension (website's response)
-- `aiii:register` - Page → Extension (register custom tools)
+Used by `@athreei/site-sdk` for website-to-AI communication:
+
+- `aiii:ready` - SDK → Page (SDK initialized)
+- `aiii:request` - AI → Page (AI requesting action)
+- `aiii:response` - Page → AI (website's response)
+- `aiii:register` - Page → AI (register custom tools)
 
 ### Database Pattern
 
@@ -306,11 +310,9 @@ export default {
 ## Testing
 
 - **Primary test runner:** Vitest (`bun run test`)
-- Vitest with `jsdom` environment for extension tests (browser simulation)
-- Node environment for all other tests
-- Run single test file: `npx vitest run packages/mcp-server/src/server.test.ts`
+- Run single test file: `npx vitest run <path>`
 - SQLite tests (bun:sqlite): `bun run test:sqlite`
-- Extension tests require jsdom for DOM APIs
+- Node environment for most tests, jsdom for browser simulation when needed
 
 **Important:** Do NOT use `bun test` directly - most tests use Vitest-specific APIs (`vi.hoisted`, `vi.mocked`, jsdom environment) that are incompatible with Bun's native test runner.
 
@@ -319,12 +321,12 @@ export default {
 - **Runtime:** Bun
 - **Language:** TypeScript 5.7 (strict mode)
 - **Backend:** Hono web framework
-- **Frontend:** React 18/19, Next.js 15, Vite 6, Tailwind CSS v4, shadcn/ui
-- **Marketing:** Preact + Vite
+- **Frontend:** React 19, Next.js 15, Tailwind CSS v4, shadcn/ui
+- **Desktop:** Tauri 2.0 + React
 - **Database:** PostgreSQL (cloud), SQLite (self-hosted)
 - **ORM:** Drizzle ORM with dual schema support
 - **Auth:** Better Auth
 - **Email:** Resend + React Email
 - **Validation:** Zod
-- **Crypto:** @noble/hashes, @noble/ciphers, Argon2
-- **Testing:** Vitest with jsdom for extension tests
+- **Crypto:** @noble/hashes, @noble/ciphers (XChaCha20-Poly1305), Argon2
+- **Testing:** Vitest
