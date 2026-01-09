@@ -422,7 +422,9 @@ export const syncEnable = (
   authToken: string,
   serverUrl?: string
 ): Promise<void> =>
-  invoke("sync_enable", { input: { auth_token: authToken, server_url: serverUrl } })
+  invoke("sync_enable", {
+    input: { auth_token: authToken, server_url: serverUrl },
+  })
 
 /**
  * Disable sync
@@ -446,13 +448,13 @@ export const syncGetConflicts = (): Promise<SyncConflict[]> =>
 export const syncResolveConflict = (
   conflictId: string,
   resolution: ConflictResolution
-): Promise<void> =>
-  invoke("sync_resolve_conflict", { conflictId, resolution })
+): Promise<void> => invoke("sync_resolve_conflict", { conflictId, resolution })
 
 /**
  * Get sync configuration
  */
-export const syncGetConfig = (): Promise<SyncConfig> => invoke("sync_get_config")
+export const syncGetConfig = (): Promise<SyncConfig> =>
+  invoke("sync_get_config")
 
 /**
  * Update sync configuration
@@ -463,7 +465,8 @@ export const syncSetConfig = (config: SyncConfig): Promise<void> =>
 /**
  * Get pending change count
  */
-export const syncPendingCount = (): Promise<number> => invoke("sync_pending_count")
+export const syncPendingCount = (): Promise<number> =>
+  invoke("sync_pending_count")
 
 // ==================== Settings API ====================
 
@@ -632,8 +635,7 @@ export const backupExport = (path: string): Promise<BackupHeader> =>
 export const backupImport = (
   path: string,
   strategy: ImportStrategy
-): Promise<ImportResult> =>
-  invoke("backup_import", { path, strategy })
+): Promise<ImportResult> => invoke("backup_import", { path, strategy })
 
 /**
  * Get information about a backup file

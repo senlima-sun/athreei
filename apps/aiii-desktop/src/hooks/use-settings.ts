@@ -107,7 +107,9 @@ export function useSetLaunchAtStartup() {
   return useMutation({
     mutationFn: api.settingsSetLaunchAtStartup,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["settings", "launch-at-startup"] })
+      queryClient.invalidateQueries({
+        queryKey: ["settings", "launch-at-startup"],
+      })
       queryClient.invalidateQueries({ queryKey: ["settings"] })
     },
   })
@@ -135,7 +137,9 @@ export function useSetDataRetention() {
   return useMutation({
     mutationFn: api.settingsSetDataRetention,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["settings", "data-retention"] })
+      queryClient.invalidateQueries({
+        queryKey: ["settings", "data-retention"],
+      })
       queryClient.invalidateQueries({ queryKey: ["settings"] })
     },
   })

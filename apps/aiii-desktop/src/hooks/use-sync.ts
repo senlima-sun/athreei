@@ -50,8 +50,13 @@ export function useSyncPendingCount() {
 export function useSyncEnable() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ authToken, serverUrl }: { authToken: string; serverUrl?: string }) =>
-      api.syncEnable(authToken, serverUrl),
+    mutationFn: ({
+      authToken,
+      serverUrl,
+    }: {
+      authToken: string
+      serverUrl?: string
+    }) => api.syncEnable(authToken, serverUrl),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sync"] })
     },
@@ -92,8 +97,13 @@ export function useSyncNow() {
 export function useSyncResolveConflict() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ conflictId, resolution }: { conflictId: string; resolution: ConflictResolution }) =>
-      api.syncResolveConflict(conflictId, resolution),
+    mutationFn: ({
+      conflictId,
+      resolution,
+    }: {
+      conflictId: string
+      resolution: ConflictResolution
+    }) => api.syncResolveConflict(conflictId, resolution),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sync", "conflicts"] })
       queryClient.invalidateQueries({ queryKey: ["sync", "status"] })

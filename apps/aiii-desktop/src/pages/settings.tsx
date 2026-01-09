@@ -108,7 +108,10 @@ export function SettingsPage(): React.ReactElement {
     })
 
     if (path && typeof path === "string") {
-      const result = await importBackup.mutateAsync({ path, strategy: importStrategy })
+      const result = await importBackup.mutateAsync({
+        path,
+        strategy: importStrategy,
+      })
       setImportSuccess(
         `Imported ${result.spaces_imported} spaces and ${result.memories_imported} memories`
       )
@@ -397,9 +400,7 @@ export function SettingsPage(): React.ReactElement {
             </div>
             <div>
               <CardTitle>Backup & Restore</CardTitle>
-              <CardDescription>
-                Export and import your memories
-              </CardDescription>
+              <CardDescription>Export and import your memories</CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -477,7 +478,9 @@ export function SettingsPage(): React.ReactElement {
             </div>
             <select
               value={importStrategy}
-              onChange={(e) => setImportStrategy(e.target.value as ImportStrategy)}
+              onChange={(e) =>
+                setImportStrategy(e.target.value as ImportStrategy)
+              }
               className="rounded-md border border-input bg-transparent px-2 py-1 text-sm"
             >
               <option value="skip">Skip existing</option>

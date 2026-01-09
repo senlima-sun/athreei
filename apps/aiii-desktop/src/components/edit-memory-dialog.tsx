@@ -192,10 +192,7 @@ export function EditMemoryDialog({
               <Button variant="outline" onClick={handleClose}>
                 Cancel
               </Button>
-              <Button
-                onClick={handleSave}
-                disabled={updateMemory.isPending}
-              >
+              <Button onClick={handleSave} disabled={updateMemory.isPending}>
                 {updateMemory.isPending ? (
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 ) : (

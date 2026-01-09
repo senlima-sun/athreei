@@ -17,8 +17,13 @@ export function useExportBackup() {
 export function useImportBackup() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ path, strategy }: { path: string; strategy: ImportStrategy }) =>
-      api.backupImport(path, strategy),
+    mutationFn: ({
+      path,
+      strategy,
+    }: {
+      path: string
+      strategy: ImportStrategy
+    }) => api.backupImport(path, strategy),
     onSuccess: () => {
       // Invalidate all data queries after import
       queryClient.invalidateQueries({ queryKey: ["memories"] })

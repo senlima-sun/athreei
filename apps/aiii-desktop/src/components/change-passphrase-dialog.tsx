@@ -141,7 +141,8 @@ export function ChangePassphraseDialog({
                 <p className="font-medium">Important</p>
                 <p className="text-xs">
                   This will re-encrypt all your memories. This may take a while
-                  if you have many memories. Do not close the app during this process.
+                  if you have many memories. Do not close the app during this
+                  process.
                 </p>
               </div>
             </div>
@@ -181,11 +182,13 @@ export function ChangePassphraseDialog({
                 placeholder="Enter new passphrase (min 8 characters)"
                 disabled={changePassphrase.isPending}
               />
-              {newPassphrase.length > 0 && newPassphrase.length < MIN_PASSPHRASE_LENGTH && (
-                <p className="text-xs text-destructive">
-                  {MIN_PASSPHRASE_LENGTH - newPassphrase.length} more characters needed
-                </p>
-              )}
+              {newPassphrase.length > 0 &&
+                newPassphrase.length < MIN_PASSPHRASE_LENGTH && (
+                  <p className="text-xs text-destructive">
+                    {MIN_PASSPHRASE_LENGTH - newPassphrase.length} more
+                    characters needed
+                  </p>
+                )}
             </div>
 
             {/* Confirm passphrase */}
@@ -206,7 +209,9 @@ export function ChangePassphraseDialog({
               />
               {confirmPassphrase.length > 0 &&
                 newPassphrase !== confirmPassphrase && (
-                  <p className="text-xs text-destructive">Passphrases do not match</p>
+                  <p className="text-xs text-destructive">
+                    Passphrases do not match
+                  </p>
                 )}
             </div>
 
@@ -242,7 +247,11 @@ export function ChangePassphraseDialog({
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={!!validationError || changePassphrase.isPending || !!successMessage}
+              disabled={
+                !!validationError ||
+                changePassphrase.isPending ||
+                !!successMessage
+              }
             >
               {changePassphrase.isPending ? (
                 <>
