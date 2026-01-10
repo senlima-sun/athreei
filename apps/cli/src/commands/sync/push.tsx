@@ -6,7 +6,7 @@ import { ErrorDisplay } from "../../components/error.js"
 import { LoadingSpinner } from "../../components/loading-spinner.js"
 import { loadConfig } from "../../lib/config-loader.js"
 import type { Config } from "../../lib/config-schema.js"
-import type { McpServer } from "../../lib/types.js"
+import type { McpServer } from "../../types/index.js"
 import {
   compareConfigs,
   localToCloudRequest,

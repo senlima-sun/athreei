@@ -6,7 +6,7 @@ import { LoginFlow } from "./components/login-flow.js"
 import { AuthStatus } from "./components/auth-status.js"
 import { getAuthManager } from "./auth/manager.js"
 import { setVerbose, setQuiet, debug } from "./lib/output.js"
-import { detectMode, type CliMode } from "./lib/mode.js"
+import { detectMode, setMode } from "./lib/mode.js"
 import { OrgList, OrgSwitch, OrgCurrent } from "./commands/org.js"
 import {
   McpList,
@@ -60,17 +60,6 @@ import {
 
 const program = new Command()
 
-// Global state for mode (set in preAction hook)
-let currentMode: CliMode = "local"
-
-/**
- * Get the current CLI mode
- * Use this in command handlers to determine local vs cloud behavior
- */
-export function getMode(): CliMode {
-  return currentMode
-}
-
 program
   .name("athreei")
   .description("Athreei CLI - Universal MCP Gateway")
@@ -97,10 +86,10 @@ program
     if (opts.quiet) {
       setQuiet(true)
     }
-    // Detect and set mode
-    currentMode = detectMode({ local: opts.local, cloud: opts.cloud })
+    const mode = detectMode({ local: opts.local, cloud: opts.cloud })
+    setMode(mode)
     if (opts.verbose) {
-      debug(`Mode: ${currentMode}`)
+      debug(`Mode: ${mode}`)
     }
   })
 

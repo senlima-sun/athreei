@@ -12,6 +12,16 @@ import {
 export type { CliMode, ModeOptions }
 export { CloudModeRequiredError, LocalModeRequiredError }
 
+let currentMode: CliMode = "local"
+
+export function setMode(mode: CliMode): void {
+  currentMode = mode
+}
+
+export function getMode(): CliMode {
+  return currentMode
+}
+
 export function detectMode(options?: ModeOptions): CliMode {
   if (options?.local) {
     return "local"

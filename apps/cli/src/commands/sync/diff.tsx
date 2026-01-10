@@ -12,7 +12,7 @@ import {
   type SyncDiffResult,
   type DiffLine,
 } from "../../lib/sync-utils.js"
-import type { McpServer } from "../../lib/types.js"
+import type { McpServer } from "../../types/index.js"
 
 interface McpServerListResponse {
   data: McpServer[]
