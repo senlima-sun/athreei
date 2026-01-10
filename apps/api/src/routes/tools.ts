@@ -2,7 +2,7 @@ import { Hono } from "hono"
 import { zValidator } from "@hono/zod-validator"
 import { eq } from "drizzle-orm"
 import { authMiddleware, getAuthContext, ApiError } from "../middleware"
-import { getDb } from "../lib/db"
+import { db } from "../lib/db-operations"
 import { mcpTool, mcpServer } from "@athreei/db"
 import { listToolsQuerySchema, updateToolSchema } from "../schemas/tools"
 import { verifyOrganizationMembership } from "../services"
@@ -14,9 +14,7 @@ tools.use("*", authMiddleware)
 tools.get("/", zValidator("query", listToolsQuerySchema), async (c) => {
   const auth = getAuthContext(c)
   const { serverId } = c.req.valid("query")
-  const db = getDb()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const dbQuery = (db as any).query
+  const dbQuery = db().query
 
   const server = await dbQuery.mcpServer.findFirst({
     where: eq(mcpServer.id, serverId),
@@ -26,9 +24,7 @@ tools.get("/", zValidator("query", listToolsQuerySchema), async (c) => {
     throw ApiError.notFound("Server not found")
   }
 
-  // Verify user has access
   const isMember = await verifyOrganizationMembership(
-    db,
     auth.userId,
     server.organizationId
   )
@@ -82,9 +78,7 @@ tools.patch("/:id", zValidator("json", updateToolSchema), async (c) => {
   const auth = getAuthContext(c)
   const { id } = c.req.param()
   const updates = c.req.valid("json")
-  const db = getDb()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const dbQuery = (db as any).query
+  const dbQuery = db().query
 
   const tool = await dbQuery.mcpTool.findFirst({
     where: eq(mcpTool.id, id),
@@ -102,9 +96,7 @@ tools.patch("/:id", zValidator("json", updateToolSchema), async (c) => {
     throw ApiError.notFound("Server not found")
   }
 
-  // Verify user has access
   const isMember = await verifyOrganizationMembership(
-    db,
     auth.userId,
     server.organizationId
   )
@@ -127,8 +119,7 @@ tools.patch("/:id", zValidator("json", updateToolSchema), async (c) => {
     updateData.isEnabled = updates.isEnabled ? "true" : "false"
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [updated] = await (db as any)
+  const [updated] = await db()
     .update(mcpTool)
     .set(updateData)
     .where(eq(mcpTool.id, id))

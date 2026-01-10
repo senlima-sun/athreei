@@ -23,8 +23,8 @@ const testErrorHandler: ErrorHandler = (err: Error, c: Context) => {
 }
 
 // Mock modules before importing the routes
-vi.mock("../../lib/db", () => ({
-  getDb: vi.fn(() => mockDb),
+vi.mock("../../lib/db-operations", () => ({
+  db: vi.fn(() => mockDb),
 }))
 
 vi.mock("@athreei/db", () => ({
@@ -179,9 +179,6 @@ describe("Permissions Routes", () => {
     vi.clearAllMocks()
   })
 
-  // =========================================================================
-  // GET /permissions Tests
-  // =========================================================================
   describe("GET /permissions", () => {
     it("should list all permissions for an organization", async () => {
       mockVerifyOrganizationMembership.mockResolvedValue(true)
@@ -271,9 +268,6 @@ describe("Permissions Routes", () => {
     })
   })
 
-  // =========================================================================
-  // PUT /permissions/:id Tests
-  // =========================================================================
   describe("PUT /permissions/:id", () => {
     it("should update permission level", async () => {
       mockDb.query.permission.findFirst.mockResolvedValue(mockPermissions[0])
@@ -444,9 +438,6 @@ describe("Permissions Routes", () => {
     })
   })
 
-  // =========================================================================
-  // DELETE /permissions/:id Tests
-  // =========================================================================
   describe("DELETE /permissions/:id", () => {
     it("should delete permission successfully", async () => {
       mockDb.query.permission.findFirst.mockResolvedValue(mockPermissions[0])
@@ -517,9 +508,6 @@ describe("Permissions Routes", () => {
     })
   })
 
-  // =========================================================================
-  // Edge Cases
-  // =========================================================================
   describe("Edge Cases", () => {
     it("should handle permission with numeric timestamp", async () => {
       const permWithNumericTimestamp = {

@@ -194,9 +194,6 @@ describe("OAuth Routes", () => {
     } as any)
   })
 
-  // =========================================================================
-  // POST /api/oauth/connect Tests
-  // =========================================================================
   describe("POST /api/oauth/connect", () => {
     it("should return 400 when serverUrl is missing", async () => {
       const { default: oauth } = await import("./routes")
@@ -381,9 +378,6 @@ describe("OAuth Routes", () => {
     })
   })
 
-  // =========================================================================
-  // GET /api/oauth/callback Tests
-  // =========================================================================
   describe("GET /api/oauth/callback", () => {
     it("should redirect to dashboard with error when OAuth provider returns error", async () => {
       const { default: oauth } = await import("./routes")
@@ -599,9 +593,6 @@ describe("OAuth Routes", () => {
     })
   })
 
-  // =========================================================================
-  // POST /api/oauth/token Tests
-  // =========================================================================
   describe("POST /api/oauth/token", () => {
     it("should return 400 when serverUrl is missing", async () => {
       const { default: oauth } = await import("./routes")
@@ -729,9 +720,6 @@ describe("OAuth Routes", () => {
     })
   })
 
-  // =========================================================================
-  // DELETE /api/oauth/token Tests
-  // =========================================================================
   describe("DELETE /api/oauth/token", () => {
     it("should return 400 when serverUrl query param is missing", async () => {
       const { default: oauth } = await import("./routes")
@@ -809,9 +797,6 @@ describe("OAuth Routes", () => {
     })
   })
 
-  // =========================================================================
-  // GET /api/oauth/connections Tests
-  // =========================================================================
   describe("GET /api/oauth/connections", () => {
     it("should return empty list when no connections", async () => {
       const { default: oauth } = await import("./routes")
@@ -962,9 +947,6 @@ describe("OAuth Routes", () => {
     })
   })
 
-  // =========================================================================
-  // Authentication Tests
-  // =========================================================================
   describe("Authentication", () => {
     it("should require auth for POST /api/oauth/connect", async () => {
       // authMiddleware is mocked in all tests, so this is implicit
@@ -1032,9 +1014,6 @@ describe("OAuth Routes", () => {
     })
   })
 
-  // =========================================================================
-  // Edge Cases
-  // =========================================================================
   describe("Edge Cases", () => {
     it("should handle OAuth callback without refresh token", async () => {
       const { default: oauth } = await import("./routes")

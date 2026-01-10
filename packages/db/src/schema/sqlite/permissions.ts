@@ -23,10 +23,6 @@ export const permission = sqliteTable("permission", {
   updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
 })
 
-// =============================================================================
-// Relations
-// =============================================================================
-
 export const permissionRelations = relations(permission, ({ one }) => ({
   organization: one(organization, {
     fields: [permission.organizationId],

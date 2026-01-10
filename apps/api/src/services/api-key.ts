@@ -1,5 +1,5 @@
 import { eq, and, isNull } from "drizzle-orm"
-import { type DatabaseClient } from "../lib/db"
+import { db } from "../lib/db-operations"
 import { apiKey, endpoint } from "@athreei/db"
 
 export type ApiKeyValidationResult =
@@ -41,14 +41,12 @@ export function createFullKey(key: string): string {
 }
 
 export async function validateApiKey(
-  db: DatabaseClient,
   key: string
 ): Promise<ApiKeyValidationResult> {
   const keyToHash = key.startsWith("ak_") ? key.slice(3) : key
   const keyHash = await hashApiKey(keyToHash)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const dbQuery = (db as any).query
+  const dbQuery = db().query
 
   const apiKeyRecord = (await dbQuery.apiKey.findFirst({
     where: and(eq(apiKey.keyHash, keyHash), isNull(apiKey.revokedAt)),
@@ -74,8 +72,7 @@ export async function validateApiKey(
     return { valid: false, error: "Associated endpoint not found" }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (db as any)
+  await db()
     .update(apiKey)
     .set({
       lastUsedAt: new Date(),

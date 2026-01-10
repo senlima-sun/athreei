@@ -6,10 +6,6 @@
  * interactive elements and accessible names.
  */
 
-// ============================================================================
-// Type Definitions
-// ============================================================================
-
 export interface A11yNode {
   role: string // button, link, input, heading, etc.
   name: string // accessible name (text content, aria-label, etc.)
@@ -45,10 +41,6 @@ export interface InteractiveElement {
   bounds: { x: number; y: number; width: number; height: number }
   actionable: boolean // is it visible and enabled?
 }
-
-// ============================================================================
-// Role Detection
-// ============================================================================
 
 /**
  * Map HTML elements to their implicit ARIA roles
@@ -175,10 +167,6 @@ function getHeadingLevel(element: Element): number | undefined {
 
   return undefined
 }
-
-// ============================================================================
-// Accessible Name Computation
-// ============================================================================
 
 /**
  * Compute the accessible name for an element
@@ -310,10 +298,6 @@ function isInteractiveRole(role: string): boolean {
   return interactiveRoles.includes(role)
 }
 
-// ============================================================================
-// Visibility Check
-// ============================================================================
-
 /**
  * Check if an element is visible to the user
  */
@@ -373,10 +357,6 @@ export function isVisible(element: Element): boolean {
 
   return true
 }
-
-// ============================================================================
-// Selector Generation
-// ============================================================================
 
 /**
  * Generate a unique CSS selector for an element
@@ -459,10 +439,6 @@ function generateSelector(element: Element): string {
 
   return fullSelector
 }
-
-// ============================================================================
-// Accessibility Tree Building
-// ============================================================================
 
 /**
  * Build an accessibility node from a DOM element
@@ -591,10 +567,6 @@ export function buildA11yTree(): A11yTree {
   }
 }
 
-// ============================================================================
-// Interactive Elements Extraction
-// ============================================================================
-
 /**
  * Get a flat list of all interactive elements on the page
  */
@@ -666,10 +638,6 @@ export function getInteractiveElements(): InteractiveElement[] {
   return elements
 }
 
-// ============================================================================
-// Element Finding
-// ============================================================================
-
 /**
  * Find an element by CSS selector
  */
@@ -681,10 +649,6 @@ export function findElement(selector: string): Element | null {
     return null
   }
 }
-
-// ============================================================================
-// MutationObserver Integration
-// ============================================================================
 
 let observer: MutationObserver | null = null
 let debounceTimer: number | null = null

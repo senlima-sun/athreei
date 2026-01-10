@@ -8,10 +8,6 @@
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js"
 import type { Tool } from "@modelcontextprotocol/sdk/types.js"
 
-// =============================================================================
-// MCP Server Configuration Types
-// =============================================================================
-
 /**
  * OAuth configuration for servers that don't support RFC 9728 discovery
  */
@@ -60,10 +56,6 @@ export interface McpServerConfig {
   oauth?: OAuthConfig
 }
 
-// =============================================================================
-// Connected MCP Types
-// =============================================================================
-
 /**
  * A connected MCP server with its tools
  */
@@ -81,10 +73,6 @@ export interface ConnectedMcp {
   /** Last successful heartbeat */
   lastHeartbeat?: Date
 }
-
-// =============================================================================
-// Aggregated Tool Types
-// =============================================================================
 
 /**
  * Aggregated tool with server prefix
@@ -106,10 +94,6 @@ export interface ParsedToolName {
   /** Original tool name */
   toolName: string
 }
-
-// =============================================================================
-// Router Types
-// =============================================================================
 
 /**
  * Minimal state interface required for routing operations.
@@ -142,10 +126,6 @@ export interface RoutingInfo {
   /** Whether the server is connected */
   isConnected: boolean
 }
-
-// =============================================================================
-// Logger Interface
-// =============================================================================
 
 /**
  * Logger interface for gateway-core functions.

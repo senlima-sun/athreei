@@ -9,10 +9,6 @@ import { homedir, platform } from "node:os"
 import { join } from "node:path"
 import { existsSync, mkdirSync } from "node:fs"
 
-// ============================================================================
-// Constants
-// ============================================================================
-
 /** Config directory name */
 const CONFIG_DIR_NAME = ".athreei"
 
@@ -21,10 +17,6 @@ const LEGACY_CONFIG_DIR_NAME = ".a3i"
 
 /** Config file name */
 const CONFIG_FILE_NAME = "config.json"
-
-// ============================================================================
-// Path Functions
-// ============================================================================
 
 /**
  * Get the config directory path based on platform
@@ -92,10 +84,6 @@ export function getAppDataDir(): string {
   }
 }
 
-// ============================================================================
-// Directory Management
-// ============================================================================
-
 /**
  * Ensure the config directory exists
  *
@@ -127,10 +115,6 @@ export function ensureAppDataDir(): string {
 
   return dir
 }
-
-// ============================================================================
-// Existence Checks
-// ============================================================================
 
 /**
  * Check if main config file exists

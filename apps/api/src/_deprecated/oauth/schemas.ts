@@ -6,18 +6,10 @@
 
 import { z } from "zod"
 
-// =============================================================================
-// Constants
-// =============================================================================
-
 /**
  * Known OAuth providers for display purposes
  */
 export const oauthProviders = ["sentry", "github", "linear", "other"] as const
-
-// =============================================================================
-// Request Schemas
-// =============================================================================
 
 /**
  * POST /api/oauth/connect - Initiate OAuth flow
@@ -42,10 +34,6 @@ export const deleteTokenQuerySchema = z.object({
   serverUrl: z.string().min(1, "Server URL is required"),
 })
 
-// =============================================================================
-// Response Types
-// =============================================================================
-
 /**
  * OAuth connection info (without sensitive tokens)
  */
@@ -56,10 +44,6 @@ export const oauthConnectionSchema = z.object({
   createdAt: z.date(),
   updatedAt: z.date(),
 })
-
-// =============================================================================
-// Type Exports
-// =============================================================================
 
 export type OAuthProvider = (typeof oauthProviders)[number]
 export type ConnectOAuthInput = z.infer<typeof connectOAuthSchema>

@@ -77,8 +77,8 @@ const mockDb = {
 }
 
 // Mock modules - these get hoisted but reference the globals above
-vi.mock("../../lib/db", () => ({
-  getDb: vi.fn(() => mockDb),
+vi.mock("../../lib/db-operations", () => ({
+  db: vi.fn(() => mockDb),
 }))
 
 vi.mock("../../middleware", () => ({
@@ -231,10 +231,6 @@ describe("MCP Servers Environment Variables API", () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
-
-  // ===========================================================================
-  // POST /api/mcp-servers - Create Server with Env Vars
-  // ===========================================================================
   describe("POST /api/mcp-servers - Create Server with Env Vars", () => {
     it("should create server with env vars and return envKeys in response", async () => {
       mockDb.query.member.findFirst.mockResolvedValue(mockMember)
@@ -392,10 +388,6 @@ describe("MCP Servers Environment Variables API", () => {
       expect(data.envKeys ?? []).toEqual([])
     })
   })
-
-  // ===========================================================================
-  // PATCH /api/mcp-servers/:id - Update Server Env Vars
-  // ===========================================================================
   describe("PATCH /api/mcp-servers/:id - Update Server Env Vars", () => {
     it("should update encrypted env via PATCH", async () => {
       const updatedServer = {
@@ -543,10 +535,6 @@ describe("MCP Servers Environment Variables API", () => {
       expect(response.status).toBe(403)
     })
   })
-
-  // ===========================================================================
-  // GET /api/mcp-servers/:id - Returns envKeys only
-  // ===========================================================================
   describe("GET /api/mcp-servers/:id - Returns envKeys only", () => {
     it("should return array of env var names, not values", async () => {
       mockDb.query.mcpServer.findFirst.mockResolvedValue(mockMcpServerWithEnv)
@@ -623,10 +611,6 @@ describe("MCP Servers Environment Variables API", () => {
       expect(data.error.toLowerCase()).toContain("access")
     })
   })
-
-  // ===========================================================================
-  // GET /api/mcp-servers/:id/env - Full Decrypted Env Vars
-  // ===========================================================================
   describe("GET /api/mcp-servers/:id/env - Full Decrypted Env Vars", () => {
     it("should return full decrypted env vars", async () => {
       mockDb.query.mcpServer.findFirst.mockResolvedValue(mockMcpServerWithEnv)
@@ -714,10 +698,6 @@ describe("MCP Servers Environment Variables API", () => {
       expect(data.env).toBeDefined()
     })
   })
-
-  // ===========================================================================
-  // Encryption Configuration Tests
-  // ===========================================================================
   describe("Encryption Configuration", () => {
     // Note: Encryption is configured via ENCRYPTION_KEY env var at top of file
     // These tests verify behavior when encryption IS configured
@@ -797,10 +777,6 @@ describe("MCP Servers Environment Variables API", () => {
       expect(response.status).toBe(201)
     })
   })
-
-  // ===========================================================================
-  // Authorization Tests
-  // ===========================================================================
   describe("Authorization for Env Var Access", () => {
     it("should require authentication for GET /api/mcp-servers/:id/env", async () => {
       // This is implicitly tested since authMiddleware is applied to all routes
@@ -849,10 +825,6 @@ describe("MCP Servers Environment Variables API", () => {
       expect(response.status).toBe(200)
     })
   })
-
-  // ===========================================================================
-  // Edge Cases
-  // ===========================================================================
   describe("Edge Cases", () => {
     it("should handle env var names with special characters", async () => {
       mockDb.query.member.findFirst.mockResolvedValue(mockMember)
@@ -1020,10 +992,6 @@ describe("MCP Servers Environment Variables API", () => {
       expect(responses.every((r) => r.status === 200)).toBe(true)
     })
   })
-
-  // ===========================================================================
-  // Key Version Tracking Tests
-  // ===========================================================================
   describe("Encryption Key Version Tracking", () => {
     it("should store key version when encrypting env vars", async () => {
       mockDb.query.member.findFirst.mockResolvedValue(mockMember)

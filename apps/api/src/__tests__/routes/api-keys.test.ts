@@ -21,8 +21,8 @@ const testErrorHandler: ErrorHandler = (err: Error, c: Context) => {
 }
 
 // Mock modules before importing the routes
-vi.mock("../../lib/db", () => ({
-  getDb: vi.fn(() => mockDb),
+vi.mock("../../lib/db-operations", () => ({
+  db: vi.fn(() => mockDb),
 }))
 
 vi.mock("../../middleware", () => ({
@@ -173,10 +173,6 @@ describe("API Keys Routes", () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
-
-  // =========================================================================
-  // Organization Membership Verification Tests
-  // =========================================================================
   describe("Organization Membership Verification", () => {
     describe("GET /endpoints/:endpointId/keys", () => {
       it("should return 403 when user is NOT a member of the endpoint's organization", async () => {
@@ -366,10 +362,6 @@ describe("API Keys Routes", () => {
       })
     })
   })
-
-  // =========================================================================
-  // GET /endpoints/:endpointId/keys Tests
-  // =========================================================================
   describe("GET /endpoints/:endpointId/keys", () => {
     it("should return 404 when endpoint does not exist", async () => {
       mockDb.query.endpoint.findFirst.mockResolvedValue(null)
@@ -468,10 +460,6 @@ describe("API Keys Routes", () => {
       expect(data.keys[0].scopes).toEqual(["read", "write"])
     })
   })
-
-  // =========================================================================
-  // POST /endpoints/:endpointId/keys Tests
-  // =========================================================================
   describe("POST /endpoints/:endpointId/keys", () => {
     it("should validate request body requires name", async () => {
       const { default: apiKeys } = await import("../../routes/api-keys")
@@ -632,10 +620,6 @@ describe("API Keys Routes", () => {
       )
     })
   })
-
-  // =========================================================================
-  // DELETE /endpoints/:endpointId/keys/:keyId Tests
-  // =========================================================================
   describe("DELETE /endpoints/:endpointId/keys/:keyId", () => {
     it("should return 404 when endpoint does not exist", async () => {
       mockDb.query.endpoint.findFirst.mockResolvedValue(null)
@@ -730,10 +714,6 @@ describe("API Keys Routes", () => {
       )
     })
   })
-
-  // =========================================================================
-  // API Key Format Tests
-  // =========================================================================
   describe("API Key Format", () => {
     it("should generate key with ak_ prefix", async () => {
       mockDb.query.endpoint.findFirst.mockResolvedValue(mockEndpoint)
@@ -776,10 +756,6 @@ describe("API Keys Routes", () => {
       expect(data.prefix).toBe("ak_" + keyWithoutPrefix.substring(0, 8))
     })
   })
-
-  // =========================================================================
-  // Validation Tests
-  // =========================================================================
   describe("Validation", () => {
     it("should reject invalid expiresAt format", async () => {
       const { default: apiKeys } = await import("../../routes/api-keys")
@@ -852,10 +828,6 @@ describe("API Keys Routes", () => {
       expect(response.status).toBe(400)
     })
   })
-
-  // =========================================================================
-  // Edge Cases
-  // =========================================================================
   describe("Edge Cases", () => {
     it("should handle endpoint with different organization than user's membership", async () => {
       // User is a member of org_123, but endpoint belongs to org_other

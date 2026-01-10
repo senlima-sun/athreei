@@ -23,10 +23,6 @@ import {
   type CloudConfig,
 } from "../types/cli-config.js"
 
-// ============================================================================
-// Error Types
-// ============================================================================
-
 /**
  * Configuration error with context
  */
@@ -40,10 +36,6 @@ export class ConfigError extends Error {
     this.name = "ConfigError"
   }
 }
-
-// ============================================================================
-// Async API
-// ============================================================================
 
 /**
  * Load configuration from file (async)
@@ -68,10 +60,6 @@ export async function saveConfig(
 ): Promise<void> {
   saveConfigSync(config, configPath)
 }
-
-// ============================================================================
-// Sync API (for CLI startup)
-// ============================================================================
 
 /**
  * Load configuration from file (sync)
@@ -156,10 +144,6 @@ export function saveConfigSync(
     throw new ConfigError(`Failed to write config file: ${path}`, path, error)
   }
 }
-
-// ============================================================================
-// Specialized Loaders
-// ============================================================================
 
 /**
  * Load local configuration specifically
@@ -255,10 +239,6 @@ export function loadCloudConfigSync(configPath?: string): CloudConfig {
   return result.data
 }
 
-// ============================================================================
-// Legacy Migration
-// ============================================================================
-
 /**
  * Check if legacy a3i config needs migration
  *
@@ -307,10 +287,6 @@ export function loadLegacyConfigSync(): LocalConfig {
 
   return migrateLegacyConfig(data)
 }
-
-// ============================================================================
-// Utility Functions
-// ============================================================================
 
 /**
  * Check if config file exists

@@ -12,10 +12,6 @@ import type {
   Logger,
 } from "@athreei/gateway-core"
 
-// =============================================================================
-// Session Types
-// =============================================================================
-
 /**
  * Gateway session state
  */
@@ -59,10 +55,6 @@ export interface CreateSessionOptions {
   platformUrl?: string
 }
 
-// =============================================================================
-// API Response Types
-// =============================================================================
-
 /**
  * Endpoint configuration from Platform API
  */
@@ -86,10 +78,6 @@ export interface ApiKeyValidation {
   config?: EndpointConfig
   error?: string
 }
-
-// =============================================================================
-// SSE Message Types
-// =============================================================================
 
 /**
  * MCP JSON-RPC message (incoming)
@@ -129,10 +117,6 @@ export interface SseEvent {
   id?: string
 }
 
-// =============================================================================
-// Health Check Types
-// =============================================================================
-
 /**
  * Health check response
  */
@@ -143,10 +127,6 @@ export interface HealthCheckResponse {
   activeSessions: number
   uptime: number
 }
-
-// =============================================================================
-// Request Validation Schemas
-// =============================================================================
 
 /**
  * SSE connection query parameters
@@ -169,10 +149,6 @@ export const McpMessageSchema = z.object({
 
 export type McpMessage = z.infer<typeof McpMessageSchema>
 
-// =============================================================================
-// Error Types
-// =============================================================================
-
 /**
  * Gateway cloud error codes
  */
@@ -194,10 +170,6 @@ export interface GatewayError {
   message: string
   details?: unknown
 }
-
-// =============================================================================
-// Configuration Types
-// =============================================================================
 
 /**
  * Gateway cloud configuration

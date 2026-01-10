@@ -7,18 +7,10 @@
 
 import { z } from "zod"
 
-// ============================================================================
-// Transport Types
-// ============================================================================
-
 /**
  * Supported MCP transport protocols
  */
 export type ServerTransport = "stdio" | "sse" | "streamable-http"
-
-// ============================================================================
-// Server Configuration
-// ============================================================================
 
 /**
  * MCP server configuration
@@ -67,10 +59,6 @@ export interface ServerConfig {
   /** Optional token for authentication (may be encrypted) */
   token?: string
 }
-
-// ============================================================================
-// Zod Schemas for Validation
-// ============================================================================
 
 /**
  * Zod schema for server transport type
@@ -133,10 +121,6 @@ export const serverConfigSchema = z
  */
 export type ValidatedServerConfig = z.infer<typeof serverConfigSchema>
 
-// ============================================================================
-// Type Guards
-// ============================================================================
-
 /**
  * Check if server uses stdio transport
  */
@@ -157,10 +141,6 @@ export function isHttpServer(
     (transport === "sse" || transport === "streamable-http") && !!server.url
   )
 }
-
-// ============================================================================
-// Verification Result
-// ============================================================================
 
 /**
  * Result of verifying an MCP server connection

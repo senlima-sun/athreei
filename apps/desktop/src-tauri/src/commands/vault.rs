@@ -245,7 +245,6 @@ pub struct ChangePassphraseResult {
     pub errors: Vec<String>,
 }
 
-// ==================== Salt Storage Helpers ====================
 
 /// Table for storing vault configuration
 const VAULT_CONFIG_TABLE: &str = r#"

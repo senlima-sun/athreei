@@ -32,13 +32,9 @@ const mockCrypto = {
 vi.stubGlobal("crypto", mockCrypto)
 
 // Mock modules before importing the routes
-vi.mock("../../lib/db", () => ({
-  getDb: vi.fn(() => mockDb),
+vi.mock("../../lib/db-operations", () => ({
+  db: vi.fn(() => mockDb),
 }))
-
-// =============================================================================
-// Type definitions for test responses
-// =============================================================================
 
 interface TracesResponse {
   received: number
@@ -50,10 +46,6 @@ interface TracesResponse {
 interface ErrorResponse {
   error: string
 }
-
-// =============================================================================
-// Mock data
-// =============================================================================
 
 const mockApiKeyRecord = {
   id: "key_123",
@@ -103,10 +95,6 @@ const mockApiKeyWithoutEndpoint = {
   endpointId: null,
 }
 
-// =============================================================================
-// Mock database
-// =============================================================================
-
 const mockInsertValues = vi.fn()
 const mockUpdateSetWhere = vi.fn()
 
@@ -128,10 +116,6 @@ const mockDb = {
     })),
   })),
 }
-
-// =============================================================================
-// Tests
-// =============================================================================
 
 describe("Gateway Traces POST Endpoint", () => {
   beforeEach(() => {

@@ -11,19 +11,11 @@
 import { z } from "zod"
 import { serverConfigSchema, type ServerConfig } from "./server-config.js"
 
-// ============================================================================
-// Default Values
-// ============================================================================
-
 /** Default Platform URL */
 export const DEFAULT_PLATFORM_URL = "https://athreei.com"
 
 /** Default sync interval: 5 minutes */
 export const DEFAULT_SYNC_INTERVAL = 5 * 60 * 1000
-
-// ============================================================================
-// Local Mode Configuration
-// ============================================================================
 
 /**
  * Local mode configuration
@@ -55,10 +47,6 @@ export interface LocalConfig {
 export const localConfigSchema = z.object({
   servers: z.array(serverConfigSchema).default([]),
 })
-
-// ============================================================================
-// Cloud Mode Configuration
-// ============================================================================
 
 /**
  * Cloud mode configuration
@@ -96,10 +84,6 @@ export const cloudConfigSchema = z.object({
   syncInterval: z.number().positive().optional().default(DEFAULT_SYNC_INTERVAL),
 })
 
-// ============================================================================
-// Combined Configuration Type
-// ============================================================================
-
 /**
  * Combined configuration type supporting both modes
  *
@@ -122,10 +106,6 @@ export const athreeiConfigSchema = z.union([
   // Cloud mode: has apiKey
   cloudConfigSchema,
 ])
-
-// ============================================================================
-// Type Guards
-// ============================================================================
 
 /**
  * Check if config is for local mode
@@ -165,10 +145,6 @@ export function detectModeFromConfig(config: AthreeiConfig): "local" | "cloud" {
   return "local"
 }
 
-// ============================================================================
-// Factory Functions
-// ============================================================================
-
 /**
  * Create an empty local configuration
  */
@@ -193,10 +169,6 @@ export function createCloudConfig(
     syncInterval: options?.syncInterval ?? DEFAULT_SYNC_INTERVAL,
   }
 }
-
-// ============================================================================
-// Legacy a3i Config Migration
-// ============================================================================
 
 /**
  * Legacy a3i server configuration (for migration)

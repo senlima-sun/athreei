@@ -7,10 +7,6 @@
 
 import type { Logger } from "@athreei/gateway-core"
 
-// =============================================================================
-// Types
-// =============================================================================
-
 interface TraceData {
   traceId: string
   aggregatedToolName: string
@@ -23,10 +19,6 @@ interface TraceData {
   endedAt?: string
   durationMs?: number
 }
-
-// =============================================================================
-// TraceRecorder Class
-// =============================================================================
 
 export class TraceRecorder {
   private platformUrl: string
@@ -107,10 +99,6 @@ export class TraceRecorder {
     }
   }
 }
-
-// =============================================================================
-// Recorder Factory
-// =============================================================================
 
 const recorders = new Map<string, TraceRecorder>()
 

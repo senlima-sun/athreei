@@ -1,7 +1,7 @@
 import { Hono } from "hono"
 import { zValidator } from "@hono/zod-validator"
 import { eq, and } from "drizzle-orm"
-import { getDb } from "../lib/db"
+import { db } from "../lib/db-operations"
 import {
   namespace,
   namespaceResource,
@@ -46,9 +46,7 @@ function applyRateLimit(
 }
 
 gateway.get("/config", zValidator("query", getConfigQuerySchema), async (c) => {
-  const db = getDb()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const dbQuery = (db as any).query
+  const dbQuery = db().query
   const { endpoint: endpointSlug } = c.req.valid("query")
 
   const authHeader = c.req.header("Authorization")
@@ -58,14 +56,13 @@ gateway.get("/config", zValidator("query", getConfigQuerySchema), async (c) => {
     return c.json({ error: "Authorization header required" }, 401)
   }
 
-  const validation = await validateApiKey(db, apiKeyValue)
+  const validation = await validateApiKey(apiKeyValue)
   if (!validation.valid) {
     return c.json({ error: validation.error }, 401)
   }
 
   const { apiKeyRecord, endpointRecord, keyHash } = validation
 
-  // Apply rate limiting
   const rateLimitResult = applyRateLimit(c, keyHash, endpointRecord.rateLimit)
   if (rateLimitResult.limited) {
     return c.json(
@@ -190,16 +187,13 @@ gateway.post("/traces", zValidator("json", postTracesSchema), async (c) => {
     return c.json({ error: "Authorization header required" }, 401)
   }
 
-  const db = getDb()
-
-  const validation = await validateApiKey(db, apiKeyValue)
+  const validation = await validateApiKey(apiKeyValue)
   if (!validation.valid) {
     return c.json({ error: validation.error }, 401)
   }
 
   const { apiKeyRecord, endpointRecord, keyHash } = validation
 
-  // Apply rate limiting
   const rateLimitResult = applyRateLimit(c, keyHash, endpointRecord.rateLimit)
   if (rateLimitResult.limited) {
     return c.json(
@@ -243,26 +237,27 @@ gateway.post("/traces", zValidator("json", postTracesSchema), async (c) => {
     }
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (db as any).insert(trace).values({
-        id,
-        organizationId: endpointRecord.organizationId,
-        userId: null, // Gateway traces don't have a user context
-        mcpServerId: null, // Could be enhanced to look up server by name
-        traceId: traceData.traceId,
-        parentSpanId: null,
-        spanId,
-        name: traceData.aggregatedToolName || traceData.toolName,
-        kind: "server", // Gateway is acting as server
-        status,
-        statusMessage,
-        startTime: new Date(traceData.startedAt),
-        endTime: traceData.endedAt ? new Date(traceData.endedAt) : null,
-        durationMs: traceData.durationMs || null,
-        attributes,
-        events: null,
-        createdAt: now,
-      })
+      await db()
+        .insert(trace)
+        .values({
+          id,
+          organizationId: endpointRecord.organizationId,
+          userId: null,
+          mcpServerId: null,
+          traceId: traceData.traceId,
+          parentSpanId: null,
+          spanId,
+          name: traceData.aggregatedToolName || traceData.toolName,
+          kind: "server",
+          status,
+          statusMessage,
+          startTime: new Date(traceData.startedAt),
+          endTime: traceData.endedAt ? new Date(traceData.endedAt) : null,
+          durationMs: traceData.durationMs || null,
+          attributes,
+          events: null,
+          createdAt: now,
+        })
 
       insertedIds.push(id)
     } catch (error) {

@@ -70,10 +70,6 @@ export const namespaceResource = pgTable(
   ]
 )
 
-// =============================================================================
-// Relations
-// =============================================================================
-
 export const namespaceRelations = relations(namespace, ({ one, many }) => ({
   organization: one(organization, {
     fields: [namespace.organizationId],

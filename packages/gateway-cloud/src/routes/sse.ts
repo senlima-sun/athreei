@@ -40,10 +40,6 @@ export function configureSseRoutes(options: { logger?: Logger }): void {
   }
 }
 
-// =============================================================================
-// API Key Validation
-// =============================================================================
-
 /**
  * Validate API key and get endpoint configuration from Platform API
  */
@@ -96,10 +92,6 @@ function createError(
 ): GatewayError {
   return { error: code, message, details }
 }
-
-// =============================================================================
-// MCP Protocol Handling
-// =============================================================================
 
 /**
  * Handle MCP initialize request
@@ -281,10 +273,6 @@ async function handleMcpRequest(
   }
 }
 
-// =============================================================================
-// SSE Stream Handling
-// =============================================================================
-
 /**
  * Send SSE event
  */
@@ -348,10 +336,6 @@ async function handleSseConnection(
   clearInterval(pingInterval)
   logger.info(`SSE connection closed for session: ${sessionId}`)
 }
-
-// =============================================================================
-// Routes
-// =============================================================================
 
 /**
  * SSE endpoint for MCP communication

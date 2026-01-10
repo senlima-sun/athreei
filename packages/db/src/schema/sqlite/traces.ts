@@ -85,10 +85,6 @@ export const metric = sqliteTable("metric", {
   createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
 })
 
-// =============================================================================
-// Relations
-// =============================================================================
-
 export const traceRelations = relations(trace, ({ one }) => ({
   organization: one(organization, {
     fields: [trace.organizationId],

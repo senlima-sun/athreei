@@ -2,7 +2,7 @@ import { Hono } from "hono"
 import { zValidator } from "@hono/zod-validator"
 import { eq, and, isNull, gte, sql } from "drizzle-orm"
 import { authMiddleware, getAuthContext, ApiError } from "../middleware"
-import { getDb, type DatabaseClient } from "../lib/db"
+import { db } from "../lib/db-operations"
 import { apiKey, endpoint, trace } from "@athreei/db"
 import { createApiKeySchema } from "../schemas/api-keys"
 import {
@@ -19,13 +19,10 @@ const apiKeys = new Hono()
 apiKeys.use("*", authMiddleware)
 
 async function verifyEndpointAccess(
-  db: DatabaseClient,
   endpointId: string,
   userId: string
 ): Promise<typeof endpoint.$inferSelect> {
-  // Get the endpoint
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const ep = await (db as any).query.endpoint.findFirst({
+  const ep = await db().query.endpoint.findFirst({
     where: eq(endpoint.id, endpointId),
   })
 
@@ -33,11 +30,7 @@ async function verifyEndpointAccess(
     throw ApiError.notFound("Endpoint not found")
   }
 
-  const isMember = await verifyOrganizationMembership(
-    db,
-    userId,
-    ep.organizationId
-  )
+  const isMember = await verifyOrganizationMembership(userId, ep.organizationId)
   if (!isMember) {
     throw ApiError.forbidden("You do not have access to this endpoint")
   }
@@ -46,14 +39,12 @@ async function verifyEndpointAccess(
 }
 
 apiKeys.get("/:endpointId/keys", async (c) => {
-  const db = getDb()
   const auth = getAuthContext(c)
   const endpointId = c.req.param("endpointId")
 
-  await verifyEndpointAccess(db, endpointId, auth.userId)
+  await verifyEndpointAccess(endpointId, auth.userId)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const keys = await (db as any).query.apiKey.findMany({
+  const keys = await db().query.apiKey.findMany({
     where: and(eq(apiKey.endpointId, endpointId), isNull(apiKey.revokedAt)),
   })
 
@@ -75,12 +66,11 @@ apiKeys.post(
   "/:endpointId/keys",
   zValidator("json", createApiKeySchema),
   async (c) => {
-    const db = getDb()
     const auth = getAuthContext(c)
     const endpointId = c.req.param("endpointId")
     const body = c.req.valid("json")
 
-    const ep = await verifyEndpointAccess(db, endpointId, auth.userId)
+    const ep = await verifyEndpointAccess(endpointId, auth.userId)
 
     const plainKey = generateApiKey()
     const keyHash = await hashApiKey(plainKey)
@@ -92,21 +82,22 @@ apiKeys.post(
 
     const expiresAt = body.expiresAt ? new Date(body.expiresAt) : null
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (db as any).insert(apiKey).values({
-      id,
-      organizationId: ep.organizationId,
-      endpointId,
-      createdById: auth.userId,
-      name: body.name,
-      keyHash,
-      keyPrefix,
-      scopes: body.scopes ? JSON.stringify(body.scopes) : null,
-      expiresAt,
-      usageCount: 0,
-      createdAt: now,
-      updatedAt: now,
-    })
+    await db()
+      .insert(apiKey)
+      .values({
+        id,
+        organizationId: ep.organizationId,
+        endpointId,
+        createdById: auth.userId,
+        name: body.name,
+        keyHash,
+        keyPrefix,
+        scopes: body.scopes ? JSON.stringify(body.scopes) : null,
+        expiresAt,
+        usageCount: 0,
+        createdAt: now,
+        updatedAt: now,
+      })
 
     return c.json(
       {
@@ -124,15 +115,13 @@ apiKeys.post(
 )
 
 apiKeys.delete("/:endpointId/keys/:keyId", async (c) => {
-  const db = getDb()
   const auth = getAuthContext(c)
   const endpointId = c.req.param("endpointId")
   const keyId = c.req.param("keyId")
 
-  await verifyEndpointAccess(db, endpointId, auth.userId)
+  await verifyEndpointAccess(endpointId, auth.userId)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const existingKey = await (db as any).query.apiKey.findFirst({
+  const existingKey = await db().query.apiKey.findFirst({
     where: and(
       eq(apiKey.id, keyId),
       eq(apiKey.endpointId, endpointId),
@@ -145,8 +134,7 @@ apiKeys.delete("/:endpointId/keys/:keyId", async (c) => {
   }
 
   const now = new Date()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (db as any)
+  await db()
     .update(apiKey)
     .set({
       revokedAt: now,
@@ -170,15 +158,13 @@ function getPastDays(days: number): string[] {
 }
 
 apiKeys.get("/:endpointId/keys/:keyId/stats", async (c) => {
-  const db = getDb()
   const auth = getAuthContext(c)
   const endpointId = c.req.param("endpointId")
   const keyId = c.req.param("keyId")
 
-  await verifyEndpointAccess(db, endpointId, auth.userId)
+  await verifyEndpointAccess(endpointId, auth.userId)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const existingKey = await (db as any).query.apiKey.findFirst({
+  const existingKey = await db().query.apiKey.findFirst({
     where: and(
       eq(apiKey.id, keyId),
       eq(apiKey.endpointId, endpointId),
@@ -194,19 +180,16 @@ apiKeys.get("/:endpointId/keys/:keyId/stats", async (c) => {
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
   sevenDaysAgo.setHours(0, 0, 0, 0)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const dbAny = db as any
-
   const apiKeyJsonPattern = `%"apiKeyId":"${keyId}"%`
 
-  const totalCountResult = await dbAny
+  const totalCountResult = await db()
     .select({ count: sql<number>`count(*)` })
     .from(trace)
     .where(sql`${trace.attributes} LIKE ${apiKeyJsonPattern}`)
 
   const totalUsage = Number(totalCountResult[0]?.count ?? 0)
 
-  const errorCountResult = await dbAny
+  const errorCountResult = await db()
     .select({ count: sql<number>`count(*)` })
     .from(trace)
     .where(
@@ -228,7 +211,7 @@ apiKeys.get("/:endpointId/keys/:keyId/stats", async (c) => {
     const dayEnd = new Date(dateStr)
     dayEnd.setHours(23, 59, 59, 999)
 
-    const dayCountResult = await dbAny
+    const dayCountResult = await db()
       .select({ count: sql<number>`count(*)` })
       .from(trace)
       .where(
@@ -239,7 +222,7 @@ apiKeys.get("/:endpointId/keys/:keyId/stats", async (c) => {
         )
       )
 
-    const dayErrorResult = await dbAny
+    const dayErrorResult = await db()
       .select({ count: sql<number>`count(*)` })
       .from(trace)
       .where(
@@ -258,7 +241,7 @@ apiKeys.get("/:endpointId/keys/:keyId/stats", async (c) => {
     })
   }
 
-  const lastTraceResult = await dbAny
+  const lastTraceResult = await db()
     .select({ startTime: trace.startTime })
     .from(trace)
     .where(sql`${trace.attributes} LIKE ${apiKeyJsonPattern}`)
@@ -270,7 +253,7 @@ apiKeys.get("/:endpointId/keys/:keyId/stats", async (c) => {
   return c.json({
     totalUsage,
     last7Days,
-    errorRate: Math.round(errorRate * 100) / 100, // Round to 2 decimal places
+    errorRate: Math.round(errorRate * 100) / 100,
     lastUsed,
   })
 })

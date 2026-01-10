@@ -19,20 +19,20 @@ import {
   McpEnvList,
   McpEnvSet,
   McpEnvDelete,
-} from "./commands/mcp.js"
+} from "./commands/mcp/index.js"
 import {
   EndpointList,
   EndpointDetails,
   EndpointCreate,
   EndpointDelete,
-} from "./commands/endpoint.js"
+} from "./commands/endpoint/index.js"
 import {
   ConfigInit,
   ConfigShow,
   ConfigSet,
   ConfigGet,
   ConfigValidate,
-} from "./commands/config.js"
+} from "./commands/config/index.js"
 import {
   GatewayStatus,
   GatewayStart,
@@ -40,9 +40,18 @@ import {
   GatewayLogs,
   GatewayConfigShow,
   GatewayConfigSet,
-} from "./commands/gateway.js"
-import { SyncStatus, SyncPull, SyncPush, SyncDiff } from "./commands/sync.js"
-import { ApiKeyList, ApiKeyCreate, ApiKeyRevoke } from "./commands/apikey.js"
+} from "./commands/gateway/index.js"
+import {
+  SyncStatus,
+  SyncPull,
+  SyncPush,
+  SyncDiff,
+} from "./commands/sync/index.js"
+import {
+  ApiKeyList,
+  ApiKeyCreate,
+  ApiKeyRevoke,
+} from "./commands/apikey/index.js"
 import {
   outputBashCompletion,
   outputZshCompletion,

@@ -50,7 +50,7 @@ let lastTransportConfig: {
 } | null = null
 
 // Mock modules
-vi.mock("../../lib/db", () => ({
+vi.mock("../../lib/db-operations", () => ({
   getDb: vi.fn(() => ({})),
 }))
 

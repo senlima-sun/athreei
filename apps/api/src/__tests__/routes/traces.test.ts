@@ -40,8 +40,8 @@ interface SingleTraceResponse {
 }
 
 // Mock modules before importing the routes
-vi.mock("../../lib/db", () => ({
-  getDb: vi.fn(() => mockDb),
+vi.mock("../../lib/db-operations", () => ({
+  db: vi.fn(() => mockDb),
 }))
 
 vi.mock("../../middleware", () => ({

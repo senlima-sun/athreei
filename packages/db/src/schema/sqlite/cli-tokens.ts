@@ -10,10 +10,6 @@ import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core"
 import { relations } from "drizzle-orm"
 import { user, organization } from "./auth"
 
-// =============================================================================
-// CLI Token Table
-// =============================================================================
-
 /**
  * CLI Token - stores hashed authentication tokens for CLI access
  *
@@ -37,10 +33,6 @@ export const cliToken = sqliteTable("cli_token", {
     .$defaultFn(() => new Date()),
   revokedAt: integer("revoked_at", { mode: "timestamp" }),
 })
-
-// =============================================================================
-// CLI Auth Session Table
-// =============================================================================
 
 /**
  * CLI Auth Session - temporary sessions for browser-based authentication flow
@@ -67,10 +59,6 @@ export const cliAuthSession = sqliteTable("cli_auth_session", {
     .notNull()
     .$defaultFn(() => new Date()),
 })
-
-// =============================================================================
-// Relations
-// =============================================================================
 
 export const cliTokenRelations = relations(cliToken, ({ one }) => ({
   user: one(user, {

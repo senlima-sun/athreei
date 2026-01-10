@@ -361,7 +361,6 @@ mod tests {
         assert_eq!(tracker.get_last_sync().unwrap(), Some(1234567890));
     }
 
-    // ==================== Additional Integration Tests ====================
 
     #[test]
     fn test_track_update() {

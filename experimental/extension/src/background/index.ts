@@ -19,10 +19,6 @@ import { permissionManager } from "./permission-manager"
 import { PermissionDeniedError } from "./types"
 import { handlePermissionRequest } from "./permission-handler"
 
-// ============================================================================
-// Constants
-// ============================================================================
-
 const NATIVE_HOST_NAME = "com.athreei.native_host"
 const VERSION = "0.1.0"
 
@@ -41,10 +37,6 @@ const DEFAULT_AI_APP = "AI Assistant"
 
 // Current AI app name for the active request (extracted from MCP context)
 let currentAiApp: string = DEFAULT_AI_APP
-
-// ============================================================================
-// Connection State
-// ============================================================================
 
 type ConnectionState =
   | "disconnected"
@@ -75,10 +67,6 @@ const connection: ConnectionManager = {
   healthCheckIntervalId: null,
   pendingRequests: new Map(),
 }
-
-// ============================================================================
-// Native Host Connection Management
-// ============================================================================
 
 /**
  * Connect to the native host application
@@ -245,10 +233,6 @@ function broadcastConnectionStatus(connected: boolean): void {
   })
 }
 
-// ============================================================================
-// Native Host Message Handling
-// ============================================================================
-
 /**
  * Handle messages from native host
  */
@@ -406,10 +390,6 @@ async function sendResponseToNativeHost(
   connection.port.postMessage(response)
 }
 
-// ============================================================================
-// Browser Tab Operations
-// ============================================================================
-
 /**
  * List all tabs
  */
@@ -548,10 +528,6 @@ async function handleScreenshot(
   }
 }
 
-// ============================================================================
-// Content Script Communication
-// ============================================================================
-
 /**
  * Forward request to content script
  */
@@ -659,10 +635,6 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 
   return false
 })
-
-// ============================================================================
-// Utilities
-// ============================================================================
 
 /**
  * Generate unique ID
@@ -821,10 +793,6 @@ async function updatePermissionLevel(
     console.error("[Background] Error updating permission:", error)
   }
 }
-
-// ============================================================================
-// Initialization
-// ============================================================================
 
 console.log("[Background] Service worker starting, version:", VERSION)
 

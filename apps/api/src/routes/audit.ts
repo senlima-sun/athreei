@@ -2,7 +2,7 @@ import { Hono } from "hono"
 import { zValidator } from "@hono/zod-validator"
 import { eq, and, gte, lte, sql, desc } from "drizzle-orm"
 import { authMiddleware, getAuthContext, ApiError } from "../middleware"
-import { getDb } from "../lib/db"
+import { db } from "../lib/db-operations"
 import { auditLog, user } from "@athreei/db"
 import { listAuditQuerySchema, createAuditSchema } from "../schemas/audit"
 import type { AuditAction, TargetType } from "../schemas/audit"
@@ -24,7 +24,6 @@ export async function logAuditEvent(params: {
   organizationId: string
   metadata?: Record<string, unknown>
 }): Promise<void> {
-  const db = getDb()
   const id = generateUUID()
   const timestamp = now()
 
@@ -39,18 +38,15 @@ export async function logAuditEvent(params: {
     createdAt: timestamp,
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (db as any).insert(auditLog).values(entry)
+  await db().insert(auditLog).values(entry)
 }
 
 audit.get("/", zValidator("query", listAuditQuerySchema), async (c) => {
-  const db = getDb()
   const auth = getAuthContext(c)
   const { organizationId, action, actorId, startDate, endDate, limit, offset } =
     c.req.valid("query")
 
   const isMember = await verifyOrganizationMembership(
-    db,
     auth.userId,
     organizationId
   )
@@ -76,8 +72,7 @@ audit.get("/", zValidator("query", listAuditQuerySchema), async (c) => {
     conditions.push(lte(auditLog.createdAt, new Date(endDate)))
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const entries = await (db as any)
+  const entries = await db()
     .select({
       id: auditLog.id,
       action: auditLog.action,
@@ -95,8 +90,7 @@ audit.get("/", zValidator("query", listAuditQuerySchema), async (c) => {
     .limit(limit)
     .offset(offset)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const countResult = await (db as any)
+  const countResult = await db()
     .select({ count: sql<number>`count(*)` })
     .from(auditLog)
     .where(and(...conditions))
@@ -128,7 +122,6 @@ audit.get("/", zValidator("query", listAuditQuerySchema), async (c) => {
 })
 
 audit.post("/", zValidator("json", createAuditSchema), async (c) => {
-  const db = getDb()
   const auth = getAuthContext(c)
   const body = c.req.valid("json")
 
@@ -139,7 +132,6 @@ audit.post("/", zValidator("json", createAuditSchema), async (c) => {
   }
 
   const isMember = await verifyOrganizationMembership(
-    db,
     auth.userId,
     organizationId
   )

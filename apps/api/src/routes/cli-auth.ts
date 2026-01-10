@@ -10,7 +10,7 @@ import {
   user,
   organization,
 } from "@athreei/db"
-import { getDb } from "../lib/db"
+import { db } from "../lib/db-operations"
 import { getAuth } from "../lib/auth"
 import { generateId, ID_PREFIXES } from "../services"
 
@@ -44,14 +44,12 @@ const tokenSchema = z.object({
 
 cliAuth.post("/initiate", zValidator("json", initiateSchema), async (c) => {
   const { state, callbackPort } = c.req.valid("json")
-  const db = getDb()
 
   const sessionId = generateId(ID_PREFIXES.cliAuthSession)
   const expiresAt = new Date(Date.now() + 5 * 60 * 1000)
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (db as any).insert(cliAuthSession).values({
+    await db().insert(cliAuthSession).values({
       id: sessionId,
       state,
       callbackPort,
@@ -81,10 +79,7 @@ cliAuth.get("/session/:sessionId", async (c) => {
   const { sessionId } = c.req.param()
   const state = c.req.query("state")
 
-  const db = getDb()
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [session] = await (db as any)
+  const [session] = await db()
     .select()
     .from(cliAuthSession)
     .where(eq(cliAuthSession.id, sessionId))
@@ -107,7 +102,6 @@ cliAuth.get("/session/:sessionId", async (c) => {
 
 cliAuth.post("/token", zValidator("json", tokenSchema), async (c) => {
   const { sessionId, organizationId } = c.req.valid("json")
-  const db = getDb()
   const auth = getAuth()
 
   const session = await auth.api.getSession({ headers: c.req.raw.headers })
@@ -115,8 +109,7 @@ cliAuth.post("/token", zValidator("json", tokenSchema), async (c) => {
     return c.json({ error: "Not authenticated" }, 401)
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [cliSession] = await (db as any)
+  const [cliSession] = await db()
     .select()
     .from(cliAuthSession)
     .where(eq(cliAuthSession.id, sessionId))
@@ -130,8 +123,7 @@ cliAuth.post("/token", zValidator("json", tokenSchema), async (c) => {
     return c.json({ error: "Session expired" }, 400)
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [membership] = await (db as any)
+  const [membership] = await db()
     .select()
     .from(member)
     .where(
@@ -146,8 +138,7 @@ cliAuth.post("/token", zValidator("json", tokenSchema), async (c) => {
     return c.json({ error: "No access to organization" }, 403)
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const updateResult = await (db as any)
+  const updateResult = await db()
     .update(cliAuthSession)
     .set({
       status: "used",
@@ -175,8 +166,7 @@ cliAuth.post("/token", zValidator("json", tokenSchema), async (c) => {
   const tokenId = generateId()
   const expiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (db as any).insert(cliToken).values({
+  await db().insert(cliToken).values({
     id: tokenId,
     tokenHash,
     userId: session.user.id,
@@ -208,10 +198,7 @@ cliAuth.get("/verify", async (c) => {
   const token = authHeader.slice(7)
   const tokenHash = createHash("sha256").update(token).digest("hex")
 
-  const db = getDb()
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [foundToken] = await (db as any)
+  const [foundToken] = await db()
     .select({
       id: cliToken.id,
       userId: cliToken.userId,
@@ -235,14 +222,12 @@ cliAuth.get("/verify", async (c) => {
     return c.json({ valid: false, error: "Token expired" }, 401)
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (db as any)
+  await db()
     .update(cliToken)
     .set({ lastUsedAt: new Date() })
     .where(eq(cliToken.id, foundToken.id))
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [foundUser] = await (db as any)
+  const [foundUser] = await db()
     .select({
       id: user.id,
       email: user.email,
@@ -256,8 +241,7 @@ cliAuth.get("/verify", async (c) => {
     return c.json({ valid: false, error: "User not found" }, 401)
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const memberships = await (db as any)
+  const memberships = await db()
     .select({
       organizationId: member.organizationId,
       role: member.role,

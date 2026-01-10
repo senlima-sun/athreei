@@ -25,8 +25,8 @@ const testErrorHandler: ErrorHandler = (err: Error, c: Context) => {
 }
 
 // Mock modules before importing the routes
-vi.mock("../../lib/db", () => ({
-  getDb: vi.fn(() => mockDb),
+vi.mock("../../lib/db-operations", () => ({
+  db: vi.fn(() => mockDb),
 }))
 
 vi.mock("@athreei/db", () => ({
@@ -206,10 +206,6 @@ describe("Audit Routes", () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
-
-  // =========================================================================
-  // GET /api/audit Tests
-  // =========================================================================
   describe("GET /api/audit", () => {
     it("should list audit events with organizationId filter", async () => {
       const { verifyOrganizationMembership } = await import("../../services")
@@ -524,10 +520,6 @@ describe("Audit Routes", () => {
       expect(response.status).toBe(400)
     })
   })
-
-  // =========================================================================
-  // POST /api/audit Tests
-  // =========================================================================
   describe("POST /api/audit", () => {
     it("should create audit entry successfully", async () => {
       const { verifyOrganizationMembership } = await import("../../services")
@@ -693,10 +685,6 @@ describe("Audit Routes", () => {
       expect(data.message).toBe("Audit event logged successfully")
     })
   })
-
-  // =========================================================================
-  // logAuditEvent Helper Function Tests
-  // =========================================================================
   describe("logAuditEvent helper", () => {
     it("should insert audit event with all fields", async () => {
       mockDb.insert.mockReturnValue({
@@ -755,10 +743,6 @@ describe("Audit Routes", () => {
       expect(generateUUID).toHaveBeenCalled()
     })
   })
-
-  // =========================================================================
-  // Edge Cases
-  // =========================================================================
   describe("Edge Cases", () => {
     it("should handle complex metadata objects", async () => {
       const { verifyOrganizationMembership } = await import("../../services")

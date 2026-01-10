@@ -23,10 +23,6 @@ export const permission = pgTable("permission", {
   updatedAt: timestamp("updatedAt").notNull(),
 })
 
-// =============================================================================
-// Relations
-// =============================================================================
-
 export const permissionRelations = relations(permission, ({ one }) => ({
   organization: one(organization, {
     fields: [permission.organizationId],

@@ -7,10 +7,6 @@
 
 import type { Logger } from "@athreei/gateway-core"
 
-// =============================================================================
-// Types
-// =============================================================================
-
 /**
  * OAuth token response from platform API
  */
@@ -30,10 +26,6 @@ export interface GetOAuthTokenOptions {
   /** Logger instance */
   logger?: Logger
 }
-
-// =============================================================================
-// OAuth Token Fetching
-// =============================================================================
 
 /**
  * Fetch OAuth token for an MCP server from the platform API

@@ -31,10 +31,6 @@ import {
 import { DEFAULT_CONFIG, type GatewayCloudConfig } from "./types.js"
 import type { Logger } from "@athreei/gateway-core"
 
-// =============================================================================
-// Application Setup
-// =============================================================================
-
 const app = new Hono()
 
 // Create logger
@@ -48,10 +44,6 @@ const log: Logger = {
   warn: (...args) => console.error("[WARN]", ...args),
   error: (...args) => console.error("[ERROR]", ...args),
 }
-
-// =============================================================================
-// Middleware
-// =============================================================================
 
 app.use("*", honoLogger())
 
@@ -70,10 +62,6 @@ app.use(
     allowMethods: ["GET", "POST", "OPTIONS"],
   })
 )
-
-// =============================================================================
-// Routes
-// =============================================================================
 
 // Health check routes
 app.route("/health", healthRoutes)
@@ -112,10 +100,6 @@ app.onError((err, c) => {
   )
 })
 
-// =============================================================================
-// Server Lifecycle
-// =============================================================================
-
 /**
  * Initialize the gateway cloud service
  */
@@ -148,10 +132,6 @@ async function shutdown(): Promise<void> {
 
   log.info("Gateway cloud service shut down")
 }
-
-// =============================================================================
-// Main Entry Point
-// =============================================================================
 
 const config: GatewayCloudConfig = {
   ...DEFAULT_CONFIG,

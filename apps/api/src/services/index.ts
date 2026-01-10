@@ -68,3 +68,14 @@ export {
   generateConfigVersion,
   isValidEndpointUrl,
 } from "./endpoint-url"
+
+export {
+  type RegistryLoaderConfig,
+  initRegistryLoader,
+  loadRegistry,
+  getRegistryServers,
+  getRegistryServerBySlug,
+  getRegistryCategories,
+  clearRegistryCache,
+  getRegistryCacheStatus,
+} from "./registry-loader"

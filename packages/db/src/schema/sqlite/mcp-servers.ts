@@ -54,10 +54,6 @@ export const mcpTool = sqliteTable("mcp_tool", {
   updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
 })
 
-// =============================================================================
-// Relations
-// =============================================================================
-
 export const mcpServerRelations = relations(mcpServer, ({ one, many }) => ({
   organization: one(organization, {
     fields: [mcpServer.organizationId],

@@ -71,10 +71,6 @@ export const namespaceResource = sqliteTable(
   ]
 )
 
-// =============================================================================
-// Relations
-// =============================================================================
-
 export const namespaceRelations = relations(namespace, ({ one, many }) => ({
   organization: one(organization, {
     fields: [namespace.organizationId],

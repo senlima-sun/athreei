@@ -2,7 +2,7 @@ import { Hono } from "hono"
 import { zValidator } from "@hono/zod-validator"
 import { eq, and, desc, gte, lte, like, sql } from "drizzle-orm"
 import { authMiddleware, getAuthContext, ApiError } from "../middleware"
-import { getDb } from "../lib/db"
+import { db } from "../lib/db-operations"
 import { trace } from "@athreei/db"
 import { listTracesQuerySchema, traceIdParamSchema } from "../schemas/traces"
 import { verifyOrganizationMembership } from "../services"
@@ -21,13 +21,11 @@ function safeJsonParse(value: string | null): unknown {
 }
 
 traces.get("/", zValidator("query", listTracesQuerySchema), async (c) => {
-  const db = getDb()
   const auth = getAuthContext(c)
   const { organizationId, limit, offset, status, startDate, endDate, search } =
     c.req.valid("query")
 
   const isMember = await verifyOrganizationMembership(
-    db,
     auth.userId,
     organizationId
   )
@@ -54,8 +52,7 @@ traces.get("/", zValidator("query", listTracesQuerySchema), async (c) => {
     conditions.push(like(trace.name, `%${search}%`))
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const dbQuery = (db as any).query
+  const dbQuery = db().query
 
   const tracesResult = await dbQuery.trace.findMany({
     where: and(...conditions),
@@ -64,8 +61,7 @@ traces.get("/", zValidator("query", listTracesQuerySchema), async (c) => {
     offset,
   })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const countResult = await (db as any)
+  const countResult = await db()
     .select({ count: sql<number>`count(*)` })
     .from(trace)
     .where(and(...conditions))
@@ -91,12 +87,10 @@ traces.get("/", zValidator("query", listTracesQuerySchema), async (c) => {
 })
 
 traces.get("/:id", zValidator("param", traceIdParamSchema), async (c) => {
-  const db = getDb()
   const auth = getAuthContext(c)
   const { id } = c.req.valid("param")
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const dbQuery = (db as any).query
+  const dbQuery = db().query
 
   const traceRecord = await dbQuery.trace.findFirst({
     where: eq(trace.id, id),
@@ -107,7 +101,6 @@ traces.get("/:id", zValidator("param", traceIdParamSchema), async (c) => {
   }
 
   const isMember = await verifyOrganizationMembership(
-    db,
     auth.userId,
     traceRecord.organizationId
   )

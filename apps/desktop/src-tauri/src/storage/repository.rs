@@ -43,7 +43,6 @@ fn row_to_memory(row: &Row) -> Result<Memory> {
 }
 
 impl Database {
-    // ==================== Space Operations ====================
 
     /// Create a new space
     pub fn create_space(&self, space: &Space) -> Result<()> {
@@ -106,7 +105,6 @@ impl Database {
         Ok(())
     }
 
-    // ==================== Memory Operations ====================
 
     /// Create a new memory
     pub fn create_memory(&self, memory: &Memory) -> Result<()> {
@@ -271,7 +269,6 @@ impl Database {
         }
     }
 
-    // ==================== Tag Operations ====================
 
     /// Get or create a tag by name
     fn get_or_create_tag(&self, name: &str) -> Result<Tag> {
@@ -413,7 +410,6 @@ impl Database {
         Ok(count)
     }
 
-    // ==================== Utility Operations ====================
 
     /// Count all memories, optionally filtered by space
     pub fn count_memories(&self, space_id: Option<&str>) -> Result<i64> {
@@ -696,7 +692,6 @@ mod tests {
             .expect("Failed to check"));
     }
 
-    // ==================== Additional Integration Tests ====================
 
     #[test]
     fn test_space_update_preserves_fields() {

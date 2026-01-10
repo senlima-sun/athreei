@@ -8,8 +8,6 @@ import { invoke } from "@tauri-apps/api/core"
 
 import type { CreateMemoryInput, Memory, Space, TagWithCount } from "./types"
 
-// ==================== Vault API ====================
-
 /**
  * Unlock the vault with a passphrase
  *
@@ -73,8 +71,6 @@ export const vaultChangePassphrase = (
 ): Promise<ChangePassphraseResult> =>
   invoke("vault_change_passphrase", { oldPassphrase, newPassphrase })
 
-// ==================== Spaces API ====================
-
 /**
  * List all spaces ordered by name
  *
@@ -131,8 +127,6 @@ export const deleteSpace = (id: string): Promise<void> =>
  */
 export const countSpaceMemories = (spaceId: string): Promise<number> =>
   invoke("count_space_memories", { spaceId })
-
-// ==================== Memories API ====================
 
 /**
  * List memories with optional filtering and pagination
@@ -250,8 +244,6 @@ export interface UpdateMemoryInput {
 export const updateMemory = (input: UpdateMemoryInput): Promise<Memory> =>
   invoke("update_memory", { input })
 
-// ==================== Bulk Operations API ====================
-
 /**
  * Delete multiple memories
  *
@@ -293,8 +285,6 @@ export const tagMemories = (ids: string[], tags: string[]): Promise<number> =>
 export const untagMemories = (ids: string[], tags: string[]): Promise<number> =>
   invoke("untag_memories", { ids, tags })
 
-// ==================== MCP Server API ====================
-
 /**
  * MCP server status
  */
@@ -332,8 +322,6 @@ export const mcpStop = (): Promise<void> => invoke("mcp_stop")
  * @returns Current server status including running state and transport
  */
 export const mcpStatus = (): Promise<McpStatus> => invoke("mcp_status")
-
-// ==================== Sync API ====================
 
 /**
  * Sync state
@@ -468,8 +456,6 @@ export const syncSetConfig = (config: SyncConfig): Promise<void> =>
 export const syncPendingCount = (): Promise<number> =>
   invoke("sync_pending_count")
 
-// ==================== Settings API ====================
-
 /**
  * Keyboard shortcuts configuration
  */
@@ -582,8 +568,6 @@ export const settingsCleanupOldMemories = (): Promise<number> =>
  */
 export const settingsGetAppInfo = (): Promise<AppInfo> =>
   invoke("settings_get_app_info")
-
-// ==================== Backup API ====================
 
 /**
  * Backup header/metadata

@@ -48,10 +48,6 @@ import { generateUUID, logOAuthEvent, generateTokenHash } from "../../services"
 
 const oauth = new Hono()
 
-// =============================================================================
-// Rate Limiters
-// =============================================================================
-
 const connectRateLimiter = withRateLimitLogging(
   "connect",
   createConnectRateLimiter()
@@ -67,19 +63,11 @@ const tokenDeleteRateLimiter = withRateLimitLogging(
   createConnectionsRateLimiter() // Same limit as connections (30/min)
 )
 
-// =============================================================================
-// Constants
-// =============================================================================
-
 const SESSION_TTL_MS = 5 * 60 * 1000 // 5 minutes
 const TOKEN_REFRESH_THRESHOLD_MS = 5 * 60 * 1000 // Refresh if expiring in 5 minutes
 
 // Platform URL for OAuth callbacks
 const PLATFORM_URL = process.env.PLATFORM_URL || "http://localhost:3001"
-
-// =============================================================================
-// Helper Functions
-// =============================================================================
 
 /**
  * Detect OAuth provider from server URL
@@ -291,10 +279,6 @@ async function getClientId(
 
   return fallbackClientId
 }
-
-// =============================================================================
-// Routes
-// =============================================================================
 
 /**
  * POST /api/oauth/connect

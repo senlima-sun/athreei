@@ -1,10 +1,3 @@
-/**
- * API Validation Schemas
- *
- * Re-exports all Zod validation schemas used by API routes.
- */
-
-// MCP Servers
 export {
   transportTypes,
   statusTypes,

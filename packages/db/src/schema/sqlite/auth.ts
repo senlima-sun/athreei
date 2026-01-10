@@ -7,10 +7,6 @@
 import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core"
 import { relations } from "drizzle-orm"
 
-// =============================================================================
-// Core Authentication Tables
-// =============================================================================
-
 /**
  * User table - stores user account information
  */
@@ -81,10 +77,6 @@ export const verification = sqliteTable("verification", {
   updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
 })
 
-// =============================================================================
-// Organization Plugin Tables
-// =============================================================================
-
 /**
  * Organization table - stores organization/team information
  */
@@ -129,10 +121,6 @@ export const invitation = sqliteTable("invitation", {
   expiresAt: integer("expiresAt", { mode: "timestamp" }).notNull(),
   createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
 })
-
-// =============================================================================
-// Relations
-// =============================================================================
 
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),

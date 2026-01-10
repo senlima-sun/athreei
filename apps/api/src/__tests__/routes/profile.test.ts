@@ -23,8 +23,8 @@ const testErrorHandler: ErrorHandler = (err: Error, c: Context) => {
 }
 
 // Mock modules before importing the routes
-vi.mock("../../lib/db", () => ({
-  getDb: vi.fn(() => mockDb),
+vi.mock("../../lib/db-operations", () => ({
+  db: vi.fn(() => mockDb),
 }))
 
 vi.mock("../../lib/auth", () => ({
@@ -152,9 +152,6 @@ describe("Profile Routes", () => {
     vi.clearAllMocks()
   })
 
-  // =========================================================================
-  // PATCH /api/profile Tests
-  // =========================================================================
   describe("PATCH /api/profile", () => {
     it("should update user name successfully", async () => {
       mockDb.query.user.findFirst.mockResolvedValue({
@@ -279,9 +276,6 @@ describe("Profile Routes", () => {
     })
   })
 
-  // =========================================================================
-  // POST /api/profile/password Tests
-  // =========================================================================
   describe("POST /api/profile/password", () => {
     it("should change password successfully", async () => {
       mockAuth.api.changePassword.mockResolvedValue({ success: true })
@@ -401,9 +395,6 @@ describe("Profile Routes", () => {
     })
   })
 
-  // =========================================================================
-  // Edge Cases
-  // =========================================================================
   describe("Edge Cases", () => {
     it("should return 404 when user not found after update", async () => {
       mockDb.query.user.findFirst.mockResolvedValue(null)

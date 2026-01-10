@@ -1,10 +1,3 @@
-/**
- * MCP Client Module
- *
- * Direct MCP server communication for local mode.
- * Supports stdio, SSE, and streamable-http transports.
- */
-
 import { Client } from "@modelcontextprotocol/sdk/client/index.js"
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js"
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
@@ -14,60 +7,23 @@ import {
   type ServerConfig,
   type ServerVerifyResult,
 } from "@athreei/shared"
+import { DEFAULT_MCP_TIMEOUT, CLIENT_INFO } from "../constants/index.js"
 
-// ============================================================================
-// Constants
-// ============================================================================
-
-/** Default connection timeout in milliseconds */
-const DEFAULT_TIMEOUT = 10000
-
-/** CLI client info for MCP protocol */
-const CLIENT_INFO = {
-  name: "athreei-cli",
-  version: "0.1.0",
-}
-
-// ============================================================================
-// Types
-// ============================================================================
-
-/**
- * Tool information from MCP server
- */
 export interface McpTool {
   name: string
   description?: string
   inputSchema?: Record<string, unknown>
 }
 
-/**
- * MCP client options
- */
 export interface McpClientOptions {
-  /** Connection timeout in milliseconds */
   timeout?: number
 }
 
-// ============================================================================
-// Server Verification
-// ============================================================================
-
-/**
- * Verify connection to an MCP server
- *
- * Connects to the server, retrieves server info and tools list,
- * then disconnects. Returns verification result.
- *
- * @param config - Server configuration
- * @param options - Client options
- * @returns Verification result
- */
 export async function verifyMcpServer(
   config: ServerConfig,
   options?: McpClientOptions
 ): Promise<ServerVerifyResult> {
-  const timeout = options?.timeout ?? DEFAULT_TIMEOUT
+  const timeout = options?.timeout ?? DEFAULT_MCP_TIMEOUT
   const target = isStdioServer(config)
     ? config.command
     : isHttpServer(config)
@@ -87,10 +43,8 @@ export async function verifyMcpServer(
 
     const transport = createTransport(config)
 
-    // Connect with timeout
     await withTimeout(client.connect(transport), timeout, "Connection timeout")
 
-    // Get server info
     try {
       const serverInfo = client.getServerVersion()
       if (serverInfo) {
@@ -100,10 +54,9 @@ export async function verifyMcpServer(
         }
       }
     } catch {
-      // Server info is optional, continue if not available
+      // Server info is optional
     }
 
-    // List tools to verify server is responding
     const toolsResponse = await withTimeout(
       client.listTools(),
       timeout,
@@ -114,7 +67,6 @@ export async function verifyMcpServer(
     result.success = true
     result.tools = tools.map((t) => t.name)
 
-    // Disconnect gracefully
     await client.close()
   } catch (error) {
     result.success = false
@@ -124,13 +76,6 @@ export async function verifyMcpServer(
   return result
 }
 
-/**
- * Verify multiple MCP servers
- *
- * @param configs - Server configurations
- * @param options - Client options
- * @returns Array of verification results
- */
 export async function verifyMcpServers(
   configs: ServerConfig[],
   options?: McpClientOptions
@@ -138,22 +83,11 @@ export async function verifyMcpServers(
   return Promise.all(configs.map((config) => verifyMcpServer(config, options)))
 }
 
-// ============================================================================
-// Tool Listing
-// ============================================================================
-
-/**
- * List tools from an MCP server
- *
- * @param config - Server configuration
- * @param options - Client options
- * @returns Array of tools
- */
 export async function listMcpTools(
   config: ServerConfig,
   options?: McpClientOptions
 ): Promise<McpTool[]> {
-  const timeout = options?.timeout ?? DEFAULT_TIMEOUT
+  const timeout = options?.timeout ?? DEFAULT_MCP_TIMEOUT
 
   const client = new Client(CLIENT_INFO, {
     capabilities: {},
@@ -183,13 +117,6 @@ export async function listMcpTools(
   }
 }
 
-// ============================================================================
-// Transport Factory
-// ============================================================================
-
-/**
- * Create appropriate transport for server config
- */
 function createTransport(config: ServerConfig) {
   if (isStdioServer(config)) {
     return new StdioClientTransport({
@@ -205,13 +132,10 @@ function createTransport(config: ServerConfig) {
       ...config.headers,
     }
 
-    // Add token as Authorization header if present
     if (config.token) {
       headers["Authorization"] = `Bearer ${config.token}`
     }
 
-    // Use SSE transport for both SSE and streamable-http
-    // (streamable-http is handled by the SSE transport)
     return new SSEClientTransport(url, {
       eventSourceInit: {
         fetch: (input, init) =>
@@ -232,13 +156,6 @@ function createTransport(config: ServerConfig) {
   throw new Error(`Unsupported transport: ${config.transport ?? "stdio"}`)
 }
 
-// ============================================================================
-// Utilities
-// ============================================================================
-
-/**
- * Execute promise with timeout
- */
 async function withTimeout<T>(
   promise: Promise<T>,
   ms: number,

@@ -22,8 +22,8 @@ const testErrorHandler: ErrorHandler = (err: Error, c: Context) => {
 }
 
 // Mock modules before importing the routes
-vi.mock("../../lib/db", () => ({
-  getDb: vi.fn(() => mockDb),
+vi.mock("../../lib/db-operations", () => ({
+  db: vi.fn(() => mockDb),
 }))
 
 vi.mock("@athreei/db", () => ({
@@ -172,10 +172,6 @@ describe("Dashboard Routes", () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
-
-  // =========================================================================
-  // GET /api/dashboard/stats Tests
-  // =========================================================================
   describe("GET /api/dashboard/stats", () => {
     it("should return correct stats counts", async () => {
       // Import the mocked service
@@ -301,10 +297,6 @@ describe("Dashboard Routes", () => {
       expect(data.teamMembers).toBe(0)
     })
   })
-
-  // =========================================================================
-  // GET /api/dashboard/activity Tests
-  // =========================================================================
   describe("GET /api/dashboard/activity", () => {
     it("should return activity feed with traces, servers, and members", async () => {
       const { verifyOrganizationMembership } = await import("../../services")
@@ -437,10 +429,6 @@ describe("Dashboard Routes", () => {
       }
     })
   })
-
-  // =========================================================================
-  // Edge Cases
-  // =========================================================================
   describe("Edge Cases", () => {
     it("should handle null count results", async () => {
       const { verifyOrganizationMembership } = await import("../../services")

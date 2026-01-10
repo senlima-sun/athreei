@@ -3,7 +3,7 @@ import { zValidator } from "@hono/zod-validator"
 import { eq } from "drizzle-orm"
 import { z } from "zod"
 import { authMiddleware, getAuthContext, ApiError } from "../middleware"
-import { getDb, type DatabaseClient } from "../lib/db"
+import { db } from "../lib/db-operations"
 import { permission } from "@athreei/db"
 import { verifyOrganizationMembership } from "../services"
 
@@ -16,13 +16,10 @@ const updatePermissionSchema = z.object({
 })
 
 async function verifyPermissionAccess(
-  db: DatabaseClient,
   permissionId: string,
   userId: string
 ): Promise<typeof permission.$inferSelect> {
-  // Get the permission
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const perm = await (db as any).query.permission.findFirst({
+  const perm = await db().query.permission.findFirst({
     where: eq(permission.id, permissionId),
   })
 
@@ -31,7 +28,6 @@ async function verifyPermissionAccess(
   }
 
   const isMember = await verifyOrganizationMembership(
-    db,
     userId,
     perm.organizationId
   )
@@ -43,7 +39,6 @@ async function verifyPermissionAccess(
 }
 
 permissions.get("/", async (c) => {
-  const db = getDb()
   const auth = getAuthContext(c)
   const organizationId = c.req.query("organizationId")
 
@@ -52,7 +47,6 @@ permissions.get("/", async (c) => {
   }
 
   const isMember = await verifyOrganizationMembership(
-    db,
     auth.userId,
     organizationId
   )
@@ -60,8 +54,7 @@ permissions.get("/", async (c) => {
     throw ApiError.forbidden("You do not have access to this organization")
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const perms = await (db as any).query.permission.findMany({
+  const perms = await db().query.permission.findMany({
     where: eq(permission.organizationId, organizationId),
   })
 
@@ -86,16 +79,14 @@ permissions.put(
   "/:id",
   zValidator("json", updatePermissionSchema),
   async (c) => {
-    const db = getDb()
     const auth = getAuthContext(c)
     const permissionId = c.req.param("id")
     const body = c.req.valid("json")
 
-    const perm = await verifyPermissionAccess(db, permissionId, auth.userId)
+    const perm = await verifyPermissionAccess(permissionId, auth.userId)
 
     const now = new Date()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (db as any)
+    await db()
       .update(permission)
       .set({
         allowed: body.allowed,
@@ -118,14 +109,12 @@ permissions.put(
 )
 
 permissions.delete("/:id", async (c) => {
-  const db = getDb()
   const auth = getAuthContext(c)
   const permissionId = c.req.param("id")
 
-  await verifyPermissionAccess(db, permissionId, auth.userId)
+  await verifyPermissionAccess(permissionId, auth.userId)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (db as any).delete(permission).where(eq(permission.id, permissionId))
+  await db().delete(permission).where(eq(permission.id, permissionId))
 
   return c.json({ message: "Permission deleted successfully" })
 })

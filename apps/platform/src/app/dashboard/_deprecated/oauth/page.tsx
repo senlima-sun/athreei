@@ -5,10 +5,6 @@ import { PageHeader, LoadingState, ErrorState } from "@/components/dashboard"
 import { Plus, Loader2, Trash2, Shield, X } from "lucide-react"
 import { API_URL } from "@/constants/api"
 
-// =============================================================================
-// Types
-// =============================================================================
-
 interface OAuthConnection {
   provider: string
   serverUrl: string
@@ -22,10 +18,6 @@ interface OAuthProvider {
   serverUrl: string
   icon?: string
 }
-
-// =============================================================================
-// Constants
-// =============================================================================
 
 const KNOWN_PROVIDERS: OAuthProvider[] = [
   {
@@ -47,10 +39,6 @@ const KNOWN_PROVIDERS: OAuthProvider[] = [
     serverUrl: "https://api.github.com/mcp/sse",
   },
 ]
-
-// =============================================================================
-// Component
-// =============================================================================
 
 export default function OAuthPage() {
   const [connections, setConnections] = useState<OAuthConnection[]>([])

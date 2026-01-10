@@ -10,10 +10,6 @@
 export * from "./server-config.js"
 export * from "./cli-config.js"
 
-// ============================================================================
-// Permission Model
-// ============================================================================
-
 export type PermissionLevel = "denied" | "allowed" | "ask"
 
 export interface Permission {
@@ -24,10 +20,6 @@ export interface Permission {
   createdAt: number
   updatedAt: number
 }
-
-// ============================================================================
-// Audit Log
-// ============================================================================
 
 export type AuditStatus = "success" | "denied" | "error"
 
@@ -42,10 +34,6 @@ export interface AuditLogEntry {
   status: AuditStatus
 }
 
-// ============================================================================
-// Session Tracking
-// ============================================================================
-
 export interface Session {
   id: string
   tabId?: number
@@ -54,10 +42,6 @@ export interface Session {
   endedAt?: number
   metadata?: Record<string, unknown>
 }
-
-// ============================================================================
-// Native Messaging Types
-// ============================================================================
 
 export interface NativeMessage {
   id: string
@@ -84,18 +68,10 @@ export interface NativeEvent extends NativeMessage {
   payload: unknown
 }
 
-// ============================================================================
-// MCP Client Info (from protocol)
-// ============================================================================
-
 export interface MCPClientInfo {
   name: string
   version: string
 }
-
-// ============================================================================
-// Content Script Action Types
-// ============================================================================
 
 export type AiiiToolType =
   | "click"
@@ -205,10 +181,6 @@ export type AiiiActionAfterDetail = {
   timestamp: number
   duration: number
 }
-
-// ============================================================================
-// Permission Request/Response Messages
-// ============================================================================
 
 /**
  * Message from content script to background for permission requests

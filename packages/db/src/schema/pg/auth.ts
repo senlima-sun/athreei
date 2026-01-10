@@ -5,10 +5,6 @@
 import { pgTable, text, boolean, timestamp } from "drizzle-orm/pg-core"
 import { relations } from "drizzle-orm"
 
-// =============================================================================
-// Core Authentication Tables
-// =============================================================================
-
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
@@ -63,10 +59,6 @@ export const verification = pgTable("verification", {
   updatedAt: timestamp("updatedAt").notNull(),
 })
 
-// =============================================================================
-// Organization Plugin Tables
-// =============================================================================
-
 export const organization = pgTable("organization", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
@@ -102,10 +94,6 @@ export const invitation = pgTable("invitation", {
   expiresAt: timestamp("expiresAt").notNull(),
   createdAt: timestamp("createdAt").notNull(),
 })
-
-// =============================================================================
-// Relations
-// =============================================================================
 
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),

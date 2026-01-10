@@ -20,10 +20,6 @@ import {
 } from "@athreei/gateway-core"
 import type { GatewaySession, CreateSessionOptions } from "../types.js"
 
-// =============================================================================
-// Session Store
-// =============================================================================
-
 /** In-memory session storage */
 const sessions = new Map<string, GatewaySession>()
 
@@ -35,10 +31,6 @@ let sessionIdleTimeout = 30 * 60 * 1000 // 30 minutes default
 
 /** Default logger */
 let logger: Logger = noopLogger
-
-// =============================================================================
-// Session Configuration
-// =============================================================================
 
 /**
  * Configure session management settings
@@ -54,10 +46,6 @@ export function configureSessionManager(options: {
     logger = options.logger
   }
 }
-
-// =============================================================================
-// Environment Variable Fetching
-// =============================================================================
 
 /**
  * Fetch environment variables for an MCP server from the API
@@ -102,10 +90,6 @@ async function getServerEnv(
     return {}
   }
 }
-
-// =============================================================================
-// MCP Client Connection
-// =============================================================================
 
 /**
  * Connect to a single MCP server
@@ -258,10 +242,6 @@ async function disconnectMcpServer(
   }
 }
 
-// =============================================================================
-// Session Lifecycle
-// =============================================================================
-
 /**
  * Generate a unique session ID
  */
@@ -385,10 +365,6 @@ export function getSessionCount(): number {
   return sessions.size
 }
 
-// =============================================================================
-// Tool Operations
-// =============================================================================
-
 /**
  * List tools for a session
  */
@@ -434,10 +410,6 @@ export async function callSessionTool(
 
   return routeToolCall(state, toolName, args, { logger })
 }
-
-// =============================================================================
-// Session Cleanup
-// =============================================================================
 
 /**
  * Cleanup idle sessions
@@ -503,10 +475,6 @@ export async function cleanupAllSessions(): Promise<void> {
 
   logger.info("All sessions cleaned up")
 }
-
-// =============================================================================
-// Exports for Testing
-// =============================================================================
 
 /**
  * Reset session store (for testing)

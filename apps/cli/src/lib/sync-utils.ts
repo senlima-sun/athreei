@@ -1,5 +1,5 @@
 import type { McpServerConfig } from "./config-schema"
-import type { McpServer } from "./types"
+import type { McpServer } from "../types/index.js"
 
 export type SyncStatus = "in-sync" | "local-only" | "cloud-only" | "conflict"
 
@@ -34,12 +34,10 @@ export interface MergeOptions {
   ) => Promise<ConflictResolution>
 }
 
-// Normalize server name for case-insensitive comparison
 function normalizeServerName(name: string): string {
   return name.toLowerCase().trim()
 }
 
-// Convert cloud MCP server to local config format
 export function cloudToLocalConfig(cloud: McpServer): McpServerConfig {
   const config: McpServerConfig = {
     name: cloud.name,
@@ -60,7 +58,6 @@ export function cloudToLocalConfig(cloud: McpServer): McpServerConfig {
   return config
 }
 
-// Convert local config to cloud request format
 export function localToCloudRequest(
   local: McpServerConfig,
   organizationId: string
@@ -101,7 +98,6 @@ export function localToCloudRequest(
   return request
 }
 
-// Find differences between local and cloud configurations
 function findDifferences(local: McpServerConfig, cloud: McpServer): string[] {
   const differences: string[] = []
 
@@ -145,12 +141,10 @@ function findDifferences(local: McpServerConfig, cloud: McpServer): string[] {
   return differences
 }
 
-// Check if two servers are equivalent (in-sync)
 function serversMatch(local: McpServerConfig, cloud: McpServer): boolean {
   return findDifferences(local, cloud).length === 0
 }
 
-// Compare local and cloud configurations
 export function compareConfigs(
   localServers: McpServerConfig[],
   cloudServers: McpServer[]
@@ -160,7 +154,6 @@ export function compareConfigs(
   const cloudOnly: ServerComparison[] = []
   const conflicts: ServerComparison[] = []
 
-  // Create maps for efficient lookup
   const localByName = new Map<string, McpServerConfig>()
   for (const server of localServers) {
     localByName.set(normalizeServerName(server.name), server)
@@ -171,7 +164,6 @@ export function compareConfigs(
     cloudByName.set(normalizeServerName(server.name), server)
   }
 
-  // Process local servers
   for (const [normalizedName, local] of localByName) {
     const cloud = cloudByName.get(normalizedName)
 
@@ -199,7 +191,6 @@ export function compareConfigs(
     }
   }
 
-  // Find cloud-only servers
   for (const [normalizedName, cloud] of cloudByName) {
     if (!localByName.has(normalizedName)) {
       cloudOnly.push({
@@ -230,7 +221,6 @@ export function compareConfigs(
   }
 }
 
-// Merge servers from cloud into local config
 export async function mergeMcpServers(
   localServers: McpServerConfig[],
   cloudServers: McpServer[],
@@ -245,26 +235,21 @@ export async function mergeMcpServers(
 
   const diff = compareConfigs(localServers, cloudServers)
 
-  // Start with in-sync servers (no changes needed)
   const result: McpServerConfig[] = [...diff.inSync.map((c) => c.local!)]
 
   const added: string[] = []
   const updated: string[] = []
   const skipped: string[] = []
 
-  // Add cloud-only servers
   for (const comparison of diff.cloudOnly) {
     result.push(cloudToLocalConfig(comparison.cloud!))
     added.push(comparison.name)
   }
 
-  // Keep local-only servers
   for (const comparison of diff.localOnly) {
     result.push(comparison.local!)
-    // These are not skipped, they remain local
   }
 
-  // Handle conflicts
   for (const comparison of diff.conflicts) {
     let resolution = conflictResolution
 
@@ -296,7 +281,6 @@ export async function mergeMcpServers(
   return { result, added, updated, skipped }
 }
 
-// Format diff for display
 export function formatDiffLine(
   prefix: string,
   name: string,
@@ -308,7 +292,6 @@ export function formatDiffLine(
   return `${prefix} ${name}`
 }
 
-// Generate unified diff-like output
 export interface DiffLine {
   type: "add" | "remove" | "modify" | "context"
   text: string
@@ -317,27 +300,23 @@ export interface DiffLine {
 export function generateDiffLines(diff: SyncDiffResult): DiffLine[] {
   const lines: DiffLine[] = []
 
-  // In-sync items (context)
   for (const item of diff.inSync) {
     lines.push({ type: "context", text: `  ${item.name}` })
   }
 
-  // Local-only items (would be added to cloud on push)
   for (const item of diff.localOnly) {
     lines.push({ type: "add", text: `+ ${item.name} (local only)` })
   }
 
-  // Cloud-only items (would be added locally on pull)
   for (const item of diff.cloudOnly) {
     lines.push({ type: "remove", text: `- ${item.name} (cloud only)` })
   }
 
-  // Conflicts
   for (const item of diff.conflicts) {
     lines.push({ type: "modify", text: `~ ${item.name} (conflict)` })
     if (item.differences) {
-      for (const diff of item.differences) {
-        lines.push({ type: "modify", text: `    ${diff}` })
+      for (const d of item.differences) {
+        lines.push({ type: "modify", text: `    ${d}` })
       }
     }
   }
@@ -345,7 +324,6 @@ export function generateDiffLines(diff: SyncDiffResult): DiffLine[] {
   return lines
 }
 
-// Export JSON-friendly diff format
 export interface JsonDiff {
   status: "in-sync" | "out-of-sync"
   summary: SyncDiffResult["summary"]

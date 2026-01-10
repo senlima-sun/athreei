@@ -56,10 +56,6 @@ export { TraceSyncClient, createTraceSyncClient } from "./trace-sync.js"
 export { log, setLogLevel } from "./logger.js"
 export * from "./types.js"
 
-// =============================================================================
-// CLI Argument Parsing
-// =============================================================================
-
 interface CliArgs {
   configPath?: string
   transport: "stdio" | "sse"
@@ -202,10 +198,6 @@ Config file format for Platform mode:
 }
 `)
 }
-
-// =============================================================================
-// Gateway Lifecycle
-// =============================================================================
 
 /**
  * Initialize the gateway state and connect to all MCP servers
@@ -359,10 +351,6 @@ function setupShutdownHandlers(
   })
 }
 
-// =============================================================================
-// Transport Setup
-// =============================================================================
-
 /**
  * Start the gateway with stdio transport
  */
@@ -428,10 +416,6 @@ async function startSSE(
   // Store server reference for shutdown
   ;(globalThis as Record<string, unknown>).__sseServer = server
 }
-
-// =============================================================================
-// Main Entry Point
-// =============================================================================
 
 /**
  * Create mock namespace config for testing

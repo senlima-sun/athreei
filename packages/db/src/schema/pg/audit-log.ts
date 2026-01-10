@@ -36,10 +36,6 @@ export const auditLog = pgTable(
   ]
 )
 
-// =============================================================================
-// Relations
-// =============================================================================
-
 export const auditLogRelations = relations(auditLog, ({ one }) => ({
   organization: one(organization, {
     fields: [auditLog.organizationId],

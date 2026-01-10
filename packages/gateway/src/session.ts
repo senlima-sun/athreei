@@ -13,10 +13,6 @@ import type { ConnectedMcp, AggregatedTool, McpServerConfig } from "./types.js"
 import { connectToAllServers, disconnectAllServers } from "./mcp-client.js"
 import { log } from "./logger.js"
 
-// =============================================================================
-// Types
-// =============================================================================
-
 export interface GatewaySession {
   id: string
   connectedMcps: Map<string, ConnectedMcp>
@@ -30,18 +26,10 @@ export interface CreateSessionOptions {
   servers: McpServerConfig[]
 }
 
-// =============================================================================
-// Session Store
-// =============================================================================
-
 const sessions = new Map<string, GatewaySession>()
 
 let cleanupIntervalId: ReturnType<typeof setInterval> | null = null
 let sessionIdleTimeout = 30 * 60 * 1000 // 30 minutes default
-
-// =============================================================================
-// Session Configuration
-// =============================================================================
 
 export function configureSessionManager(options: {
   idleTimeout?: number
@@ -50,10 +38,6 @@ export function configureSessionManager(options: {
     sessionIdleTimeout = options.idleTimeout
   }
 }
-
-// =============================================================================
-// Session Lifecycle
-// =============================================================================
 
 function generateSessionId(): string {
   return `sess_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`
@@ -137,10 +121,6 @@ export function getSessionCount(): number {
   return sessions.size
 }
 
-// =============================================================================
-// Tool Operations
-// =============================================================================
-
 export function listSessionTools(
   sessionId: string
 ): { name: string; description?: string; inputSchema: unknown }[] {
@@ -180,10 +160,6 @@ export async function callSessionTool(
 
   return coreRouteToolCall(state, toolName, args, { logger: log })
 }
-
-// =============================================================================
-// Session Cleanup
-// =============================================================================
 
 export async function cleanupIdleSessions(): Promise<number> {
   const now = Date.now()

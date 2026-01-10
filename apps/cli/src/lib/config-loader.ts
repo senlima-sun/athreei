@@ -14,22 +14,16 @@ import {
   type Config,
 } from "./config-schema"
 
-// Config file name
 export const CONFIG_FILE_NAME = "athreei.config.json"
 
-// Config locations (in priority order)
 export function getConfigPaths(): string[] {
   return [
-    // 1. Environment variable
     process.env.ATHREEI_CONFIG,
-    // 2. Current working directory
     join(process.cwd(), CONFIG_FILE_NAME),
-    // 3. Home directory
     join(homedir(), ".athreei", CONFIG_FILE_NAME),
   ].filter(Boolean) as string[]
 }
 
-// Find first existing config file
 export function findConfig(): string | null {
   for (const path of getConfigPaths()) {
     if (existsSync(path)) {
@@ -39,7 +33,6 @@ export function findConfig(): string | null {
   return null
 }
 
-// Load config from file
 export function loadConfig(
   path?: string
 ): { config: Config; path: string } | null {
@@ -53,27 +46,23 @@ export function loadConfig(
   return { config, path: configPath }
 }
 
-// Load config or return defaults
 export function loadConfigOrDefault(): { config: Config; path: string | null } {
   const result = loadConfig()
   if (result) return { ...result }
   return { config: defaultConfig, path: null }
 }
 
-// Write config to file (atomic)
 export function writeConfig(config: Config, path: string): void {
   const dir = dirname(path)
   if (!existsSync(dir)) {
     mkdirSync(dir, { recursive: true })
   }
 
-  // Atomic write: write to temp file, then rename
   const tempPath = `${path}.tmp`
   writeFileSync(tempPath, JSON.stringify(config, null, 2) + "\n", "utf-8")
   renameSync(tempPath, path)
 }
 
-// Get value by dot notation path
 export function getConfigValue(config: Config, key: string): unknown {
   const parts = key.split(".")
   let value: unknown = config
@@ -84,14 +73,13 @@ export function getConfigValue(config: Config, key: string): unknown {
   return value
 }
 
-// Set value by dot notation path
 export function setConfigValue(
   config: Config,
   key: string,
   value: unknown
 ): Config {
   const parts = key.split(".")
-  const result = JSON.parse(JSON.stringify(config)) // Deep clone
+  const result = JSON.parse(JSON.stringify(config))
   let current: Record<string, unknown> = result
 
   for (let i = 0; i < parts.length - 1; i++) {
@@ -103,19 +91,16 @@ export function setConfigValue(
   }
 
   current[parts[parts.length - 1]] = value
-  return configSchema.parse(result) // Validate after setting
+  return configSchema.parse(result)
 }
 
-// Get default config path for init
 export function getDefaultConfigPath(): string {
   return join(process.cwd(), CONFIG_FILE_NAME)
 }
 
-// Get home config path
 export function getHomeConfigPath(): string {
   return join(homedir(), ".athreei", CONFIG_FILE_NAME)
 }
 
-// Re-export for convenience
 export { CONFIG_VERSION, defaultConfig, configSchema }
 export type { Config }

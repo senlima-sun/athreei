@@ -20,10 +20,6 @@ export type {
 
 export { noopLogger } from "@athreei/gateway-core"
 
-// =============================================================================
-// Local Configuration Types
-// =============================================================================
-
 /**
  * Local gateway configuration file format (~/.athreei/config.json)
  */
@@ -47,10 +43,6 @@ export interface LocalConfig {
   servers: import("@athreei/gateway-core").McpServerConfig[]
 }
 
-// =============================================================================
-// Platform API Response Types
-// =============================================================================
-
 /**
  * Namespace configuration from Platform API
  * Returned by GET /api/gateway/config?endpoint={name}
@@ -73,10 +65,6 @@ export interface NamespaceConfig {
   /** Config version for change detection */
   configVersion: string
 }
-
-// =============================================================================
-// Trace Types
-// =============================================================================
 
 /**
  * Tool call trace for monitoring and debugging
@@ -142,10 +130,6 @@ export interface EncryptedToolCallTrace {
     algorithm: "xchacha20poly1305"
   }
 }
-
-// =============================================================================
-// Event Types
-// =============================================================================
 
 /**
  * Gateway lifecycle events

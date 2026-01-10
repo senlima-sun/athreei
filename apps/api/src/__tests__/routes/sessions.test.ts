@@ -23,8 +23,8 @@ const testErrorHandler: ErrorHandler = (err: Error, c: Context) => {
 }
 
 // Mock modules before importing the routes
-vi.mock("../../lib/db", () => ({
-  getDb: vi.fn(() => mockDb),
+vi.mock("../../lib/db-operations", () => ({
+  db: vi.fn(() => mockDb),
 }))
 
 vi.mock("@athreei/db", () => ({
@@ -165,9 +165,6 @@ describe("Sessions Routes", () => {
     vi.clearAllMocks()
   })
 
-  // =========================================================================
-  // GET /api/sessions Tests
-  // =========================================================================
   describe("GET /api/sessions", () => {
     it("should list all active sessions", async () => {
       mockDb.select.mockReturnValue({
@@ -281,9 +278,6 @@ describe("Sessions Routes", () => {
     })
   })
 
-  // =========================================================================
-  // DELETE /api/sessions/:sessionId Tests
-  // =========================================================================
   describe("DELETE /api/sessions/:sessionId", () => {
     it("should revoke session successfully", async () => {
       mockDb.query.session.findFirst.mockResolvedValue(mockSessions[1])
@@ -357,9 +351,6 @@ describe("Sessions Routes", () => {
     })
   })
 
-  // =========================================================================
-  // Edge Cases
-  // =========================================================================
   describe("Edge Cases", () => {
     it("should handle session without user agent", async () => {
       const sessionWithoutUserAgent = {

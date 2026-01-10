@@ -235,7 +235,6 @@ mod tests {
         assert_eq!(decrypted, plaintext);
     }
 
-    // ==================== Additional Integration Tests ====================
 
     #[test]
     fn test_encrypt_various_lengths() {

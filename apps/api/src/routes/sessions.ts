@@ -3,8 +3,12 @@ import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { eq, and, gt } from "drizzle-orm"
 import { authMiddleware, getAuthContext, ApiError } from "../middleware"
-import { getDb } from "../lib/db"
-import { detectDatabaseType, getSchema } from "@athreei/db"
+import { db } from "../lib/db-operations"
+import {
+  detectDatabaseType,
+  getSchema,
+  session as pgSession,
+} from "@athreei/db"
 
 interface SessionResponse {
   id: string
@@ -15,6 +19,15 @@ interface SessionResponse {
   ipAddress?: string
   userAgent?: string
   createdAt: string
+}
+
+interface SessionRow {
+  id: string
+  ipAddress: string | null
+  userAgent: string | null
+  createdAt: Date
+  updatedAt: Date
+  expiresAt: Date
 }
 
 const sessionIdParamSchema = z.object({
@@ -32,7 +45,6 @@ function parseUserAgent(userAgent?: string | null): {
   let device: string | undefined
   let browser: string | undefined
 
-  // Detect device
   if (/iPhone/i.test(userAgent)) {
     device = "iPhone"
   } else if (/iPad/i.test(userAgent)) {
@@ -47,7 +59,6 @@ function parseUserAgent(userAgent?: string | null): {
     device = "Linux"
   }
 
-  // Detect browser
   if (/Chrome/i.test(userAgent) && !/Edg/i.test(userAgent)) {
     browser = "Chrome"
   } else if (/Safari/i.test(userAgent) && !/Chrome/i.test(userAgent)) {
@@ -70,52 +81,41 @@ sessions.use("*", authMiddleware)
 sessions.get("/", async (c) => {
   const auth = getAuthContext(c)
 
-  const db = getDb()
   const databaseUrl = process.env.DATABASE_URL
   const dbType = databaseUrl ? detectDatabaseType(databaseUrl) : "sqlite"
   const schema = getSchema(dbType)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const userSessions = await (db as any)
+  const userSessions = (await db()
     .select({
-      id: schema.session.id,
-      ipAddress: schema.session.ipAddress,
-      userAgent: schema.session.userAgent,
-      createdAt: schema.session.createdAt,
-      updatedAt: schema.session.updatedAt,
-      expiresAt: schema.session.expiresAt,
+      id: pgSession.id,
+      ipAddress: pgSession.ipAddress,
+      userAgent: pgSession.userAgent,
+      createdAt: pgSession.createdAt,
+      updatedAt: pgSession.updatedAt,
+      expiresAt: pgSession.expiresAt,
     })
-    .from(schema.session)
+    .from(pgSession)
     .where(
       and(
         eq(schema.session.userId, auth.userId),
         gt(schema.session.expiresAt, new Date())
       )
-    )
+    )) as SessionRow[]
 
-  const sessionsResponse: SessionResponse[] = userSessions.map(
-    (session: {
-      id: string
-      ipAddress: string | null
-      userAgent: string | null
-      createdAt: Date
-      updatedAt: Date
-      expiresAt: Date
-    }) => {
-      const { device, browser } = parseUserAgent(session.userAgent)
+  const sessionsResponse: SessionResponse[] = userSessions.map((session) => {
+    const { device, browser } = parseUserAgent(session.userAgent)
 
-      return {
-        id: session.id,
-        device,
-        browser,
-        lastActive: session.updatedAt.toISOString(),
-        current: session.id === auth.session.id,
-        ipAddress: session.ipAddress ?? undefined,
-        userAgent: session.userAgent ?? undefined,
-        createdAt: session.createdAt.toISOString(),
-      }
+    return {
+      id: session.id,
+      device,
+      browser,
+      lastActive: session.updatedAt.toISOString(),
+      current: session.id === auth.session.id,
+      ipAddress: session.ipAddress ?? undefined,
+      userAgent: session.userAgent ?? undefined,
+      createdAt: session.createdAt.toISOString(),
     }
-  )
+  })
 
   sessionsResponse.sort((a, b) => {
     if (a.current) return -1
@@ -140,13 +140,11 @@ sessions.delete(
       )
     }
 
-    const db = getDb()
     const databaseUrl = process.env.DATABASE_URL
     const dbType = databaseUrl ? detectDatabaseType(databaseUrl) : "sqlite"
     const schema = getSchema(dbType)
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const existingSession = await (db as any).query.session.findFirst({
+    const existingSession = await db().query.session.findFirst({
       where: and(
         eq(schema.session.id, sessionId),
         eq(schema.session.userId, auth.userId)
@@ -157,14 +155,10 @@ sessions.delete(
       throw ApiError.notFound("Session not found", "SESSION_NOT_FOUND")
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (db as any)
-      .delete(schema.session)
+    await db()
+      .delete(pgSession)
       .where(
-        and(
-          eq(schema.session.id, sessionId),
-          eq(schema.session.userId, auth.userId)
-        )
+        and(eq(pgSession.id, sessionId), eq(pgSession.userId, auth.userId))
       )
 
     return c.json({ message: "Session revoked successfully" })

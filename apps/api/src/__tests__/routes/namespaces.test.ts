@@ -11,8 +11,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest"
 import { Hono } from "hono"
 
 // Mock modules before importing the routes
-vi.mock("../../lib/db", () => ({
-  getDb: vi.fn(() => mockDb),
+vi.mock("../../lib/db-operations", () => ({
+  db: vi.fn(() => mockDb),
 }))
 
 vi.mock("../../middleware", () => ({
@@ -34,6 +34,25 @@ vi.mock("../../middleware", () => ({
       throw error
     }
     return auth
+  }),
+  withOrgFromQuery: vi.fn((c, next) => {
+    const organizationId = c.req.query("organizationId")
+    if (!organizationId) {
+      const error = new Error(
+        "BadRequest: organizationId query parameter is required"
+      )
+      ;(error as Error & { statusCode: number }).statusCode = 400
+      throw error
+    }
+    c.set("org", { organizationId })
+    return next()
+  }),
+  getOrgContext: vi.fn((c) => {
+    const org = c.get("org")
+    if (!org) {
+      throw new Error("Organization context not found")
+    }
+    return org
   }),
   ApiError: {
     badRequest: (msg: string) => {

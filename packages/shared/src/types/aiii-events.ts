@@ -11,10 +11,6 @@
 
 import { z } from "zod"
 
-// ============================================================================
-// Event Names
-// ============================================================================
-
 export const AIII_EVENT_NAMES = [
   "aiii:ready",
   "aiii:request",
@@ -24,10 +20,6 @@ export const AIII_EVENT_NAMES = [
 ] as const
 
 export type AiiiEventName = (typeof AIII_EVENT_NAMES)[number]
-
-// ============================================================================
-// aiii:ready - Extension → Page
-// ============================================================================
 
 /**
  * Dispatched by the extension when it's ready to receive events.
@@ -40,10 +32,6 @@ export const AiiiReadyEventSchema = z.object({
 })
 
 export type AiiiReadyEvent = z.infer<typeof AiiiReadyEventSchema>
-
-// ============================================================================
-// aiii:request - Extension → Page
-// ============================================================================
 
 /**
  * Dispatched by the extension when an AI app requests a tool call.
@@ -64,10 +52,6 @@ export const AiiiRequestEventSchema = z.object({
 
 export type AiiiRequestEvent = z.infer<typeof AiiiRequestEventSchema>
 
-// ============================================================================
-// aiii:response - Page → Extension
-// ============================================================================
-
 /**
  * Dispatched by the website in response to aiii:request.
  * Must include the matching requestId.
@@ -81,10 +65,6 @@ export const AiiiResponseEventSchema = z.object({
 })
 
 export type AiiiResponseEvent = z.infer<typeof AiiiResponseEventSchema>
-
-// ============================================================================
-// aiii:register - Page → Extension
-// ============================================================================
 
 /**
  * Dispatched by the website to register custom tools.
@@ -148,10 +128,6 @@ export const AiiiRegisterEventSchema = z.object({
 export type AiiiRegisterEvent = z.infer<typeof AiiiRegisterEventSchema>
 export type AiiiToolParameter = z.infer<typeof AiiiToolParameterSchema>
 
-// ============================================================================
-// aiii:permission - Page → Extension
-// ============================================================================
-
 /**
  * Dispatched by the website to request a specific permission scope.
  * This allows websites to pre-request permissions for a better UX.
@@ -184,10 +160,6 @@ export const AiiiPermissionEventSchema = z.object({
 
 export type AiiiPermissionEvent = z.infer<typeof AiiiPermissionEventSchema>
 
-// ============================================================================
-// aiii:permission-response - Extension → Page
-// ============================================================================
-
 /**
  * Permission response event dispatched back to website
  */
@@ -204,10 +176,6 @@ export const AiiiPermissionResponseEventSchema = z.object({
 export type AiiiPermissionResponseEvent = z.infer<
   typeof AiiiPermissionResponseEventSchema
 >
-
-// ============================================================================
-// Extension → Page Action Events (for observation/interception)
-// ============================================================================
 
 /**
  * Dispatched before the extension performs a built-in action.
@@ -251,10 +219,6 @@ export const AiiiCancelEventSchema = z.object({
 })
 
 export type AiiiCancelEvent = z.infer<typeof AiiiCancelEventSchema>
-
-// ============================================================================
-// Helper Types
-// ============================================================================
 
 /**
  * Union of all event payload types

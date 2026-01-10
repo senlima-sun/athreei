@@ -65,10 +65,6 @@ export const apiKey = sqliteTable("api_key", {
   updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
 })
 
-// =============================================================================
-// Relations
-// =============================================================================
-
 export const endpointRelations = relations(endpoint, ({ one, many }) => ({
   organization: one(organization, {
     fields: [endpoint.organizationId],

@@ -375,7 +375,6 @@ pub async fn count_memories(
         .map_err(|e| format!("Failed to count memories: {e}"))
 }
 
-// ==================== Bulk Operations ====================
 
 /// Delete multiple memories by ID
 #[tauri::command]

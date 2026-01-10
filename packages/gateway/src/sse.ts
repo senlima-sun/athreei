@@ -19,10 +19,6 @@ import {
 import { log } from "./logger.js"
 import type { NamespaceConfig } from "./types.js"
 
-// =============================================================================
-// Types
-// =============================================================================
-
 interface McpRequest {
   jsonrpc: "2.0"
   id: string | number
@@ -37,19 +33,11 @@ interface McpResponse {
   error?: { code: number; message: string }
 }
 
-// =============================================================================
-// State
-// =============================================================================
-
 let namespaceConfig: NamespaceConfig | null = null
 
 export function setNamespaceConfig(config: NamespaceConfig): void {
   namespaceConfig = config
 }
-
-// =============================================================================
-// MCP Protocol Handling
-// =============================================================================
 
 function handleInitialize(request: McpRequest): McpResponse {
   return {
@@ -165,10 +153,6 @@ async function handleMcpRequest(
   }
 }
 
-// =============================================================================
-// SSE Stream Handling
-// =============================================================================
-
 async function sendEvent(
   stream: SSEStreamingApi,
   event: string,
@@ -223,10 +207,6 @@ async function handleSseConnection(
   clearInterval(pingInterval)
   log.info(`SSE connection closed for session: ${sessionId}`)
 }
-
-// =============================================================================
-// Hono App
-// =============================================================================
 
 export function createSseApp(): Hono {
   const app = new Hono()

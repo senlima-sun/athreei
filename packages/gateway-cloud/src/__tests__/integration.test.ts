@@ -24,10 +24,6 @@ import {
 } from "../gateway/session.js"
 import { GatewayErrorCode } from "../types.js"
 
-// =============================================================================
-// Mocks
-// =============================================================================
-
 const mockFetch = vi.fn()
 global.fetch = mockFetch
 
@@ -87,10 +83,6 @@ vi.mock("@modelcontextprotocol/sdk/client/sse.js", () => ({
   SSEClientTransport: vi.fn().mockImplementation(() => ({})),
 }))
 
-// =============================================================================
-// Test Fixtures
-// =============================================================================
-
 const mockEndpointConfig = {
   namespaceId: "ns_integration_test",
   namespaceName: "Integration Test Namespace",
@@ -135,10 +127,6 @@ const mockLogger = {
   warn: () => {},
   error: () => {},
 }
-
-// =============================================================================
-// Integration Tests
-// =============================================================================
 
 describe("Gateway Cloud Integration Tests", () => {
   let testApp: Hono

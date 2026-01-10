@@ -13,5 +13,8 @@ export * from "./crypto/index.js"
 // Re-export utility functions
 export * from "./utils/index.js"
 
+// Re-export schemas
+export * from "./schemas/index.js"
+
 // Version info
 export const VERSION = "0.1.0"

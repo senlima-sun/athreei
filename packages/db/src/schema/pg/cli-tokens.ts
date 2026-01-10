@@ -10,10 +10,6 @@ import { pgTable, text, timestamp, integer } from "drizzle-orm/pg-core"
 import { relations } from "drizzle-orm"
 import { user, organization } from "./auth"
 
-// =============================================================================
-// CLI Token Table
-// =============================================================================
-
 /**
  * CLI Token - stores hashed authentication tokens for CLI access
  *
@@ -35,10 +31,6 @@ export const cliToken = pgTable("cli_token", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   revokedAt: timestamp("revoked_at"),
 })
-
-// =============================================================================
-// CLI Auth Session Table
-// =============================================================================
 
 /**
  * CLI Auth Session - temporary sessions for browser-based authentication flow
@@ -63,10 +55,6 @@ export const cliAuthSession = pgTable("cli_auth_session", {
   expiresAt: timestamp("expires_at").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 })
-
-// =============================================================================
-// Relations
-// =============================================================================
 
 export const cliTokenRelations = relations(cliToken, ({ one }) => ({
   user: one(user, {

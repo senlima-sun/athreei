@@ -186,9 +186,6 @@ describe("Organizations Routes", () => {
     vi.clearAllMocks()
   })
 
-  // =========================================================================
-  // POST /api/organizations Tests (Create Organization)
-  // =========================================================================
   describe("POST /api/organizations", () => {
     it("should create organization successfully", async () => {
       mockAuthHandler.mockResolvedValue(
@@ -349,9 +346,6 @@ describe("Organizations Routes", () => {
     })
   })
 
-  // =========================================================================
-  // GET /api/organizations Tests (List Organizations)
-  // =========================================================================
   describe("GET /api/organizations", () => {
     it("should list all user organizations", async () => {
       mockAuthHandler.mockResolvedValue(
@@ -409,9 +403,6 @@ describe("Organizations Routes", () => {
     })
   })
 
-  // =========================================================================
-  // GET /api/organizations/:id Tests (Get Organization)
-  // =========================================================================
   describe("GET /api/organizations/:id", () => {
     it("should get organization details", async () => {
       mockAuthHandler.mockResolvedValue(
@@ -471,9 +462,6 @@ describe("Organizations Routes", () => {
     })
   })
 
-  // =========================================================================
-  // PATCH /api/organizations/:id Tests (Update Organization)
-  // =========================================================================
   describe("PATCH /api/organizations/:id", () => {
     it("should update organization name", async () => {
       const updatedOrg = { ...mockOrganization, name: "Updated Name" }
@@ -649,9 +637,6 @@ describe("Organizations Routes", () => {
     })
   })
 
-  // =========================================================================
-  // DELETE /api/organizations/:id Tests (Delete Organization)
-  // =========================================================================
   describe("DELETE /api/organizations/:id", () => {
     it("should delete organization successfully", async () => {
       mockAuthHandler.mockResolvedValue(createMockResponse({}, 200))
@@ -718,9 +703,6 @@ describe("Organizations Routes", () => {
     })
   })
 
-  // =========================================================================
-  // POST /api/organizations/:id/invite Tests (Invite Member)
-  // =========================================================================
   describe("POST /api/organizations/:id/invite", () => {
     it("should invite member successfully", async () => {
       mockAuthHandler.mockResolvedValue(createMockResponse(mockInvitation, 200))
@@ -911,9 +893,6 @@ describe("Organizations Routes", () => {
     })
   })
 
-  // =========================================================================
-  // GET /api/organizations/:id/members Tests (List Members)
-  // =========================================================================
   describe("GET /api/organizations/:id/members", () => {
     it("should list organization members and invitations", async () => {
       mockAuthHandler.mockResolvedValue(
@@ -990,9 +969,6 @@ describe("Organizations Routes", () => {
     })
   })
 
-  // =========================================================================
-  // PATCH /api/organizations/:id/members/:memberId Tests (Update Member Role)
-  // =========================================================================
   describe("PATCH /api/organizations/:id/members/:memberId", () => {
     it("should update member role successfully", async () => {
       const updatedMember = { ...mockMember, role: "member" }
@@ -1135,9 +1111,6 @@ describe("Organizations Routes", () => {
     })
   })
 
-  // =========================================================================
-  // POST /api/organizations/:id/invitations/:invitationId/resend Tests
-  // =========================================================================
   describe("POST /api/organizations/:id/invitations/:invitationId/resend", () => {
     it("should resend invitation successfully", async () => {
       // First call returns full organization with invitation
@@ -1262,9 +1235,6 @@ describe("Organizations Routes", () => {
     })
   })
 
-  // =========================================================================
-  // DELETE /api/organizations/:id/invitations/:invitationId Tests
-  // =========================================================================
   describe("DELETE /api/organizations/:id/invitations/:invitationId", () => {
     it("should cancel invitation successfully", async () => {
       mockAuthHandler.mockResolvedValue(createMockResponse({}, 200))
@@ -1337,9 +1307,6 @@ describe("Organizations Routes", () => {
     })
   })
 
-  // =========================================================================
-  // Edge Cases
-  // =========================================================================
   describe("Edge Cases", () => {
     it("should handle organization with empty metadata", async () => {
       const orgWithEmptyMetadata = { ...mockOrganization, metadata: {} }

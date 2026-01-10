@@ -6,10 +6,6 @@
 
 import { z } from "zod"
 
-// ============================================================================
-// browser_list_tabs
-// ============================================================================
-
 export const BrowserListTabsInputSchema = z.object({})
 
 export const BrowserListTabsOutputSchema = z.object({
@@ -27,10 +23,6 @@ export const BrowserListTabsOutputSchema = z.object({
 export type BrowserListTabsInput = z.infer<typeof BrowserListTabsInputSchema>
 export type BrowserListTabsOutput = z.infer<typeof BrowserListTabsOutputSchema>
 
-// ============================================================================
-// browser_get_active_tab
-// ============================================================================
-
 export const BrowserGetActiveTabInputSchema = z.object({})
 
 export const BrowserGetActiveTabOutputSchema = z.object({
@@ -46,10 +38,6 @@ export type BrowserGetActiveTabInput = z.infer<
 export type BrowserGetActiveTabOutput = z.infer<
   typeof BrowserGetActiveTabOutputSchema
 >
-
-// ============================================================================
-// browser_navigate
-// ============================================================================
 
 export const BrowserNavigateInputSchema = z.object({
   url: z.string().url().describe("The URL to navigate to"),
@@ -69,10 +57,6 @@ export const BrowserNavigateOutputSchema = z.object({
 
 export type BrowserNavigateInput = z.infer<typeof BrowserNavigateInputSchema>
 export type BrowserNavigateOutput = z.infer<typeof BrowserNavigateOutputSchema>
-
-// ============================================================================
-// browser_get_content
-// ============================================================================
 
 export const BrowserGetContentInputSchema = z.object({
   tabId: z.number().optional().describe("Tab ID (defaults to active tab)"),
@@ -97,10 +81,6 @@ export type BrowserGetContentInput = z.infer<
 export type BrowserGetContentOutput = z.infer<
   typeof BrowserGetContentOutputSchema
 >
-
-// ============================================================================
-// browser_get_elements
-// ============================================================================
 
 export const BrowserGetElementsInputSchema = z.object({
   tabId: z.number().optional().describe("Tab ID (defaults to active tab)"),
@@ -151,10 +131,6 @@ export type BrowserGetElementsOutput = z.infer<
 >
 export type ElementInfo = z.infer<typeof ElementInfoSchema>
 
-// ============================================================================
-// browser_click
-// ============================================================================
-
 export const BrowserClickInputSchema = z.object({
   tabId: z.number().optional().describe("Tab ID (defaults to active tab)"),
   selector: z.string().optional().describe("CSS selector of element to click"),
@@ -188,10 +164,6 @@ export const BrowserClickOutputSchema = z.object({
 
 export type BrowserClickInput = z.infer<typeof BrowserClickInputSchema>
 export type BrowserClickOutput = z.infer<typeof BrowserClickOutputSchema>
-
-// ============================================================================
-// browser_type
-// ============================================================================
 
 export const BrowserTypeInputSchema = z.object({
   tabId: z.number().optional().describe("Tab ID (defaults to active tab)"),
@@ -229,10 +201,6 @@ export const BrowserTypeOutputSchema = z.object({
 export type BrowserTypeInput = z.infer<typeof BrowserTypeInputSchema>
 export type BrowserTypeOutput = z.infer<typeof BrowserTypeOutputSchema>
 
-// ============================================================================
-// browser_scroll
-// ============================================================================
-
 export const BrowserScrollInputSchema = z.object({
   tabId: z.number().optional().describe("Tab ID (defaults to active tab)"),
   selector: z
@@ -266,10 +234,6 @@ export const BrowserScrollOutputSchema = z.object({
 
 export type BrowserScrollInput = z.infer<typeof BrowserScrollInputSchema>
 export type BrowserScrollOutput = z.infer<typeof BrowserScrollOutputSchema>
-
-// ============================================================================
-// browser_screenshot
-// ============================================================================
 
 export const BrowserScreenshotInputSchema = z.object({
   tabId: z.number().optional().describe("Tab ID (defaults to active tab)"),
@@ -312,10 +276,6 @@ export type BrowserScreenshotOutput = z.infer<
   typeof BrowserScreenshotOutputSchema
 >
 
-// ============================================================================
-// browser_execute_script
-// ============================================================================
-
 export const BrowserExecuteScriptInputSchema = z.object({
   tabId: z.number().optional().describe("Tab ID (defaults to active tab)"),
   script: z.string().describe("JavaScript code to execute"),
@@ -336,10 +296,6 @@ export type BrowserExecuteScriptInput = z.infer<
 export type BrowserExecuteScriptOutput = z.infer<
   typeof BrowserExecuteScriptOutputSchema
 >
-
-// ============================================================================
-// browser_wait
-// ============================================================================
 
 export const BrowserWaitInputSchema = z.object({
   tabId: z.number().optional().describe("Tab ID (defaults to active tab)"),
@@ -368,10 +324,6 @@ export const BrowserWaitOutputSchema = z.object({
 
 export type BrowserWaitInput = z.infer<typeof BrowserWaitInputSchema>
 export type BrowserWaitOutput = z.infer<typeof BrowserWaitOutputSchema>
-
-// ============================================================================
-// Tool Registry
-// ============================================================================
 
 export const MCP_TOOL_NAMES = [
   "browser_list_tabs",

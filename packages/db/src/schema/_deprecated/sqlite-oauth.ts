@@ -9,10 +9,6 @@ import { sqliteTable, text, integer, unique } from "drizzle-orm/sqlite-core"
 import { relations } from "drizzle-orm"
 import { user } from "../sqlite/auth"
 
-// =============================================================================
-// OAuth Session Table
-// =============================================================================
-
 /**
  * Temporary storage for OAuth flow state during authorization.
  * Records are short-lived (5 minute TTL) and deleted after callback.
@@ -42,10 +38,6 @@ export const oauthSession = sqliteTable("oauth_session", {
   createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   expiresAt: integer("expires_at", { mode: "timestamp" }).notNull(),
 })
-
-// =============================================================================
-// OAuth Token Table
-// =============================================================================
 
 /**
  * Persistent storage for OAuth tokens.
@@ -87,10 +79,6 @@ export const oauthToken = sqliteTable(
     unique("oauth_token_user_server_unique").on(table.userId, table.serverUrl),
   ]
 )
-
-// =============================================================================
-// Relations
-// =============================================================================
 
 export const oauthSessionRelations = relations(oauthSession, ({ one }) => ({
   user: one(user, {

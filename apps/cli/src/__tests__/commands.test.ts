@@ -149,7 +149,7 @@ describe("CLI Commands - JSON Output Mode", () => {
     it("should require an organization to be selected", async () => {
       mockCredentialStore.getActiveOrg.mockResolvedValue(null)
 
-      const { McpList } = await import("../commands/mcp.js")
+      const { McpList } = await import("../commands/mcp/index.js")
 
       // Verify credential store is checked and component is exported
       expect(mockCredentialStore.getActiveOrg).toBeDefined()
@@ -178,7 +178,7 @@ describe("CLI Commands - JSON Output Mode", () => {
         pagination: { limit: 50, offset: 0, total: 1, hasMore: false },
       })
 
-      const { McpList } = await import("../commands/mcp.js")
+      const { McpList } = await import("../commands/mcp/index.js")
       expect(mockApiClient.get).toBeDefined()
       expect(McpList).toBeDefined()
     })
@@ -190,7 +190,7 @@ describe("CLI Commands - JSON Output Mode", () => {
         pagination: { limit: 50, offset: 0, total: 0, hasMore: false },
       })
 
-      const { McpList } = await import("../commands/mcp.js")
+      const { McpList } = await import("../commands/mcp/index.js")
       // Component should accept search, status, transport props
       expect(McpList).toBeDefined()
     })
@@ -200,7 +200,7 @@ describe("CLI Commands - JSON Output Mode", () => {
     it("should require an organization to be selected", async () => {
       mockCredentialStore.getActiveOrg.mockResolvedValue(null)
 
-      const { EndpointList } = await import("../commands/endpoint.js")
+      const { EndpointList } = await import("../commands/endpoint/index.js")
       expect(mockCredentialStore.getActiveOrg).toBeDefined()
       expect(EndpointList).toBeDefined()
     })
@@ -225,7 +225,7 @@ describe("CLI Commands - JSON Output Mode", () => {
         pagination: { limit: 50, offset: 0, total: 1, hasMore: false },
       })
 
-      const { EndpointList } = await import("../commands/endpoint.js")
+      const { EndpointList } = await import("../commands/endpoint/index.js")
       expect(mockApiClient.get).toBeDefined()
       expect(EndpointList).toBeDefined()
     })
@@ -246,7 +246,7 @@ describe("CLI Commands - JSON Output Mode", () => {
         ],
       })
 
-      const { ApiKeyList } = await import("../commands/apikey.js")
+      const { ApiKeyList } = await import("../commands/apikey/index.js")
       expect(ApiKeyList).toBeDefined()
     })
 
@@ -264,7 +264,7 @@ describe("CLI Commands - JSON Output Mode", () => {
       mockCredentialStore.getActiveOrg.mockResolvedValue("org-1")
       mockApiClient.get.mockResolvedValue({ data: mockKeys })
 
-      const { ApiKeyList } = await import("../commands/apikey.js")
+      const { ApiKeyList } = await import("../commands/apikey/index.js")
       expect(mockApiClient.get).toBeDefined()
       expect(ApiKeyList).toBeDefined()
     })
@@ -284,7 +284,7 @@ describe("CLI Commands - JSON Output Mode", () => {
       mockCredentialStore.getActiveOrg.mockResolvedValue("org-1")
       mockApiClient.get.mockResolvedValue({ data: mockKeys })
 
-      const { ApiKeyList } = await import("../commands/apikey.js")
+      const { ApiKeyList } = await import("../commands/apikey/index.js")
       expect(ApiKeyList).toBeDefined()
     })
   })
@@ -294,7 +294,7 @@ describe("CLI Commands - JSON Output Mode", () => {
       const fs = await import("fs")
       vi.mocked(fs.existsSync).mockReturnValue(false)
 
-      const { GatewayStatus } = await import("../commands/gateway.js")
+      const { GatewayStatus } = await import("../commands/gateway/index.js")
       expect(GatewayStatus).toBeDefined()
       expect(typeof GatewayStatus).toBe("function")
     })
@@ -304,7 +304,7 @@ describe("CLI Commands - JSON Output Mode", () => {
       vi.mocked(fs.existsSync).mockReturnValue(true)
       vi.mocked(fs.readFileSync).mockReturnValue("12345")
 
-      const { GatewayStatus } = await import("../commands/gateway.js")
+      const { GatewayStatus } = await import("../commands/gateway/index.js")
       expect(fs.existsSync).toBeDefined()
       expect(GatewayStatus).toBeDefined()
     })
@@ -560,31 +560,31 @@ describe("Gateway Commands", () => {
   })
 
   it("should export GatewayStatus component", async () => {
-    const { GatewayStatus } = await import("../commands/gateway.js")
+    const { GatewayStatus } = await import("../commands/gateway/index.js")
     expect(GatewayStatus).toBeDefined()
     expect(typeof GatewayStatus).toBe("function")
   })
 
   it("should export GatewayStart component", async () => {
-    const { GatewayStart } = await import("../commands/gateway.js")
+    const { GatewayStart } = await import("../commands/gateway/index.js")
     expect(GatewayStart).toBeDefined()
     expect(typeof GatewayStart).toBe("function")
   })
 
   it("should export GatewayStop component", async () => {
-    const { GatewayStop } = await import("../commands/gateway.js")
+    const { GatewayStop } = await import("../commands/gateway/index.js")
     expect(GatewayStop).toBeDefined()
     expect(typeof GatewayStop).toBe("function")
   })
 
   it("should export GatewayLogs component", async () => {
-    const { GatewayLogs } = await import("../commands/gateway.js")
+    const { GatewayLogs } = await import("../commands/gateway/index.js")
     expect(GatewayLogs).toBeDefined()
     expect(typeof GatewayLogs).toBe("function")
   })
 
   it("should accept json prop for status command", async () => {
-    const { GatewayStatus } = await import("../commands/gateway.js")
+    const { GatewayStatus } = await import("../commands/gateway/index.js")
     // TypeScript would catch if json prop is not supported
     expect(GatewayStatus).toBeDefined()
   })
@@ -596,50 +596,50 @@ describe("MCP Commands", () => {
   })
 
   it("should export McpList component", async () => {
-    const { McpList } = await import("../commands/mcp.js")
+    const { McpList } = await import("../commands/mcp/index.js")
     expect(McpList).toBeDefined()
     expect(typeof McpList).toBe("function")
   })
 
   it("should export McpDetails component", async () => {
-    const { McpDetails } = await import("../commands/mcp.js")
+    const { McpDetails } = await import("../commands/mcp/index.js")
     expect(McpDetails).toBeDefined()
     expect(typeof McpDetails).toBe("function")
   })
 
   it("should export McpCreate component", async () => {
-    const { McpCreate } = await import("../commands/mcp.js")
+    const { McpCreate } = await import("../commands/mcp/index.js")
     expect(McpCreate).toBeDefined()
     expect(typeof McpCreate).toBe("function")
   })
 
   it("should export McpDelete component", async () => {
-    const { McpDelete } = await import("../commands/mcp.js")
+    const { McpDelete } = await import("../commands/mcp/index.js")
     expect(McpDelete).toBeDefined()
     expect(typeof McpDelete).toBe("function")
   })
 
   it("should export McpUpdate component", async () => {
-    const { McpUpdate } = await import("../commands/mcp.js")
+    const { McpUpdate } = await import("../commands/mcp/index.js")
     expect(McpUpdate).toBeDefined()
     expect(typeof McpUpdate).toBe("function")
   })
 
   it("should export McpVerify component", async () => {
-    const { McpVerify } = await import("../commands/mcp.js")
+    const { McpVerify } = await import("../commands/mcp/index.js")
     expect(McpVerify).toBeDefined()
     expect(typeof McpVerify).toBe("function")
   })
 
   it("should export McpTools component", async () => {
-    const { McpTools } = await import("../commands/mcp.js")
+    const { McpTools } = await import("../commands/mcp/index.js")
     expect(McpTools).toBeDefined()
     expect(typeof McpTools).toBe("function")
   })
 
   it("should export environment variable commands", async () => {
     const { McpEnvList, McpEnvSet, McpEnvDelete } =
-      await import("../commands/mcp.js")
+      await import("../commands/mcp/index.js")
     expect(McpEnvList).toBeDefined()
     expect(McpEnvSet).toBeDefined()
     expect(McpEnvDelete).toBeDefined()
@@ -652,25 +652,25 @@ describe("Endpoint Commands", () => {
   })
 
   it("should export EndpointList component", async () => {
-    const { EndpointList } = await import("../commands/endpoint.js")
+    const { EndpointList } = await import("../commands/endpoint/index.js")
     expect(EndpointList).toBeDefined()
     expect(typeof EndpointList).toBe("function")
   })
 
   it("should export EndpointDetails component", async () => {
-    const { EndpointDetails } = await import("../commands/endpoint.js")
+    const { EndpointDetails } = await import("../commands/endpoint/index.js")
     expect(EndpointDetails).toBeDefined()
     expect(typeof EndpointDetails).toBe("function")
   })
 
   it("should export EndpointCreate component", async () => {
-    const { EndpointCreate } = await import("../commands/endpoint.js")
+    const { EndpointCreate } = await import("../commands/endpoint/index.js")
     expect(EndpointCreate).toBeDefined()
     expect(typeof EndpointCreate).toBe("function")
   })
 
   it("should export EndpointDelete component", async () => {
-    const { EndpointDelete } = await import("../commands/endpoint.js")
+    const { EndpointDelete } = await import("../commands/endpoint/index.js")
     expect(EndpointDelete).toBeDefined()
     expect(typeof EndpointDelete).toBe("function")
   })
@@ -682,19 +682,19 @@ describe("ApiKey Commands", () => {
   })
 
   it("should export ApiKeyList component", async () => {
-    const { ApiKeyList } = await import("../commands/apikey.js")
+    const { ApiKeyList } = await import("../commands/apikey/index.js")
     expect(ApiKeyList).toBeDefined()
     expect(typeof ApiKeyList).toBe("function")
   })
 
   it("should export ApiKeyCreate component", async () => {
-    const { ApiKeyCreate } = await import("../commands/apikey.js")
+    const { ApiKeyCreate } = await import("../commands/apikey/index.js")
     expect(ApiKeyCreate).toBeDefined()
     expect(typeof ApiKeyCreate).toBe("function")
   })
 
   it("should export ApiKeyRevoke component", async () => {
-    const { ApiKeyRevoke } = await import("../commands/apikey.js")
+    const { ApiKeyRevoke } = await import("../commands/apikey/index.js")
     expect(ApiKeyRevoke).toBeDefined()
     expect(typeof ApiKeyRevoke).toBe("function")
   })

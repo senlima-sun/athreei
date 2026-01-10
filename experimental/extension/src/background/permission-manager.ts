@@ -9,26 +9,14 @@
 
 import type { PermissionLevel } from "@athreei/shared"
 
-// ============================================================================
-// Constants
-// ============================================================================
-
 const CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
 const MCP_SERVER_URL = "http://localhost:3001"
 const STORAGE_KEY_PREFIX = "permission_cache_"
-
-// ============================================================================
-// Types
-// ============================================================================
 
 interface CachedPermission {
   level: PermissionLevel
   timestamp: number
 }
-
-// ============================================================================
-// Permission Manager
-// ============================================================================
 
 class PermissionManagerImpl {
   private memoryCache: Map<string, CachedPermission> = new Map()
@@ -280,10 +268,6 @@ class PermissionManagerImpl {
     }
   }
 }
-
-// ============================================================================
-// Singleton Export
-// ============================================================================
 
 export const permissionManager = new PermissionManagerImpl()
 

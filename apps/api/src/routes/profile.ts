@@ -3,9 +3,9 @@ import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { eq } from "drizzle-orm"
 import { authMiddleware, getAuthContext, ApiError } from "../middleware"
-import { getDb } from "../lib/db"
+import { db } from "../lib/db-operations"
 import { getAuth } from "../lib/auth"
-import { detectDatabaseType, getSchema } from "@athreei/db"
+import { detectDatabaseType, getSchema, user as pgUser } from "@athreei/db"
 
 const MIN_PASSWORD_LENGTH = 8
 const MAX_PASSWORD_LENGTH = 128
@@ -57,7 +57,6 @@ profile.patch("/", zValidator("json", updateProfileSchema), async (c) => {
     )
   }
 
-  const db = getDb()
   const databaseUrl = process.env.DATABASE_URL
   const dbType = databaseUrl ? detectDatabaseType(databaseUrl) : "sqlite"
   const schema = getSchema(dbType)
@@ -75,14 +74,9 @@ profile.patch("/", zValidator("json", updateProfileSchema), async (c) => {
     updateData.image = updates.avatarUrl
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (db as any)
-    .update(schema.user)
-    .set(updateData)
-    .where(eq(schema.user.id, auth.userId))
+  await db().update(pgUser).set(updateData).where(eq(pgUser.id, auth.userId))
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const updatedUser = await (db as any).query.user.findFirst({
+  const updatedUser = await db().query.user.findFirst({
     where: eq(schema.user.id, auth.userId),
     columns: {
       id: true,

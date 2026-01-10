@@ -7,19 +7,11 @@
 
 import type { PermissionLevel } from "@athreei/shared"
 
-// ============================================================================
-// Permission Check Result
-// ============================================================================
-
 export interface PermissionCheckResult {
   allowed: boolean
   level: PermissionLevel
   reason?: string
 }
-
-// ============================================================================
-// Tab Info
-// ============================================================================
 
 export interface TabInfo {
   id: number
@@ -27,10 +19,6 @@ export interface TabInfo {
   origin: string
   title: string
 }
-
-// ============================================================================
-// Permission Error
-// ============================================================================
 
 export class PermissionDeniedError extends Error {
   constructor(

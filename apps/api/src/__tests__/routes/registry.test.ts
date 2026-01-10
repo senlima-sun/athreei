@@ -2,13 +2,77 @@
  * Registry API route tests
  */
 
-import { describe, it, expect } from "vitest"
+import { describe, it, expect, vi, beforeEach, beforeAll } from "vitest"
 import { Hono } from "hono"
-import registry from "../../routes/registry"
-import {
-  REGISTRY_SERVERS,
-  type RegistryMcpServer,
-} from "../../data/mcp-registry"
+import type { RegistryMcpServer } from "@athreei/shared"
+
+const MOCK_SERVERS: RegistryMcpServer[] = [
+  {
+    slug: "figma",
+    name: "Figma",
+    description: "Access Figma designs",
+    publisher: "Anthropic",
+    iconUrl: "https://www.figma.com/favicon.ico",
+    transport: "stdio",
+    command: "npx",
+    args: ["-y", "@anthropic/mcp-figma"],
+    docsUrl: "https://github.com/anthropics/mcp-figma",
+    envVars: [
+      {
+        name: "FIGMA_ACCESS_TOKEN",
+        description: "Personal access token",
+        required: true,
+      },
+    ],
+    categories: ["design", "productivity"],
+    verified: true,
+  },
+  {
+    slug: "sentry",
+    name: "Sentry",
+    description: "Query error reports",
+    publisher: "Sentry",
+    iconUrl: "https://sentry.io/favicon.ico",
+    transport: "stdio",
+    command: "npx",
+    args: ["-y", "@sentry/mcp-server"],
+    docsUrl: "https://github.com/getsentry/sentry-mcp",
+    envVars: [
+      {
+        name: "SENTRY_AUTH_TOKEN",
+        description: "Auth token",
+        required: true,
+      },
+    ],
+    categories: ["monitoring", "developer-tools"],
+    verified: true,
+  },
+  {
+    slug: "unverified-server",
+    name: "Unverified Server",
+    description: "An unverified community server",
+    publisher: "Community",
+    transport: "stdio",
+    command: "npx",
+    args: ["-y", "unverified-mcp"],
+    docsUrl: "https://example.com",
+    envVars: [],
+    categories: ["other"],
+    verified: false,
+  },
+]
+
+vi.mock("../../services/registry-loader", () => ({
+  getRegistryServers: vi.fn(() => Promise.resolve(MOCK_SERVERS)),
+  getRegistryServerBySlug: vi.fn((slug: string) =>
+    Promise.resolve(MOCK_SERVERS.find((s) => s.slug === slug))
+  ),
+  getRegistryCategories: vi.fn(() =>
+    Promise.resolve(
+      [...new Set(MOCK_SERVERS.flatMap((s) => s.categories))].sort()
+    )
+  ),
+}))
 
 interface RegistryListResponse {
   servers: RegistryMcpServer[]
@@ -20,9 +84,17 @@ interface ErrorResponse {
   error: string
 }
 
-// Mount registry routes on a test app
-const app = new Hono()
-app.route("/api/registry", registry)
+let app: Hono
+
+beforeAll(async () => {
+  const { default: registry } = await import("../../routes/registry")
+  app = new Hono()
+  app.route("/api/registry", registry)
+})
+
+beforeEach(() => {
+  vi.clearAllMocks()
+})
 
 describe("Registry Routes", () => {
   describe("GET /api/registry", () => {
@@ -32,9 +104,15 @@ describe("Registry Routes", () => {
 
       const data = (await res.json()) as RegistryListResponse
       expect(data.servers).toBeDefined()
-      expect(data.total).toBe(REGISTRY_SERVERS.length)
+      expect(data.total).toBe(MOCK_SERVERS.length)
       expect(data.categories).toBeDefined()
       expect(Array.isArray(data.categories)).toBe(true)
+    })
+
+    it("should set Cache-Control header", async () => {
+      const res = await app.request("/api/registry")
+      expect(res.status).toBe(200)
+      expect(res.headers.get("Cache-Control")).toBe("public, max-age=300")
     })
 
     it("should filter by category", async () => {
@@ -136,14 +214,19 @@ describe("Registry Routes", () => {
 
   describe("GET /api/registry/:slug", () => {
     it("should return a single server by slug", async () => {
-      const firstServer = REGISTRY_SERVERS[0]
-      const res = await app.request(`/api/registry/${firstServer.slug}`)
+      const res = await app.request("/api/registry/figma")
       expect(res.status).toBe(200)
 
       const data = (await res.json()) as RegistryMcpServer
-      expect(data.slug).toBe(firstServer.slug)
-      expect(data.name).toBe(firstServer.name)
+      expect(data.slug).toBe("figma")
+      expect(data.name).toBe("Figma")
       expect(data.transport).toBeDefined()
+    })
+
+    it("should set Cache-Control header", async () => {
+      const res = await app.request("/api/registry/figma")
+      expect(res.status).toBe(200)
+      expect(res.headers.get("Cache-Control")).toBe("public, max-age=300")
     })
 
     it("should return 404 for non-existent slug", async () => {
@@ -155,8 +238,7 @@ describe("Registry Routes", () => {
     })
 
     it("should return all expected fields for a server", async () => {
-      const firstServer = REGISTRY_SERVERS[0]
-      const res = await app.request(`/api/registry/${firstServer.slug}`)
+      const res = await app.request("/api/registry/figma")
       expect(res.status).toBe(200)
 
       const data = (await res.json()) as RegistryMcpServer

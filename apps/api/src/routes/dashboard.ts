@@ -3,7 +3,7 @@ import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { eq, and, desc, gte, sql } from "drizzle-orm"
 import { authMiddleware, getAuthContext, ApiError } from "../middleware"
-import { getDb } from "../lib/db"
+import { db } from "../lib/db-operations"
 import { endpoint, mcpServer, trace, member } from "@athreei/db"
 import { verifyOrganizationMembership } from "../services"
 
@@ -43,12 +43,10 @@ const dashboard = new Hono()
 dashboard.use("*", authMiddleware)
 
 dashboard.get("/stats", zValidator("query", statsQuerySchema), async (c) => {
-  const db = getDb()
   const auth = getAuthContext(c)
   const { organizationId } = c.req.valid("query")
 
   const isMember = await verifyOrganizationMembership(
-    db,
     auth.userId,
     organizationId
   )
@@ -59,16 +57,13 @@ dashboard.get("/stats", zValidator("query", statsQuerySchema), async (c) => {
 
   const thirtyDaysAgo = new Date(Date.now() - THIRTY_DAYS_MS)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const dbAny = db as any
-
   const [
     endpointCountResult,
     mcpServerCountResult,
     traceCountResult,
     memberCountResult,
   ] = await Promise.all([
-    dbAny
+    db()
       .select({ count: sql<number>`count(*)` })
       .from(endpoint)
       .where(
@@ -78,12 +73,12 @@ dashboard.get("/stats", zValidator("query", statsQuerySchema), async (c) => {
         )
       ),
 
-    dbAny
+    db()
       .select({ count: sql<number>`count(*)` })
       .from(mcpServer)
       .where(eq(mcpServer.organizationId, organizationId)),
 
-    dbAny
+    db()
       .select({ count: sql<number>`count(*)` })
       .from(trace)
       .where(
@@ -93,7 +88,7 @@ dashboard.get("/stats", zValidator("query", statsQuerySchema), async (c) => {
         )
       ),
 
-    dbAny
+    db()
       .select({ count: sql<number>`count(*)` })
       .from(member)
       .where(eq(member.organizationId, organizationId)),
@@ -115,12 +110,10 @@ dashboard.get(
   "/activity",
   zValidator("query", activityQuerySchema),
   async (c) => {
-    const db = getDb()
     const auth = getAuthContext(c)
     const { organizationId, limit } = c.req.valid("query")
 
     const isMember = await verifyOrganizationMembership(
-      db,
       auth.userId,
       organizationId
     )
@@ -129,8 +122,7 @@ dashboard.get(
       throw ApiError.forbidden("Access denied")
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const dbQuery = (db as any).query
+    const dbQuery = db().query
 
     const recentTraces = await dbQuery.trace.findMany({
       where: eq(trace.organizationId, organizationId),

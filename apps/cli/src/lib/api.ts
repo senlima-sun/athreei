@@ -1,38 +1,14 @@
 import { getAuthManager } from "../auth/manager.js"
 import { debug } from "./output.js"
+import { ApiError, AuthError, RateLimitError } from "../errors/index.js"
+import {
+  DEFAULT_BASE_URL,
+  DEFAULT_TIMEOUT,
+  MAX_RETRIES,
+  INITIAL_BACKOFF_MS,
+} from "../constants/index.js"
 
-const DEFAULT_BASE_URL = "http://localhost:3001"
-const DEFAULT_TIMEOUT = 30000
-const MAX_RETRIES = 3
-const INITIAL_BACKOFF_MS = 1000
-
-export class ApiError extends Error {
-  constructor(
-    public readonly status: number,
-    message: string,
-    public readonly body?: unknown
-  ) {
-    super(message)
-    this.name = "ApiError"
-  }
-}
-
-export class AuthError extends ApiError {
-  constructor(message: string, body?: unknown) {
-    super(401, message, body)
-    this.name = "AuthError"
-  }
-}
-
-export class RateLimitError extends ApiError {
-  public readonly retryAfter?: number
-
-  constructor(message: string, retryAfter?: number, body?: unknown) {
-    super(429, message, body)
-    this.name = "RateLimitError"
-    this.retryAfter = retryAfter
-  }
-}
+export { ApiError, AuthError, RateLimitError }
 
 interface RequestOptions {
   timeout?: number
@@ -119,7 +95,6 @@ export class ApiClient {
               : undefined
             const responseBody = await this.parseResponseBody(response)
 
-            // On rate limit, wait and retry (unless we've exhausted retries)
             if (attempt < MAX_RETRIES) {
               const waitTime = retryAfterMs ?? backoffMs
               await this.sleep(waitTime)
@@ -143,7 +118,6 @@ export class ApiClient {
             )
           }
 
-          // Handle empty responses (204 No Content)
           if (
             response.status === 204 ||
             response.headers.get("Content-Length") === "0"
@@ -166,19 +140,16 @@ export class ApiClient {
           throw error
         }
       } catch (error) {
-        // Don't retry auth errors
         if (error instanceof AuthError) {
           throw error
         }
 
-        // Don't retry non-rate-limit errors
         if (error instanceof ApiError && error.status !== 429) {
           throw error
         }
 
         lastError = error instanceof Error ? error : new Error(String(error))
 
-        // Only continue retrying for rate limits
         if (!(error instanceof RateLimitError)) {
           throw error
         }
