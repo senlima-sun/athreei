@@ -1,0 +1,259 @@
+---
+title: 環境設定
+description: 設定 athreei 本地開發環境
+---
+
+> 本文檔正在翻譯中。以下為英文原文。
+
+# Development Setup
+
+Complete guide for setting up a development environment.
+
+## Prerequisites
+
+- **Bun** >= 1.0 (runtime and package manager)
+- **Node.js** >= 18 (for some tooling)
+- **Chrome** or Chromium-based browser
+- **PostgreSQL** (for cloud services development)
+- **Docker** (optional, for PostgreSQL)
+
+## Installation
+
+### 1. Install Bun
+
+```bash
+curl -fsSL https://bun.sh/install | bash
+```
+
+### 2. Clone the Repository
+
+```bash
+git clone https://github.com/athreei/athreei.git
+cd athreei
+```
+
+### 3. Install Dependencies
+
+```bash
+bun install
+```
+
+This installs dependencies for all packages in the monorepo.
+
+## Database Setup
+
+For developing cloud services (sync-server, gateway-cloud, api):
+
+### Option 1: Docker
+
+```bash
+docker-compose up -d
+```
+
+### Option 2: Local PostgreSQL
+
+1. Install PostgreSQL
+2. Create a database:
+   ```sql
+   CREATE DATABASE athreei_dev;
+   ```
+
+### Environment Configuration
+
+Create `.env` files as needed:
+
+```bash
+# packages/sync-server/.env
+DATABASE_URL=postgres://user:pass@localhost:5432/athreei_dev
+
+# apps/api/.env
+DATABASE_URL=postgres://user:pass@localhost:5432/athreei_dev
+```
+
+### Run Migrations
+
+```bash
+cd packages/db
+bun run migrate
+```
+
+## Running Development Servers
+
+### All Packages
+
+```bash
+# From root directory
+bun run dev
+```
+
+This starts all packages in watch mode.
+
+### Individual Packages
+
+```bash
+# MCP Server
+cd packages/mcp-server && bun run dev
+
+# Extension (build and watch)
+cd packages/extension && bun run dev
+
+# Dashboard
+cd packages/dashboard && bun run dev
+
+# API Server
+cd apps/api && bun run dev
+
+# Platform (Next.js)
+cd apps/platform && bun run dev
+```
+
+## Extension Development
+
+### Building
+
+```bash
+cd packages/extension
+bun run build       # Production build
+bun run dev         # Watch mode
+```
+
+### Loading in Chrome
+
+1. Build the extension first
+2. Open `chrome://extensions/`
+3. Enable "Developer mode" (top right)
+4. Click "Load unpacked"
+5. Select `packages/extension/dist/`
+
+### Reloading After Changes
+
+After code changes:
+
+1. Rebuild: `bun run build` (or use watch mode)
+2. Go to `chrome://extensions/`
+3. Click the refresh icon on athreei
+
+### Debugging
+
+**Service Worker:**
+
+- `chrome://extensions/` → athreei → "Inspect views: service worker"
+
+**Content Script:**
+
+- Open DevTools on any page
+- Content script logs appear in console
+
+**Popup:**
+
+- Right-click extension icon → "Inspect popup"
+
+## Native Host Development
+
+### Building
+
+```bash
+cd packages/native-host
+bun run build          # Current platform
+bun run build:all      # All platforms
+```
+
+### Testing
+
+```bash
+# Test the binary
+./dist/athreei-host-* --version
+```
+
+### Registering for Development
+
+The native host must be registered with Chrome:
+
+```bash
+# The binary attempts auto-registration on first run
+./dist/athreei-host-* --register
+```
+
+## Testing
+
+### Run All Tests
+
+```bash
+bun run test
+```
+
+**Important:** Do NOT use `bun test` directly - most tests use Vitest-specific APIs (`vi.hoisted`, `vi.mocked`, jsdom environment) that are incompatible with Bun's native test runner.
+
+### Watch Mode
+
+```bash
+bun run test:watch
+```
+
+### Specific Package
+
+```bash
+npx vitest run packages/mcp-server
+```
+
+### SQLite Tests
+
+```bash
+bun run test:sqlite
+```
+
+### Coverage
+
+```bash
+npx vitest run --coverage
+```
+
+## Code Quality
+
+### Linting
+
+```bash
+bun run lint          # Check issues
+bun run lint:fix      # Auto-fix
+```
+
+### Formatting
+
+```bash
+bun run format        # Format all files
+bun run format:check  # Check only
+```
+
+### Type Checking
+
+```bash
+bun run typecheck:all
+```
+
+## Common Issues
+
+### "Module not found"
+
+```bash
+# Rebuild everything
+bun install
+bun run build
+```
+
+### Extension Not Loading
+
+1. Check for build errors in `packages/extension`
+2. Ensure all files exist in `dist/`
+3. Try removing and re-adding the extension
+
+### Native Host Connection Failed
+
+1. Check native messaging manifest exists
+2. Verify binary path is correct
+3. Run binary directly to check for errors
+
+### Database Connection Failed
+
+1. Verify PostgreSQL is running
+2. Check DATABASE_URL in `.env`
+3. Run migrations: `bun run migrate`

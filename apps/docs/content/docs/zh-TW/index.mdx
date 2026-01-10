@@ -1,0 +1,135 @@
+---
+title: 歡迎使用 athreei
+description: 通用 MCP 閘道器 - 為 AI 應用程式提供單一連接，統一存取所有 MCP 伺服器
+---
+
+> 本文檔正在翻譯中。以下為英文原文。
+
+# Welcome to athreei
+
+**athreei is the universal MCP gateway** - one connection for AI apps, unified access to all your MCP servers.
+
+## The Problem
+
+Today, context ownership is controlled by AI app providers. If you use Claude Desktop, Anthropic controls your MCP connections. If you use ChatGPT, OpenAI controls it. Users can't:
+
+- **See what tools AI actually called** or what data was returned
+- **Iterate on tool prompts** with real data (forced to blind prompt engineering)
+- **Use the same MCP setup** across different AI apps
+
+## How athreei Solves This
+
+athreei gives you control over your AI context:
+
+<Cards>
+  <Card title="One Connection, Many MCPs" href="/docs/gateway">
+    Connect athreei once to your AI app, access all your MCP servers (Figma,
+    Sentry, Linear, etc.) through it
+  </Card>
+  <Card title="See What AI Did" href="/docs/audit-logs">
+    View every tool call with full input/output - stop guessing, start iterating
+    with data
+  </Card>
+  <Card title="Customize Tool Behavior" href="/docs/tools">
+    Edit tool descriptions and add custom prompts to improve how AI uses your
+    tools
+  </Card>
+</Cards>
+
+## How It Works
+
+```
+┌─────────────┐      ┌─────────────────────────────────────────┐
+│   AI App    │      │              athreei                    │
+│  (Claude,   │ ───► │  ┌─────────┐  ┌─────────┐  ┌─────────┐  │
+│   GPT...)   │      │  │ MCP #1  │  │ MCP #2  │  │ MCP #3  │  │
+└─────────────┘      │  └─────────┘  └─────────┘  └─────────┘  │
+                     │                    │                    │
+                     │              Audit Logs                 │
+                     │         (encrypted storage)             │
+                     └─────────────────────────────────────────┘
+```
+
+Instead of configuring multiple MCP servers in your AI app, you configure **athreei once**. athreei then:
+
+1. **Aggregates** all your MCP servers behind a single endpoint
+2. **Logs** every tool call with full request/response data
+3. **Routes** requests to the appropriate MCP server
+
+## Key User Journeys
+
+### 1. MCP Aggregation (Connect Once, Access Many)
+
+Add any MCP server to athreei, access all tools through one connection:
+
+```json
+{
+  "mcpServers": {
+    "athreei": {
+      "command": "athreei-gateway"
+    }
+  }
+}
+```
+
+Install MCPs from the registry with one click, or paste your existing JSON config. Tools from different servers are namespaced: `figma__get_components`, `sentry__get_issues`, `linear__create_ticket`.
+
+[Learn more about the Gateway →](/docs/gateway)
+
+### 2. Observability (See What AI Did)
+
+Every tool call is recorded with full visibility:
+
+- **Timeline view** - See all tool calls in chronological order
+- **Input/Output details** - Exactly what was sent and received
+- **Filter and search** - By tool, server, status, or date range
+- **Duration metrics** - How long each call took
+
+No more guessing what went wrong. See the actual data.
+
+[Learn more about Traces →](/docs/audit-logs/traces)
+
+### 3. Iteration Loop (Improve With Data)
+
+The real power: use trace data to improve your AI workflows:
+
+1. **View a trace** - See what the AI sent to a tool
+2. **Spot an issue** - "The AI used the wrong parameters"
+3. **Edit the tool** - Customize description or add instructions
+4. **Retry** - Validate the improvement with real data
+
+No more blind prompt engineering. Iterate with actual data.
+
+[Learn more about Tool Configuration →](/docs/tools)
+
+## Getting Started
+
+1. **Sign up** at [athreei.com](https://athreei.com) and create an organization
+2. **Add MCP servers** from the registry (one-click) or paste your JSON config
+3. **Get your endpoint URL** and API key from the dashboard
+4. **Connect your AI app** - Add athreei as an MCP server in Claude Desktop, ChatGPT, Cursor, or any MCP-compatible app
+5. **View traces** - See every tool call in the dashboard
+
+[Detailed installation guide →](/docs/getting-started)
+
+## Deployment Options
+
+| Mode              | Best For                                | Data Location                           |
+| ----------------- | --------------------------------------- | --------------------------------------- |
+| **Local Gateway** | Privacy-focused users, developers       | Your machine (free)                     |
+| **Cloud Gateway** | Teams, web apps, centralized management | E2E encrypted on athreei servers (paid) |
+
+[Compare local vs cloud →](/docs/concepts/local-vs-cloud)
+
+## Documentation
+
+| Section                                  | Description                             |
+| ---------------------------------------- | --------------------------------------- |
+| [Getting Started](/docs/getting-started) | Installation and configuration          |
+| [Gateway](/docs/gateway)                 | MCP aggregation and routing             |
+| [Registry](/docs/registry)               | Browse and install MCP servers          |
+| [Tools](/docs/tools)                     | Customize tool descriptions and prompts |
+| [Traces](/docs/audit-logs/traces)        | View and analyze tool calls             |
+| [Concepts](/docs/concepts)               | Architecture overview                   |
+| [SDK](/docs/sdk)                         | Build MCP servers for websites          |
+| [Development](/docs/development)         | Contributing to athreei                 |

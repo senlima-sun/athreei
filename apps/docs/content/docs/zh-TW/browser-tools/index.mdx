@@ -1,0 +1,434 @@
+---
+title: 瀏覽器工具（示範）
+description: 用於測試 athreei 平台的示範工具
+---
+
+> 本文檔正在翻譯中。以下為英文原文。
+
+# Browser Tools (Demo)
+
+<Callout type="info">
+  **Demo Feature** - These browser tools are for testing and demonstration
+  purposes. They help verify the platform is working correctly and let you
+  experience audit logging in action. They are not part of athreei's core
+  business functionality.
+</Callout>
+
+athreei includes **11 browser automation tools** as a built-in MCP server for testing. Use these to:
+
+- Verify the athreei gateway is working
+- See audit logs populate with real data
+- Experience the AI ↔ athreei ↔ MCP flow
+
+## Tool Overview
+
+| Tool                                                | Description                              |
+| --------------------------------------------------- | ---------------------------------------- |
+| [`browser_list_tabs`](#browser_list_tabs)           | List all open browser tabs               |
+| [`browser_get_active_tab`](#browser_get_active_tab) | Get the currently active tab             |
+| [`browser_navigate`](#browser_navigate)             | Navigate to a URL                        |
+| [`browser_get_content`](#browser_get_content)       | Get page content in various formats      |
+| [`browser_get_elements`](#browser_get_elements)     | Get interactive elements on the page     |
+| [`browser_click`](#browser_click)                   | Click on elements                        |
+| [`browser_type`](#browser_type)                     | Type text into inputs                    |
+| [`browser_scroll`](#browser_scroll)                 | Scroll pages or elements                 |
+| [`browser_screenshot`](#browser_screenshot)         | Capture screenshots                      |
+| [`browser_execute_script`](#browser_execute_script) | Execute JavaScript (requires permission) |
+| [`browser_wait`](#browser_wait)                     | Wait for elements or conditions          |
+
+---
+
+## Tab Tools
+
+### browser_list_tabs
+
+List all open browser tabs with their IDs, URLs, and titles.
+
+**Parameters:** None
+
+**Returns:**
+
+```typescript
+{
+  tabs: Array<{
+    id: number
+    url: string
+    title: string
+    active: boolean
+    windowId: number
+  }>
+}
+```
+
+**Example prompt:** "List all my open browser tabs"
+
+---
+
+### browser_get_active_tab
+
+Get information about the currently active browser tab.
+
+**Parameters:** None
+
+**Returns:**
+
+```typescript
+{
+  id: number
+  url: string
+  title: string
+  windowId: number
+}
+```
+
+**Example prompt:** "What page am I currently on?"
+
+---
+
+## Navigation Tools
+
+### browser_navigate
+
+Navigate to a URL in the browser. Can target a specific tab or use the active tab.
+
+**Parameters:**
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `url` | string | Yes | - | The URL to navigate to |
+| `tabId` | number | No | active tab | Tab ID to navigate |
+| `waitUntil` | string | No | `"load"` | When to consider navigation complete |
+
+**waitUntil options:**
+
+- `"load"` - Wait for the load event
+- `"domcontentloaded"` - Wait for DOMContentLoaded
+- `"networkidle"` - Wait until no network activity
+
+**Returns:**
+
+```typescript
+{
+  success: boolean
+  url: string
+  title: string
+}
+```
+
+**Example prompt:** "Navigate to https://example.com"
+
+---
+
+### browser_wait
+
+Wait for an element to reach a specific state or for a custom condition to be met.
+
+**Parameters:**
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `tabId` | number | No | active tab | Tab ID |
+| `selector` | string | No | - | CSS selector to wait for |
+| `state` | string | No | `"visible"` | Element state to wait for |
+| `timeout` | number | No | `30000` | Maximum wait time in ms |
+| `condition` | string | No | - | Custom JS condition that returns true when ready |
+
+**state options:**
+
+- `"attached"` - Element exists in DOM
+- `"detached"` - Element removed from DOM
+- `"visible"` - Element is visible
+- `"hidden"` - Element is hidden
+
+**Returns:**
+
+```typescript
+{
+  success: boolean
+  waited: number // Time waited in ms
+  timedOut: boolean
+}
+```
+
+**Example prompt:** "Wait for the loading spinner to disappear"
+
+---
+
+## Content Tools
+
+### browser_get_content
+
+Get the content of a web page in various formats.
+
+**Parameters:**
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `tabId` | number | No | active tab | Tab ID |
+| `format` | string | No | `"a11y"` | Content format |
+| `selector` | string | No | - | CSS selector to scope content |
+
+**format options:**
+
+- `"a11y"` - Accessibility tree (recommended for AI)
+- `"html"` - Raw HTML
+- `"text"` - Plain text
+- `"markdown"` - Markdown format
+
+**Returns:**
+
+```typescript
+{
+  content: string
+  format: "a11y" | "html" | "text" | "markdown"
+  url: string
+  title: string
+}
+```
+
+<Callout type="info">
+  The `a11y` format is recommended for AI assistants as it provides a
+  structured, semantic view of the page content.
+</Callout>
+
+**Example prompt:** "Read the main content of this page"
+
+---
+
+### browser_get_elements
+
+Get a list of interactive elements on the page with their selectors and accessible names.
+
+**Parameters:**
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `tabId` | number | No | active tab | Tab ID |
+| `selector` | string | No | - | CSS selector to filter elements |
+| `roles` | string[] | No | - | ARIA roles to filter (e.g., button, link, textbox) |
+| `interactiveOnly` | boolean | No | `true` | Only return interactive elements |
+
+**Returns:**
+
+```typescript
+{
+  elements: Array<{
+    index: number // Stable index for referencing
+    selector: string // Unique CSS selector
+    role: string // ARIA role
+    name?: string // Accessible name
+    text?: string // Text content
+    value?: string // Current value (for inputs)
+    boundingBox?: { x: number; y: number; width: number; height: number }
+    enabled: boolean
+    visible: boolean
+    focused?: boolean
+    checked?: boolean
+    attributes?: Record<string, string>
+  }>
+  count: number
+}
+```
+
+<Callout type="info">
+  The `index` field can be used with `browser_click` and `browser_type` instead
+  of CSS selectors for more reliable targeting.
+</Callout>
+
+**Example prompt:** "List all the buttons on this page"
+
+---
+
+## Interaction Tools
+
+### browser_click
+
+Click on an element identified by CSS selector or element index.
+
+**Parameters:**
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `tabId` | number | No | active tab | Tab ID |
+| `selector` | string | No* | - | CSS selector of element to click |
+| `index` | number | No* | - | Element index from `browser_get_elements` |
+| `button` | string | No | `"left"` | Mouse button: `"left"`, `"right"`, `"middle"` |
+| `clickCount` | number | No | `1` | Number of clicks (2 for double-click) |
+| `modifiers` | string[] | No | - | Modifier keys: `"ctrl"`, `"shift"`, `"alt"`, `"meta"` |
+
+\*Either `selector` or `index` must be provided.
+
+**Returns:**
+
+```typescript
+{
+  success: boolean;
+  clicked: {
+    selector: string;
+    text?: string;
+  };
+}
+```
+
+**Example prompt:** "Click the Submit button"
+
+---
+
+### browser_type
+
+Type text into an input element. Can optionally clear existing content first and submit the form.
+
+**Parameters:**
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `tabId` | number | No | active tab | Tab ID |
+| `selector` | string | No* | - | CSS selector of input element |
+| `index` | number | No* | - | Element index from `browser_get_elements` |
+| `text` | string | Yes | - | Text to type |
+| `clear` | boolean | No | `false` | Clear existing content first |
+| `delay` | number | No | - | Delay between keystrokes in ms |
+| `submit` | boolean | No | `false` | Press Enter after typing |
+
+\*Either `selector` or `index` must be provided.
+
+**Returns:**
+
+```typescript
+{
+  success: boolean;
+  typed: {
+    selector: string;
+    text: string;
+    previousValue?: string;
+  };
+}
+```
+
+**Example prompt:** "Type 'hello world' into the search box"
+
+---
+
+### browser_scroll
+
+Scroll the page or a specific element by direction/amount or to absolute coordinates.
+
+**Parameters:**
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `tabId` | number | No | active tab | Tab ID |
+| `selector` | string | No | - | CSS selector of scrollable element (defaults to page) |
+| `direction` | string | No | - | Scroll direction: `"up"`, `"down"`, `"left"`, `"right"` |
+| `amount` | number | No | - | Scroll amount in pixels |
+| `x` | number | No | - | Absolute scroll X position |
+| `y` | number | No | - | Absolute scroll Y position |
+| `behavior` | string | No | `"auto"` | Scroll behavior: `"auto"`, `"smooth"` |
+
+**Returns:**
+
+```typescript
+{
+  success: boolean
+  scrollPosition: {
+    x: number
+    y: number
+  }
+}
+```
+
+**Example prompt:** "Scroll down the page"
+
+---
+
+## Advanced Tools
+
+### browser_screenshot
+
+Take a screenshot of the page, full page, or a specific element.
+
+**Parameters:**
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `tabId` | number | No | active tab | Tab ID |
+| `selector` | string | No | - | CSS selector of element to screenshot |
+| `fullPage` | boolean | No | `false` | Capture full scrollable page |
+| `format` | string | No | `"png"` | Image format: `"png"`, `"jpeg"`, `"webp"` |
+| `quality` | number | No | - | Image quality 0-100 (for jpeg/webp) |
+
+**Returns:**
+
+```typescript
+{
+  success: boolean
+  image: string // Base64-encoded image data
+  format: "png" | "jpeg" | "webp"
+  dimensions: {
+    width: number
+    height: number
+  }
+}
+```
+
+**Example prompt:** "Take a screenshot of this page"
+
+---
+
+### browser_execute_script
+
+Execute JavaScript code in the page context.
+
+<Callout type="warning">
+  This tool requires explicit user permission due to security implications. Use
+  sparingly and only when other tools cannot accomplish the task.
+</Callout>
+
+**Parameters:**
+| Name | Type | Required | Default | Description |
+|------|------|----------|---------|-------------|
+| `tabId` | number | No | active tab | Tab ID |
+| `script` | string | Yes | - | JavaScript code to execute |
+| `args` | unknown[] | No | - | Arguments to pass to the script |
+
+**Returns:**
+
+```typescript
+{
+  success: boolean
+  result: unknown // Return value from the script
+}
+```
+
+**Example prompt:** "Run a script to get the page's scroll height"
+
+---
+
+## Using Tools Effectively
+
+### Best Practices
+
+1. **Start with `browser_get_content`** - Use the `a11y` format to understand page structure
+2. **Use `browser_get_elements`** - Get element indices for reliable targeting
+3. **Prefer index over selector** - Element indices are more stable than CSS selectors
+4. **Use `browser_wait`** - Wait for elements before interacting with dynamic pages
+5. **Request permission sparingly** - Only use `browser_execute_script` when necessary
+
+### Common Workflows
+
+**Form Filling:**
+
+```
+1. browser_get_elements (find form fields)
+2. browser_type (fill each field)
+3. browser_click (submit button)
+```
+
+**Data Extraction:**
+
+```
+1. browser_navigate (go to page)
+2. browser_wait (wait for content)
+3. browser_get_content (extract data)
+```
+
+**Interactive Tasks:**
+
+```
+1. browser_get_content (understand page)
+2. browser_get_elements (find interactive elements)
+3. browser_click / browser_type (interact)
+4. browser_wait (wait for changes)
+```

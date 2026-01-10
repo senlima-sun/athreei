@@ -1,0 +1,112 @@
+---
+title: 追蹤記錄
+description: AI-MCP 互動的詳細追蹤分析
+---
+
+> 本文檔正在翻譯中。以下為英文原文。
+
+# Traces
+
+Traces provide detailed, end-to-end visibility into tool calls with encrypted payload storage.
+
+## What are Traces?
+
+Each tool call generates a trace containing:
+
+```typescript
+interface TraceEntry {
+  id: string
+  traceId: string
+  toolName: string // e.g., "browser__screenshot"
+  serverName: string // e.g., "browser"
+  endpointId?: string
+  status: "success" | "error"
+  durationMs: number
+  startTime: number
+  endTime?: number
+  encryptedPayload?: string // E2E encrypted
+  keyVersion?: number
+  errorMessage?: string
+}
+```
+
+## Encrypted Payloads
+
+Request and response data is encrypted before storage:
+
+```json
+{
+  "nonce": "base64...",
+  "ciphertext": "base64...",
+  "keyVersion": 1,
+  "algorithm": "xchacha20-poly1305"
+}
+```
+
+Decryption happens client-side in your browser. athreei servers never see plaintext.
+
+## Viewing Traces
+
+### Dashboard
+
+The Traces page in the Dashboard shows:
+
+| Column   | Description                      |
+| -------- | -------------------------------- |
+| Time     | When the call started            |
+| Tool     | Tool name with server prefix     |
+| Server   | MCP server that handled the call |
+| Status   | Success or error indicator       |
+| Duration | Execution time in ms/seconds     |
+| Action   | View full trace details          |
+
+### Filtering Options
+
+- **Endpoint** - Filter by gateway endpoint
+- **MCP Server** - Filter by server name
+- **Tool** - Filter by specific tool
+- **Status** - Success or error
+- **Date Range** - From/to date pickers
+
+### API Access
+
+```bash
+# List traces
+GET /api/traces?limit=50
+
+# Filter by server
+GET /api/traces?server=filesystem
+
+# Filter by status
+GET /api/traces?status=error
+
+# Full query
+GET /api/traces?server=browser&tool=screenshot&status=success&dateFrom=...&dateTo=...
+```
+
+## Trace Details
+
+Click "View" on any trace to see:
+
+1. **Metadata** - All unencrypted fields
+2. **Decrypted Request** - Input parameters (if you have the key)
+3. **Decrypted Response** - Output data (if you have the key)
+4. **Error Info** - Error message if status is error
+
+## Performance Analysis
+
+Use traces to analyze performance:
+
+- **Duration** - Identify slow tools
+- **Error Rate** - Find unreliable servers
+- **Call Volume** - Understand usage patterns
+- **Timeline** - See request flow
+
+## Export
+
+Export traces for:
+
+- Compliance audits
+- Performance reports
+- Debugging sessions
+- Historical analysis

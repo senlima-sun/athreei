@@ -1,0 +1,99 @@
+---
+title: 安裝
+description: 在您的系統上安裝 athreei
+---
+
+> 本文檔正在翻譯中。以下為英文原文。
+
+# Installation
+
+This guide covers installing the athreei gateway on all platforms.
+
+## Prerequisites
+
+- **AI application** with MCP support (Claude Desktop, ChatGPT, Cursor, etc.)
+- **Node.js** (optional, for npm-based MCP servers)
+
+## Gateway Installation
+
+### Option 1: Download Pre-built Binary
+
+1. Go to the [Releases page](https://github.com/athreei/athreei/releases)
+
+2. Download for your platform:
+
+   | Platform              | File                              |
+   | --------------------- | --------------------------------- |
+   | macOS (Apple Silicon) | `athreei-gateway-darwin-arm64`    |
+   | macOS (Intel)         | `athreei-gateway-darwin-x64`      |
+   | Windows               | `athreei-gateway-windows-x64.exe` |
+   | Linux                 | `athreei-gateway-linux-x64`       |
+
+3. Install:
+
+   ```bash
+   # macOS / Linux
+   chmod +x athreei-gateway-*
+   sudo mv athreei-gateway-* /usr/local/bin/athreei-gateway
+
+   # Windows: Move to a folder in your PATH
+   ```
+
+4. Verify:
+   ```bash
+   athreei-gateway --version
+   ```
+
+### Option 2: Build from Source
+
+```bash
+# Install Bun if needed
+curl -fsSL https://bun.sh/install | bash
+
+# Clone and build
+git clone https://github.com/athreei/athreei.git
+cd athreei
+bun install
+
+# Build the gateway binary
+cd packages/gateway
+bun run build:binary
+```
+
+The binary will be in `packages/gateway/dist/`.
+
+## Verifying Installation
+
+```bash
+athreei-gateway --version
+# Should output version number
+```
+
+Test the gateway in mock mode (no configuration needed):
+
+```bash
+athreei-gateway --mock --debug
+# Gateway starts with no servers for testing
+```
+
+## Troubleshooting
+
+### "Permission denied" on macOS
+
+macOS may block unsigned binaries:
+
+```bash
+xattr -d com.apple.quarantine /usr/local/bin/athreei-gateway
+```
+
+### Gateway won't start
+
+1. Check the config file exists and is valid JSON
+2. Verify upstream MCP server commands work independently
+3. Run with `--debug` flag for more output
+
+### Dashboard connection issues
+
+1. Ensure the gateway is running
+2. Check firewall settings for localhost connections
+3. Verify the port isn't in use by another application

@@ -1,0 +1,326 @@
+---
+title: 貢獻指南
+description: athreei 貢獻指南
+---
+
+> 本文檔正在翻譯中。以下為英文原文。
+
+# Contributing
+
+Thank you for your interest in contributing to athreei! This guide covers our contribution process and code style.
+
+## Getting Started
+
+1. **Fork the repository** on GitHub
+2. **Clone your fork:**
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/athreei.git
+   cd athreei
+   ```
+3. **Create a feature branch:**
+   ```bash
+   git checkout -b feature/my-feature
+   ```
+4. **Install dependencies:**
+   ```bash
+   bun install
+   ```
+
+## Development Workflow
+
+### Making Changes
+
+1. Make your changes in the appropriate package(s)
+2. Add tests for new functionality
+3. Run tests: `bun run test`
+4. Run linting: `bun run lint`
+5. Run type checking: `bun run typecheck:all`
+
+### Commit Messages
+
+Follow [Conventional Commits](https://www.conventionalcommits.org/):
+
+```
+<type>(<scope>): <description>
+
+[optional body]
+
+[optional footer]
+```
+
+**Types:**
+| Type | Description |
+|------|-------------|
+| `feat` | New feature |
+| `fix` | Bug fix |
+| `docs` | Documentation only |
+| `style` | Formatting, no code change |
+| `refactor` | Code change that neither fixes nor adds |
+| `perf` | Performance improvement |
+| `test` | Adding or updating tests |
+| `chore` | Build, tooling, dependencies |
+
+**Scopes** (use package/app names):
+
+- `api`, `platform`, `web`
+- `mcp-server`, `extension`, `gateway`
+- `db`, `auth`, `shared`
+
+**Examples:**
+
+```
+feat(api): add rate limiting to gateway routes
+
+fix(platform): resolve session handling bug
+
+docs(sdk): update mock mode documentation
+
+refactor(gateway): simplify accessibility tree builder
+
+perf(mcp-server): optimize message batching
+
+test(api): add unit tests for permission repository
+```
+
+### Creating a Pull Request
+
+1. **Push your branch:**
+
+   ```bash
+   git push origin feature/my-feature
+   ```
+
+2. **Open a PR** on GitHub
+
+3. **Fill out the PR template:**
+   - Clear title describing the change
+   - Description of what and why
+   - Link to related issues
+   - Screenshots if applicable
+
+4. **Wait for review** and address feedback
+
+## Code Style
+
+### General
+
+- **Prettier** for formatting (no semicolons, double quotes)
+- **ESLint** for linting
+
+### TypeScript
+
+- **Strict mode** is enabled
+- **No `any` types** - use `unknown` if necessary
+- **Explicit return types** for exported functions
+- **Zod** for runtime validation at boundaries
+
+```typescript
+// Good
+export function processData(input: unknown): ProcessedData {
+  const validated = InputSchema.parse(input)
+  return transform(validated)
+}
+
+// Bad
+export function processData(input: any) {
+  return transform(input)
+}
+```
+
+### Naming Conventions
+
+| Element          | Convention           | Example               |
+| ---------------- | -------------------- | --------------------- |
+| Files            | kebab-case           | `native-messaging.ts` |
+| Types/Interfaces | PascalCase           | `PermissionLevel`     |
+| Functions        | camelCase            | `handleRequest`       |
+| Constants        | SCREAMING_SNAKE_CASE | `MAX_MESSAGE_SIZE`    |
+| MCP Tools        | snake_case           | `browser_click`       |
+
+### File Organization
+
+```typescript
+// 1. Imports (external, then internal)
+import { z } from "zod"
+import { logger } from "../utils/logger"
+
+// 2. Type definitions
+interface Config {
+  /* ... */
+}
+
+// 3. Constants
+const DEFAULT_TIMEOUT = 30000
+
+// 4. Main exports
+export function createServer(config: Config) {
+  // ...
+}
+
+// 5. Helper functions (private)
+function validateConfig(config: Config) {
+  // ...
+}
+```
+
+### Logging
+
+In MCP server code, always use stderr:
+
+```typescript
+// Good - goes to stderr
+import { logger } from "./utils/logger"
+logger.info("Processing request")
+
+// Bad - stdout is reserved for JSON-RPC
+console.log("Processing request")
+```
+
+## Adding New MCP Tools
+
+### Step 1: Define Schema
+
+Edit `packages/shared/src/types/mcp-tools.ts`:
+
+```typescript
+export const BrowserNewToolInputSchema = z.object({
+  param1: z.string().describe("Description"),
+  param2: z.number().optional(),
+})
+
+export const BrowserNewToolOutputSchema = z.object({
+  result: z.string(),
+})
+```
+
+### Step 2: Register Tool
+
+Edit `packages/mcp-server/src/tools/browser.ts`:
+
+```typescript
+server.tool(
+  "browser_new_tool",
+  "Description of what this tool does",
+  BrowserNewToolInputSchema.shape,
+  async ({ param1, param2 }) => {
+    const result = await bridge.send({
+      method: "browser_new_tool",
+      payload: { param1, param2 },
+    })
+    return { content: [{ type: "text", text: JSON.stringify(result) }] }
+  }
+)
+```
+
+### Step 3: Implement Handler
+
+Create `packages/extension/src/content/actions/new-tool.ts`:
+
+```typescript
+export async function handleNewTool(params: {
+  param1: string
+  param2?: number
+}) {
+  // Implementation
+  return { result: "success" }
+}
+```
+
+### Step 4: Add Tests
+
+```typescript
+describe("browser_new_tool", () => {
+  it("returns expected result", async () => {
+    const result = await handleNewTool({ param1: "test" })
+    expect(result.result).toBe("success")
+  })
+})
+```
+
+## Testing Guidelines
+
+### Coverage Requirements
+
+- **80%+** coverage on API routes
+- **90%+** coverage on business logic
+
+### Test Structure
+
+```
+packages/mcp-server/
+├── src/
+│   ├── server.ts
+│   └── server.test.ts      # Co-located tests
+└── __tests__/
+    └── integration.test.ts  # Integration tests
+```
+
+### Test Patterns
+
+```typescript
+describe("PermissionService", () => {
+  let service: PermissionService
+
+  beforeEach(() => {
+    service = new PermissionService()
+  })
+
+  afterEach(() => {
+    service.cleanup()
+  })
+
+  it("grants permission for allowed origin", async () => {
+    await service.setPermission(
+      "https://example.com",
+      "browser_click",
+      "allowed"
+    )
+    const result = await service.checkPermission(
+      "https://example.com",
+      "browser_click"
+    )
+    expect(result).toBe("allowed")
+  })
+})
+```
+
+### Extension Tests
+
+Extension tests use jsdom for browser simulation:
+
+```typescript
+// vitest.config.ts
+export default defineConfig({
+  test: {
+    environment: "jsdom",
+  },
+})
+```
+
+## Documentation
+
+### When to Update Docs
+
+- New features or tools
+- Changed behavior
+- New configuration options
+- Breaking changes
+
+### Documentation Location
+
+- `apps/docs/content/docs/` - User-facing documentation
+- Code comments for API documentation
+- `CLAUDE.md` for development guidelines
+
+## Review Process
+
+1. **CI must pass** - Tests, linting, type checking
+2. **At least one maintainer approval**
+3. **Address all comments** before merging
+4. **Squash commits** for clean history
+
+## Questions?
+
+- **GitHub Issues** for bugs and features
+- **GitHub Discussions** for questions
+- Check existing issues before creating new ones

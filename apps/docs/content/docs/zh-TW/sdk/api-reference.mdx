@@ -1,0 +1,380 @@
+---
+title: SDK API 參考
+description: "@athreei/site-sdk 的完整 API 參考文檔"
+---
+
+> 本文檔正在翻譯中。以下為英文原文。
+
+# SDK API Reference
+
+Complete reference for the `@athreei/site-sdk` package.
+
+## Simple API
+
+The `athreei` singleton provides a convenient API for most use cases.
+
+```typescript
+import { athreei } from "@athreei/site-sdk"
+```
+
+### athreei.onReady(callback)
+
+Wait for the extension to be ready and receive extension info.
+
+```typescript
+athreei.onReady((info: AthreeiInfo) => {
+  console.log("Version:", info.version)
+  console.log("Capabilities:", info.capabilities)
+})
+```
+
+**Parameters:**
+
+- `callback: (info: AthreeiInfo) => void` - Called when extension is ready
+
+**AthreeiInfo:**
+
+```typescript
+interface AthreeiInfo {
+  version: string // Extension version
+  capabilities: string[] // Available built-in capabilities
+  extensionId?: string // Extension ID
+}
+```
+
+---
+
+### athreei.registerTool(definition)
+
+Register a custom tool that AI can use.
+
+```typescript
+athreei.registerTool({
+  name: "search_products",
+  description: "Search for products in the catalog",
+  parameters: {
+    query: { type: "string", required: true, description: "Search query" },
+    maxResults: { type: "number", default: 10 },
+  },
+  handler: async ({ query, maxResults }) => {
+    return await searchProducts(query, maxResults)
+  },
+})
+```
+
+**ToolDefinition:**
+
+```typescript
+interface ToolDefinition {
+  name: string // Tool identifier
+  description: string // What the tool does
+  parameters: Record<string, ToolParameter>
+  handler?: RequestHandler // Function to handle requests
+  returns?: {
+    // Return type info
+    type: "string" | "number" | "boolean" | "array" | "object" | "void"
+    description?: string
+  }
+  examples?: Array<{
+    // Usage examples
+    description: string
+    args: Record<string, unknown>
+    result?: unknown
+  }>
+  requiresPermission?: boolean // Default: true
+}
+```
+
+**ToolParameter:**
+
+```typescript
+interface ToolParameter {
+  type: "string" | "number" | "boolean" | "array" | "object"
+  required?: boolean // Default: false
+  default?: unknown // Default value
+  description?: string // Parameter description
+  enum?: (string | number)[] // Allowed values
+  items?: {
+    // For arrays
+    type: "string" | "number" | "boolean" | "object"
+  }
+}
+```
+
+---
+
+### athreei.onRequest(toolName, handler)
+
+Register a handler for tool requests. Returns an unsubscribe function.
+
+```typescript
+const unsubscribe = athreei.onRequest("my_tool", async (args, requestId) => {
+  const result = await processRequest(args)
+  return result
+})
+
+// Later, to stop handling
+unsubscribe()
+```
+
+**Parameters:**
+
+- `toolName: string` - Name of the tool to handle
+- `handler: RequestHandler` - Handler function
+
+**RequestHandler:**
+
+```typescript
+type RequestHandler = (
+  args: Record<string, unknown>,
+  requestId: string
+) => unknown | Promise<unknown>
+```
+
+**Returns:** `Unsubscribe` - Function to stop handling requests
+
+---
+
+### athreei.requestPermission(options)
+
+Request permission from the user for specific actions.
+
+```typescript
+const granted = await athreei.requestPermission({
+  scopes: ["interact", "read"],
+  reason: "To help you complete your purchase",
+  duration: "session",
+})
+
+if (granted) {
+  // Permission granted
+}
+```
+
+**PermissionOptions:**
+
+```typescript
+interface PermissionOptions {
+  scopes?: PermissionScope[] // Permission scopes to request
+  scope?: PermissionScope // Single scope (alternative to scopes)
+  tools?: string[] // Specific tools to request permission for
+  reason?: string // Why permission is needed
+  duration?: PermissionDuration // How long permission should last
+}
+
+type PermissionScope =
+  | "read"
+  | "interact"
+  | "navigate"
+  | "screenshot"
+  | "execute"
+  | "custom"
+type PermissionDuration = "session" | "persistent" | "once"
+```
+
+**Returns:** `Promise<boolean>` - Whether permission was granted
+
+---
+
+### athreei.onBeforeAction(callback)
+
+Listen for built-in browser actions before they execute. Return `false` to cancel.
+
+```typescript
+const unsubscribe = athreei.onBeforeAction((action) => {
+  console.log("AI action:", action.tool, action.args)
+
+  // Cancel navigation to external sites
+  if (action.tool === "browser_navigate") {
+    const url = new URL(action.args.url as string)
+    if (url.hostname !== window.location.hostname) {
+      return false // Cancel
+    }
+  }
+})
+```
+
+**ActionCallback:**
+
+```typescript
+type ActionCallback = (action: {
+  requestId: string
+  tool: string
+  args: Record<string, unknown>
+  timestamp: number
+  origin: string
+  aiApp?: string
+}) => void | boolean | Promise<void | boolean>
+```
+
+**Returns:** `Unsubscribe`
+
+---
+
+### athreei.onAfterAction(callback)
+
+Listen for built-in browser actions after they complete.
+
+```typescript
+const unsubscribe = athreei.onAfterAction((result) => {
+  console.log("Action result:", result.tool, result.success)
+  if (!result.success) {
+    console.error("Error:", result.error)
+  }
+})
+```
+
+**ActionResultCallback:**
+
+```typescript
+type ActionResultCallback = (result: {
+  requestId: string
+  tool: string
+  success: boolean
+  result?: unknown
+  error?: string
+  timestamp: number
+  duration: number // Time taken in ms
+}) => void | Promise<void>
+```
+
+**Returns:** `Unsubscribe`
+
+---
+
+## AthreeiClient Class
+
+For advanced usage with more control.
+
+```typescript
+import { AthreeiClient } from "@athreei/site-sdk"
+
+const client = new AthreeiClient(options)
+```
+
+### Constructor
+
+```typescript
+const client = new AthreeiClient({
+  debug: false, // Enable debug logging
+  timeout: 30000, // Timeout for operations (ms)
+  mockMode: false, // Enable mock mode
+})
+```
+
+**AthreeiClientOptions:**
+
+```typescript
+interface AthreeiClientOptions {
+  debug?: boolean // Default: false
+  timeout?: number // Default: 30000
+  mockMode?: boolean // Default: false
+}
+```
+
+### client.waitForReady()
+
+Wait for the extension to be ready. Returns a promise.
+
+```typescript
+const info = await client.waitForReady()
+console.log("Ready:", info.version)
+```
+
+**Returns:** `Promise<AthreeiInfo>`
+
+### client.registerTool(definition)
+
+Same as `athreei.registerTool()`.
+
+### client.onRequest(toolName, handler)
+
+Same as `athreei.onRequest()`.
+
+### client.requestPermission(options)
+
+Same as `athreei.requestPermission()`.
+
+### client.onBeforeAction(callback)
+
+Same as `athreei.onBeforeAction()`.
+
+### client.onAfterAction(callback)
+
+Same as `athreei.onAfterAction()`.
+
+### client.destroy()
+
+Clean up all listeners and handlers. Call this when done.
+
+```typescript
+client.destroy()
+```
+
+---
+
+## Type Exports
+
+The SDK exports all types for TypeScript usage:
+
+```typescript
+import type {
+  // Tool types
+  ToolDefinition,
+  ToolParameter,
+  RequestHandler,
+
+  // Info types
+  AthreeiInfo,
+  AthreeiClientOptions,
+
+  // Permission types
+  PermissionOptions,
+  PermissionScope,
+  PermissionDuration,
+
+  // Callback types
+  ActionCallback,
+  ActionResultCallback,
+  Unsubscribe,
+
+  // Event types (from @athreei/shared)
+  AiiiReadyEvent,
+  AiiiRequestEvent,
+  AiiiResponseEvent,
+  AiiiRegisterEvent,
+  AiiiPermissionEvent,
+  AiiiActionBeforeEvent,
+  AiiiActionAfterEvent,
+  AiiiToolParameter,
+} from "@athreei/site-sdk"
+```
+
+---
+
+## Error Handling
+
+Handlers should handle errors gracefully:
+
+```typescript
+athreei.onRequest("my_tool", async (args) => {
+  try {
+    const result = await riskyOperation(args)
+    return { success: true, data: result }
+  } catch (error) {
+    // Errors are automatically caught and reported to the AI
+    throw new Error(`Operation failed: ${error.message}`)
+  }
+})
+```
+
+When a handler throws, the SDK automatically sends an error response:
+
+```typescript
+{
+  requestId: '...',
+  success: false,
+  error: 'Operation failed: ...',
+  errorCode: 'HANDLER_ERROR'
+}
+```

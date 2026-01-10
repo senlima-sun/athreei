@@ -1,15 +1,23 @@
 import { docs } from "fumadocs-mdx:collections/server"
 import { type InferPageType, loader } from "fumadocs-core/source"
 import { lucideIconsPlugin } from "fumadocs-core/source/lucide-icons"
+import { i18n } from "@/lib/i18n"
 
-// See https://fumadocs.dev/docs/headless/source-api for more info
 export const source = loader({
   baseUrl: "/docs",
   source: docs.toFumadocsSource(),
   plugins: [lucideIconsPlugin()],
+  i18n,
 })
 
-export function getPageImage(page: InferPageType<typeof source>) {
+export type PageType = InferPageType<typeof source>
+
+interface PageDataWithText {
+  title: string
+  getText: (type: "raw" | "processed") => Promise<string>
+}
+
+export function getPageImage(page: PageType) {
   const segments = [...page.slugs, "image.png"]
 
   return {
@@ -18,10 +26,11 @@ export function getPageImage(page: InferPageType<typeof source>) {
   }
 }
 
-export async function getLLMText(page: InferPageType<typeof source>) {
-  const processed = await page.data.getText("processed")
+export async function getLLMText(page: PageType) {
+  const data = page.data as PageDataWithText
+  const processed = await data.getText("processed")
 
-  return `# ${page.data.title}
+  return `# ${data.title}
 
 ${processed}`
 }

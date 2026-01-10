@@ -1,0 +1,244 @@
+---
+title: 架構
+description: athreei 如何作為通用 MCP 閘道器運作
+---
+
+> 本文檔正在翻譯中。以下為英文原文。
+
+# Architecture
+
+athreei is the universal MCP gateway - one connection for AI apps, unified access to all your MCP servers.
+
+## The Problem We Solve
+
+Today, context ownership is controlled by AI app providers:
+
+- **Claude Desktop** - Anthropic controls your MCP connections
+- **ChatGPT** - OpenAI controls it (via their App Store)
+- **Cursor, Windsurf, etc.** - Each app has its own config
+
+This means:
+
+- You configure MCPs separately for each AI app
+- You can't see what tools AI actually called
+- You can't iterate on tool prompts with real data
+- Switching AI apps means reconfiguring everything
+
+athreei decouples context from AI apps. You control your MCP connections, and any AI app can use them through athreei.
+
+## System Overview
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              athreei Platform                               │
+│                                                                             │
+│  ┌──────────────┐                                                           │
+│  │   AI App     │                                                           │
+│  │ (Claude,GPT) │                                                           │
+│  └──────┬───────┘                                                           │
+│         │                                                                   │
+│         ▼                                                                   │
+│  ┌──────────────────────────────────────────────────────────────────────┐  │
+│  │                         athreei Gateway                               │  │
+│  │                                                                       │  │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  │  │
+│  │  │  MCP #1     │  │  MCP #2     │  │  MCP #3     │  │  Website    │  │  │
+│  │  │ (GitHub)    │  │(Filesystem) │  │  (Slack)    │  │  (via SDK)  │  │  │
+│  │  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘  │  │
+│  │                                                                       │  │
+│  │  ──────────────────────────────────────────────────────────────────  │  │
+│  │                           Audit Logs                                 │  │
+│  │                    (encrypted, searchable)                           │  │
+│  └──────────────────────────────────────────────────────────────────────┘  │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+## Core Components
+
+### Gateway
+
+The central hub that:
+
+1. **Aggregates** multiple MCP servers behind one connection
+2. **Routes** tool calls to the appropriate server
+3. **Namespaces** tools to prevent collisions (`github__create_issue`)
+4. **Logs** every interaction for audit and compliance
+
+The gateway can run locally (binary) or hosted (cloud service).
+
+### Audit System
+
+Every tool call is recorded:
+
+| Field     | Description                      |
+| --------- | -------------------------------- |
+| Trace ID  | Unique identifier for the call   |
+| Tool Name | Namespaced tool (`server__tool`) |
+| Server    | Which MCP server handled it      |
+| Request   | Input parameters (encrypted)     |
+| Response  | Output data (encrypted)          |
+| Status    | Success or error                 |
+| Duration  | Execution time                   |
+
+Payloads are stored with end-to-end encryption. Only you can decrypt them.
+
+### Tool Configuration
+
+Users can customize any tool without modifying the MCP server:
+
+- **Custom descriptions** - Override how tools are described to AI
+- **Custom prompts** - Add instructions that guide AI behavior
+- **Enable/disable** - Control which tools are exposed
+
+This enables the iteration loop: view traces → spot issues → edit tools → retry → validate improvements.
+
+### SDK (For Developers)
+
+Enables websites to become MCP servers:
+
+```typescript
+import { athreei } from "@athreei/site-sdk"
+
+athreei.registerTool({
+  name: "search_products",
+  description: "Search catalog",
+  handler: async ({ query }) => {
+    return await yourAPI.search(query)
+  },
+})
+```
+
+When users visit your site with athreei, your tools are available to their AI.
+
+## Data Flow
+
+### Standard Tool Call
+
+```
+1. User asks AI: "Create a GitHub issue"
+         │
+         ▼
+2. AI calls: github__create_issue
+         │
+         ▼
+3. Gateway receives, logs metadata
+         │
+         ▼
+4. Routes to GitHub MCP server
+         │
+         ▼
+5. Server executes, returns result
+         │
+         ▼
+6. Gateway logs response (encrypted)
+         │
+         ▼
+7. Result returned to AI
+```
+
+### Website SDK Tool Call
+
+```
+1. AI calls: yoursite__search_products
+         │
+         ▼
+2. Gateway routes to browser tab
+         │
+         ▼
+3. SDK receives via DOM events
+         │
+         ▼
+4. Your handler executes
+         │
+         ▼
+5. Response flows back to AI
+```
+
+## Deployment Modes
+
+### Local Gateway
+
+Everything runs on your machine:
+
+```
+┌────────────────────────────────┐
+│        Your Machine            │
+│                                │
+│  AI App ─▶ Gateway ─▶ MCPs    │
+│                │               │
+│           Audit Logs           │
+│         (local SQLite)         │
+└────────────────────────────────┘
+```
+
+**Best for:** Individual users, maximum control
+
+### Cloud Gateway
+
+Gateway runs as a hosted service:
+
+```
+┌─────────────────┐      ┌──────────────────────────────┐
+│    AI App       │      │      athreei Cloud           │
+│   (any client)  │─────▶│                              │
+└─────────────────┘      │  Gateway ──▶ Your MCPs       │
+                         │      │                       │
+                         │  Audit Logs (E2E encrypted)  │
+                         └──────────────────────────────┘
+```
+
+**Best for:** Web apps, teams, centralized management
+
+## Tool Namespacing
+
+When tools from different servers are aggregated, they're prefixed:
+
+```
+Original:         Aggregated:
+────────          ──────────
+read_file    ──▶  filesystem__read_file
+create_issue ──▶  github__create_issue
+send_message ──▶  slack__send_message
+```
+
+This prevents naming collisions and clarifies which server provides each tool.
+
+## Security
+
+### Audit Trail
+
+Complete visibility into AI-MCP interactions:
+
+- Every tool call logged
+- Request/response captured
+- Searchable and filterable
+- Exportable for compliance
+
+### Encryption
+
+Cloud audit logs use E2E encryption:
+
+- Payloads encrypted before storage
+- Decryption only in your browser
+- athreei servers never see plaintext
+
+### Access Control
+
+- API keys for cloud gateway access
+- Per-organization data isolation
+- Configurable retention policies
+
+## Next Steps
+
+<Cards>
+  <Card title="Local vs Cloud" href="/docs/concepts/local-vs-cloud">
+    Compare deployment options
+  </Card>
+  <Card title="Gateway" href="/docs/gateway">
+    Set up the gateway
+  </Card>
+  <Card title="Audit Logs" href="/docs/audit-logs">
+    Learn about audit features
+  </Card>
+</Cards>

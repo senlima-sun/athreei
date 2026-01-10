@@ -1,0 +1,14 @@
+{
+  "title": "文檔",
+  "pages": [
+    "index",
+    "getting-started",
+    "gateway",
+    "registry",
+    "tools",
+    "audit-logs",
+    "sdk",
+    "concepts",
+    "development"
+  ]
+}

@@ -1,0 +1,182 @@
+---
+title: 快速開始
+description: 幾分鐘內將您的 AI 應用程式連接到 athreei
+---
+
+> 本文檔正在翻譯中。以下為英文原文。
+
+# Getting Started
+
+Get up and running with athreei in five minutes.
+
+## 1. Create an Account
+
+1. Go to [athreei.com](https://athreei.com)
+2. Sign up with email or OAuth
+3. Create an organization
+
+## 2. Add MCP Servers
+
+Choose how to add MCP servers:
+
+### Option A: One-Click Install (Recommended)
+
+1. Go to **Registry** in the dashboard
+2. Browse available MCPs (Figma, Sentry, Linear, etc.)
+3. Click on an MCP → Enter your API token → Click **Install**
+
+### Option B: Import JSON
+
+Already have MCP configs from Claude Desktop?
+
+1. Go to **My Servers** → Click **Import JSON**
+2. Paste your existing config:
+
+```json
+{
+  "mcpServers": {
+    "figma": {
+      "command": "npx",
+      "args": ["-y", "@anthropic/mcp-figma"],
+      "env": { "FIGMA_ACCESS_TOKEN": "your-token" }
+    }
+  }
+}
+```
+
+3. Click **Parse** → **Import**
+
+## 3. Create an Endpoint
+
+1. Go to **Endpoints** → Click **New Endpoint**
+2. Give it a name (e.g., "my-tools")
+3. Select a namespace containing your MCP servers
+4. Copy the generated API key
+
+## 4. Install the Gateway
+
+Download the athreei gateway for your platform:
+
+| Platform              | Binary                            |
+| --------------------- | --------------------------------- |
+| macOS (Apple Silicon) | `athreei-gateway-darwin-arm64`    |
+| macOS (Intel)         | `athreei-gateway-darwin-x64`      |
+| Windows               | `athreei-gateway-windows-x64.exe` |
+| Linux                 | `athreei-gateway-linux-x64`       |
+
+[Download from GitHub Releases →](https://github.com/athreei/athreei/releases)
+
+```bash
+# macOS/Linux
+chmod +x athreei-gateway-*
+sudo mv athreei-gateway-* /usr/local/bin/athreei-gateway
+```
+
+Create config at `~/.athreei/config.json`:
+
+```json
+{
+  "apiKey": "atr_your_api_key_here",
+  "endpoint": "your-endpoint-name"
+}
+```
+
+## 5. Connect Your AI App
+
+Add athreei to your AI app's MCP configuration:
+
+**Claude Desktop** (`~/Library/Application Support/Claude/claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "athreei": {
+      "command": "athreei-gateway"
+    }
+  }
+}
+```
+
+Restart your AI app. All tools are now available through one connection!
+
+## Try It Out
+
+Ask your AI to use tools from the MCPs you installed:
+
+- "Get the components from my Figma file" (figma)
+- "Show me the latest errors in Sentry" (sentry)
+- "Create a Linear ticket for this bug" (linear)
+
+All calls are aggregated through athreei with namespaced tool names: `figma__get_components`, `sentry__get_issues`, etc.
+
+## View Traces
+
+See every tool call in the dashboard:
+
+1. Go to **Traces** in the dashboard
+2. See the timeline of all tool calls
+3. Click on any trace to see input/output details
+
+You'll see:
+
+- Exactly what the AI sent to each tool
+- What data was returned
+- Success/error status
+- Duration metrics
+
+## Iterate and Improve
+
+Spot an issue in a trace? Improve it:
+
+1. View the trace details
+2. See what went wrong (e.g., AI used wrong parameters)
+3. Go to the tool configuration
+4. Add a custom description or prompt
+5. Retry - the AI will behave differently
+
+This is the iteration loop: see real data, make targeted improvements.
+
+## Alternative: Local Mode (No Account Required)
+
+For self-hosted usage without Platform sync, use local mode:
+
+1. Create config at `~/.athreei/config.json`:
+
+```json
+{
+  "servers": [
+    {
+      "name": "filesystem",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/dir"]
+    }
+  ]
+}
+```
+
+2. Start the gateway with `--local` flag:
+
+```bash
+athreei-gateway --local
+```
+
+3. Connect your AI app the same way as Platform mode.
+
+See [Configuration](/docs/getting-started/configuration) for more local mode options.
+
+## Next Steps
+
+<Cards>
+  <Card title="Configuration" href="/docs/getting-started/configuration">
+    Advanced gateway configuration options
+  </Card>
+  <Card title="Registry" href="/docs/registry">
+    Browse and install more MCP servers
+  </Card>
+  <Card title="Tool Configuration" href="/docs/tools">
+    Customize tool descriptions and prompts
+  </Card>
+  <Card title="Gateway Options" href="/docs/gateway">
+    Local vs cloud gateway comparison
+  </Card>
+</Cards>
