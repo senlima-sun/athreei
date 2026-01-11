@@ -40,6 +40,9 @@ export {
   moveMemories,
   tagMemories,
   untagMemories,
+  getOldestMemoryDate,
+  listMemoriesByDate,
+  countMemoriesByDate,
   type UpdateMemoryInput,
 } from "./memories"
 

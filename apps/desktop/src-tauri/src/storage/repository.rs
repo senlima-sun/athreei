@@ -447,6 +447,86 @@ impl Database {
         )?;
         Ok(count > 0)
     }
+
+    /// Get the oldest memory timestamp
+    pub fn get_oldest_memory_date(&self, space_id: Option<&str>) -> Result<Option<i64>> {
+        match space_id {
+            Some(sid) => self.connection().query_row(
+                "SELECT MIN(created_at) FROM memories WHERE space_id = ?1",
+                params![sid],
+                |row| row.get(0),
+            ),
+            None => self
+                .connection()
+                .query_row("SELECT MIN(created_at) FROM memories", [], |row| row.get(0)),
+        }
+    }
+
+    /// List memories for a specific date (day)
+    pub fn list_memories_by_date(
+        &self,
+        start_timestamp: i64,
+        end_timestamp: i64,
+        space_id: Option<&str>,
+        limit: usize,
+        offset: usize,
+    ) -> Result<Vec<Memory>> {
+        let (sql, params_vec): (&str, Vec<Box<dyn rusqlite::ToSql>>) = match space_id {
+            Some(sid) => (
+                "SELECT id, space_id, source, source_id, title, summary, content, metadata, created_at, updated_at
+                 FROM memories
+                 WHERE space_id = ?1 AND created_at >= ?2 AND created_at < ?3
+                 ORDER BY created_at DESC LIMIT ?4 OFFSET ?5",
+                vec![
+                    Box::new(sid.to_string()),
+                    Box::new(start_timestamp),
+                    Box::new(end_timestamp),
+                    Box::new(limit as i64),
+                    Box::new(offset as i64),
+                ],
+            ),
+            None => (
+                "SELECT id, space_id, source, source_id, title, summary, content, metadata, created_at, updated_at
+                 FROM memories
+                 WHERE created_at >= ?1 AND created_at < ?2
+                 ORDER BY created_at DESC LIMIT ?3 OFFSET ?4",
+                vec![
+                    Box::new(start_timestamp),
+                    Box::new(end_timestamp),
+                    Box::new(limit as i64),
+                    Box::new(offset as i64),
+                ],
+            ),
+        };
+
+        let mut stmt = self.connection().prepare(sql)?;
+        let params_refs: Vec<&dyn rusqlite::ToSql> =
+            params_vec.iter().map(|p| p.as_ref()).collect();
+        let rows = stmt.query_map(params_refs.as_slice(), |row| row_to_memory(row))?;
+
+        rows.collect()
+    }
+
+    /// Count memories for a specific date range
+    pub fn count_memories_by_date(
+        &self,
+        start_timestamp: i64,
+        end_timestamp: i64,
+        space_id: Option<&str>,
+    ) -> Result<i64> {
+        match space_id {
+            Some(sid) => self.connection().query_row(
+                "SELECT COUNT(*) FROM memories WHERE space_id = ?1 AND created_at >= ?2 AND created_at < ?3",
+                params![sid, start_timestamp, end_timestamp],
+                |row| row.get(0),
+            ),
+            None => self.connection().query_row(
+                "SELECT COUNT(*) FROM memories WHERE created_at >= ?1 AND created_at < ?2",
+                params![start_timestamp, end_timestamp],
+                |row| row.get(0),
+            ),
+        }
+    }
 }
 
 #[cfg(test)]

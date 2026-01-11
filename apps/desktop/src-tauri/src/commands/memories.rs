@@ -375,6 +375,81 @@ pub async fn count_memories(
         .map_err(|e| format!("Failed to count memories: {e}"))
 }
 
+/// Get the oldest memory timestamp
+#[tauri::command]
+pub async fn get_oldest_memory_date(
+    space_id: Option<String>,
+    db: State<'_, Arc<DatabaseState>>,
+) -> Result<Option<i64>, String> {
+    let db_guard = db
+        .db
+        .lock()
+        .map_err(|e| format!("Database lock error: {e}"))?;
+
+    db_guard
+        .get_oldest_memory_date(space_id.as_deref())
+        .map_err(|e| format!("Failed to get oldest memory date: {e}"))
+}
+
+/// List memories for a specific date
+#[tauri::command]
+pub async fn list_memories_by_date(
+    start_timestamp: i64,
+    end_timestamp: i64,
+    space_id: Option<String>,
+    limit: Option<usize>,
+    offset: Option<usize>,
+    db: State<'_, Arc<DatabaseState>>,
+    vault: State<'_, Arc<VaultState>>,
+) -> Result<Vec<DecryptedMemory>, String> {
+    if !vault.is_unlocked() {
+        return Err("Vault is locked".to_string());
+    }
+
+    let db_guard = db
+        .db
+        .lock()
+        .map_err(|e| format!("Database lock error: {e}"))?;
+
+    let memories = db_guard
+        .list_memories_by_date(
+            start_timestamp,
+            end_timestamp,
+            space_id.as_deref(),
+            limit.unwrap_or(50),
+            offset.unwrap_or(0),
+        )
+        .map_err(|e| format!("Failed to list memories: {e}"))?;
+
+    let mut decrypted_memories = Vec::with_capacity(memories.len());
+    for memory in memories {
+        let tags = db_guard
+            .get_tags(&memory.id)
+            .map_err(|e| format!("Failed to get tags: {e}"))?;
+        decrypted_memories.push(decrypt_memory(&memory, tags, &vault)?);
+    }
+
+    Ok(decrypted_memories)
+}
+
+/// Count memories for a specific date range
+#[tauri::command]
+pub async fn count_memories_by_date(
+    start_timestamp: i64,
+    end_timestamp: i64,
+    space_id: Option<String>,
+    db: State<'_, Arc<DatabaseState>>,
+) -> Result<i64, String> {
+    let db_guard = db
+        .db
+        .lock()
+        .map_err(|e| format!("Database lock error: {e}"))?;
+
+    db_guard
+        .count_memories_by_date(start_timestamp, end_timestamp, space_id.as_deref())
+        .map_err(|e| format!("Failed to count memories: {e}"))
+}
+
 
 /// Delete multiple memories by ID
 #[tauri::command]

@@ -136,6 +136,9 @@ pub fn run() {
             commands::list_tags,
             commands::count_memories,
             commands::update_memory,
+            commands::get_oldest_memory_date,
+            commands::list_memories_by_date,
+            commands::count_memories_by_date,
             // Bulk memory commands
             commands::delete_memories,
             commands::move_memories,

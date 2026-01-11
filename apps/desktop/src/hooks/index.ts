@@ -28,6 +28,14 @@ export {
   useUpdateMemory,
 } from "./use-memories"
 
+export { useInfiniteMemories } from "./use-infinite-memories"
+
+export {
+  useOldestMemoryDate,
+  useMemoriesByDate,
+  useMemoryCountByDate,
+} from "./use-memories-by-date"
+
 export { useMcpStatus, useMcpStart, useMcpStop } from "./use-mcp"
 
 export { useDebounce } from "./use-debounce"

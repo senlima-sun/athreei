@@ -2,6 +2,13 @@ import { useEffect, useRef, useState } from "react"
 import { X, Save, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { RichTextEditor } from "@/components/editor"
 import { useUpdateMemory, useSpaces } from "@/hooks"
 import type { Memory } from "@/lib/types"
@@ -144,20 +151,32 @@ export function EditMemoryDialog({
               >
                 Space
               </label>
-              <select
-                id="edit-space"
+              <Select
                 value={spaceId ?? ""}
-                onChange={(e) => setSpaceId(e.target.value || null)}
-                className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                onValueChange={(value) => setSpaceId(value || null)}
+                items={{
+                  "": "No space",
+                  ...Object.fromEntries(
+                    spaces.map((s) => [
+                      s.id,
+                      `${s.icon ? s.icon + " " : ""}${s.name}`,
+                    ])
+                  ),
+                }}
               >
-                <option value="">No space</option>
-                {spaces.map((space) => (
-                  <option key={space.id} value={space.id}>
-                    {space.icon && `${space.icon} `}
-                    {space.name}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger variant="outline">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">No space</SelectItem>
+                  {spaces.map((space) => (
+                    <SelectItem key={space.id} value={space.id}>
+                      {space.icon && `${space.icon} `}
+                      {space.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Error */}

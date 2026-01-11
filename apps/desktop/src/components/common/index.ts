@@ -1,11 +1,4 @@
+export { EditableTitle } from "./editable-title"
 export { EmptyState } from "./empty-state"
-export {
-  ErrorDisplay,
-  PageError,
-  FullPageError,
-} from "./error-display"
-export {
-  LoadingSpinner,
-  PageLoading,
-  FullPageLoading,
-} from "./loading-spinner"
+export { ErrorDisplay, PageError, FullPageError } from "./error-display"
+export { LoadingSpinner, PageLoading, FullPageLoading } from "./loading-spinner"

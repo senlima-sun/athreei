@@ -124,11 +124,7 @@ function BlurHandler({
   return null
 }
 
-function Placeholder({
-  text,
-}: {
-  text: string
-}): React.ReactElement {
+function Placeholder({ text }: { text: string }): React.ReactElement {
   return <div className="lexical-editor-placeholder">{text}</div>
 }
 
@@ -163,7 +159,9 @@ export function RichTextEditor({
       <div className={cn("lexical-editor", className)}>
         <div className="relative">
           <RichTextPlugin
-            contentEditable={<ContentEditable className={contentEditableClass} />}
+            contentEditable={
+              <ContentEditable className={contentEditableClass} />
+            }
             placeholder={<Placeholder text={placeholder} />}
             ErrorBoundary={LexicalErrorBoundary}
           />

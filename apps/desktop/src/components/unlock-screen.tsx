@@ -72,7 +72,9 @@ export function UnlockScreen({
                 type={showPassphrase ? "text" : "password"}
                 value={passphrase}
                 onChange={(e) => setPassphrase(e.target.value)}
-                placeholder={isFirstTime ? "Create passphrase" : "Enter passphrase"}
+                placeholder={
+                  isFirstTime ? "Create passphrase" : "Enter passphrase"
+                }
                 autoFocus
                 disabled={isLoading}
                 className="h-8 pr-8 text-xs"

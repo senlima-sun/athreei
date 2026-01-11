@@ -102,6 +102,55 @@ export const countMemories = (spaceId?: string): Promise<number> =>
   invoke("count_memories", { spaceId })
 
 /**
+ * Get the oldest memory timestamp
+ *
+ * @param spaceId - Optional space filter
+ * @returns Unix timestamp of oldest memory, or null if no memories exist
+ */
+export const getOldestMemoryDate = (spaceId?: string): Promise<number | null> =>
+  invoke("get_oldest_memory_date", { spaceId })
+
+/**
+ * List memories for a specific date range
+ *
+ * @param startTimestamp - Start of date range (Unix timestamp)
+ * @param endTimestamp - End of date range (Unix timestamp)
+ * @param spaceId - Optional space filter
+ * @param limit - Maximum number of results (default 50)
+ * @param offset - Number of results to skip (default 0)
+ * @returns Array of decrypted memories
+ */
+export const listMemoriesByDate = (
+  startTimestamp: number,
+  endTimestamp: number,
+  spaceId?: string,
+  limit?: number,
+  offset?: number
+): Promise<Memory[]> =>
+  invoke("list_memories_by_date", {
+    startTimestamp,
+    endTimestamp,
+    spaceId,
+    limit,
+    offset,
+  })
+
+/**
+ * Count memories for a specific date range
+ *
+ * @param startTimestamp - Start of date range (Unix timestamp)
+ * @param endTimestamp - End of date range (Unix timestamp)
+ * @param spaceId - Optional space filter
+ * @returns Number of memories in the date range
+ */
+export const countMemoriesByDate = (
+  startTimestamp: number,
+  endTimestamp: number,
+  spaceId?: string
+): Promise<number> =>
+  invoke("count_memories_by_date", { startTimestamp, endTimestamp, spaceId })
+
+/**
  * Input for updating a memory
  */
 export interface UpdateMemoryInput {

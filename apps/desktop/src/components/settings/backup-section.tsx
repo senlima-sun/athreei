@@ -1,12 +1,13 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
-  Archive,
-  Download,
-  Upload,
-  Loader2,
-  CheckCircle,
-} from "lucide-react"
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Archive, Download, Upload, Loader2, CheckCircle } from "lucide-react"
 import { useExportBackup, useImportBackup } from "@/hooks"
 import type { ImportStrategy } from "@/lib/api"
 import { ErrorDisplay } from "@/components/common/error-display"
@@ -118,17 +119,26 @@ export function BackupSection(): React.ReactElement {
         label="Strategy"
         description="Handle existing data"
         action={
-          <select
+          <Select
             value={importStrategy}
-            onChange={(e) =>
-              setImportStrategy(e.target.value as ImportStrategy)
+            onValueChange={(value) =>
+              setImportStrategy(value as ImportStrategy)
             }
-            className="h-6 rounded bg-muted px-1.5 text-[10px]"
+            items={{
+              skip: "Skip existing",
+              merge: "Merge",
+              replace: "Replace",
+            }}
           >
-            <option value="skip">Skip existing</option>
-            <option value="merge">Merge</option>
-            <option value="replace">Replace</option>
-          </select>
+            <SelectTrigger size="sm" className="h-6 w-auto min-w-24 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="skip">Skip existing</SelectItem>
+              <SelectItem value="merge">Merge</SelectItem>
+              <SelectItem value="replace">Replace</SelectItem>
+            </SelectContent>
+          </Select>
         }
       />
     </Section>

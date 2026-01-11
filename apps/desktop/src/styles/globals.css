@@ -37,6 +37,8 @@
 
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
+  --animate-slide-in-from-bottom: slide-in-from-bottom 0.15s ease-out;
+  --animate-slide-in-from-top: slide-in-from-top 0.15s ease-out;
 
   @keyframes accordion-down {
     from {
@@ -53,6 +55,28 @@
     }
     to {
       height: 0;
+    }
+  }
+
+  @keyframes slide-in-from-bottom {
+    from {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slide-in-from-top {
+    from {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
     }
   }
 }

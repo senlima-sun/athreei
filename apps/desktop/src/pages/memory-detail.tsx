@@ -3,6 +3,13 @@ import { useParams, useNavigate, Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import {
   ArrowLeft,
   Globe,
   Trash2,
@@ -13,52 +20,8 @@ import {
 } from "lucide-react"
 import { useMemory, useDeleteMemory, useSpaces, useUpdateMemory } from "@/hooks"
 import { useLayoutHeader } from "@/components/layout/layout"
-import { PageLoading } from "@/components/common/loading-spinner"
-import { ErrorDisplay } from "@/components/common/error-display"
+import { EditableTitle, PageLoading, ErrorDisplay } from "@/components/common"
 import { MemoryContentViewer, RichTextEditor } from "@/components/editor"
-
-interface EditableTitleProps {
-  initialValue: string
-  onSave: (value: string) => void
-}
-
-function EditableTitle({
-  initialValue,
-  onSave,
-}: EditableTitleProps): React.ReactElement {
-  const [value, setValue] = useState(initialValue)
-  const lastSavedRef = useRef(initialValue)
-
-  useEffect(() => {
-    if (initialValue !== lastSavedRef.current) {
-      setValue(initialValue)
-      lastSavedRef.current = initialValue
-    }
-  }, [initialValue])
-
-  const handleBlur = (): void => {
-    if (value !== lastSavedRef.current) {
-      lastSavedRef.current = value
-      onSave(value)
-    }
-  }
-
-  return (
-    <input
-      type="text"
-      value={value}
-      onChange={(e) => setValue(e.target.value)}
-      onBlur={handleBlur}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") {
-          e.currentTarget.blur()
-        }
-      }}
-      placeholder="Untitled"
-      className="min-w-0 flex-1 truncate bg-transparent text-sm font-medium outline-none placeholder:text-muted-foreground"
-    />
-  )
-}
 
 export function MemoryDetailPage(): React.ReactElement {
   const { id } = useParams<{ id: string }>()
@@ -341,19 +304,32 @@ export function MemoryDetailPage(): React.ReactElement {
         <h3 className="mb-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
           Space
         </h3>
-        <select
+        <Select
           value={spaceId ?? ""}
-          onChange={(e) => saveSpace(e.target.value || null)}
-          className="w-full max-w-xs rounded-md border border-input bg-transparent px-3 py-1.5 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          onValueChange={(value) => saveSpace(value || null)}
+          items={{
+            "": "No space",
+            ...Object.fromEntries(
+              spaces.map((s) => [
+                s.id,
+                `${s.icon ? s.icon + " " : ""}${s.name}`,
+              ])
+            ),
+          }}
         >
-          <option value="">No space</option>
-          {spaces.map((space) => (
-            <option key={space.id} value={space.id}>
-              {space.icon && `${space.icon} `}
-              {space.name}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger variant="outline" className="max-w-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">No space</SelectItem>
+            {spaces.map((space) => (
+              <SelectItem key={space.id} value={space.id}>
+                {space.icon && `${space.icon} `}
+                {space.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </section>
     </div>
   )

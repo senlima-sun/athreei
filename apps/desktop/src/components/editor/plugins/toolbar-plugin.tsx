@@ -8,7 +8,11 @@ import {
   SELECTION_CHANGE_COMMAND,
   COMMAND_PRIORITY_CRITICAL,
 } from "lexical"
-import { $isHeadingNode, $createHeadingNode, type HeadingTagType } from "@lexical/rich-text"
+import {
+  $isHeadingNode,
+  $createHeadingNode,
+  type HeadingTagType,
+} from "@lexical/rich-text"
 import {
   INSERT_ORDERED_LIST_COMMAND,
   INSERT_UNORDERED_LIST_COMMAND,
@@ -74,7 +78,9 @@ interface ToolbarPluginProps {
   sticky?: boolean
 }
 
-export function ToolbarPlugin({ sticky = false }: ToolbarPluginProps): React.ReactElement {
+export function ToolbarPlugin({
+  sticky = false,
+}: ToolbarPluginProps): React.ReactElement {
   const [editor] = useLexicalComposerContext()
   const [isBold, setIsBold] = useState(false)
   const [isItalic, setIsItalic] = useState(false)
@@ -183,7 +189,9 @@ export function ToolbarPlugin({ sticky = false }: ToolbarPluginProps): React.Rea
         <Italic className="h-4 w-4" />
       </ToolbarButton>
       <ToolbarButton
-        onClick={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "strikethrough")}
+        onClick={() =>
+          editor.dispatchCommand(FORMAT_TEXT_COMMAND, "strikethrough")
+        }
         isActive={isStrikethrough}
         title="Strikethrough"
       >
@@ -224,14 +232,18 @@ export function ToolbarPlugin({ sticky = false }: ToolbarPluginProps): React.Rea
       <ToolbarDivider />
 
       <ToolbarButton
-        onClick={() => editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined)}
+        onClick={() =>
+          editor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined)
+        }
         isActive={blockType === "bullet"}
         title="Bullet List"
       >
         <List className="h-4 w-4" />
       </ToolbarButton>
       <ToolbarButton
-        onClick={() => editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined)}
+        onClick={() =>
+          editor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined)
+        }
         isActive={blockType === "number"}
         title="Numbered List"
       >
