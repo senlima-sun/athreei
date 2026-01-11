@@ -29,13 +29,12 @@ pub async fn vault_unlock(
     };
 
     if let Some(salt) = existing_salt {
-        // Unlock with existing salt
-        let vault_with_salt = VaultState::with_salt(salt);
-        vault_with_salt
-            .unlock(&passphrase)
-            .map_err(|e| format!("Failed to unlock vault: {e}"))?;
+        // Set the stored salt on the managed vault before unlocking
+        vault
+            .set_salt(salt)
+            .map_err(|e| format!("Failed to set vault salt: {e}"))?;
 
-        // Copy the unlocked state to the managed vault
+        // Unlock with the stored salt
         vault
             .unlock(&passphrase)
             .map_err(|e| format!("Failed to unlock vault: {e}"))?;

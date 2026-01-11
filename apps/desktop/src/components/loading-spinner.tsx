@@ -8,9 +8,9 @@ interface LoadingSpinnerProps {
 }
 
 const sizeClasses = {
-  sm: "h-4 w-4",
-  md: "h-8 w-8",
-  lg: "h-12 w-12",
+  sm: "h-3 w-3",
+  md: "h-4 w-4",
+  lg: "h-5 w-5",
 }
 
 export function LoadingSpinner({
@@ -19,12 +19,12 @@ export function LoadingSpinner({
   message,
 }: LoadingSpinnerProps): React.ReactElement {
   return (
-    <div className={cn("flex flex-col items-center justify-center", className)}>
+    <div className={cn("flex items-center gap-2", className)}>
       <Loader2
         className={cn("animate-spin text-muted-foreground", sizeClasses[size])}
       />
       {message && (
-        <p className="mt-2 text-sm text-muted-foreground">{message}</p>
+        <span className="text-xs text-muted-foreground">{message}</span>
       )}
     </div>
   )
@@ -38,8 +38,8 @@ export function PageLoading({
   message = "Loading...",
 }: PageLoadingProps): React.ReactElement {
   return (
-    <div className="flex h-64 items-center justify-center">
-      <LoadingSpinner size="lg" message={message} />
+    <div className="flex h-32 items-center justify-center">
+      <LoadingSpinner size="md" message={message} />
     </div>
   )
 }

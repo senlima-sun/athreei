@@ -1,12 +1,6 @@
 import { useMemo } from "react"
+import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import {
   FileText,
@@ -91,25 +85,25 @@ export function HomePage(): React.ReactElement {
   const recentMemories = useMemo(() => memories.slice(0, 5), [memories])
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Quick Actions */}
-      <div className="flex flex-wrap gap-3">
-        <Button variant="default" className="gap-2">
-          <Sparkles className="h-4 w-4" />
+      <div className="flex flex-wrap gap-2">
+        <Button size="sm" className="h-7 gap-1.5 text-xs">
+          <Sparkles className="h-3.5 w-3.5" />
           Generate Standup
         </Button>
-        <Button variant="outline" className="gap-2">
-          <FileText className="h-4 w-4" />
-          Save Manual Note
+        <Button variant="secondary" size="sm" className="h-7 gap-1.5 text-xs">
+          <FileText className="h-3.5 w-3.5" />
+          Save Note
         </Button>
       </div>
 
       {/* Activity Stats */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
         <StatsCard
           icon={Database}
           value={isLoadingStats ? "-" : stats.totalMemories}
-          label="Total Memories"
+          label="Total"
         />
         <StatsCard
           icon={Calendar}
@@ -119,106 +113,86 @@ export function HomePage(): React.ReactElement {
         <StatsCard
           icon={CalendarDays}
           value={isLoadingStats ? "-" : stats.memoriesThisWeek}
-          label="This Week"
+          label="Week"
         />
         <StatsCard
           icon={Folder}
           value={
             isLoadingStats
               ? "-"
-              : (stats.mostActiveSpace?.name ?? "No activity")
+              : (stats.mostActiveSpace?.name ?? "—")
           }
-          label="Most Active Space"
+          label="Active"
         />
       </div>
 
       {/* Weekly Activity Chart */}
-      <Card>
-        <CardContent className="pt-6">
-          <ActivityChart data={weeklyData} />
-        </CardContent>
-      </Card>
+      <div className="rounded-md bg-card p-3">
+        <ActivityChart data={weeklyData} />
+      </div>
 
       {/* Today's Timeline */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            Today&apos;s Timeline
-          </CardTitle>
-          <CardDescription>
-            Your activities and memories from today
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <PageLoading message="Loading memories..." />
-          ) : error ? (
-            <ErrorDisplay error={error} onRetry={refetch} />
-          ) : todayMemories.length === 0 ? (
-            <EmptyState
-              icon={Clock}
-              title="No memories yet today"
-              description="Start using AI tools with MCP to automatically capture your activities, or save a manual note above."
-            />
-          ) : (
-            <div className="space-y-6">
-              {[...groupedMemories.entries()].map(([hour, hourMemories]) => (
-                <div key={hour}>
-                  <h4 className="mb-3 text-sm font-medium text-muted-foreground">
-                    {formatHour(hour)}
-                  </h4>
-                  <div className="space-y-3">
-                    {hourMemories.map((memory) => (
-                      <MemoryCard key={memory.id} memory={memory} />
-                    ))}
-                  </div>
+      <section className="rounded-md bg-card p-3">
+        <div className="mb-2 flex items-center gap-1.5">
+          <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+          <h3 className="text-xs font-medium">Today&apos;s Timeline</h3>
+        </div>
+        {isLoading ? (
+          <PageLoading message="Loading memories..." />
+        ) : error ? (
+          <ErrorDisplay error={error} onRetry={refetch} />
+        ) : todayMemories.length === 0 ? (
+          <EmptyState
+            icon={Clock}
+            title="No memories yet today"
+            description="Start using AI tools with MCP to capture activities."
+          />
+        ) : (
+          <div className="space-y-3">
+            {[...groupedMemories.entries()].map(([hour, hourMemories]) => (
+              <div key={hour}>
+                <h4 className="mb-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                  {formatHour(hour)}
+                </h4>
+                <div className="space-y-1">
+                  {hourMemories.map((memory) => (
+                    <MemoryItem key={memory.id} memory={memory} />
+                  ))}
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
 
       {/* Recent Activity */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
-          <CardDescription>
-            Your latest memories across all spaces
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <PageLoading message="Loading..." />
-          ) : error ? (
-            <ErrorDisplay error={error} onRetry={refetch} />
-          ) : recentMemories.length === 0 ? (
-            <div className="text-sm text-muted-foreground">
-              No recent activity to show. Connect an AI app to get started.
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {recentMemories.map((memory) => (
-                <MemoryCard key={memory.id} memory={memory} compact />
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <section className="rounded-md bg-card p-3">
+        <h3 className="mb-2 text-xs font-medium">Recent Activity</h3>
+        {isLoading ? (
+          <PageLoading message="Loading..." />
+        ) : error ? (
+          <ErrorDisplay error={error} onRetry={refetch} />
+        ) : recentMemories.length === 0 ? (
+          <p className="text-xs text-muted-foreground">
+            No recent activity. Connect an AI app to get started.
+          </p>
+        ) : (
+          <div className="space-y-1">
+            {recentMemories.map((memory) => (
+              <MemoryItem key={memory.id} memory={memory} />
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   )
 }
 
-interface MemoryCardProps {
+interface MemoryItemProps {
   memory: Memory
-  compact?: boolean
 }
 
-function MemoryCard({
-  memory,
-  compact = false,
-}: MemoryCardProps): React.ReactElement {
+function MemoryItem({ memory }: MemoryItemProps): React.ReactElement {
   const time = new Date(memory.created_at * 1000)
   const timeString = time.toLocaleTimeString([], {
     hour: "2-digit",
@@ -226,42 +200,30 @@ function MemoryCard({
   })
 
   return (
-    <div className="flex items-start gap-3 rounded-lg border border-border bg-card/50 p-3">
-      <div className="mt-0.5 rounded-md bg-muted p-2">
-        <Globe className="h-4 w-4 text-muted-foreground" />
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <h5 className="truncate text-sm font-medium">
-            {memory.title || memory.source || "Untitled"}
-          </h5>
-          <Badge variant="outline" className="shrink-0 text-xs">
-            {memory.source}
-          </Badge>
+    <Link
+      to={`/memories/${memory.id}`}
+      className="group flex items-center gap-2 rounded px-2 py-1.5 no-underline transition-colors hover:bg-accent"
+    >
+      <Globe className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+      <span className="min-w-0 flex-1 truncate text-xs text-foreground">
+        {memory.title || memory.source || "Untitled"}
+      </span>
+      {memory.tags.length > 0 && (
+        <div className="hidden items-center gap-1 sm:flex">
+          {memory.tags.slice(0, 2).map((tag) => (
+            <Badge
+              key={tag}
+              variant="secondary"
+              className="h-4 px-1 text-[10px]"
+            >
+              {tag}
+            </Badge>
+          ))}
         </div>
-        {!compact && memory.summary && (
-          <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-            {memory.summary}
-          </p>
-        )}
-        <div className="mt-1 flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">{timeString}</span>
-          {memory.tags.length > 0 && (
-            <div className="flex items-center gap-1">
-              {memory.tags.slice(0, 3).map((tag) => (
-                <Badge key={tag} variant="secondary" className="text-xs">
-                  {tag}
-                </Badge>
-              ))}
-              {memory.tags.length > 3 && (
-                <span className="text-xs text-muted-foreground">
-                  +{memory.tags.length - 3}
-                </span>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+      )}
+      <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground">
+        {timeString}
+      </span>
+    </Link>
   )
 }

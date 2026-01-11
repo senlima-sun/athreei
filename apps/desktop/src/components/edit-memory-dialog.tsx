@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import { X, Save, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { RichTextEditor } from "@/components/editor"
 import { useUpdateMemory, useSpaces } from "@/hooks"
 import type { Memory } from "@/lib/types"
 
@@ -125,20 +126,13 @@ export function EditMemoryDialog({
 
             {/* Content */}
             <div className="space-y-2">
-              <label
-                htmlFor="edit-content"
-                className="text-sm font-medium text-muted-foreground"
-              >
+              <label className="text-sm font-medium text-muted-foreground">
                 Content
               </label>
-              <textarea
-                id="edit-content"
+              <RichTextEditor
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
-                onKeyDown={handleKeyDown}
+                onChange={setContent}
                 placeholder="Memory content..."
-                rows={6}
-                className="w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 resize-none"
               />
             </div>
 

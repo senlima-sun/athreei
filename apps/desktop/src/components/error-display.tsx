@@ -1,12 +1,5 @@
 import { AlertCircle, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 
 interface ErrorDisplayProps {
@@ -26,20 +19,21 @@ export function ErrorDisplay({
   return (
     <div
       className={cn(
-        "flex items-center gap-3 rounded-lg bg-destructive/10 p-4",
+        "flex items-center gap-2 rounded bg-destructive/10 px-2 py-1.5",
         className
       )}
     >
-      <AlertCircle className="h-5 w-5 shrink-0 text-destructive" />
-      <div className="flex-1">
-        <p className="text-sm font-medium text-destructive">Error</p>
-        <p className="text-sm text-muted-foreground">{message}</p>
-      </div>
+      <AlertCircle className="h-3 w-3 shrink-0 text-destructive" />
+      <span className="flex-1 truncate text-[10px] text-destructive">
+        {message}
+      </span>
       {onRetry && (
-        <Button variant="outline" size="sm" onClick={onRetry} className="gap-2">
-          <RefreshCw className="h-4 w-4" />
-          Retry
-        </Button>
+        <button
+          onClick={onRetry}
+          className="shrink-0 text-[10px] text-muted-foreground hover:text-foreground"
+        >
+          <RefreshCw className="h-3 w-3" />
+        </button>
       )}
     </div>
   )
@@ -58,23 +52,24 @@ export function PageError({
     error instanceof Error ? error.message : "An unexpected error occurred"
 
   return (
-    <Card className="mx-auto max-w-md">
-      <CardHeader className="text-center">
-        <div className="mx-auto mb-4 rounded-full bg-destructive/10 p-4">
-          <AlertCircle className="h-8 w-8 text-destructive" />
-        </div>
-        <CardTitle>Something went wrong</CardTitle>
-        <CardDescription>{message}</CardDescription>
-      </CardHeader>
+    <div className="flex flex-col items-center justify-center py-8 text-center">
+      <AlertCircle className="mb-2 h-5 w-5 text-destructive" />
+      <p className="text-xs font-medium">Something went wrong</p>
+      <p className="mt-0.5 max-w-xs text-[11px] text-muted-foreground">
+        {message}
+      </p>
       {onRetry && (
-        <CardContent className="text-center">
-          <Button variant="outline" onClick={onRetry} className="gap-2">
-            <RefreshCw className="h-4 w-4" />
-            Try Again
-          </Button>
-        </CardContent>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={onRetry}
+          className="mt-3 h-6 gap-1 text-xs"
+        >
+          <RefreshCw className="h-3 w-3" />
+          Retry
+        </Button>
       )}
-    </Card>
+    </div>
   )
 }
 

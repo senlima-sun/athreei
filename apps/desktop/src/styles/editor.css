@@ -1,0 +1,68 @@
+.lexical-editor {
+  @apply relative;
+}
+
+.lexical-editor [contenteditable="true"] {
+  @apply outline-none;
+  caret-color: currentColor;
+}
+
+.lexical-editor [contenteditable="true"]:focus {
+  @apply outline-none;
+}
+
+.lexical-editor-placeholder {
+  @apply pointer-events-none absolute left-0 top-0 select-none text-sm text-muted-foreground;
+}
+
+.lexical-editor-input {
+  @apply min-h-[120px] text-sm text-foreground;
+}
+
+.lexical-editor-input:focus {
+  @apply outline-none;
+}
+
+.lexical-toolbar {
+  @apply inline-flex flex-wrap items-center gap-1 rounded-lg border border-border bg-background px-2 py-1.5 shadow-sm;
+}
+
+.lexical-toolbar-wrapper {
+  @apply flex justify-center py-2;
+}
+
+.lexical-toolbar-sticky-wrapper {
+  @apply fixed left-0 right-0 z-40 flex justify-center;
+  bottom: 5vh;
+}
+
+.lexical-toolbar-sticky-wrapper .lexical-toolbar {
+  @apply shadow-md;
+}
+
+.lexical-toolbar-button {
+  @apply inline-flex h-7 w-7 items-center justify-center rounded text-muted-foreground transition-colors;
+  @apply hover:bg-accent hover:text-foreground;
+  @apply focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring;
+}
+
+.lexical-toolbar-button[data-active="true"] {
+  @apply bg-accent text-foreground;
+}
+
+.lexical-toolbar-button:disabled {
+  @apply cursor-not-allowed opacity-50;
+}
+
+.lexical-toolbar-divider {
+  @apply mx-1 h-5 w-px bg-border;
+}
+
+.lexical-link-editor {
+  @apply absolute z-50 rounded-md border border-border bg-popover p-2 shadow-md;
+}
+
+.lexical-link-input {
+  @apply h-8 w-64 rounded border border-input bg-background px-2 text-sm;
+  @apply focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring;
+}

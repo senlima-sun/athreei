@@ -23,35 +23,31 @@ export function StatsCard({
   return (
     <div
       className={cn(
-        "flex items-start gap-3 rounded-lg border border-border bg-card p-4",
+        "flex items-center gap-2.5 rounded-md bg-card px-3 py-2",
         className
       )}
     >
-      <div className="rounded-md bg-muted p-2">
-        <Icon className="h-4 w-4 text-muted-foreground" />
-      </div>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <span className="text-2xl font-bold">{value}</span>
-          {trend && (
-            <span
-              className={cn(
-                "flex items-center gap-0.5 text-xs font-medium",
-                trend.direction === "up"
-                  ? "text-green-600 dark:text-green-400"
-                  : "text-red-600 dark:text-red-400"
-              )}
-            >
-              {trend.direction === "up" ? (
-                <TrendingUp className="h-3 w-3" />
-              ) : (
-                <TrendingDown className="h-3 w-3" />
-              )}
-              {trend.value}%
-            </span>
-          )}
-        </div>
-        <p className="text-sm text-muted-foreground">{label}</p>
+      <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+      <div className="flex min-w-0 flex-1 items-baseline gap-1.5">
+        <span className="text-base font-semibold tabular-nums">{value}</span>
+        {trend && (
+          <span
+            className={cn(
+              "flex items-center gap-0.5 text-xs",
+              trend.direction === "up"
+                ? "text-green-600 dark:text-green-500"
+                : "text-red-600 dark:text-red-500"
+            )}
+          >
+            {trend.direction === "up" ? (
+              <TrendingUp className="h-3 w-3" />
+            ) : (
+              <TrendingDown className="h-3 w-3" />
+            )}
+            {trend.value}%
+          </span>
+        )}
+        <span className="truncate text-xs text-muted-foreground">{label}</span>
       </div>
     </div>
   )

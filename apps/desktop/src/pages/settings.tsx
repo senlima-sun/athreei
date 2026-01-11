@@ -1,10 +1,3 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -24,6 +17,7 @@ import {
   Upload,
   Archive,
   Loader2,
+  ChevronRight,
 } from "lucide-react"
 import {
   useVaultLock,
@@ -48,7 +42,6 @@ export function SettingsPage(): React.ReactElement {
   const [importStrategy, setImportStrategy] = useState<ImportStrategy>("skip")
   const [showChangePassphrase, setShowChangePassphrase] = useState(false)
 
-  // MCP server state
   const { data: mcpStatus, isLoading: mcpLoading } = useMcpStatus()
   const mcpStart = useMcpStart()
   const mcpStop = useMcpStop()
@@ -67,7 +60,6 @@ export function SettingsPage(): React.ReactElement {
 
   const mcpError = mcpStart.error || mcpStop.error
 
-  // Sync state
   const { data: syncStatus } = useSyncStatus()
   const { data: pendingCount = 0 } = useSyncPendingCount()
   const syncNow = useSyncNow()
@@ -76,14 +68,12 @@ export function SettingsPage(): React.ReactElement {
     await syncNow.mutateAsync()
   }
 
-  // Backup state
   const exportBackup = useExportBackup()
   const importBackup = useImportBackup()
   const [exportSuccess, setExportSuccess] = useState<string | null>(null)
   const [importSuccess, setImportSuccess] = useState<string | null>(null)
 
   const handleExport = async (): Promise<void> => {
-    // Use Tauri dialog to get save path
     const { save } = await import("@tauri-apps/plugin-dialog")
     const path = await save({
       defaultPath: `aiii-backup-${new Date().toISOString().split("T")[0]}.aiii`,
@@ -100,7 +90,6 @@ export function SettingsPage(): React.ReactElement {
   }
 
   const handleImport = async (): Promise<void> => {
-    // Use Tauri dialog to get file path
     const { open } = await import("@tauri-apps/plugin-dialog")
     const path = await open({
       multiple: false,
@@ -126,396 +115,349 @@ export function SettingsPage(): React.ReactElement {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Vault / Encryption */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-muted p-2">
-                <Shield className="h-5 w-5" />
-              </div>
-              <div>
-                <CardTitle>Vault</CardTitle>
-                <CardDescription>Your encrypted memory storage</CardDescription>
-              </div>
-            </div>
-            <Badge variant="success" className="gap-1">
-              <CheckCircle className="h-3 w-3" />
-              Unlocked
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
-            <div>
-              <p className="text-sm font-medium">Lock Vault</p>
-              <p className="text-xs text-muted-foreground">
-                Lock the vault to protect your memories. You&apos;ll need your
-                passphrase to unlock.
-              </p>
-            </div>
+    <div className="space-y-4">
+      {/* Vault */}
+      <Section
+        icon={Shield}
+        title="Vault"
+        badge={
+          <Badge variant="success" className="gap-0.5">
+            <CheckCircle className="h-2.5 w-2.5" />
+            Unlocked
+          </Badge>
+        }
+      >
+        <SettingRow
+          label="Lock Vault"
+          description="Protect your memories"
+          action={
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
-              className="gap-2"
+              className="h-6 gap-1 text-xs"
               onClick={handleLockVault}
               loading={vaultLock.isPending}
             >
-              <Lock className="h-4 w-4" />
-              Lock Now
+              <Lock className="h-3 w-3" />
+              Lock
             </Button>
-          </div>
+          }
+        />
+        {vaultLock.error && <ErrorDisplay error={vaultLock.error} />}
 
-          {vaultLock.error && <ErrorDisplay error={vaultLock.error} />}
-
-          <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
-            <div>
-              <p className="text-sm font-medium">Encryption</p>
-              <p className="text-xs text-muted-foreground">
-                Your memories are encrypted locally with your passphrase
-              </p>
-            </div>
-            <Badge variant="secondary">
-              <Key className="mr-1 h-3 w-3" />
-              AES-256-GCM
+        <SettingRow
+          label="Encryption"
+          description="Local encryption with your passphrase"
+          action={
+            <Badge variant="outline">
+              <Key className="h-2.5 w-2.5" />
+              AES-256
             </Badge>
-          </div>
+          }
+        />
 
-          <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
-            <div>
-              <p className="text-sm font-medium">Change Passphrase</p>
-              <p className="text-xs text-muted-foreground">
-                Update your vault passphrase
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
+        <SettingRow
+          label="Change Passphrase"
+          description="Update vault passphrase"
+          action={
+            <button
               onClick={() => setShowChangePassphrase(true)}
+              className="flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground"
             >
               Change
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+              <ChevronRight className="h-3 w-3" />
+            </button>
+          }
+        />
+      </Section>
 
       {/* MCP Server */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-muted p-2">
-                <Server className="h-5 w-5" />
-              </div>
-              <div>
-                <CardTitle>MCP Server</CardTitle>
-                <CardDescription>
-                  Local MCP server for AI app connections
-                </CardDescription>
-              </div>
-            </div>
-            {mcpLoading ? (
-              <Badge variant="secondary">Loading...</Badge>
-            ) : mcpStatus?.running ? (
-              <Badge variant="success" className="gap-1">
-                <CheckCircle className="h-3 w-3" />
-                Running
-              </Badge>
-            ) : (
-              <Badge variant="secondary" className="gap-1">
-                <AlertCircle className="h-3 w-3" />
-                Stopped
-              </Badge>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
-            <div>
-              <p className="text-sm font-medium">Server Control</p>
-              <p className="text-xs text-muted-foreground">
-                {mcpStatus?.running
-                  ? `Running with ${mcpStatus.transport} transport`
-                  : "Start the server to allow AI apps to connect"}
-              </p>
-            </div>
+      <Section
+        icon={Server}
+        title="MCP Server"
+        badge={
+          mcpLoading ? (
+            <Badge variant="outline">...</Badge>
+          ) : mcpStatus?.running ? (
+            <Badge variant="success" className="gap-0.5">
+              <CheckCircle className="h-2.5 w-2.5" />
+              Running
+            </Badge>
+          ) : (
+            <Badge variant="outline" className="gap-0.5">
+              <AlertCircle className="h-2.5 w-2.5" />
+              Stopped
+            </Badge>
+          )
+        }
+      >
+        <SettingRow
+          label="Server Control"
+          description={
+            mcpStatus?.running
+              ? `${mcpStatus.transport} transport`
+              : "Start to connect AI apps"
+          }
+          action={
             <Button
               variant={mcpStatus?.running ? "destructive" : "default"}
               size="sm"
-              className="gap-2"
+              className="h-6 gap-1 text-xs"
               onClick={handleMcpToggle}
               loading={mcpStart.isPending || mcpStop.isPending}
             >
               {mcpStatus?.running ? (
                 <>
-                  <Square className="h-4 w-4" />
+                  <Square className="h-2.5 w-2.5" />
                   Stop
                 </>
               ) : (
                 <>
-                  <Play className="h-4 w-4" />
+                  <Play className="h-2.5 w-2.5" />
                   Start
                 </>
               )}
             </Button>
-          </div>
+          }
+        />
+        {mcpError && <ErrorDisplay error={mcpError} />}
 
-          {mcpError && <ErrorDisplay error={mcpError} />}
-
-          <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
-            <div>
-              <p className="text-sm font-medium">Transport</p>
-              <p className="text-xs text-muted-foreground">
-                {mcpStatus?.transport === "stdio"
-                  ? "stdio - for Claude Desktop"
-                  : "HTTP/SSE - for web clients"}
-              </p>
-            </div>
-            <Badge variant="outline">{mcpStatus?.transport ?? "stdio"}</Badge>
+        {mcpStatus?.running && mcpStatus?.port && (
+          <div className="flex items-center justify-between rounded bg-green-500/10 px-2 py-1.5">
+            <code className="text-[10px] text-green-600 dark:text-green-400">
+              http://127.0.0.1:{mcpStatus.port}/mcp
+            </code>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(
+                  `http://127.0.0.1:${mcpStatus.port}/mcp`
+                )
+              }}
+              className="text-[10px] text-muted-foreground hover:text-foreground"
+            >
+              Copy
+            </button>
           </div>
+        )}
 
-          <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
-            <div>
-              <p className="text-sm font-medium">Setup Guide</p>
-              <p className="text-xs text-muted-foreground">
-                Learn how to connect Claude Desktop
-              </p>
-            </div>
-            <Button variant="outline" size="sm" className="gap-2">
-              <ExternalLink className="h-4 w-4" />
-              View Guide
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+        <SettingRow
+          label="Setup Guide"
+          description="Connect Claude Desktop"
+          action={
+            <button className="flex items-center gap-0.5 text-xs text-muted-foreground hover:text-foreground">
+              <ExternalLink className="h-3 w-3" />
+            </button>
+          }
+        />
+      </Section>
 
       {/* Sync */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-3">
-              <div className="rounded-lg bg-muted p-2">
-                <Cloud className="h-5 w-5" />
-              </div>
-              <div>
-                <CardTitle>Sync</CardTitle>
-                <CardDescription>
-                  Sync your memories across devices
-                </CardDescription>
-              </div>
-            </div>
-            {syncStatus?.enabled ? (
-              <Badge variant="success" className="gap-1">
-                <CheckCircle className="h-3 w-3" />
-                Enabled
-              </Badge>
-            ) : (
-              <Badge variant="secondary" className="gap-1">
-                <AlertCircle className="h-3 w-3" />
-                Disabled
-              </Badge>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
-            <div>
-              <p className="text-sm font-medium">Cloud Sync</p>
-              <p className="text-xs text-muted-foreground">
-                {syncStatus?.enabled
-                  ? `Last sync: ${formatLastSync(syncStatus.last_sync)}`
-                  : "Sync encrypted memories to athreei cloud"}
-              </p>
-            </div>
-            {syncStatus?.enabled ? (
+      <Section
+        icon={Cloud}
+        title="Sync"
+        badge={
+          syncStatus?.enabled ? (
+            <Badge variant="success" className="gap-0.5">
+              <CheckCircle className="h-2.5 w-2.5" />
+              On
+            </Badge>
+          ) : (
+            <Badge variant="outline">Off</Badge>
+          )
+        }
+      >
+        <SettingRow
+          label="Cloud Sync"
+          description={
+            syncStatus?.enabled
+              ? `Last: ${formatLastSync(syncStatus.last_sync)}`
+              : "Sync to athreei cloud"
+          }
+          action={
+            syncStatus?.enabled ? (
               <Button
-                variant="outline"
+                variant="secondary"
                 size="sm"
-                className="gap-2"
+                className="h-6 gap-1 text-xs"
                 onClick={handleSyncNow}
                 loading={syncNow.isPending}
               >
-                <RefreshCw className="h-4 w-4" />
-                Sync Now
+                <RefreshCw className="h-3 w-3" />
+                Sync
               </Button>
             ) : (
-              <Button variant="outline" size="sm" disabled>
+              <span className="text-[10px] text-muted-foreground">
                 Coming Soon
-              </Button>
-            )}
-          </div>
+              </span>
+            )
+          }
+        />
+        {syncNow.error && <ErrorDisplay error={syncNow.error} />}
 
-          {syncNow.error && <ErrorDisplay error={syncNow.error} />}
+        {syncStatus?.enabled && pendingCount > 0 && (
+          <SettingRow
+            label="Pending"
+            description="Local changes waiting"
+            action={<Badge variant="outline">{pendingCount}</Badge>}
+          />
+        )}
 
-          {syncStatus?.enabled && pendingCount > 0 && (
-            <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
-              <div>
-                <p className="text-sm font-medium">Pending Changes</p>
-                <p className="text-xs text-muted-foreground">
-                  Local changes waiting to sync
-                </p>
-              </div>
-              <Badge variant="secondary">{pendingCount} pending</Badge>
-            </div>
-          )}
-
-          {syncStatus?.conflicts_count && syncStatus.conflicts_count > 0 && (
-            <div className="flex items-center justify-between rounded-lg border border-amber-500/50 bg-amber-500/10 p-3">
-              <div>
-                <p className="text-sm font-medium text-amber-600">
-                  Sync Conflicts
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {syncStatus.conflicts_count} conflict(s) need resolution
-                </p>
-              </div>
-              <Button variant="outline" size="sm">
-                Resolve
-              </Button>
-            </div>
-          )}
-
-          <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
-            <div>
-              <p className="text-sm font-medium">Local Storage</p>
-              <p className="text-xs text-muted-foreground">
-                SQLite database on your machine
-              </p>
-            </div>
+        <SettingRow
+          label="Local Storage"
+          description="SQLite on this machine"
+          action={
             <Badge variant="outline">
-              <HardDrive className="mr-1 h-3 w-3" />
-              {memoryCount} memories
+              <HardDrive className="h-2.5 w-2.5" />
+              {memoryCount}
             </Badge>
-          </div>
-        </CardContent>
-      </Card>
+          }
+        />
+      </Section>
 
-      {/* Backup & Restore */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-muted p-2">
-              <Archive className="h-5 w-5" />
-            </div>
-            <div>
-              <CardTitle>Backup & Restore</CardTitle>
-              <CardDescription>Export and import your memories</CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
-            <div>
-              <p className="text-sm font-medium">Export Backup</p>
-              <p className="text-xs text-muted-foreground">
-                Save all your memories to a compressed file
-              </p>
-            </div>
+      {/* Backup */}
+      <Section icon={Archive} title="Backup">
+        <SettingRow
+          label="Export"
+          description="Save memories to file"
+          action={
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
-              className="gap-2"
+              className="h-6 gap-1 text-xs"
               onClick={handleExport}
               disabled={exportBackup.isPending}
             >
               {exportBackup.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-3 w-3 animate-spin" />
               ) : (
-                <Download className="h-4 w-4" />
+                <Download className="h-3 w-3" />
               )}
               Export
             </Button>
+          }
+        />
+        {exportBackup.error && <ErrorDisplay error={exportBackup.error} />}
+        {exportSuccess && (
+          <div className="flex items-center gap-1.5 rounded bg-green-500/10 px-2 py-1.5 text-[10px] text-green-600">
+            <CheckCircle className="h-3 w-3" />
+            {exportSuccess}
           </div>
+        )}
 
-          {exportBackup.error && <ErrorDisplay error={exportBackup.error} />}
-
-          {exportSuccess && (
-            <div className="flex items-center gap-2 rounded-lg bg-green-500/10 p-3 text-sm text-green-600">
-              <CheckCircle className="h-4 w-4" />
-              {exportSuccess}
-            </div>
-          )}
-
-          <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
-            <div>
-              <p className="text-sm font-medium">Import Backup</p>
-              <p className="text-xs text-muted-foreground">
-                Restore memories from a backup file
-              </p>
-            </div>
+        <SettingRow
+          label="Import"
+          description="Restore from backup"
+          action={
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
-              className="gap-2"
+              className="h-6 gap-1 text-xs"
               onClick={handleImport}
               disabled={importBackup.isPending}
             >
               {importBackup.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-3 w-3 animate-spin" />
               ) : (
-                <Upload className="h-4 w-4" />
+                <Upload className="h-3 w-3" />
               )}
               Import
             </Button>
+          }
+        />
+        {importBackup.error && <ErrorDisplay error={importBackup.error} />}
+        {importSuccess && (
+          <div className="flex items-center gap-1.5 rounded bg-green-500/10 px-2 py-1.5 text-[10px] text-green-600">
+            <CheckCircle className="h-3 w-3" />
+            {importSuccess}
           </div>
+        )}
 
-          {importBackup.error && <ErrorDisplay error={importBackup.error} />}
-
-          {importSuccess && (
-            <div className="flex items-center gap-2 rounded-lg bg-green-500/10 p-3 text-sm text-green-600">
-              <CheckCircle className="h-4 w-4" />
-              {importSuccess}
-            </div>
-          )}
-
-          <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3">
-            <div>
-              <p className="text-sm font-medium">Import Strategy</p>
-              <p className="text-xs text-muted-foreground">
-                How to handle existing data when importing
-              </p>
-            </div>
+        <SettingRow
+          label="Strategy"
+          description="Handle existing data"
+          action={
             <select
               value={importStrategy}
               onChange={(e) =>
                 setImportStrategy(e.target.value as ImportStrategy)
               }
-              className="rounded-md border border-input bg-transparent px-2 py-1 text-sm"
+              className="h-6 rounded bg-muted px-1.5 text-[10px]"
             >
               <option value="skip">Skip existing</option>
-              <option value="merge">Merge (add new only)</option>
-              <option value="replace">Replace all</option>
+              <option value="merge">Merge</option>
+              <option value="replace">Replace</option>
             </select>
-          </div>
-        </CardContent>
-      </Card>
+          }
+        />
+      </Section>
 
       {/* About */}
-      <Card>
-        <CardHeader>
-          <CardTitle>About</CardTitle>
-          <CardDescription>
-            aiii Desktop - Personal Memory Engine
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Version</span>
-            <span>0.1.0</span>
-          </div>
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Build</span>
-            <span>Development</span>
-          </div>
-        </CardContent>
-      </Card>
+      <Section title="About">
+        <div className="flex items-center justify-between px-2 py-1 text-xs">
+          <span className="text-muted-foreground">Version</span>
+          <span>0.1.0</span>
+        </div>
+        <div className="flex items-center justify-between px-2 py-1 text-xs">
+          <span className="text-muted-foreground">Build</span>
+          <span>Development</span>
+        </div>
+      </Section>
 
-      {/* Dialogs */}
       <ChangePassphraseDialog
         open={showChangePassphrase}
         onOpenChange={setShowChangePassphrase}
       />
+    </div>
+  )
+}
+
+interface SectionProps {
+  icon?: React.ComponentType<{ className?: string }>
+  title: string
+  badge?: React.ReactNode
+  children: React.ReactNode
+}
+
+function Section({
+  icon: Icon,
+  title,
+  badge,
+  children,
+}: SectionProps): React.ReactElement {
+  return (
+    <section className="rounded-md bg-card">
+      <div className="flex items-center justify-between px-3 py-2">
+        <div className="flex items-center gap-2">
+          {Icon && <Icon className="h-3.5 w-3.5 text-muted-foreground" />}
+          <h3 className="text-xs font-medium">{title}</h3>
+        </div>
+        {badge}
+      </div>
+      <div className="space-y-0.5 px-3 pb-2">{children}</div>
+    </section>
+  )
+}
+
+interface SettingRowProps {
+  label: string
+  description: string
+  action: React.ReactNode
+}
+
+function SettingRow({
+  label,
+  description,
+  action,
+}: SettingRowProps): React.ReactElement {
+  return (
+    <div className="flex items-center justify-between rounded bg-muted/50 px-2 py-1.5">
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-medium">{label}</p>
+        <p className="truncate text-[10px] text-muted-foreground">
+          {description}
+        </p>
+      </div>
+      <div className="ml-2 shrink-0">{action}</div>
     </div>
   )
 }

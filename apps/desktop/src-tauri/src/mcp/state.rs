@@ -9,7 +9,10 @@ use tokio::sync::{mpsc, RwLock};
 use crate::encryption::VaultState;
 use crate::state::DatabaseState;
 
-use super::transport::run_stdio_server;
+use super::transport::{run_http_server, run_stdio_server};
+
+/// Default port for HTTP transport
+const DEFAULT_HTTP_PORT: u16 = 3333;
 
 /// Server status information
 #[derive(Debug, Clone, serde::Serialize)]
@@ -77,11 +80,79 @@ impl McpServerState {
         self.vault.is_unlocked()
     }
 
-    /// Start the MCP server with stdio transport
+    /// Start the MCP server with HTTP transport (default)
     ///
     /// # Returns
     /// Ok(()) if the server started successfully, Err with message otherwise
     pub async fn start(&self) -> Result<(), String> {
+        self.start_http(None).await
+    }
+
+    /// Start the MCP server with HTTP transport on a specific port
+    ///
+    /// # Arguments
+    /// * `port` - Optional port number (defaults to 3333)
+    ///
+    /// # Returns
+    /// Ok(()) if the server started successfully, Err with message otherwise
+    pub async fn start_http(&self, port: Option<u16>) -> Result<(), String> {
+        // Check if already running
+        if *self.running.read().await {
+            return Err("MCP server is already running".to_string());
+        }
+
+        // Check vault is unlocked
+        if !self.vault.is_unlocked() {
+            return Err(
+                "Cannot start MCP server: vault is locked. Please unlock it first.".to_string(),
+            );
+        }
+
+        let port = port.unwrap_or(DEFAULT_HTTP_PORT);
+
+        // Create shutdown channel
+        let (shutdown_tx, shutdown_rx) = mpsc::channel::<()>(1);
+
+        // Store shutdown sender
+        *self.shutdown_tx.write().await = Some(shutdown_tx);
+
+        // Update state
+        *self.running.write().await = true;
+        *self.port.write().await = Some(port);
+        *self.transport.write().await = "http".to_string();
+
+        // Clone state refs for the spawned task
+        let running = self.running.clone();
+        let shutdown_tx_ref = self.shutdown_tx.clone();
+        let port_ref = self.port.clone();
+        let db = self.db.clone();
+        let vault = self.vault.clone();
+
+        // Spawn the server task
+        tokio::spawn(async move {
+            let result = run_http_server(db, vault, port, shutdown_rx).await;
+
+            // Update state when server stops
+            *running.write().await = false;
+            *shutdown_tx_ref.write().await = None;
+            *port_ref.write().await = None;
+
+            if let Err(e) = result {
+                eprintln!("[aiii-mcp] Server error: {e}");
+            }
+        });
+
+        Ok(())
+    }
+
+    /// Start the MCP server with stdio transport
+    ///
+    /// Note: stdio transport requires a client to spawn the process.
+    /// This method is primarily for Claude Desktop integration.
+    ///
+    /// # Returns
+    /// Ok(()) if the server started successfully, Err with message otherwise
+    pub async fn start_stdio(&self) -> Result<(), String> {
         // Check if already running
         if *self.running.read().await {
             return Err("MCP server is already running".to_string());

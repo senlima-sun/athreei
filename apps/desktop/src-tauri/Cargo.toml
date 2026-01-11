@@ -28,9 +28,14 @@ anyhow = "1.0"
 nanoid = "0.4"
 
 # MCP SDK
-rmcp = { version = "0.12", features = ["server", "macros", "transport-io"] }
+rmcp = { version = "0.12", features = ["server", "macros", "transport-io", "transport-streamable-http-server"] }
 async-trait = "0.1"
 schemars = "1.0"
+
+# HTTP server for SSE transport
+axum = "0.7"
+tower = "0.5"
+tower-http = { version = "0.6", features = ["cors"] }
 
 # HTTP client for sync
 reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-features = false }

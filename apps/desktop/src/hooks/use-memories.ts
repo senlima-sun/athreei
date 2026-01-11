@@ -5,11 +5,14 @@ import type { UpdateMemoryInput } from "@/lib/api"
 
 /**
  * Query memories with optional space filter and pagination
+ *
+ * Polls every 5 seconds to pick up memories created via MCP
  */
 export function useMemories(spaceId?: string, limit?: number, offset?: number) {
   return useQuery({
     queryKey: ["memories", { spaceId, limit, offset }],
     queryFn: () => api.listMemories(spaceId, limit, offset),
+    refetchInterval: 5000,
   })
 }
 
@@ -26,11 +29,14 @@ export function useMemory(id: string) {
 
 /**
  * Query total memory count with optional space filter
+ *
+ * Polls every 5 seconds to pick up memories created via MCP
  */
 export function useMemoryCount(spaceId?: string) {
   return useQuery({
     queryKey: ["memories", "count", spaceId],
     queryFn: () => api.countMemories(spaceId),
+    refetchInterval: 5000,
   })
 }
 

@@ -38,6 +38,17 @@ impl VaultState {
         }
     }
 
+    /// Set the salt on an existing vault state
+    ///
+    /// Use this to set the salt loaded from storage before unlocking.
+    pub fn set_salt(&self, salt: [u8; SALT_LENGTH]) -> Result<(), VaultError> {
+        let mut salt_guard = self.salt.write().map_err(|_| {
+            VaultError::KeyDerivationFailed("Failed to acquire salt write lock".to_string())
+        })?;
+        *salt_guard = Some(salt);
+        Ok(())
+    }
+
     /// Unlock the vault with a passphrase
     ///
     /// If no salt exists, a new one will be generated. This is the case
@@ -322,6 +333,27 @@ mod tests {
         let state = VaultState::with_salt(salt);
 
         assert_eq!(state.get_salt(), Some(salt));
+    }
+
+    #[test]
+    fn test_set_salt_updates_salt() {
+        let state = VaultState::new();
+        assert!(state.get_salt().is_none());
+
+        let salt = [42u8; SALT_LENGTH];
+        state.set_salt(salt).unwrap();
+
+        assert_eq!(state.get_salt(), Some(salt));
+    }
+
+    #[test]
+    fn test_set_salt_then_unlock_uses_provided_salt() {
+        let state = VaultState::new();
+        let salt = [42u8; SALT_LENGTH];
+        state.set_salt(salt).unwrap();
+
+        let returned_salt = state.unlock("test-passphrase").unwrap();
+        assert_eq!(returned_salt, salt);
     }
 
     #[test]

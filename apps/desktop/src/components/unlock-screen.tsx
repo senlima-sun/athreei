@@ -1,13 +1,6 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { useVaultUnlock, useVaultSetup } from "@/hooks"
 import { Lock, Eye, EyeOff, Shield, AlertCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -49,160 +42,140 @@ export function UnlockScreen({
 
   return (
     <div className="dark flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-4 rounded-full bg-primary/10 p-4">
+      <div className="w-full max-w-xs">
+        <div className="mb-6 text-center">
+          <div className="mx-auto mb-3 inline-flex rounded-lg bg-card p-3">
             {isFirstTime ? (
-              <Shield className="h-8 w-8 text-primary" />
+              <Shield className="h-5 w-5 text-foreground" />
             ) : (
-              <Lock className="h-8 w-8 text-primary" />
+              <Lock className="h-5 w-5 text-foreground" />
             )}
           </div>
-          <CardTitle className="text-2xl">
-            {isFirstTime ? "Set Up Your Vault" : "Unlock Your Vault"}
-          </CardTitle>
-          <CardDescription>
+          <h1 className="text-sm font-medium">
+            {isFirstTime ? "Set Up Vault" : "Unlock Vault"}
+          </h1>
+          <p className="mt-1 text-[11px] text-muted-foreground">
             {isFirstTime
-              ? "Create a passphrase to encrypt your memories. This passphrase never leaves your device."
-              : "Enter your passphrase to access your encrypted memories."}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Passphrase input */}
-            <div className="space-y-2">
-              <label
-                htmlFor="passphrase"
-                className="text-sm font-medium text-foreground"
+              ? "Create a passphrase to encrypt your memories"
+              : "Enter passphrase to access memories"}
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <div className="space-y-1.5">
+            <label htmlFor="passphrase" className="text-xs font-medium">
+              Passphrase
+            </label>
+            <div className="relative">
+              <Input
+                id="passphrase"
+                type={showPassphrase ? "text" : "password"}
+                value={passphrase}
+                onChange={(e) => setPassphrase(e.target.value)}
+                placeholder={isFirstTime ? "Create passphrase" : "Enter passphrase"}
+                autoFocus
+                disabled={isLoading}
+                className="h-8 pr-8 text-xs"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassphrase(!showPassphrase)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                tabIndex={-1}
               >
-                Passphrase
+                {showPassphrase ? (
+                  <EyeOff className="h-3.5 w-3.5" />
+                ) : (
+                  <Eye className="h-3.5 w-3.5" />
+                )}
+              </button>
+            </div>
+          </div>
+
+          {isFirstTime && (
+            <div className="space-y-1.5">
+              <label htmlFor="confirm" className="text-xs font-medium">
+                Confirm
               </label>
               <div className="relative">
                 <Input
-                  id="passphrase"
-                  type={showPassphrase ? "text" : "password"}
-                  value={passphrase}
-                  onChange={(e) => setPassphrase(e.target.value)}
-                  placeholder={
-                    isFirstTime
-                      ? "Create a strong passphrase"
-                      : "Enter passphrase"
-                  }
-                  autoFocus
+                  id="confirm"
+                  type={showConfirm ? "text" : "password"}
+                  value={confirmPassphrase}
+                  onChange={(e) => setConfirmPassphrase(e.target.value)}
+                  placeholder="Confirm passphrase"
                   disabled={isLoading}
-                  className="pr-10"
+                  className="h-8 pr-8 text-xs"
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassphrase(!showPassphrase)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  onClick={() => setShowConfirm(!showConfirm)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   tabIndex={-1}
                 >
-                  {showPassphrase ? (
-                    <EyeOff className="h-4 w-4" />
+                  {showConfirm ? (
+                    <EyeOff className="h-3.5 w-3.5" />
                   ) : (
-                    <Eye className="h-4 w-4" />
+                    <Eye className="h-3.5 w-3.5" />
                   )}
                 </button>
               </div>
-            </div>
-
-            {/* Confirm passphrase (first time only) */}
-            {isFirstTime && (
-              <div className="space-y-2">
-                <label
-                  htmlFor="confirm"
-                  className="text-sm font-medium text-foreground"
+              {passphrase.length > 0 && confirmPassphrase.length > 0 && (
+                <p
+                  className={cn(
+                    "text-[10px]",
+                    passphrase === confirmPassphrase
+                      ? "text-green-500"
+                      : "text-destructive"
+                  )}
                 >
-                  Confirm Passphrase
-                </label>
-                <div className="relative">
-                  <Input
-                    id="confirm"
-                    type={showConfirm ? "text" : "password"}
-                    value={confirmPassphrase}
-                    onChange={(e) => setConfirmPassphrase(e.target.value)}
-                    placeholder="Confirm your passphrase"
-                    disabled={isLoading}
-                    className="pr-10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirm(!showConfirm)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    tabIndex={-1}
-                  >
-                    {showConfirm ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </button>
-                </div>
-                {passphrase.length > 0 && confirmPassphrase.length > 0 && (
-                  <p
-                    className={cn(
-                      "text-xs",
-                      passphrase === confirmPassphrase
-                        ? "text-green-500"
-                        : "text-destructive"
-                    )}
-                  >
-                    {passphrase === confirmPassphrase
-                      ? "Passphrases match"
-                      : "Passphrases do not match"}
-                  </p>
-                )}
-              </div>
-            )}
-
-            {/* Passphrase requirements (first time only) */}
-            {isFirstTime && (
-              <div className="rounded-lg bg-muted/50 p-3">
-                <p className="mb-2 text-xs font-medium text-muted-foreground">
-                  Requirements:
+                  {passphrase === confirmPassphrase ? "Match" : "No match"}
                 </p>
-                <ul className="space-y-1 text-xs text-muted-foreground">
-                  <li
-                    className={cn(passphrase.length >= 8 && "text-green-500")}
-                  >
-                    {passphrase.length >= 8 ? "✓" : "○"} At least 8 characters
-                  </li>
-                </ul>
-              </div>
-            )}
+              )}
+            </div>
+          )}
 
-            {/* Error message */}
-            {error && (
-              <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
-                <AlertCircle className="h-4 w-4 shrink-0" />
-                <span>
-                  {error instanceof Error
-                    ? error.message
-                    : "An error occurred. Please try again."}
-                </span>
-              </div>
-            )}
+          {isFirstTime && (
+            <div className="rounded bg-card px-2 py-1.5">
+              <p
+                className={cn(
+                  "text-[10px]",
+                  passphrase.length >= 8
+                    ? "text-green-500"
+                    : "text-muted-foreground"
+                )}
+              >
+                {passphrase.length >= 8 ? "✓" : "○"} At least 8 characters
+              </p>
+            </div>
+          )}
 
-            {/* Submit button */}
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={!isValid || isLoading}
-              loading={isLoading}
-            >
-              {isFirstTime ? "Create Vault" : "Unlock"}
-            </Button>
-          </form>
+          {error && (
+            <div className="flex items-center gap-1.5 rounded bg-destructive/10 px-2 py-1.5 text-[10px] text-destructive">
+              <AlertCircle className="h-3 w-3 shrink-0" />
+              <span>
+                {error instanceof Error ? error.message : "Error occurred"}
+              </span>
+            </div>
+          )}
 
-          {/* Security note */}
-          <p className="mt-4 text-center text-xs text-muted-foreground">
-            {isFirstTime
-              ? "Your passphrase is used to derive an encryption key locally. We never store or transmit your passphrase."
-              : "Your memories are encrypted with AES-256-GCM and only accessible with your passphrase."}
-          </p>
-        </CardContent>
-      </Card>
+          <Button
+            type="submit"
+            size="sm"
+            className="h-8 w-full text-xs"
+            disabled={!isValid || isLoading}
+            loading={isLoading}
+          >
+            {isFirstTime ? "Create Vault" : "Unlock"}
+          </Button>
+        </form>
+
+        <p className="mt-4 text-center text-[10px] text-muted-foreground">
+          {isFirstTime
+            ? "Passphrase never leaves your device"
+            : "Encrypted with AES-256-GCM"}
+        </p>
+      </div>
     </div>
   )
 }

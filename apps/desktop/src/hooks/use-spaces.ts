@@ -3,11 +3,14 @@ import * as api from "@/lib/api"
 
 /**
  * Query all spaces
+ *
+ * Polls every 5 seconds to pick up changes from MCP
  */
 export function useSpaces() {
   return useQuery({
     queryKey: ["spaces"],
     queryFn: api.listSpaces,
+    refetchInterval: 5000,
   })
 }
 
