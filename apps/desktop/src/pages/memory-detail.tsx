@@ -12,9 +12,9 @@ import {
   Tag,
 } from "lucide-react"
 import { useMemory, useDeleteMemory, useSpaces, useUpdateMemory } from "@/hooks"
-import { useLayoutHeader } from "@/components/layout"
-import { PageLoading } from "@/components/loading-spinner"
-import { ErrorDisplay } from "@/components/error-display"
+import { useLayoutHeader } from "@/components/layout/layout"
+import { PageLoading } from "@/components/common/loading-spinner"
+import { ErrorDisplay } from "@/components/common/error-display"
 import { MemoryContentViewer, RichTextEditor } from "@/components/editor"
 
 interface EditableTitleProps {

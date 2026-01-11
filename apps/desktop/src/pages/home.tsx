@@ -13,25 +13,19 @@ import {
   Folder,
 } from "lucide-react"
 import { useMemories, useStats } from "@/hooks"
-import { PageLoading } from "@/components/loading-spinner"
-import { ErrorDisplay } from "@/components/error-display"
-import { EmptyState } from "@/components/empty-state"
+import { PageLoading } from "@/components/common/loading-spinner"
+import { ErrorDisplay } from "@/components/common/error-display"
+import { EmptyState } from "@/components/common/empty-state"
 import { StatsCard } from "@/components/stats-card"
 import { ActivityChart } from "@/components/activity-chart"
 import type { Memory } from "@/lib/types"
 
-/**
- * Get the start of today as a Unix timestamp (seconds)
- */
 function getTodayStart(): number {
   const now = new Date()
   now.setHours(0, 0, 0, 0)
   return Math.floor(now.getTime() / 1000)
 }
 
-/**
- * Group memories by hour
- */
 function groupMemoriesByHour(memories: Memory[]): Map<number, Memory[]> {
   const groups = new Map<number, Memory[]>()
 
@@ -45,13 +39,9 @@ function groupMemoriesByHour(memories: Memory[]): Map<number, Memory[]> {
     groups.get(hour)!.push(memory)
   }
 
-  // Sort groups by hour (descending - most recent first)
   return new Map([...groups.entries()].sort(([a], [b]) => b - a))
 }
 
-/**
- * Format hour for display
- */
 function formatHour(hour: number): string {
   const ampm = hour >= 12 ? "PM" : "AM"
   const displayHour = hour % 12 || 12
@@ -64,24 +54,21 @@ export function HomePage(): React.ReactElement {
     isLoading,
     error,
     refetch,
-  } = useMemories(undefined, 100) // Fetch recent 100 memories
+  } = useMemories(undefined, 100)
 
   const { stats, weeklyData, isLoading: isLoadingStats } = useStats()
 
-  // Filter to today's memories
   const todayStart = useMemo(() => getTodayStart(), [])
   const todayMemories = useMemo(
     () => memories.filter((m) => m.created_at >= todayStart),
     [memories, todayStart]
   )
 
-  // Group by hour
   const groupedMemories = useMemo(
     () => groupMemoriesByHour(todayMemories),
     [todayMemories]
   )
 
-  // Recent activity (all memories, not just today)
   const recentMemories = useMemo(() => memories.slice(0, 5), [memories])
 
   return (
@@ -117,11 +104,7 @@ export function HomePage(): React.ReactElement {
         />
         <StatsCard
           icon={Folder}
-          value={
-            isLoadingStats
-              ? "-"
-              : (stats.mostActiveSpace?.name ?? "—")
-          }
+          value={isLoadingStats ? "-" : (stats.mostActiveSpace?.name ?? "—")}
           label="Active"
         />
       </div>

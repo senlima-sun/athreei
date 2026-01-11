@@ -9,9 +9,9 @@ import {
   useDeleteSpace,
   useSpaceMemoryCount,
 } from "@/hooks"
-import { PageLoading } from "@/components/loading-spinner"
-import { ErrorDisplay } from "@/components/error-display"
-import { EmptyState } from "@/components/empty-state"
+import { PageLoading } from "@/components/common/loading-spinner"
+import { ErrorDisplay } from "@/components/common/error-display"
+import { EmptyState } from "@/components/common/empty-state"
 import type { Space } from "@/lib/types"
 
 const EMOJI_OPTIONS = [
@@ -58,9 +58,7 @@ export function SpacesPage(): React.ReactElement {
       </div>
 
       {/* Inline Create Form */}
-      {isCreating && (
-        <CreateSpaceInline onClose={() => setIsCreating(false)} />
-      )}
+      {isCreating && <CreateSpaceInline onClose={() => setIsCreating(false)} />}
 
       {/* Content */}
       {isLoading ? (
@@ -161,12 +159,10 @@ function CreateSpaceInline({
     e.preventDefault()
     if (!name.trim()) return
 
-    try {
-      await createSpace.mutateAsync({ name: name.trim(), icon })
-      onClose()
-    } catch {
-      // Error handled by React Query
-    }
+    await createSpace
+      .mutateAsync({ name: name.trim(), icon })
+      .then(() => onClose())
+      .catch(() => {})
   }
 
   return (
