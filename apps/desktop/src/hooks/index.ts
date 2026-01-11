@@ -1,4 +1,3 @@
-// Vault hooks
 export {
   useVaultStatus,
   useVaultIsSetup,
@@ -8,7 +7,6 @@ export {
   useVaultChangePassphrase,
 } from "./use-vault"
 
-// Spaces hooks
 export {
   useSpaces,
   useSpace,
@@ -18,7 +16,6 @@ export {
   useDeleteSpace,
 } from "./use-spaces"
 
-// Memories hooks
 export {
   useMemories,
   useMemory,
@@ -31,10 +28,8 @@ export {
   useUpdateMemory,
 } from "./use-memories"
 
-// MCP hooks
 export { useMcpStatus, useMcpStart, useMcpStop } from "./use-mcp"
 
-// Utility hooks
 export { useDebounce } from "./use-debounce"
 export { useSearch } from "./use-search"
 export {
@@ -44,10 +39,8 @@ export {
   type DateRange,
 } from "./use-memory-filters"
 
-// Stats hooks
 export { useStats } from "./use-stats"
 
-// Sync hooks
 export {
   useSyncStatus,
   useSyncConfig,
@@ -60,10 +53,8 @@ export {
   useSyncSetConfig,
 } from "./use-sync"
 
-// Bulk operations hooks
 export { useBulkOperations } from "./use-bulk-operations"
 
-// Settings hooks
 export {
   useSettings,
   useDatabasePath,
@@ -82,5 +73,4 @@ export {
   DATA_RETENTION_OPTIONS,
 } from "./use-settings"
 
-// Backup hooks
 export { useExportBackup, useImportBackup, useBackupInfo } from "./use-backup"

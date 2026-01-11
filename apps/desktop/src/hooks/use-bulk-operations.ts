@@ -2,14 +2,10 @@ import { useState, useCallback } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import * as api from "@/lib/api"
 
-/**
- * Hook for managing bulk memory operations
- */
 export function useBulkOperations() {
   const queryClient = useQueryClient()
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
 
-  // Selection handlers
   const selectMemory = useCallback((id: string) => {
     setSelectedIds((prev) => new Set(prev).add(id))
   }, [])
@@ -47,7 +43,6 @@ export function useBulkOperations() {
     [selectedIds]
   )
 
-  // Bulk delete mutation
   const deleteMemories = useMutation({
     mutationFn: (ids: string[]) => api.deleteMemories(ids),
     onSuccess: () => {
@@ -57,7 +52,6 @@ export function useBulkOperations() {
     },
   })
 
-  // Bulk move mutation
   const moveMemories = useMutation({
     mutationFn: ({
       ids,
@@ -73,7 +67,6 @@ export function useBulkOperations() {
     },
   })
 
-  // Bulk tag mutation
   const tagMemories = useMutation({
     mutationFn: ({ ids, tags }: { ids: string[]; tags: string[] }) =>
       api.tagMemories(ids, tags),
@@ -84,7 +77,6 @@ export function useBulkOperations() {
     },
   })
 
-  // Bulk untag mutation
   const untagMemories = useMutation({
     mutationFn: ({ ids, tags }: { ids: string[]; tags: string[] }) =>
       api.untagMemories(ids, tags),
@@ -95,7 +87,6 @@ export function useBulkOperations() {
     },
   })
 
-  // Action handlers
   const handleBulkDelete = useCallback(async () => {
     if (selectedIds.size === 0) return
     await deleteMemories.mutateAsync(Array.from(selectedIds))
@@ -135,12 +126,10 @@ export function useBulkOperations() {
   )
 
   return {
-    // Selection state
     selectedIds,
     selectedCount: selectedIds.size,
     hasSelection: selectedIds.size > 0,
 
-    // Selection actions
     selectMemory,
     deselectMemory,
     toggleSelection,
@@ -148,13 +137,11 @@ export function useBulkOperations() {
     clearSelection,
     isSelected,
 
-    // Bulk operations
     handleBulkDelete,
     handleBulkMove,
     handleBulkTag,
     handleBulkUntag,
 
-    // Operation states
     isDeleting: deleteMemories.isPending,
     isMoving: moveMemories.isPending,
     isTagging: tagMemories.isPending,
@@ -165,27 +152,9 @@ export function useBulkOperations() {
       tagMemories.isPending ||
       untagMemories.isPending,
 
-    // Errors
     deleteError: deleteMemories.error,
     moveError: moveMemories.error,
     tagError: tagMemories.error,
     untagError: untagMemories.error,
   }
-}
-
-/**
- * Hook for updating a single memory
- */
-export function useUpdateMemory() {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: api.updateMemory,
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["memories"] })
-      queryClient.invalidateQueries({
-        queryKey: ["memories", "detail", variables.id],
-      })
-    },
-  })
 }

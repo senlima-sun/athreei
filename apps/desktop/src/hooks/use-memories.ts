@@ -3,11 +3,6 @@ import * as api from "@/lib/api"
 import type { CreateMemoryInput } from "@/lib/types"
 import type { UpdateMemoryInput } from "@/lib/api"
 
-/**
- * Query memories with optional space filter and pagination
- *
- * Polls every 5 seconds to pick up memories created via MCP
- */
 export function useMemories(spaceId?: string, limit?: number, offset?: number) {
   return useQuery({
     queryKey: ["memories", { spaceId, limit, offset }],
@@ -16,9 +11,6 @@ export function useMemories(spaceId?: string, limit?: number, offset?: number) {
   })
 }
 
-/**
- * Query a single memory by ID
- */
 export function useMemory(id: string) {
   return useQuery({
     queryKey: ["memories", "detail", id],
@@ -27,11 +19,6 @@ export function useMemory(id: string) {
   })
 }
 
-/**
- * Query total memory count with optional space filter
- *
- * Polls every 5 seconds to pick up memories created via MCP
- */
 export function useMemoryCount(spaceId?: string) {
   return useQuery({
     queryKey: ["memories", "count", spaceId],
@@ -40,9 +27,6 @@ export function useMemoryCount(spaceId?: string) {
   })
 }
 
-/**
- * Mutation to create a new memory
- */
 export function useCreateMemory() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -54,9 +38,6 @@ export function useCreateMemory() {
   })
 }
 
-/**
- * Mutation to delete a memory
- */
 export function useDeleteMemory() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -68,9 +49,6 @@ export function useDeleteMemory() {
   })
 }
 
-/**
- * Mutation to update memory tags
- */
 export function useUpdateMemoryTags() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -85,9 +63,6 @@ export function useUpdateMemoryTags() {
   })
 }
 
-/**
- * Search memories using full-text search
- */
 export function useSearchMemories(query: string, spaceId?: string) {
   return useQuery({
     queryKey: ["memories", "search", query, spaceId],
@@ -96,9 +71,6 @@ export function useSearchMemories(query: string, spaceId?: string) {
   })
 }
 
-/**
- * Query all tags with usage counts
- */
 export function useTags() {
   return useQuery({
     queryKey: ["tags"],
@@ -106,9 +78,6 @@ export function useTags() {
   })
 }
 
-/**
- * Mutation to update a memory
- */
 export function useUpdateMemory() {
   const queryClient = useQueryClient()
   return useMutation({
