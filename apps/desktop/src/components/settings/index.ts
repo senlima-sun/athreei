@@ -1,0 +1,7 @@
+export { Section } from "./section"
+export { SettingRow } from "./setting-row"
+export { VaultSection } from "./vault-section"
+export { McpSection } from "./mcp-section"
+export { SyncSection } from "./sync-section"
+export { BackupSection } from "./backup-section"
+export { AboutSection } from "./about-section"
