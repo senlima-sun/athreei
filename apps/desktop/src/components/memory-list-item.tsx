@@ -1,15 +1,55 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react"
 import { Badge } from "@/components/ui/badge"
-import { Globe, Trash2 } from "lucide-react"
+import {
+  Globe,
+  Trash2,
+  MessageSquare,
+  Bot,
+  FileText,
+  ChevronDown,
+  Pencil,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { EditableTitle } from "@/components/common"
-import { RichTextEditor } from "@/components/editor"
+import { RichTextEditor, MemoryContentViewer } from "@/components/editor"
 import { useUpdateMemory, useDeleteMemory } from "@/hooks"
 import { cn } from "@/lib/utils"
 import type { Memory } from "@/lib/types"
 
 interface MemoryListItemProps {
   memory: Memory
+}
+
+type ViewState = "collapsed" | "expanded" | "editing"
+
+const SOURCE_CONFIG: Record<
+  string,
+  { icon: typeof Globe; color: string; bg: string }
+> = {
+  browser: {
+    icon: Globe,
+    color: "text-blue-500",
+    bg: "bg-blue-500/10",
+  },
+  claude: {
+    icon: Bot,
+    color: "text-amber-500",
+    bg: "bg-amber-500/10",
+  },
+  chat: {
+    icon: MessageSquare,
+    color: "text-emerald-500",
+    bg: "bg-emerald-500/10",
+  },
+  default: {
+    icon: FileText,
+    color: "text-muted-foreground",
+    bg: "bg-muted/50",
+  },
+}
+
+function getSourceConfig(source: string) {
+  return SOURCE_CONFIG[source.toLowerCase()] ?? SOURCE_CONFIG.default
 }
 
 function stripMarkdown(text: string): string {
@@ -32,7 +72,7 @@ function stripMarkdown(text: string): string {
 export function MemoryListItem({
   memory,
 }: MemoryListItemProps): React.ReactElement {
-  const [isExpanded, setIsExpanded] = useState(false)
+  const [viewState, setViewState] = useState<ViewState>("collapsed")
   const [content, setContent] = useState(memory.content ?? "")
   const [confirmDelete, setConfirmDelete] = useState(false)
 
@@ -110,6 +150,31 @@ export function MemoryListItem({
     await deleteMemory.mutateAsync(memory.id)
   }
 
+  const handleRowClick = (): void => {
+    if (viewState === "collapsed") {
+      setViewState("expanded")
+    }
+  }
+
+  const handleToggleExpand = (e: React.MouseEvent): void => {
+    e.stopPropagation()
+    if (viewState === "collapsed") {
+      setViewState("expanded")
+    } else {
+      setViewState("collapsed")
+    }
+  }
+
+  const handleContentClick = (): void => {
+    if (viewState === "expanded") {
+      setViewState("editing")
+    }
+  }
+
+  const handleEditorEscape = (): void => {
+    setViewState("expanded")
+  }
+
   const time = new Date(memory.created_at * 1000)
   const timeString = time.toLocaleTimeString([], {
     hour: "2-digit",
@@ -117,91 +182,174 @@ export function MemoryListItem({
   })
 
   const previewText = useMemo(() => {
-    const parts: string[] = []
-    if (memory.title) parts.push(memory.title)
-    if (memory.summary) parts.push(memory.summary)
-    if (content) parts.push(stripMarkdown(content))
-    return parts.join(" — ") || null
+    if (memory.title) return memory.title
+    if (memory.summary) return memory.summary
+    if (content) return stripMarkdown(content).slice(0, 60)
+    return null
   }, [memory.title, memory.summary, content])
+
+  const sourceConfig = getSourceConfig(memory.source)
+  const SourceIcon = sourceConfig.icon
+
+  const isExpanded = viewState !== "collapsed"
+  const isEditing = viewState === "editing"
 
   return (
     <div
       className={cn(
-        "group py-1.5 px-2 transition-colors cursor-pointer",
-        isExpanded && "bg-muted/30"
+        "group rounded-lg px-3 py-2.5 transition-all duration-150",
+        isExpanded
+          ? "bg-card shadow-sm ring-1 ring-border/50"
+          : "cursor-pointer hover:bg-accent/40"
       )}
-      onClick={() => !isExpanded && setIsExpanded(true)}
+      onClick={handleRowClick}
     >
-      <div className="flex items-center gap-1.5 min-w-0">
-        <Globe className="h-3 w-3 shrink-0 text-muted-foreground/50" />
-
-        <span className="shrink-0 text-[9px] tabular-nums text-muted-foreground/60">
-          {timeString}
-        </span>
-
-        <Badge variant="outline" className="shrink-0 h-4 px-1 text-[9px]">
-          {memory.source}
-        </Badge>
-
-        {previewText ? (
-          <span className="flex-1 min-w-0 truncate text-[11px] text-foreground/80">
-            {previewText}
-          </span>
-        ) : (
-          <span className="flex-1 min-w-0 truncate text-[11px] italic text-muted-foreground/40">
-            No content
-          </span>
-        )}
-
-        <Button
-          variant={confirmDelete ? "destructive" : "ghost"}
-          size="sm"
-          className="h-4 w-4 shrink-0 p-0 opacity-0 transition-opacity group-hover:opacity-100"
-          onClick={(e) => {
-            e.stopPropagation()
-            if (confirmDelete) {
-              handleDelete()
-            } else {
-              setConfirmDelete(true)
-            }
-          }}
-          onMouseLeave={() => setConfirmDelete(false)}
+      <div className="flex items-center gap-2.5">
+        <div
+          className={cn(
+            "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-transform duration-150",
+            !isExpanded && "group-hover:scale-105",
+            sourceConfig.bg
+          )}
         >
-          <Trash2 className="h-2.5 w-2.5" />
-        </Button>
+          <SourceIcon className={cn("h-4 w-4", sourceConfig.color)} />
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            {previewText ? (
+              <span className="flex-1 truncate text-[13px] font-medium text-foreground/90">
+                {previewText}
+              </span>
+            ) : (
+              <span className="flex-1 truncate text-[13px] italic text-muted-foreground/50">
+                No content
+              </span>
+            )}
+          </div>
+          <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
+            <span className="tabular-nums">{timeString}</span>
+            <span className="text-border">·</span>
+            <span className="capitalize">{memory.source}</span>
+            {memory.tags.length > 0 && (
+              <>
+                <span className="text-border">·</span>
+                <span className="truncate">
+                  {memory.tags.slice(0, 2).join(", ")}
+                  {memory.tags.length > 2 && ` +${memory.tags.length - 2}`}
+                </span>
+              </>
+            )}
+          </div>
+        </div>
+
+        <div className="flex shrink-0 items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className={cn(
+              "text-muted-foreground/60 transition-all duration-150",
+              !isExpanded && "opacity-0 group-hover:opacity-100"
+            )}
+            onClick={handleToggleExpand}
+          >
+            <ChevronDown
+              className={cn(
+                "h-4 w-4 transition-transform duration-150",
+                isExpanded && "rotate-180"
+              )}
+            />
+          </Button>
+
+          <Button
+            variant={confirmDelete ? "destructive" : "ghost"}
+            size="icon-sm"
+            className={cn(
+              "text-muted-foreground/60 transition-all duration-150",
+              !isExpanded && "opacity-0 group-hover:opacity-100",
+              confirmDelete && "opacity-100"
+            )}
+            onClick={(e) => {
+              e.stopPropagation()
+              if (confirmDelete) {
+                handleDelete()
+              } else {
+                setConfirmDelete(true)
+              }
+            }}
+            onMouseLeave={() => setConfirmDelete(false)}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       {isExpanded && (
-        <div className="mt-1.5 pl-4" onClick={(e) => e.stopPropagation()}>
-          <div className="mb-1.5">
-            <EditableTitle
-              initialValue={memory.title ?? ""}
-              onSave={saveTitle}
-              placeholder="Add title..."
-              className="text-xs font-medium"
-            />
-          </div>
-          <RichTextEditor
-            value={content}
-            onChange={handleContentChange}
-            placeholder="Write something..."
-            variant="borderless"
-            showToolbar
-            stickyToolbar
-            onEscape={() => setIsExpanded(false)}
-            onBlur={handleContentBlur}
-          />
-          <div className="flex items-center gap-1 mt-1.5">
-            {memory.tags.map((tag) => (
-              <Badge
-                key={tag}
-                variant="secondary"
-                className="h-4 px-1 text-[9px]"
-              >
-                {tag}
-              </Badge>
-            ))}
-          </div>
+        <div
+          className="mt-3 animate-fade-in border-t border-border/50 pt-3"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {isEditing ? (
+            <>
+              <div className="mb-2">
+                <EditableTitle
+                  initialValue={memory.title ?? ""}
+                  onSave={saveTitle}
+                  placeholder="Add title..."
+                  className="text-sm font-medium"
+                />
+              </div>
+              <RichTextEditor
+                value={content}
+                onChange={handleContentChange}
+                placeholder="Write something..."
+                variant="borderless"
+                showToolbar
+                stickyToolbar
+                onEscape={handleEditorEscape}
+                onBlur={handleContentBlur}
+              />
+            </>
+          ) : (
+            <div
+              className="group/content cursor-pointer rounded-md p-2 transition-colors hover:bg-accent/30"
+              onClick={handleContentClick}
+            >
+              {memory.title && (
+                <h3 className="mb-2 text-sm font-medium text-foreground">
+                  {memory.title}
+                </h3>
+              )}
+              {content ? (
+                <MemoryContentViewer
+                  content={content}
+                  className="text-[13px] leading-relaxed text-foreground/80"
+                />
+              ) : (
+                <p className="text-[13px] italic text-muted-foreground/50">
+                  No content yet. Click to add...
+                </p>
+              )}
+              <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground/50 opacity-0 transition-opacity group-hover/content:opacity-100">
+                <Pencil className="h-3 w-3" />
+                <span>Click to edit</span>
+              </div>
+            </div>
+          )}
+
+          {memory.tags.length > 0 && (
+            <div className="mt-3 flex flex-wrap items-center gap-1.5">
+              {memory.tags.map((tag) => (
+                <Badge
+                  key={tag}
+                  variant="secondary"
+                  className="rounded-md px-2 py-0.5 text-[11px]"
+                >
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -34,6 +34,12 @@
   --color-surface: var(--surface);
   --color-surface-raised: var(--surface-raised);
 
+  /* Brand color tokens */
+  --color-brand: var(--brand);
+  --color-brand-light: var(--brand-light);
+  --color-brand-dark: var(--brand-dark);
+  --color-brand-foreground: var(--brand-foreground);
+
   --radius-sm: calc(var(--radius) - 2px);
   --radius-md: var(--radius);
   --radius-lg: calc(var(--radius) + 2px);
@@ -43,6 +49,10 @@
   --animate-accordion-up: accordion-up 0.2s ease-out;
   --animate-slide-in-from-bottom: slide-in-from-bottom 0.15s ease-out;
   --animate-slide-in-from-top: slide-in-from-top 0.15s ease-out;
+  --animate-fade-in: fade-in 0.2s ease-out;
+  --animate-fade-in-up: fade-in-up 0.3s ease-out;
+  --animate-scale-in: scale-in 0.2s ease-out;
+  --animate-pulse-subtle: pulse-subtle 2s ease-in-out infinite;
 
   @keyframes accordion-down {
     from {
@@ -83,6 +93,47 @@
       opacity: 1;
     }
   }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes scale-in {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes pulse-subtle {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.7;
+    }
+  }
 }
 
 :root {
@@ -109,6 +160,27 @@
 
   --surface: oklch(0.975 0 0);
   --surface-raised: oklch(0.96 0 0);
+
+  /* Dynamic accent color - teal/cyan by default */
+  --accent-h: 175;
+  --accent-s: 0.14;
+  --accent-l: 0.55;
+  --brand: oklch(var(--accent-l) var(--accent-s) var(--accent-h));
+  --brand-light: oklch(0.92 0.04 var(--accent-h));
+  --brand-dark: oklch(0.35 0.12 var(--accent-h));
+  --brand-foreground: oklch(0.98 0 0);
+
+  /* Gradient tokens */
+  --gradient-brand: linear-gradient(
+    135deg,
+    oklch(var(--accent-l) var(--accent-s) var(--accent-h)),
+    oklch(0.6 0.12 calc(var(--accent-h) + 30))
+  );
+  --gradient-subtle: linear-gradient(
+    180deg,
+    oklch(0.98 0 0) 0%,
+    oklch(0.96 0.01 var(--accent-h)) 100%
+  );
 }
 
 .dark {
@@ -134,6 +206,23 @@
 
   --surface: oklch(0.135 0 0);
   --surface-raised: oklch(0.165 0 0);
+
+  /* Dark mode brand adjustments */
+  --brand: oklch(0.65 0.12 var(--accent-h));
+  --brand-light: oklch(0.25 0.04 var(--accent-h));
+  --brand-dark: oklch(0.75 0.1 var(--accent-h));
+  --brand-foreground: oklch(0.12 0 0);
+
+  --gradient-brand: linear-gradient(
+    135deg,
+    oklch(0.55 0.12 var(--accent-h)),
+    oklch(0.65 0.1 calc(var(--accent-h) + 30))
+  );
+  --gradient-subtle: linear-gradient(
+    180deg,
+    oklch(0.13 0 0) 0%,
+    oklch(0.14 0.02 var(--accent-h)) 100%
+  );
 }
 
 @layer base {

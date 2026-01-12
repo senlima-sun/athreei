@@ -66,7 +66,7 @@ export function FilterChips({
       {chipCount > 1 && onClearAll && (
         <button
           onClick={onClearAll}
-          className="text-[10px] text-muted-foreground hover:text-foreground"
+          className="ml-1 rounded-md px-2 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
         >
           Clear all
         </button>
@@ -87,15 +87,15 @@ function FilterChip({
   onRemove,
 }: FilterChipProps): React.ReactElement {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px]">
-      {icon}
-      <span>{label}</span>
+    <span className="group inline-flex items-center gap-1.5 rounded-full border border-brand/20 bg-brand-light px-2.5 py-1 text-[11px] text-brand-dark transition-all duration-150 hover:border-brand/30 hover:shadow-sm">
+      <span className="text-brand">{icon}</span>
+      <span className="font-medium">{label}</span>
       <button
         onClick={onRemove}
-        className="ml-0.5 rounded-full p-0.5 hover:bg-accent"
+        className="ml-0.5 rounded-full p-0.5 text-brand/60 transition-colors hover:bg-brand/10 hover:text-brand"
         aria-label={`Remove ${label} filter`}
       >
-        <X className="h-2.5 w-2.5" />
+        <X className="h-3 w-3" />
       </button>
     </span>
   )
