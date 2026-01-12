@@ -1,88 +1,85 @@
-import { useMemo, useRef, useEffect, useCallback, useState } from "react"
+import { useMemo } from "react"
 import { Clock } from "lucide-react"
-import { format } from "date-fns"
-import {
-  useOldestMemoryDate,
-  useMemoriesByDate,
-  useMemoryCountByDate,
-} from "@/hooks"
-import {
-  PageLoading,
-  LoadingSpinner,
-} from "@/components/common/loading-spinner"
+import { useFilteredMemories } from "@/hooks"
+import { PageLoading } from "@/components/common/loading-spinner"
 import { ErrorDisplay } from "@/components/common/error-display"
 import { EmptyState } from "@/components/common/empty-state"
-import { MemoryListItem } from "@/components/memory-list-item"
-import { DateSlider } from "@/components/date-slider"
+import { VirtualizedMemoryList } from "@/components/virtualized-memory-list"
+import { MemorySearchHeader } from "@/components/memory-search-header"
+import { FilterChips } from "@/components/filter-chips"
 import { useLayoutHeader } from "@/components/layout/layout"
-import type { Memory } from "@/lib/types"
 
 export function HomePage(): React.ReactElement {
-  const [selectedDate, setSelectedDate] = useState(() => new Date())
-
-  const { data: oldestDate } = useOldestMemoryDate()
-  const { data: memoryCount } = useMemoryCountByDate(selectedDate)
-
   const {
-    data,
+    memories,
     isLoading,
     error,
     refetch,
-    fetchNextPage,
     hasNextPage,
+    fetchNextPage,
     isFetchingNextPage,
-  } = useMemoriesByDate(selectedDate)
+
+    searchQuery,
+    isSearchMode,
+    onSearchChange,
+    onTagSelect,
+    recentSearches,
+    onSelectRecent,
+    isSearching,
+
+    dateRange,
+    selectedTags,
+    selectedSource,
+    setDateRange,
+    toggleTag,
+    removeTag,
+    setSource,
+    clearFilters,
+    activeFilterCount,
+    hasActiveFilters,
+    availableSources,
+  } = useFilteredMemories()
 
   const headerConfig = useMemo(
     () => ({
       title: (
-        <DateSlider
-          value={selectedDate}
-          onChange={setSelectedDate}
-          minDate={oldestDate ?? undefined}
-          maxDate={new Date()}
+        <MemorySearchHeader
+          searchQuery={searchQuery}
+          onSearchChange={onSearchChange}
+          onTagSelect={onTagSelect}
+          recentSearches={recentSearches}
+          onSelectRecent={onSelectRecent}
+          isSearching={isSearching}
+          dateRange={dateRange}
+          onDateRangeChange={setDateRange}
+          selectedTags={selectedTags}
+          onTagToggle={toggleTag}
+          selectedSource={selectedSource}
+          onSourceChange={setSource}
+          availableSources={availableSources}
+          activeFilterCount={activeFilterCount}
         />
       ),
     }),
-    [selectedDate, oldestDate]
+    [
+      searchQuery,
+      onSearchChange,
+      onTagSelect,
+      recentSearches,
+      onSelectRecent,
+      isSearching,
+      dateRange,
+      setDateRange,
+      selectedTags,
+      toggleTag,
+      selectedSource,
+      setSource,
+      availableSources,
+      activeFilterCount,
+    ]
   )
 
   useLayoutHeader(headerConfig)
-
-  const loadMoreRef = useRef<HTMLDivElement>(null)
-
-  const handleLoadMore = useCallback(() => {
-    if (hasNextPage && !isFetchingNextPage) {
-      fetchNextPage()
-    }
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage])
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) {
-          handleLoadMore()
-        }
-      },
-      { threshold: 0.1 }
-    )
-
-    const currentRef = loadMoreRef.current
-    if (currentRef) {
-      observer.observe(currentRef)
-    }
-
-    return () => {
-      if (currentRef) {
-        observer.unobserve(currentRef)
-      }
-    }
-  }, [handleLoadMore])
-
-  const memories = useMemo(() => {
-    if (!data?.pages) return []
-    return data.pages.flatMap((page) => page.memories)
-  }, [data])
 
   if (isLoading) {
     return <PageLoading message="Loading memories..." />
@@ -92,41 +89,68 @@ export function HomePage(): React.ReactElement {
     return <ErrorDisplay error={error} onRetry={refetch} />
   }
 
+  const emptyMessage = hasActiveFilters
+    ? "No memories match your filters"
+    : "No memories yet"
+
+  const emptyDescription = hasActiveFilters
+    ? "Try adjusting your search or filters"
+    : "Memories will appear here as you browse"
+
   if (memories.length === 0) {
     return (
-      <EmptyState
-        icon={Clock}
-        title="No memories"
-        description={`No memories found for ${format(selectedDate, "MMMM d, yyyy")}`}
-      />
+      <div className="flex h-full flex-col">
+        {hasActiveFilters && (
+          <FilterChips
+            dateRange={dateRange}
+            onRemoveDateRange={() => setDateRange("all")}
+            selectedTags={selectedTags}
+            onRemoveTag={removeTag}
+            selectedSource={selectedSource}
+            onRemoveSource={() => setSource(null)}
+            onClearAll={clearFilters}
+            className="mb-3 px-1"
+          />
+        )}
+        <EmptyState
+          icon={Clock}
+          title={emptyMessage}
+          description={emptyDescription}
+        />
+      </div>
     )
   }
 
   return (
-    <div>
-      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-background/95 px-3 py-1.5 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <span className="text-xs text-muted-foreground">
-          {format(selectedDate, "EEEE, MMMM d")}
-        </span>
-        <span className="text-[10px] tabular-nums text-muted-foreground">
-          {memoryCount ?? 0} {memoryCount === 1 ? "memory" : "memories"}
-        </span>
-      </div>
-
-      <div className="divide-y divide-border">
-        {memories.map((memory: Memory) => (
-          <MemoryListItem key={memory.id} memory={memory} />
-        ))}
-
-        <div ref={loadMoreRef} className="flex justify-center py-3">
-          {isFetchingNextPage ? (
-            <LoadingSpinner />
-          ) : hasNextPage ? (
-            <span className="text-[10px] text-muted-foreground">
-              Scroll to load more
-            </span>
-          ) : null}
+    <div className="flex h-full flex-col">
+      {hasActiveFilters && (
+        <div className="shrink-0 border-b border-border px-3 py-2">
+          {isSearchMode && (
+            <div className="mb-1.5 text-xs text-muted-foreground">
+              {memories.length} result{memories.length !== 1 ? "s" : ""} for
+              &ldquo;{searchQuery}&rdquo;
+            </div>
+          )}
+          <FilterChips
+            dateRange={dateRange}
+            onRemoveDateRange={() => setDateRange("all")}
+            selectedTags={selectedTags}
+            onRemoveTag={removeTag}
+            selectedSource={selectedSource}
+            onRemoveSource={() => setSource(null)}
+            onClearAll={clearFilters}
+          />
         </div>
+      )}
+
+      <div className="min-h-0 flex-1">
+        <VirtualizedMemoryList
+          memories={memories}
+          onLoadMore={fetchNextPage}
+          hasMore={hasNextPage}
+          isLoading={isFetchingNextPage}
+          showDateGroups={!isSearchMode}
+        />
       </div>
     </div>
   )

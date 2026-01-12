@@ -46,6 +46,9 @@ export {
   type MemoryFilters,
   type DateRange,
 } from "./use-memory-filters"
+export { useFilteredMemories } from "./use-filtered-memories"
+export { useMemoriesByDateRange } from "./use-memories-by-date-range"
+export { useTagSuggestions } from "./use-tag-suggestions"
 
 export { useStats } from "./use-stats"
 
