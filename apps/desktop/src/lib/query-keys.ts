@@ -91,6 +91,16 @@ export const queryKeys = {
     downloaded: ["embedding", "downloaded"] as const,
     config: ["embedding", "config"] as const,
   },
+
+  traces: {
+    all: ["traces"] as const,
+    analytics: (days?: number) => ["traces", "analytics", days] as const,
+    sessions: (limit?: number, offset?: number) =>
+      ["traces", "sessions", limit, offset] as const,
+    session: (sessionId: string) => ["traces", "session", sessionId] as const,
+    sessionTraces: (sessionId: string) =>
+      ["traces", "sessionTraces", sessionId] as const,
+  },
 } as const
 
 export type QueryKeys = typeof queryKeys

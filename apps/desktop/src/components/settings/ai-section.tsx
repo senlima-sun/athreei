@@ -1,4 +1,4 @@
-import { Brain, Download, RefreshCw, Loader2 } from "lucide-react"
+import { Brain, Download, RefreshCw, Loader2, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Section } from "./section"
 import { SettingRow } from "./setting-row"
@@ -8,6 +8,8 @@ import {
   useEmbeddingModelConfig,
   useDownloadEmbeddingModel,
   useBackfillEmbeddings,
+  useTraceAnalytics,
+  useCleanupTraces,
 } from "@/hooks"
 import { useState } from "react"
 
@@ -15,6 +17,7 @@ export function AISection(): React.ReactElement {
   return (
     <Section icon={Brain} title="AI Features">
       <EmbeddingSettings />
+      <TraceSettings />
     </Section>
   )
 }
@@ -166,6 +169,90 @@ function EmbeddingSettings(): React.ReactElement {
           />
         </>
       )}
+    </div>
+  )
+}
+
+function TraceSettings(): React.ReactElement {
+  const [retentionDays, setRetentionDays] = useState(30)
+  const { data: analytics, isLoading } = useTraceAnalytics(30)
+  const { mutateAsync: cleanup, isPending: isCleaning } = useCleanupTraces()
+  const [lastCleanupCount, setLastCleanupCount] = useState<number | null>(null)
+
+  const handleCleanup = async (): Promise<void> => {
+    const count = await cleanup(retentionDays)
+    setLastCleanupCount(count)
+  }
+
+  return (
+    <div className="mt-4 space-y-2">
+      <div className="px-2 py-1">
+        <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+          Trace Analytics
+        </p>
+      </div>
+
+      <SettingRow
+        label="Stored Traces"
+        description={
+          isLoading
+            ? "Loading..."
+            : `${analytics?.total_traces ?? 0} traces from ${analytics?.total_sessions ?? 0} sessions`
+        }
+        action={
+          <span className="text-[10px] text-muted-foreground">
+            Last 30 days
+          </span>
+        }
+      />
+
+      <SettingRow
+        label="Retention Period"
+        description="Delete traces older than this"
+        action={
+          <select
+            value={retentionDays}
+            onChange={(e) => setRetentionDays(Number(e.target.value))}
+            className="h-6 rounded border bg-transparent px-2 text-[10px] focus:outline-none focus:ring-1 focus:ring-ring"
+          >
+            <option value={7}>7 days</option>
+            <option value={14}>14 days</option>
+            <option value={30}>30 days</option>
+            <option value={60}>60 days</option>
+            <option value={90}>90 days</option>
+          </select>
+        }
+      />
+
+      <SettingRow
+        label="Cleanup Now"
+        description={
+          lastCleanupCount !== null
+            ? `Deleted ${lastCleanupCount} traces`
+            : "Remove traces older than retention period"
+        }
+        action={
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-6 gap-1 text-[10px]"
+            onClick={handleCleanup}
+            disabled={isCleaning}
+          >
+            {isCleaning ? (
+              <>
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Cleaning...
+              </>
+            ) : (
+              <>
+                <Trash2 className="h-3 w-3" />
+                Clean Up
+              </>
+            )}
+          </Button>
+        }
+      />
     </div>
   )
 }

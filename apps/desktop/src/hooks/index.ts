@@ -114,3 +114,11 @@ export {
   useInitEmbeddingModel,
   useBackfillEmbeddings,
 } from "./use-embedding"
+
+export {
+  useTraceAnalytics,
+  useRecentSessions,
+  useSessionSummary,
+  useSessionTraces,
+  useCleanupTraces,
+} from "./use-traces"

@@ -130,3 +130,16 @@ export {
   type EmbeddingStatus,
   type EmbeddingModelConfig,
 } from "./embedding"
+
+// Trace operations
+export {
+  getTraceAnalytics,
+  getSessionSummary,
+  getRecentSessions,
+  getSessionTraces,
+  cleanupTraces,
+  type TraceAnalytics,
+  type SessionState,
+  type SessionSummary,
+  type TraceEntry,
+} from "./trace"
