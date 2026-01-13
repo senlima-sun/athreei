@@ -24,6 +24,9 @@ pub struct SearchMemoriesInput {
     pub space_id: Option<String>,
     /// Maximum number of results (default: 10)
     pub limit: Option<usize>,
+    /// Summary level to return: "title" (5-15 tokens), "brief" (30-60 tokens),
+    /// "standard" (100-200 tokens), or "full" (original content). Default: "brief"
+    pub summary_level: Option<String>,
 }
 
 /// Tool input for get_memory
@@ -31,6 +34,8 @@ pub struct SearchMemoriesInput {
 pub struct GetMemoryInput {
     /// Memory ID to retrieve
     pub id: String,
+    /// Summary level to return: "title", "brief", "standard", or "full". Default: "full"
+    pub summary_level: Option<String>,
 }
 
 /// Tool input for create_memory
@@ -75,7 +80,13 @@ pub struct ToolMemory {
     pub space_id: Option<String>,
     pub source: String,
     pub title: Option<String>,
+    /// User-provided summary (encrypted/decrypted)
     pub summary: Option<String>,
+    /// Auto-generated summary at requested level (unencrypted)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub auto_summary: Option<String>,
+    /// Content - only included when summary_level is "full"
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub content: Option<String>,
     pub tags: Vec<String>,
     pub created_at: i64,
@@ -119,10 +130,26 @@ impl McpTools {
         .into_bytes()
     }
 
-    /// Decrypt a memory for tool response
-    fn decrypt_memory(&self, memory: &Memory, tags: Vec<String>) -> Result<ToolMemory, String> {
-        let aad = Self::build_aad(&memory.id, memory.space_id.as_deref());
+    /// Decrypt a memory for tool response with summary level control
+    ///
+    /// - "title": Returns only auto-generated title summary (5-15 tokens)
+    /// - "brief": Returns auto-generated brief summary (30-60 tokens)
+    /// - "standard": Returns auto-generated standard summary (100-200 tokens)
+    /// - "full": Returns full decrypted content
+    fn decrypt_memory(
+        &self,
+        memory: &Memory,
+        tags: Vec<String>,
+        summary_level: Option<&str>,
+    ) -> Result<ToolMemory, String> {
+        use crate::summarization::SummaryLevel;
 
+        let aad = Self::build_aad(&memory.id, memory.space_id.as_deref());
+        let level = summary_level
+            .and_then(SummaryLevel::from_str)
+            .unwrap_or(SummaryLevel::Brief);
+
+        // Always decrypt title for display
         let title = if let Some(encrypted) = &memory.title {
             let decrypted = self
                 .vault
@@ -133,26 +160,53 @@ impl McpTools {
             None
         };
 
-        let summary = if let Some(encrypted) = &memory.summary {
-            let decrypted = self
-                .vault
-                .decrypt(encrypted, &aad)
-                .map_err(|e| format!("Failed to decrypt summary: {e}"))?;
-            Some(
-                String::from_utf8(decrypted).map_err(|e| format!("Invalid UTF-8 in summary: {e}"))?,
-            )
+        // Decrypt user-provided summary only for "full" level
+        let summary = if level == SummaryLevel::Full {
+            if let Some(encrypted) = &memory.summary {
+                let decrypted = self
+                    .vault
+                    .decrypt(encrypted, &aad)
+                    .map_err(|e| format!("Failed to decrypt summary: {e}"))?;
+                Some(
+                    String::from_utf8(decrypted)
+                        .map_err(|e| format!("Invalid UTF-8 in summary: {e}"))?,
+                )
+            } else {
+                None
+            }
         } else {
             None
         };
 
-        let content = if let Some(encrypted) = &memory.content {
-            let decrypted = self
-                .vault
-                .decrypt(encrypted, &aad)
-                .map_err(|e| format!("Failed to decrypt content: {e}"))?;
-            Some(
-                String::from_utf8(decrypted).map_err(|e| format!("Invalid UTF-8 in content: {e}"))?,
-            )
+        // Get auto-generated summary at requested level (no decryption needed)
+        let auto_summary = match level {
+            SummaryLevel::Title => memory.summary_title.clone(),
+            SummaryLevel::Brief => memory
+                .summary_brief
+                .clone()
+                .or_else(|| memory.summary_standard.clone())
+                .or_else(|| memory.summary_title.clone()),
+            SummaryLevel::Standard => memory
+                .summary_standard
+                .clone()
+                .or_else(|| memory.summary_brief.clone()),
+            SummaryLevel::Full => None,
+        };
+
+        // Only decrypt content for "full" level
+        let content = if level == SummaryLevel::Full {
+            if let Some(encrypted) = &memory.content {
+                let decrypted = self
+                    .vault
+                    .decrypt(encrypted, &aad)
+                    .map_err(|e| format!("Failed to decrypt content: {e}"))?;
+                Some(
+                    String::from_utf8(decrypted)
+                        .map_err(|e| format!("Invalid UTF-8 in content: {e}"))?,
+                )
+            } else {
+                None
+            }
         } else {
             None
         };
@@ -163,6 +217,7 @@ impl McpTools {
             source: memory.source.clone(),
             title,
             summary,
+            auto_summary,
             content,
             tags,
             created_at: memory.created_at,
@@ -188,13 +243,14 @@ impl McpTools {
 
         let limit = input.limit.unwrap_or(10);
         let total = memories.len();
+        let summary_level = input.summary_level.as_deref();
 
         let mut results = Vec::with_capacity(limit.min(total));
         for memory in memories.into_iter().take(limit) {
             let tags = db_guard
                 .get_tags(&memory.id)
                 .map_err(|e| format!("Failed to get tags: {e}"))?;
-            results.push(self.decrypt_memory(&memory, tags)?);
+            results.push(self.decrypt_memory(&memory, tags, summary_level)?);
         }
 
         Ok(SearchResult {
@@ -219,12 +275,15 @@ impl McpTools {
             .get_memory(&input.id)
             .map_err(|e| format!("Failed to get memory: {e}"))?;
 
+        // Default to "full" for get_memory since caller wants complete details
+        let summary_level = input.summary_level.as_deref().or(Some("full"));
+
         match memory {
             Some(m) => {
                 let tags = db_guard
                     .get_tags(&m.id)
                     .map_err(|e| format!("Failed to get tags: {e}"))?;
-                Ok(Some(self.decrypt_memory(&m, tags)?))
+                Ok(Some(self.decrypt_memory(&m, tags, summary_level)?))
             }
             None => Ok(None),
         }
@@ -232,6 +291,8 @@ impl McpTools {
 
     /// Create a new memory
     pub fn create_memory(&self, input: CreateMemoryInput) -> Result<ToolMemory, String> {
+        use crate::summarization::generate_all_summaries;
+
         if !self.vault.is_unlocked() {
             return Err("Vault is locked. Please unlock to create memories.".to_string());
         }
@@ -251,12 +312,15 @@ impl McpTools {
             .encrypt(input.content.as_bytes(), &aad)
             .map_err(|e| format!("Failed to encrypt content: {e}"))?;
 
-        // Generate summary (first 200 chars of content)
+        // Generate user-provided summary (first 200 chars for backwards compatibility)
         let summary_text: String = input.content.chars().take(200).collect();
         let encrypted_summary = self
             .vault
             .encrypt(summary_text.as_bytes(), &aad)
             .map_err(|e| format!("Failed to encrypt summary: {e}"))?;
+
+        // Generate extractive summaries (unencrypted, for MCP efficiency)
+        let summaries = generate_all_summaries(&input.content);
 
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
@@ -272,6 +336,11 @@ impl McpTools {
             summary: Some(encrypted_summary),
             content: Some(encrypted_content),
             metadata: None,
+            summary_title: summaries.title.clone(),
+            summary_brief: summaries.brief.clone(),
+            summary_standard: summaries.standard.clone(),
+            summary_version: Some(summaries.version as i32),
+            content_hash: Some(summaries.content_hash),
             created_at: now,
             updated_at: now,
         };
@@ -300,6 +369,7 @@ impl McpTools {
             source: memory.source,
             title: Some(input.title),
             summary: Some(summary_text),
+            auto_summary: summaries.brief,
             content: Some(input.content),
             tags,
             created_at: now,
@@ -309,6 +379,8 @@ impl McpTools {
 
     /// Update an existing memory
     pub fn update_memory(&self, input: UpdateMemoryInput) -> Result<ToolMemory, String> {
+        use crate::summarization::{content_hash, generate_all_summaries, is_summary_stale};
+
         if !self.vault.is_unlocked() {
             return Err("Vault is locked. Please unlock to update memories.".to_string());
         }
@@ -391,6 +463,40 @@ impl McpTools {
             existing.summary.clone()
         };
 
+        // Check if content changed and regenerate extractive summaries
+        let (summary_title, summary_brief, summary_standard, summary_version, new_content_hash) =
+            if let Some(content) = &new_content {
+                let new_hash = content_hash(content);
+                let is_stale = is_summary_stale(content, existing.content_hash.as_deref());
+
+                if is_stale {
+                    let summaries = generate_all_summaries(content);
+                    (
+                        summaries.title,
+                        summaries.brief,
+                        summaries.standard,
+                        Some(existing.summary_version.unwrap_or(0) + 1),
+                        Some(new_hash),
+                    )
+                } else {
+                    (
+                        existing.summary_title.clone(),
+                        existing.summary_brief.clone(),
+                        existing.summary_standard.clone(),
+                        existing.summary_version,
+                        Some(new_hash),
+                    )
+                }
+            } else {
+                (
+                    existing.summary_title.clone(),
+                    existing.summary_brief.clone(),
+                    existing.summary_standard.clone(),
+                    existing.summary_version,
+                    existing.content_hash.clone(),
+                )
+            };
+
         let now = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
@@ -405,6 +511,11 @@ impl McpTools {
             summary: encrypted_summary,
             content: encrypted_content,
             metadata: existing.metadata.clone(),
+            summary_title: summary_title.clone(),
+            summary_brief: summary_brief.clone(),
+            summary_standard: summary_standard.clone(),
+            summary_version,
+            content_hash: new_content_hash,
             created_at: existing.created_at,
             updated_at: now,
         };
@@ -419,6 +530,7 @@ impl McpTools {
             source: existing.source,
             title: new_title,
             summary: new_content.as_ref().map(|c| c.chars().take(200).collect()),
+            auto_summary: summary_brief,
             content: new_content,
             tags,
             created_at: existing.created_at,
@@ -499,7 +611,10 @@ mod tests {
         assert_eq!(created.source, "mcp");
 
         let fetched = tools
-            .get_memory(GetMemoryInput { id: created.id })
+            .get_memory(GetMemoryInput {
+                id: created.id,
+                summary_level: Some("full".to_string()),
+            })
             .unwrap()
             .unwrap();
 

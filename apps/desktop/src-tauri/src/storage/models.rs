@@ -53,12 +53,22 @@ pub struct Memory {
     pub source_id: Option<String>,
     /// Encrypted title
     pub title: Option<Vec<u8>>,
-    /// Encrypted summary
+    /// Encrypted summary (user-provided)
     pub summary: Option<Vec<u8>>,
     /// Encrypted content
     pub content: Option<Vec<u8>>,
     /// JSON metadata (unencrypted, used for FTS)
     pub metadata: Option<String>,
+    /// Auto-generated title summary (5-15 tokens, unencrypted)
+    pub summary_title: Option<String>,
+    /// Auto-generated brief summary (30-60 tokens, unencrypted)
+    pub summary_brief: Option<String>,
+    /// Auto-generated standard summary (100-200 tokens, unencrypted)
+    pub summary_standard: Option<String>,
+    /// Summary version counter (incremented on regeneration)
+    pub summary_version: Option<i32>,
+    /// SHA-256 hash of content at summary generation time
+    pub content_hash: Option<String>,
     /// Unix timestamp of creation
     pub created_at: i64,
     /// Unix timestamp of last update
@@ -90,6 +100,11 @@ impl Memory {
             summary,
             content,
             metadata,
+            summary_title: None,
+            summary_brief: None,
+            summary_standard: None,
+            summary_version: Some(0),
+            content_hash: None,
             created_at: now,
             updated_at: now,
         }

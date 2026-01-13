@@ -37,8 +37,13 @@ fn row_to_memory(row: &Row) -> Result<Memory> {
         summary: row.get(5)?,
         content: row.get(6)?,
         metadata: row.get(7)?,
-        created_at: row.get(8)?,
-        updated_at: row.get(9)?,
+        summary_title: row.get(8)?,
+        summary_brief: row.get(9)?,
+        summary_standard: row.get(10)?,
+        summary_version: row.get(11)?,
+        content_hash: row.get(12)?,
+        created_at: row.get(13)?,
+        updated_at: row.get(14)?,
     })
 }
 
@@ -109,8 +114,8 @@ impl Database {
     /// Create a new memory
     pub fn create_memory(&self, memory: &Memory) -> Result<()> {
         self.connection().execute(
-            "INSERT INTO memories (id, space_id, source, source_id, title, summary, content, metadata, created_at, updated_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)",
+            "INSERT INTO memories (id, space_id, source, source_id, title, summary, content, metadata, summary_title, summary_brief, summary_standard, summary_version, content_hash, created_at, updated_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)",
             params![
                 memory.id,
                 memory.space_id,
@@ -120,6 +125,11 @@ impl Database {
                 memory.summary,
                 memory.content,
                 memory.metadata,
+                memory.summary_title,
+                memory.summary_brief,
+                memory.summary_standard,
+                memory.summary_version,
+                memory.content_hash,
                 memory.created_at,
                 memory.updated_at,
             ],
@@ -130,7 +140,7 @@ impl Database {
     /// Get a memory by ID
     pub fn get_memory(&self, id: &str) -> Result<Option<Memory>> {
         let mut stmt = self.connection().prepare(
-            "SELECT id, space_id, source, source_id, title, summary, content, metadata, created_at, updated_at
+            "SELECT id, space_id, source, source_id, title, summary, content, metadata, summary_title, summary_brief, summary_standard, summary_version, content_hash, created_at, updated_at
              FROM memories WHERE id = ?1",
         )?;
 
@@ -151,7 +161,7 @@ impl Database {
     ) -> Result<Vec<Memory>> {
         let (sql, params_vec): (&str, Vec<Box<dyn rusqlite::ToSql>>) = match space_id {
             Some(sid) => (
-                "SELECT id, space_id, source, source_id, title, summary, content, metadata, created_at, updated_at
+                "SELECT id, space_id, source, source_id, title, summary, content, metadata, summary_title, summary_brief, summary_standard, summary_version, content_hash, created_at, updated_at
                  FROM memories WHERE space_id = ?1
                  ORDER BY created_at DESC LIMIT ?2 OFFSET ?3",
                 vec![
@@ -161,7 +171,7 @@ impl Database {
                 ],
             ),
             None => (
-                "SELECT id, space_id, source, source_id, title, summary, content, metadata, created_at, updated_at
+                "SELECT id, space_id, source, source_id, title, summary, content, metadata, summary_title, summary_brief, summary_standard, summary_version, content_hash, created_at, updated_at
                  FROM memories
                  ORDER BY created_at DESC LIMIT ?1 OFFSET ?2",
                 vec![Box::new(limit as i64), Box::new(offset as i64)],
@@ -204,7 +214,9 @@ impl Database {
 
         let (sql, params_vec): (&str, Vec<Box<dyn rusqlite::ToSql>>) = match space_id {
             Some(sid) => (
-                "SELECT m.id, m.space_id, m.source, m.source_id, m.title, m.summary, m.content, m.metadata, m.created_at, m.updated_at
+                "SELECT m.id, m.space_id, m.source, m.source_id, m.title, m.summary, m.content, m.metadata,
+                        m.summary_title, m.summary_brief, m.summary_standard, m.summary_version, m.content_hash,
+                        m.created_at, m.updated_at
                  FROM memories m
                  JOIN memories_fts fts ON m.id = fts.memory_id
                  WHERE memories_fts MATCH ?1 AND m.space_id = ?2
@@ -212,7 +224,9 @@ impl Database {
                 vec![Box::new(fts_query), Box::new(sid.to_string())],
             ),
             None => (
-                "SELECT m.id, m.space_id, m.source, m.source_id, m.title, m.summary, m.content, m.metadata, m.created_at, m.updated_at
+                "SELECT m.id, m.space_id, m.source, m.source_id, m.title, m.summary, m.content, m.metadata,
+                        m.summary_title, m.summary_brief, m.summary_standard, m.summary_version, m.content_hash,
+                        m.created_at, m.updated_at
                  FROM memories m
                  JOIN memories_fts fts ON m.id = fts.memory_id
                  WHERE memories_fts MATCH ?1
@@ -233,7 +247,9 @@ impl Database {
     pub fn update_memory(&self, memory: &Memory) -> Result<()> {
         self.connection().execute(
             "UPDATE memories SET space_id = ?2, source = ?3, source_id = ?4, title = ?5,
-             summary = ?6, content = ?7, metadata = ?8, updated_at = ?9
+             summary = ?6, content = ?7, metadata = ?8,
+             summary_title = ?9, summary_brief = ?10, summary_standard = ?11,
+             summary_version = ?12, content_hash = ?13, updated_at = ?14
              WHERE id = ?1",
             params![
                 memory.id,
@@ -244,10 +260,57 @@ impl Database {
                 memory.summary,
                 memory.content,
                 memory.metadata,
+                memory.summary_title,
+                memory.summary_brief,
+                memory.summary_standard,
+                memory.summary_version,
+                memory.content_hash,
                 now(),
             ],
         )?;
         Ok(())
+    }
+
+    /// Update only the auto-generated summaries for a memory
+    pub fn update_memory_summaries(
+        &self,
+        memory_id: &str,
+        summary_title: Option<&str>,
+        summary_brief: Option<&str>,
+        summary_standard: Option<&str>,
+        content_hash: &str,
+    ) -> Result<()> {
+        self.connection().execute(
+            "UPDATE memories SET
+             summary_title = ?2, summary_brief = ?3, summary_standard = ?4,
+             summary_version = COALESCE(summary_version, 0) + 1,
+             content_hash = ?5, updated_at = ?6
+             WHERE id = ?1",
+            params![
+                memory_id,
+                summary_title,
+                summary_brief,
+                summary_standard,
+                content_hash,
+                now(),
+            ],
+        )?;
+        Ok(())
+    }
+
+    /// Get memories that need summary regeneration (stale or missing)
+    pub fn get_stale_summary_memories(&self, limit: usize) -> Result<Vec<Memory>> {
+        let mut stmt = self.connection().prepare(
+            "SELECT id, space_id, source, source_id, title, summary, content, metadata,
+                    summary_title, summary_brief, summary_standard, summary_version, content_hash,
+                    created_at, updated_at
+             FROM memories
+             WHERE summary_version = 0 OR summary_version IS NULL OR content_hash IS NULL
+             LIMIT ?1",
+        )?;
+
+        let rows = stmt.query_map(params![limit as i64], |row| row_to_memory(row))?;
+        rows.collect()
     }
 
     /// Delete a memory by ID
@@ -428,7 +491,7 @@ impl Database {
     /// Get memories by source
     pub fn get_memories_by_source(&self, source: &str, limit: usize) -> Result<Vec<Memory>> {
         let mut stmt = self.connection().prepare(
-            "SELECT id, space_id, source, source_id, title, summary, content, metadata, created_at, updated_at
+            "SELECT id, space_id, source, source_id, title, summary, content, metadata, summary_title, summary_brief, summary_standard, summary_version, content_hash, created_at, updated_at
              FROM memories WHERE source = ?1
              ORDER BY created_at DESC LIMIT ?2",
         )?;
@@ -473,7 +536,7 @@ impl Database {
     ) -> Result<Vec<Memory>> {
         let (sql, params_vec): (&str, Vec<Box<dyn rusqlite::ToSql>>) = match space_id {
             Some(sid) => (
-                "SELECT id, space_id, source, source_id, title, summary, content, metadata, created_at, updated_at
+                "SELECT id, space_id, source, source_id, title, summary, content, metadata, summary_title, summary_brief, summary_standard, summary_version, content_hash, created_at, updated_at
                  FROM memories
                  WHERE space_id = ?1 AND created_at >= ?2 AND created_at < ?3
                  ORDER BY created_at DESC LIMIT ?4 OFFSET ?5",
@@ -486,7 +549,7 @@ impl Database {
                 ],
             ),
             None => (
-                "SELECT id, space_id, source, source_id, title, summary, content, metadata, created_at, updated_at
+                "SELECT id, space_id, source, source_id, title, summary, content, metadata, summary_title, summary_brief, summary_standard, summary_version, content_hash, created_at, updated_at
                  FROM memories
                  WHERE created_at >= ?1 AND created_at < ?2
                  ORDER BY created_at DESC LIMIT ?3 OFFSET ?4",
@@ -1160,6 +1223,11 @@ mod tests {
             summary: None,
             content: None,
             metadata: None,
+            summary_title: None,
+            summary_brief: None,
+            summary_standard: None,
+            summary_version: None,
+            content_hash: None,
             created_at: past_timestamp,
             updated_at: past_timestamp,
         };

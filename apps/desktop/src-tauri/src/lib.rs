@@ -17,12 +17,14 @@ pub mod state;
 pub mod storage;
 pub mod summarization;
 pub mod sync;
+pub mod trace;
 
 use commands::SettingsState;
 use encryption::VaultState;
 use mcp::McpServerState;
 use state::DatabaseState;
 use sync::SyncManagerState;
+use trace::TraceCollectorState;
 
 /// Run the Tauri application
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -54,6 +56,9 @@ pub fn run() {
             // Initialize settings state
             let settings_state = SettingsState::new(&app_dir);
 
+            // Initialize trace collector state
+            let trace_collector_state = Arc::new(TraceCollectorState::new(db_state.clone()));
+
             // Manage states
             // Note: We manage the Arc'd versions for direct access too
             app.manage(db_state);
@@ -61,6 +66,7 @@ pub fn run() {
             app.manage(mcp_state);
             app.manage(sync_manager);
             app.manage(settings_state);
+            app.manage(trace_collector_state);
 
             // Setup system tray
             let show = MenuItem::with_id(app, "show", "Show Window", true, None::<&str>)?;
@@ -177,6 +183,12 @@ pub fn run() {
             commands::backup_export,
             commands::backup_import,
             commands::backup_info,
+            // Trace commands
+            commands::get_trace_analytics,
+            commands::get_session_summary,
+            commands::get_recent_sessions,
+            commands::get_session_traces,
+            commands::cleanup_traces,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

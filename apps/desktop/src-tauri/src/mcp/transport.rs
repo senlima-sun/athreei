@@ -15,6 +15,7 @@ use tower_http::cors::{Any, CorsLayer};
 use super::handler::AiiiHandler;
 use crate::encryption::VaultState;
 use crate::state::DatabaseState;
+use crate::trace::TraceCollector;
 
 /// Run the MCP server with stdio transport
 ///
@@ -26,8 +27,11 @@ pub async fn run_stdio_server(
 ) -> Result<(), String> {
     eprintln!("[aiii-mcp] Starting MCP server with stdio transport");
 
+    // Create trace collector
+    let trace_collector = Arc::new(TraceCollector::new(db.clone()));
+
     // Create the handler
-    let handler = AiiiHandler::new(db, vault);
+    let handler = AiiiHandler::new(db, vault, trace_collector);
 
     // Create the stdio transport (returns a tuple of (stdin, stdout))
     let transport = rmcp::transport::io::stdio();
@@ -79,13 +83,17 @@ pub async fn run_http_server(
     // Create session manager
     let session_manager = Arc::new(LocalSessionManager::default());
 
+    // Create trace collector (shared across all sessions)
+    let trace_collector = Arc::new(TraceCollector::new(db.clone()));
+
     // Create streamable HTTP service
     let db_clone = db.clone();
     let vault_clone = vault.clone();
+    let trace_clone = trace_collector.clone();
     let config = StreamableHttpServerConfig::default();
 
     let mcp_service = StreamableHttpService::new(
-        move || Ok(AiiiHandler::new(db_clone.clone(), vault_clone.clone())),
+        move || Ok(AiiiHandler::new(db_clone.clone(), vault_clone.clone(), trace_clone.clone())),
         session_manager,
         config,
     );

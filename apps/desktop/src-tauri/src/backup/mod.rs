@@ -165,6 +165,11 @@ pub fn import_backup(
                     summary: memory.summary,
                     content: memory.content,
                     metadata: memory.metadata,
+                    summary_title: None, // Will be regenerated
+                    summary_brief: None,
+                    summary_standard: None,
+                    summary_version: Some(0),
+                    content_hash: None,
                     created_at: memory.created_at,
                     updated_at: memory.updated_at,
                 };
@@ -226,6 +231,11 @@ pub fn import_backup(
                         summary: memory.summary,
                         content: memory.content,
                         metadata: memory.metadata,
+                        summary_title: None, // Will be regenerated
+                        summary_brief: None,
+                        summary_standard: None,
+                        summary_version: Some(0),
+                        content_hash: None,
                         created_at: memory.created_at,
                         updated_at: memory.updated_at,
                     };

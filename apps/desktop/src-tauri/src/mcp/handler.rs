@@ -22,19 +22,22 @@ use super::tools::{
 use crate::encryption::VaultState;
 use crate::mcp::resources::AiiiResources;
 use crate::state::DatabaseState;
+use crate::trace::{TraceCollector, TraceTimer};
 
 /// MCP Server Handler for aiii-memory
 #[derive(Clone)]
 pub struct AiiiHandler {
     tools: Arc<McpTools>,
     resources: Arc<AiiiResources>,
+    trace_collector: Arc<TraceCollector>,
 }
 
 impl AiiiHandler {
-    pub fn new(db: Arc<DatabaseState>, vault: Arc<VaultState>) -> Self {
+    pub fn new(db: Arc<DatabaseState>, vault: Arc<VaultState>, trace_collector: Arc<TraceCollector>) -> Self {
         Self {
             tools: Arc::new(McpTools::new(db.clone(), vault.clone())),
             resources: Arc::new(AiiiResources::new(db, vault)),
+            trace_collector,
         }
     }
 }
@@ -124,6 +127,14 @@ impl ServerHandler for AiiiHandler {
                     .collect::<serde_json::Map<String, serde_json::Value>>(),
             );
 
+            let session_id = self.trace_collector.ensure_session(Some("mcp-client".into())).await;
+
+            let timer = TraceTimer::start(
+                session_id,
+                request.name.to_string(),
+                Some(arguments_value.clone()),
+            );
+
             let result = match request.name.as_ref() {
                 "search_memories" => {
                     let input: SearchMemoriesInput = serde_json::from_value(arguments_value)
@@ -135,7 +146,11 @@ impl ServerHandler for AiiiHandler {
                         Ok(result) => serde_json::to_string_pretty(&result).map_err(|e| {
                             McpError::internal_error(format!("Serialization error: {e}"), None)
                         })?,
-                        Err(e) => return Err(McpError::internal_error(e, None)),
+                        Err(e) => {
+                            let entry = timer.finish_error(e.clone(), Some("tool_error".into()));
+                            self.trace_collector.record_trace(entry).await;
+                            return Err(McpError::internal_error(e, None));
+                        }
                     }
                 }
                 "get_memory" => {
@@ -149,7 +164,11 @@ impl ServerHandler for AiiiHandler {
                             McpError::internal_error(format!("Serialization error: {e}"), None)
                         })?,
                         Ok(None) => "Memory not found".to_string(),
-                        Err(e) => return Err(McpError::internal_error(e, None)),
+                        Err(e) => {
+                            let entry = timer.finish_error(e.clone(), Some("tool_error".into()));
+                            self.trace_collector.record_trace(entry).await;
+                            return Err(McpError::internal_error(e, None));
+                        }
                     }
                 }
                 "create_memory" => {
@@ -162,7 +181,11 @@ impl ServerHandler for AiiiHandler {
                         Ok(memory) => serde_json::to_string_pretty(&memory).map_err(|e| {
                             McpError::internal_error(format!("Serialization error: {e}"), None)
                         })?,
-                        Err(e) => return Err(McpError::internal_error(e, None)),
+                        Err(e) => {
+                            let entry = timer.finish_error(e.clone(), Some("tool_error".into()));
+                            self.trace_collector.record_trace(entry).await;
+                            return Err(McpError::internal_error(e, None));
+                        }
                     }
                 }
                 "update_memory" => {
@@ -175,7 +198,11 @@ impl ServerHandler for AiiiHandler {
                         Ok(memory) => serde_json::to_string_pretty(&memory).map_err(|e| {
                             McpError::internal_error(format!("Serialization error: {e}"), None)
                         })?,
-                        Err(e) => return Err(McpError::internal_error(e, None)),
+                        Err(e) => {
+                            let entry = timer.finish_error(e.clone(), Some("tool_error".into()));
+                            self.trace_collector.record_trace(entry).await;
+                            return Err(McpError::internal_error(e, None));
+                        }
                     }
                 }
                 "list_spaces" => {
@@ -188,16 +215,29 @@ impl ServerHandler for AiiiHandler {
                         Ok(spaces) => serde_json::to_string_pretty(&spaces).map_err(|e| {
                             McpError::internal_error(format!("Serialization error: {e}"), None)
                         })?,
-                        Err(e) => return Err(McpError::internal_error(e, None)),
+                        Err(e) => {
+                            let entry = timer.finish_error(e.clone(), Some("tool_error".into()));
+                            self.trace_collector.record_trace(entry).await;
+                            return Err(McpError::internal_error(e, None));
+                        }
                     }
                 }
                 _ => {
+                    let entry = timer.finish_error(
+                        format!("Unknown tool: {}", request.name),
+                        Some("unknown_tool".into()),
+                    );
+                    self.trace_collector.record_trace(entry).await;
                     return Err(McpError::invalid_params(
                         format!("Unknown tool: {}", request.name),
                         None,
-                    ))
+                    ));
                 }
             };
+
+            let output_value: Option<serde_json::Value> = serde_json::from_str(&result).ok();
+            let entry = timer.finish_success(output_value);
+            self.trace_collector.record_trace(entry).await;
 
             Ok(CallToolResult::success(vec![Content::text(result)]))
         }
@@ -332,6 +372,7 @@ impl ServerHandler for AiiiHandler {
                         query: context.clone(),
                         space_id: None,
                         limit: Some(5),
+                        summary_level: Some("brief".into()),
                     });
 
                     let memory_context = match search_result {
@@ -372,6 +413,7 @@ impl ServerHandler for AiiiHandler {
 mod tests {
     use super::*;
     use crate::storage::Database;
+    use crate::trace::TraceCollector;
     use std::sync::Mutex;
 
     fn create_test_handler() -> AiiiHandler {
@@ -382,7 +424,9 @@ mod tests {
         let vault_state = Arc::new(VaultState::new());
         vault_state.unlock("test-passphrase").unwrap();
 
-        AiiiHandler::new(db_state, vault_state)
+        let trace_collector = Arc::new(TraceCollector::new(db_state.clone()));
+
+        AiiiHandler::new(db_state, vault_state, trace_collector)
     }
 
     #[test]

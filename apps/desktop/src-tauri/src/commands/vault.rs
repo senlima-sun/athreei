@@ -203,7 +203,7 @@ pub async fn vault_change_passphrase(
             None
         };
 
-        // Update memory with re-encrypted data
+        // Update memory with re-encrypted data (preserve extractive summaries)
         let updated_memory = crate::storage::Memory {
             id: memory.id.clone(),
             space_id: memory.space_id.clone(),
@@ -213,6 +213,11 @@ pub async fn vault_change_passphrase(
             summary: new_summary,
             content: new_content,
             metadata: memory.metadata.clone(),
+            summary_title: memory.summary_title.clone(),
+            summary_brief: memory.summary_brief.clone(),
+            summary_standard: memory.summary_standard.clone(),
+            summary_version: memory.summary_version,
+            content_hash: memory.content_hash.clone(),
             created_at: memory.created_at,
             updated_at: memory.updated_at,
         };

@@ -224,6 +224,11 @@ pub async fn create_memory(
         summary: encrypted_summary,
         content: encrypted_content,
         metadata: input.metadata.clone(),
+        summary_title: None,
+        summary_brief: None,
+        summary_standard: None,
+        summary_version: Some(0),
+        content_hash: None,
         created_at: now,
         updated_at: now,
     };
@@ -684,6 +689,11 @@ mod tests {
             summary: None,
             content: Some(encrypted_content),
             metadata: None,
+            summary_title: None,
+            summary_brief: None,
+            summary_standard: None,
+            summary_version: Some(0),
+            content_hash: None,
             created_at: now,
             updated_at: now,
         };
