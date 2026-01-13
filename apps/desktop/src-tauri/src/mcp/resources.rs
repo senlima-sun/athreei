@@ -48,6 +48,8 @@ pub enum ParsedUri {
     Today,
     /// aiii://rules - Auto-categorization rules
     Rules,
+    /// aiii://relevant/{query} - Relevant context for a query
+    Relevant(String),
 }
 
 /// MCP Resource metadata
@@ -212,6 +214,7 @@ impl AiiiResources {
             ["memories", id] => Ok(ParsedUri::Memory((*id).to_string())),
             ["today"] => Ok(ParsedUri::Today),
             ["rules"] => Ok(ParsedUri::Rules),
+            ["relevant", query] => Ok(ParsedUri::Relevant(urlencoding::decode(query).unwrap_or_default().to_string())),
             _ => Err(ResourceError::InvalidUri(format!(
                 "Unknown URI path: {path}"
             ))),
@@ -249,6 +252,12 @@ impl AiiiResources {
                 description: Some("Auto-categorization rules".into()),
                 mime_type: Some("application/json".into()),
             },
+            Resource {
+                uri: "aiii://relevant/your-query-here".into(),
+                name: "Relevant Context".into(),
+                description: Some("Memories relevant to a query (use template)".into()),
+                mime_type: Some("text/markdown".into()),
+            },
         ];
 
         // Add space-specific resources
@@ -285,6 +294,12 @@ impl AiiiResources {
                 description: Some("Get full content of a specific memory".into()),
                 mime_type: Some("application/json".into()),
             },
+            ResourceTemplate {
+                uri_template: "aiii://relevant/{query}".into(),
+                name: "Relevant Context".into(),
+                description: Some("Get memories relevant to a URL-encoded query".into()),
+                mime_type: Some("text/markdown".into()),
+            },
         ]
     }
 
@@ -299,6 +314,7 @@ impl AiiiResources {
             ParsedUri::Memory(id) => self.read_memory(uri, &id),
             ParsedUri::Today => self.read_today(uri),
             ParsedUri::Rules => self.read_rules(uri),
+            ParsedUri::Relevant(query) => self.read_relevant(uri, &query),
         }
     }
 
@@ -778,6 +794,126 @@ impl AiiiResources {
 
         Ok(memories.iter().filter(|m| m.created_at >= since).count() as i64)
     }
+
+    /// Read aiii://relevant/{query} - get memories relevant to a query
+    fn read_relevant(&self, uri: &str, query: &str) -> Result<ResourceContents, ResourceError> {
+        use crate::context::{
+            compute_relevance, extract_intent, format_as_markdown, normalize_access_frequency,
+            recency_decay, select_within_budget, RelevanceScore, ScoredMemory, DEFAULT_BUDGET,
+            DEFAULT_WEIGHTS,
+        };
+        use crate::embedding::search_hybrid;
+
+        if !self.vault.is_unlocked() {
+            return Err(ResourceError::VaultLocked);
+        }
+
+        if query.is_empty() {
+            return Ok(ResourceContents {
+                uri: uri.to_string(),
+                mime_type: Some("text/markdown".into()),
+                text: Some("## Relevant Context\n\nNo query provided.".to_string()),
+                blob: None,
+            });
+        }
+
+        let intent = extract_intent(query);
+
+        let db_guard = self
+            .db
+            .db
+            .lock()
+            .map_err(|e| ResourceError::DatabaseError(format!("Lock error: {e}")))?;
+
+        let search_query = if !intent.cleaned.is_empty() {
+            &intent.cleaned
+        } else {
+            query
+        };
+
+        let results = search_hybrid(&db_guard, search_query, 10)
+            .map_err(|e| ResourceError::DatabaseError(format!("Search error: {e}")))?;
+
+        let max_access_count = db_guard.get_max_access_count().unwrap_or(1).max(1) as u32;
+
+        let mut scored_memories = Vec::new();
+
+        for hybrid_result in results {
+            if let Some(memory) = db_guard
+                .get_memory(&hybrid_result.memory_id)
+                .map_err(|e| ResourceError::DatabaseError(e.to_string()))?
+            {
+                let aad = format!("{}:{}", memory.id, memory.space_id.as_deref().unwrap_or(""));
+
+                let content = if let Some(encrypted) = &memory.content {
+                    let decrypted = self
+                        .vault
+                        .decrypt(encrypted, aad.as_bytes())
+                        .map_err(|e| ResourceError::DecryptionError(format!("Content: {e}")))?;
+                    String::from_utf8(decrypted)
+                        .map_err(|e| ResourceError::DecryptionError(format!("UTF-8: {e}")))?
+                } else if let Some(ref standard) = memory.summary_standard {
+                    standard.clone()
+                } else if let Some(ref brief) = memory.summary_brief {
+                    brief.clone()
+                } else {
+                    continue;
+                };
+
+                let title = if let Some(encrypted) = &memory.title {
+                    let decrypted = self
+                        .vault
+                        .decrypt(encrypted, aad.as_bytes())
+                        .map_err(|e| ResourceError::DecryptionError(format!("Title: {e}")))?;
+                    Some(
+                        String::from_utf8(decrypted)
+                            .map_err(|e| ResourceError::DecryptionError(format!("UTF-8: {e}")))?,
+                    )
+                } else {
+                    memory.summary_title.clone()
+                };
+
+                let semantic_score = (hybrid_result.score / 0.033).clamp(0.0, 1.0);
+                let recency = recency_decay(memory.updated_at, 0.1);
+                let access_freq =
+                    normalize_access_frequency(memory.access_count.unwrap_or(0) as u32, max_access_count);
+
+                let relevance_score = RelevanceScore {
+                    semantic: semantic_score,
+                    keyword: 0.5, // Simplified for resource
+                    recency,
+                    access_freq,
+                    user_priority: 0.0,
+                };
+
+                let final_score = compute_relevance(&relevance_score, &DEFAULT_WEIGHTS);
+
+                if final_score >= 0.3 {
+                    scored_memories.push(ScoredMemory {
+                        id: memory.id.clone(),
+                        content,
+                        title,
+                        score: final_score,
+                    });
+                }
+            }
+        }
+
+        let selected = select_within_budget(scored_memories, &DEFAULT_BUDGET);
+        let markdown = format_as_markdown(&selected);
+
+        // Record access for selected memories
+        for memory in &selected {
+            let _ = db_guard.record_access(&memory.id);
+        }
+
+        Ok(ResourceContents {
+            uri: uri.to_string(),
+            mime_type: Some("text/markdown".into()),
+            text: Some(markdown),
+            blob: None,
+        })
+    }
 }
 
 /// Get the Unix timestamp for the start of today (midnight UTC)
@@ -950,8 +1086,9 @@ mod tests {
         let resources = AiiiResources::new(db_state, vault_state);
         let templates = resources.list_resource_templates();
 
-        assert_eq!(templates.len(), 3);
+        assert_eq!(templates.len(), 4);
         assert!(templates.iter().any(|t| t.uri_template.contains("space_id")));
         assert!(templates.iter().any(|t| t.uri_template.contains("memory_id")));
+        assert!(templates.iter().any(|t| t.uri_template.contains("query")));
     }
 }
