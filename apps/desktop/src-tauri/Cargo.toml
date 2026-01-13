@@ -31,6 +31,12 @@ nanoid = "0.4"
 sha2 = "0.10"
 hex = "0.4"
 
+# Embedding / Vector Search
+sqlite-vec = "0.1.7-alpha.2"
+ort = { version = "2.0.0-rc.11", features = ["load-dynamic", "ndarray"] }
+tokenizers = "0.21"
+ndarray = "0.16"
+
 # MCP SDK
 rmcp = { version = "0.12", features = ["server", "macros", "transport-io", "transport-streamable-http-server"] }
 async-trait = "0.1"
@@ -42,7 +48,8 @@ tower = "0.5"
 tower-http = { version = "0.6", features = ["cors"] }
 
 # HTTP client for sync
-reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-features = false }
+reqwest = { version = "0.12", features = ["json", "rustls-tls", "stream"], default-features = false }
+futures-util = "0.3"
 
 # Backup/restore
 rmp-serde = "1.3"

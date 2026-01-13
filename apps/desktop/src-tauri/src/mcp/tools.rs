@@ -27,6 +27,9 @@ pub struct SearchMemoriesInput {
     /// Summary level to return: "title" (5-15 tokens), "brief" (30-60 tokens),
     /// "standard" (100-200 tokens), or "full" (original content). Default: "brief"
     pub summary_level: Option<String>,
+    /// Search mode: "keyword" (FTS5 only), "semantic" (vector only), or "hybrid" (combined).
+    /// Default: "hybrid" if embedding model is loaded, otherwise "keyword"
+    pub search_mode: Option<String>,
 }
 
 /// Tool input for get_memory
@@ -225,8 +228,10 @@ impl McpTools {
         })
     }
 
-    /// Search memories using FTS
+    /// Search memories using FTS, vector similarity, or hybrid mode
     pub fn search_memories(&self, input: SearchMemoriesInput) -> Result<SearchResult, String> {
+        use crate::embedding::{get_model, search_hybrid, search_vector};
+
         if !self.vault.is_unlocked() {
             return Err("Vault is locked. Please unlock to access memories.".to_string());
         }
@@ -237,22 +242,67 @@ impl McpTools {
             .lock()
             .map_err(|e| format!("Database lock error: {e}"))?;
 
-        let memories = db_guard
-            .search_memories(&input.query, input.space_id.as_deref())
-            .map_err(|e| format!("Search failed: {e}"))?;
-
         let limit = input.limit.unwrap_or(10);
-        let total = memories.len();
         let summary_level = input.summary_level.as_deref();
 
-        let mut results = Vec::with_capacity(limit.min(total));
-        for memory in memories.into_iter().take(limit) {
-            let tags = db_guard
-                .get_tags(&memory.id)
-                .map_err(|e| format!("Failed to get tags: {e}"))?;
-            results.push(self.decrypt_memory(&memory, tags, summary_level)?);
+        // Determine search mode
+        let mode = input.search_mode.as_deref().unwrap_or_else(|| {
+            if get_model().is_some() {
+                "hybrid"
+            } else {
+                "keyword"
+            }
+        });
+
+        let memory_ids: Vec<String> = match mode {
+            "keyword" => {
+                // FTS5 keyword search only
+                let memories = db_guard
+                    .search_memories(&input.query, input.space_id.as_deref())
+                    .map_err(|e| format!("Search failed: {e}"))?;
+                memories.into_iter().take(limit).map(|m| m.id).collect()
+            }
+            "semantic" => {
+                // Vector similarity search only
+                let model = get_model()
+                    .ok_or_else(|| "Embedding model not loaded for semantic search".to_string())?;
+                let embedding = model
+                    .encode(&input.query)
+                    .map_err(|e| format!("Failed to encode query: {e}"))?;
+                let vec_results = search_vector(&db_guard, &embedding, limit)
+                    .map_err(|e| format!("Vector search failed: {e}"))?;
+                vec_results.into_iter().map(|(id, _)| id).collect()
+            }
+            "hybrid" | _ => {
+                // Hybrid search (RRF merge of FTS5 and vector)
+                let results = search_hybrid(&db_guard, &input.query, limit)
+                    .map_err(|e| format!("Hybrid search failed: {e}"))?;
+                results.into_iter().map(|r| r.memory_id).collect()
+            }
+        };
+
+        // Fetch full memory details and apply space filter if needed
+        let mut results = Vec::with_capacity(memory_ids.len());
+        for memory_id in memory_ids {
+            if let Some(memory) = db_guard
+                .get_memory(&memory_id)
+                .map_err(|e| format!("Failed to get memory: {e}"))?
+            {
+                // Apply space filter if specified
+                if let Some(ref space_id) = input.space_id {
+                    if memory.space_id.as_ref() != Some(space_id) {
+                        continue;
+                    }
+                }
+
+                let tags = db_guard
+                    .get_tags(&memory.id)
+                    .map_err(|e| format!("Failed to get tags: {e}"))?;
+                results.push(self.decrypt_memory(&memory, tags, summary_level)?);
+            }
         }
 
+        let total = results.len();
         Ok(SearchResult {
             memories: results,
             total,

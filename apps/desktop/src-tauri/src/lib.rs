@@ -11,6 +11,7 @@ use tauri::{
 
 pub mod backup;
 mod commands;
+pub mod embedding;
 pub mod encryption;
 pub mod mcp;
 pub mod state;
@@ -189,6 +190,13 @@ pub fn run() {
             commands::get_recent_sessions,
             commands::get_session_traces,
             commands::cleanup_traces,
+            // Embedding commands
+            commands::get_embedding_status,
+            commands::is_embedding_model_downloaded,
+            commands::download_embedding_model,
+            commands::init_embedding_model,
+            commands::backfill_memory_embeddings,
+            commands::get_embedding_model_config,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

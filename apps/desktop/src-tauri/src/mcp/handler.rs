@@ -373,6 +373,7 @@ impl ServerHandler for AiiiHandler {
                         space_id: None,
                         limit: Some(5),
                         summary_level: Some("brief".into()),
+                        search_mode: None, // Use default (hybrid if model available)
                     });
 
                     let memory_context = match search_result {

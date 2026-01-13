@@ -164,3 +164,47 @@ CREATE INDEX IF NOT EXISTS idx_traces_session ON traces(session_id, started_at);
 CREATE INDEX IF NOT EXISTS idx_traces_tool ON traces(tool_name, started_at);
 CREATE INDEX IF NOT EXISTS idx_traces_status ON traces(status, started_at);
 CREATE INDEX IF NOT EXISTS idx_traces_started ON traces(started_at DESC);
+
+-- =============================================================================
+-- Vector Embedding Schema (sqlite-vec)
+-- =============================================================================
+
+-- Memory embeddings table: stores vector representations of memory content
+CREATE TABLE IF NOT EXISTS memory_embeddings (
+    memory_id TEXT PRIMARY KEY REFERENCES memories(id) ON DELETE CASCADE,
+    embedding BLOB NOT NULL,
+    model_name TEXT NOT NULL,
+    dimensions INTEGER NOT NULL,
+    created_at INTEGER NOT NULL
+);
+
+-- vec0 virtual table for KNN vector similarity search
+-- Uses 384 dimensions matching paraphrase-multilingual-MiniLM-L12-v2
+CREATE VIRTUAL TABLE IF NOT EXISTS memories_vec USING vec0(
+    memory_id TEXT PRIMARY KEY,
+    embedding float[384]
+);
+
+-- Trigger to sync vec0 virtual table when embeddings are inserted
+CREATE TRIGGER IF NOT EXISTS sync_memories_vec_insert
+AFTER INSERT ON memory_embeddings
+BEGIN
+    INSERT OR REPLACE INTO memories_vec(memory_id, embedding)
+    VALUES (NEW.memory_id, NEW.embedding);
+END;
+
+-- Trigger to sync vec0 virtual table when embeddings are updated
+CREATE TRIGGER IF NOT EXISTS sync_memories_vec_update
+AFTER UPDATE ON memory_embeddings
+BEGIN
+    DELETE FROM memories_vec WHERE memory_id = OLD.memory_id;
+    INSERT INTO memories_vec(memory_id, embedding)
+    VALUES (NEW.memory_id, NEW.embedding);
+END;
+
+-- Trigger to remove from vec0 when embeddings are deleted
+CREATE TRIGGER IF NOT EXISTS sync_memories_vec_delete
+AFTER DELETE ON memory_embeddings
+BEGIN
+    DELETE FROM memories_vec WHERE memory_id = OLD.memory_id;
+END;

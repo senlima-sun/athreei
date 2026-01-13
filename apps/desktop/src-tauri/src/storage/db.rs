@@ -1,12 +1,27 @@
 //! Database wrapper and initialization
 //!
 //! Handles SQLite connection management and schema initialization.
+//! Includes sqlite-vec extension for vector similarity search.
 
 use rusqlite::{Connection, Result};
 use std::path::Path;
+use std::sync::Once;
 
 /// Schema SQL embedded at compile time
 const SCHEMA_SQL: &str = include_str!("schema.sql");
+
+/// Ensure sqlite-vec extension is registered only once (process-wide)
+static SQLITE_VEC_INIT: Once = Once::new();
+
+fn init_sqlite_vec_extension() {
+    SQLITE_VEC_INIT.call_once(|| {
+        unsafe {
+            rusqlite::ffi::sqlite3_auto_extension(Some(std::mem::transmute(
+                sqlite_vec::sqlite3_vec_init as *const (),
+            )));
+        }
+    });
+}
 
 /// Database wrapper providing connection management
 pub struct Database {
@@ -22,6 +37,8 @@ impl Database {
     /// # Errors
     /// Returns an error if the connection cannot be established
     pub fn new(path: &Path) -> Result<Self> {
+        init_sqlite_vec_extension();
+
         let conn = Connection::open(path)?;
 
         // Enable foreign keys
@@ -36,6 +53,8 @@ impl Database {
 
     /// Create an in-memory database (useful for testing)
     pub fn in_memory() -> Result<Self> {
+        init_sqlite_vec_extension();
+
         let conn = Connection::open_in_memory()?;
         conn.execute_batch("PRAGMA foreign_keys = ON;")?;
         Ok(Self { conn })
@@ -95,5 +114,15 @@ mod tests {
             .query_row("PRAGMA foreign_keys;", [], |row| row.get(0))
             .expect("Failed to query foreign_keys");
         assert_eq!(fk_enabled, 1, "Foreign keys should be enabled");
+    }
+
+    #[test]
+    fn test_sqlite_vec_extension_loaded() {
+        let db = Database::in_memory().expect("Failed to create database");
+        let version: String = db
+            .connection()
+            .query_row("SELECT vec_version()", [], |row| row.get(0))
+            .expect("sqlite-vec should be loaded");
+        assert!(!version.is_empty(), "vec_version() should return a version string");
     }
 }
