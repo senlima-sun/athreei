@@ -653,8 +653,9 @@ impl McpTools {
     /// Get relevant context for a query using intent extraction and relevance scoring
     pub fn get_relevant_context(&self, input: GetRelevantContextInput) -> Result<String, String> {
         use crate::context::{
-            compute_relevance, extract_intent, format_context, recency_decay, select_within_budget,
-            ContextFormat, RelevanceScore, ScoredMemory, DEFAULT_BUDGET, DEFAULT_WEIGHTS,
+            compute_relevance, extract_intent, format_context, normalize_access_frequency,
+            recency_decay, select_within_budget, ContextFormat, RelevanceScore, ScoredMemory,
+            DEFAULT_BUDGET, DEFAULT_WEIGHTS,
         };
         use crate::embedding::search_hybrid;
 
@@ -687,6 +688,9 @@ impl McpTools {
 
         let results = search_hybrid(&db_guard, search_query, limit * 2)
             .map_err(|e| format!("Hybrid search failed: {e}"))?;
+
+        // Get max access count for normalization
+        let max_access_count = db_guard.get_max_access_count().unwrap_or(1).max(1) as u32;
 
         let mut scored_memories = Vec::new();
 
@@ -734,12 +738,14 @@ impl McpTools {
                 let semantic_score = (hybrid_result.score / 0.033).clamp(0.0, 1.0);
                 let keyword_score = compute_keyword_match(&intent.keywords, &content);
                 let recency = recency_decay(memory.updated_at, 0.1);
+                let access_freq =
+                    normalize_access_frequency(memory.access_count.unwrap_or(0) as u32, max_access_count);
 
                 let relevance_score = RelevanceScore {
                     semantic: semantic_score,
                     keyword: keyword_score,
                     recency,
-                    access_freq: 0.0,
+                    access_freq,
                     user_priority: 0.0,
                 };
 
@@ -760,6 +766,11 @@ impl McpTools {
 
         if selected.is_empty() {
             return Ok("No relevant memories found matching the criteria.".to_string());
+        }
+
+        // Record access for the selected memories
+        for memory in &selected {
+            let _ = db_guard.record_access(&memory.id);
         }
 
         let format = match input.format.as_deref().unwrap_or("markdown") {

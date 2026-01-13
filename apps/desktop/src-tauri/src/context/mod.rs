@@ -8,6 +8,7 @@ mod budget;
 mod format;
 mod intent;
 mod relevance;
+mod settings;
 
 pub use budget::{
     estimate_tokens, select_within_budget, truncate_content, ContextBudget, ScoredMemory,
@@ -19,3 +20,4 @@ pub use relevance::{
     compute_relevance, normalize_access_frequency, recency_decay, RelevanceScore, RelevanceWeights,
     DEFAULT_WEIGHTS,
 };
+pub use settings::ContextSettings;
