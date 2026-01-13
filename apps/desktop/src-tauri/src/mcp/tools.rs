@@ -412,6 +412,8 @@ impl McpTools {
             summary_standard: summaries.standard.clone(),
             summary_version: Some(summaries.version as i32),
             content_hash: Some(summaries.content_hash),
+            last_accessed_at: None,
+            access_count: Some(0),
             created_at: now,
             updated_at: now,
         };
@@ -587,6 +589,8 @@ impl McpTools {
             summary_standard: summary_standard.clone(),
             summary_version,
             content_hash: new_content_hash,
+            last_accessed_at: existing.last_accessed_at,
+            access_count: existing.access_count,
             created_at: existing.created_at,
             updated_at: now,
         };

@@ -170,6 +170,8 @@ pub fn import_backup(
                     summary_standard: None,
                     summary_version: Some(0),
                     content_hash: None,
+                    last_accessed_at: None,
+                    access_count: Some(0),
                     created_at: memory.created_at,
                     updated_at: memory.updated_at,
                 };
@@ -236,6 +238,8 @@ pub fn import_backup(
                         summary_standard: None,
                         summary_version: Some(0),
                         content_hash: None,
+                        last_accessed_at: None,
+                        access_count: Some(0),
                         created_at: memory.created_at,
                         updated_at: memory.updated_at,
                     };

@@ -30,6 +30,9 @@ CREATE TABLE IF NOT EXISTS memories (
     summary_standard TEXT, -- 100-200 tokens, top sentences by score
     summary_version INTEGER DEFAULT 0,  -- incremented when regenerated
     content_hash TEXT,     -- SHA-256 truncated, for staleness detection
+    -- Access tracking for context injection relevance scoring
+    last_accessed_at INTEGER,  -- timestamp of last context retrieval
+    access_count INTEGER DEFAULT 0,  -- number of times retrieved for context
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL
 );

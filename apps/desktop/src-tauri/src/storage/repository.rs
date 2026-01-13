@@ -42,8 +42,10 @@ fn row_to_memory(row: &Row) -> Result<Memory> {
         summary_standard: row.get(10)?,
         summary_version: row.get(11)?,
         content_hash: row.get(12)?,
-        created_at: row.get(13)?,
-        updated_at: row.get(14)?,
+        last_accessed_at: row.get(13)?,
+        access_count: row.get(14)?,
+        created_at: row.get(15)?,
+        updated_at: row.get(16)?,
     })
 }
 
@@ -114,8 +116,8 @@ impl Database {
     /// Create a new memory
     pub fn create_memory(&self, memory: &Memory) -> Result<()> {
         self.connection().execute(
-            "INSERT INTO memories (id, space_id, source, source_id, title, summary, content, metadata, summary_title, summary_brief, summary_standard, summary_version, content_hash, created_at, updated_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15)",
+            "INSERT INTO memories (id, space_id, source, source_id, title, summary, content, metadata, summary_title, summary_brief, summary_standard, summary_version, content_hash, last_accessed_at, access_count, created_at, updated_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17)",
             params![
                 memory.id,
                 memory.space_id,
@@ -130,6 +132,8 @@ impl Database {
                 memory.summary_standard,
                 memory.summary_version,
                 memory.content_hash,
+                memory.last_accessed_at,
+                memory.access_count,
                 memory.created_at,
                 memory.updated_at,
             ],
@@ -140,7 +144,7 @@ impl Database {
     /// Get a memory by ID
     pub fn get_memory(&self, id: &str) -> Result<Option<Memory>> {
         let mut stmt = self.connection().prepare(
-            "SELECT id, space_id, source, source_id, title, summary, content, metadata, summary_title, summary_brief, summary_standard, summary_version, content_hash, created_at, updated_at
+            "SELECT id, space_id, source, source_id, title, summary, content, metadata, summary_title, summary_brief, summary_standard, summary_version, content_hash, last_accessed_at, access_count, created_at, updated_at
              FROM memories WHERE id = ?1",
         )?;
 
@@ -161,7 +165,7 @@ impl Database {
     ) -> Result<Vec<Memory>> {
         let (sql, params_vec): (&str, Vec<Box<dyn rusqlite::ToSql>>) = match space_id {
             Some(sid) => (
-                "SELECT id, space_id, source, source_id, title, summary, content, metadata, summary_title, summary_brief, summary_standard, summary_version, content_hash, created_at, updated_at
+                "SELECT id, space_id, source, source_id, title, summary, content, metadata, summary_title, summary_brief, summary_standard, summary_version, content_hash, last_accessed_at, access_count, created_at, updated_at
                  FROM memories WHERE space_id = ?1
                  ORDER BY created_at DESC LIMIT ?2 OFFSET ?3",
                 vec![
@@ -171,7 +175,7 @@ impl Database {
                 ],
             ),
             None => (
-                "SELECT id, space_id, source, source_id, title, summary, content, metadata, summary_title, summary_brief, summary_standard, summary_version, content_hash, created_at, updated_at
+                "SELECT id, space_id, source, source_id, title, summary, content, metadata, summary_title, summary_brief, summary_standard, summary_version, content_hash, last_accessed_at, access_count, created_at, updated_at
                  FROM memories
                  ORDER BY created_at DESC LIMIT ?1 OFFSET ?2",
                 vec![Box::new(limit as i64), Box::new(offset as i64)],
@@ -216,7 +220,7 @@ impl Database {
             Some(sid) => (
                 "SELECT m.id, m.space_id, m.source, m.source_id, m.title, m.summary, m.content, m.metadata,
                         m.summary_title, m.summary_brief, m.summary_standard, m.summary_version, m.content_hash,
-                        m.created_at, m.updated_at
+                        m.last_accessed_at, m.access_count, m.created_at, m.updated_at
                  FROM memories m
                  JOIN memories_fts fts ON m.id = fts.memory_id
                  WHERE memories_fts MATCH ?1 AND m.space_id = ?2
@@ -226,7 +230,7 @@ impl Database {
             None => (
                 "SELECT m.id, m.space_id, m.source, m.source_id, m.title, m.summary, m.content, m.metadata,
                         m.summary_title, m.summary_brief, m.summary_standard, m.summary_version, m.content_hash,
-                        m.created_at, m.updated_at
+                        m.last_accessed_at, m.access_count, m.created_at, m.updated_at
                  FROM memories m
                  JOIN memories_fts fts ON m.id = fts.memory_id
                  WHERE memories_fts MATCH ?1
@@ -303,7 +307,7 @@ impl Database {
         let mut stmt = self.connection().prepare(
             "SELECT id, space_id, source, source_id, title, summary, content, metadata,
                     summary_title, summary_brief, summary_standard, summary_version, content_hash,
-                    created_at, updated_at
+                    last_accessed_at, access_count, created_at, updated_at
              FROM memories
              WHERE summary_version = 0 OR summary_version IS NULL OR content_hash IS NULL
              LIMIT ?1",
@@ -491,7 +495,7 @@ impl Database {
     /// Get memories by source
     pub fn get_memories_by_source(&self, source: &str, limit: usize) -> Result<Vec<Memory>> {
         let mut stmt = self.connection().prepare(
-            "SELECT id, space_id, source, source_id, title, summary, content, metadata, summary_title, summary_brief, summary_standard, summary_version, content_hash, created_at, updated_at
+            "SELECT id, space_id, source, source_id, title, summary, content, metadata, summary_title, summary_brief, summary_standard, summary_version, content_hash, last_accessed_at, access_count, created_at, updated_at
              FROM memories WHERE source = ?1
              ORDER BY created_at DESC LIMIT ?2",
         )?;
@@ -536,7 +540,7 @@ impl Database {
     ) -> Result<Vec<Memory>> {
         let (sql, params_vec): (&str, Vec<Box<dyn rusqlite::ToSql>>) = match space_id {
             Some(sid) => (
-                "SELECT id, space_id, source, source_id, title, summary, content, metadata, summary_title, summary_brief, summary_standard, summary_version, content_hash, created_at, updated_at
+                "SELECT id, space_id, source, source_id, title, summary, content, metadata, summary_title, summary_brief, summary_standard, summary_version, content_hash, last_accessed_at, access_count, created_at, updated_at
                  FROM memories
                  WHERE space_id = ?1 AND created_at >= ?2 AND created_at < ?3
                  ORDER BY created_at DESC LIMIT ?4 OFFSET ?5",
@@ -549,7 +553,7 @@ impl Database {
                 ],
             ),
             None => (
-                "SELECT id, space_id, source, source_id, title, summary, content, metadata, summary_title, summary_brief, summary_standard, summary_version, content_hash, created_at, updated_at
+                "SELECT id, space_id, source, source_id, title, summary, content, metadata, summary_title, summary_brief, summary_standard, summary_version, content_hash, last_accessed_at, access_count, created_at, updated_at
                  FROM memories
                  WHERE created_at >= ?1 AND created_at < ?2
                  ORDER BY created_at DESC LIMIT ?3 OFFSET ?4",
@@ -589,6 +593,27 @@ impl Database {
                 |row| row.get(0),
             ),
         }
+    }
+
+    /// Record an access to a memory for context injection tracking
+    pub fn record_access(&self, memory_id: &str) -> Result<()> {
+        self.connection().execute(
+            "UPDATE memories SET
+             last_accessed_at = ?2,
+             access_count = COALESCE(access_count, 0) + 1
+             WHERE id = ?1",
+            params![memory_id, now()],
+        )?;
+        Ok(())
+    }
+
+    /// Get the maximum access count across all memories (for normalization)
+    pub fn get_max_access_count(&self) -> Result<i32> {
+        self.connection().query_row(
+            "SELECT COALESCE(MAX(access_count), 0) FROM memories",
+            [],
+            |row| row.get(0),
+        )
     }
 }
 
@@ -1228,6 +1253,8 @@ mod tests {
             summary_standard: None,
             summary_version: None,
             content_hash: None,
+            last_accessed_at: None,
+            access_count: None,
             created_at: past_timestamp,
             updated_at: past_timestamp,
         };

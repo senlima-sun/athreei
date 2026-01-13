@@ -218,6 +218,8 @@ pub async fn vault_change_passphrase(
             summary_standard: memory.summary_standard.clone(),
             summary_version: memory.summary_version,
             content_hash: memory.content_hash.clone(),
+            last_accessed_at: memory.last_accessed_at,
+            access_count: memory.access_count,
             created_at: memory.created_at,
             updated_at: memory.updated_at,
         };

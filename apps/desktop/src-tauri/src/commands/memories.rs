@@ -229,6 +229,8 @@ pub async fn create_memory(
         summary_standard: None,
         summary_version: Some(0),
         content_hash: None,
+        last_accessed_at: None,
+        access_count: Some(0),
         created_at: now,
         updated_at: now,
     };
@@ -694,6 +696,8 @@ mod tests {
             summary_standard: None,
             summary_version: Some(0),
             content_hash: None,
+            last_accessed_at: None,
+            access_count: Some(0),
             created_at: now,
             updated_at: now,
         };

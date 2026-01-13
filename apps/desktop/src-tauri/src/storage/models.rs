@@ -69,6 +69,10 @@ pub struct Memory {
     pub summary_version: Option<i32>,
     /// SHA-256 hash of content at summary generation time
     pub content_hash: Option<String>,
+    /// Last time this memory was retrieved for context injection
+    pub last_accessed_at: Option<i64>,
+    /// Number of times this memory was retrieved for context
+    pub access_count: Option<i32>,
     /// Unix timestamp of creation
     pub created_at: i64,
     /// Unix timestamp of last update
@@ -105,6 +109,8 @@ impl Memory {
             summary_standard: None,
             summary_version: Some(0),
             content_hash: None,
+            last_accessed_at: None,
+            access_count: Some(0),
             created_at: now,
             updated_at: now,
         }
