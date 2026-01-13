@@ -6,6 +6,7 @@
 
 mod budget;
 mod format;
+mod injection;
 mod intent;
 mod relevance;
 mod settings;
@@ -15,6 +16,9 @@ pub use budget::{
     DEFAULT_BUDGET,
 };
 pub use format::{format_as_json, format_as_markdown, format_as_plain, format_context, ContextFormat};
+pub use injection::{
+    extract_intent_query, inject_context_into_arguments, should_inject, INJECTABLE_TOOLS,
+};
 pub use intent::{clean_meta_phrases, extract_intent, extract_keywords, Intent};
 pub use relevance::{
     compute_relevance, normalize_access_frequency, recency_decay, RelevanceScore, RelevanceWeights,
