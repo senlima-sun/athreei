@@ -5,6 +5,7 @@ import {
   BackupSection,
   AboutSection,
   AppearanceSection,
+  AISection,
 } from "@/components/settings"
 
 export function SettingsPage(): React.ReactElement {
@@ -13,6 +14,7 @@ export function SettingsPage(): React.ReactElement {
       <AppearanceSection />
       <VaultSection />
       <McpSection />
+      <AISection />
       <SyncSection />
       <BackupSection />
       <AboutSection />
