@@ -105,3 +105,12 @@ export {
   useCreateHandoff,
   useDeleteHandoff,
 } from "./use-workspaces"
+
+export {
+  useEmbeddingStatus,
+  useIsEmbeddingModelDownloaded,
+  useEmbeddingModelConfig,
+  useDownloadEmbeddingModel,
+  useInitEmbeddingModel,
+  useBackfillEmbeddings,
+} from "./use-embedding"

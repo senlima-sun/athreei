@@ -84,6 +84,13 @@ export const queryKeys = {
     latest: (workspaceId: string) =>
       ["handoffs", "latest", workspaceId] as const,
   },
+
+  embedding: {
+    all: ["embedding"] as const,
+    status: ["embedding", "status"] as const,
+    downloaded: ["embedding", "downloaded"] as const,
+    config: ["embedding", "config"] as const,
+  },
 } as const
 
 export type QueryKeys = typeof queryKeys

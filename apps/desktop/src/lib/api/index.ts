@@ -118,3 +118,15 @@ export {
   deleteHandoff,
   getLatestHandoff,
 } from "./workspaces"
+
+// Embedding operations
+export {
+  getEmbeddingStatus,
+  isEmbeddingModelDownloaded,
+  downloadEmbeddingModel,
+  initEmbeddingModel,
+  backfillEmbeddings,
+  getEmbeddingModelConfig,
+  type EmbeddingStatus,
+  type EmbeddingModelConfig,
+} from "./embedding"
