@@ -1,4 +1,4 @@
-import { X, Home, Database, FolderOpen, Settings, Sparkles } from "lucide-react"
+import { X, Home, Database, FolderOpen, Briefcase, Settings, Sparkles } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { SidebarLink } from "./sidebar-link"
 
@@ -59,6 +59,13 @@ export function Sidebar({
           onClick={onClose}
         >
           Spaces
+        </SidebarLink>
+        <SidebarLink
+          to="/workspaces"
+          icon={<Briefcase className="h-4 w-4" />}
+          onClick={onClose}
+        >
+          Workspaces
         </SidebarLink>
         <SidebarLink
           to="/settings"

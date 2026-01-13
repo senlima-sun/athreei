@@ -5,6 +5,8 @@ import { MemoriesPage } from "./pages/memories"
 import { MemoryDetailPage } from "./pages/memory-detail"
 import { SpacesPage } from "./pages/spaces"
 import { SpaceDetailPage } from "./pages/space-detail"
+import { WorkspacesPage } from "./pages/workspaces"
+import { WorkspaceDetailPage } from "./pages/workspace-detail"
 import { SettingsPage } from "./pages/settings"
 
 export const router = createBrowserRouter([
@@ -17,6 +19,8 @@ export const router = createBrowserRouter([
       { path: "memories/:id", element: <MemoryDetailPage /> },
       { path: "spaces", element: <SpacesPage /> },
       { path: "spaces/:id", element: <SpaceDetailPage /> },
+      { path: "workspaces", element: <WorkspacesPage /> },
+      { path: "workspaces/:id", element: <WorkspaceDetailPage /> },
       { path: "settings", element: <SettingsPage /> },
     ],
   },
