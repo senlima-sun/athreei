@@ -627,8 +627,8 @@ impl Database {
     /// Create a new workspace
     pub fn create_workspace(&self, workspace: &Workspace) -> Result<()> {
         self.connection().execute(
-            "INSERT INTO workspaces (id, name, description, space_id, goal, success_criteria, status, blocker, context, created_at, updated_at, completed_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
+            "INSERT INTO workspaces (id, name, description, space_id, goal, success_criteria, status, blocker, context, encrypted_goal, encrypted_context, created_at, updated_at, completed_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
             params![
                 workspace.id,
                 workspace.name,
@@ -639,6 +639,8 @@ impl Database {
                 workspace.status.as_str(),
                 workspace.blocker,
                 workspace.context,
+                workspace.encrypted_goal,
+                workspace.encrypted_context,
                 workspace.created_at,
                 workspace.updated_at,
                 workspace.completed_at,
@@ -650,7 +652,7 @@ impl Database {
     /// Get a workspace by ID
     pub fn get_workspace(&self, id: &str) -> Result<Option<Workspace>> {
         let mut stmt = self.connection().prepare(
-            "SELECT id, name, description, space_id, goal, success_criteria, status, blocker, context, created_at, updated_at, completed_at
+            "SELECT id, name, description, space_id, goal, success_criteria, status, blocker, context, encrypted_goal, encrypted_context, created_at, updated_at, completed_at
              FROM workspaces WHERE id = ?1",
         )?;
 
@@ -682,7 +684,7 @@ impl Database {
     /// List workspaces with optional filters
     pub fn list_workspaces(&self, filter: &ListWorkspacesFilter) -> Result<Vec<Workspace>> {
         let mut sql = String::from(
-            "SELECT id, name, description, space_id, goal, success_criteria, status, blocker, context, created_at, updated_at, completed_at
+            "SELECT id, name, description, space_id, goal, success_criteria, status, blocker, context, encrypted_goal, encrypted_context, created_at, updated_at, completed_at
              FROM workspaces WHERE 1=1",
         );
         let mut params_vec: Vec<Box<dyn rusqlite::ToSql>> = Vec::new();
@@ -722,7 +724,8 @@ impl Database {
         self.connection().execute(
             "UPDATE workspaces SET
              name = ?2, description = ?3, space_id = ?4, goal = ?5, success_criteria = ?6,
-             status = ?7, blocker = ?8, context = ?9, updated_at = ?10, completed_at = ?11
+             status = ?7, blocker = ?8, context = ?9, encrypted_goal = ?10, encrypted_context = ?11,
+             updated_at = ?12, completed_at = ?13
              WHERE id = ?1",
             params![
                 workspace.id,
@@ -734,6 +737,8 @@ impl Database {
                 workspace.status.as_str(),
                 workspace.blocker,
                 workspace.context,
+                workspace.encrypted_goal,
+                workspace.encrypted_context,
                 now(),
                 workspace.completed_at,
             ],
@@ -780,8 +785,8 @@ impl Database {
         )?;
 
         self.connection().execute(
-            "INSERT INTO tasks (id, workspace_id, title, description, status, blocker, is_next_action, position, created_at, updated_at, completed_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+            "INSERT INTO tasks (id, workspace_id, title, description, status, blocker, is_next_action, position, encrypted_title, encrypted_description, created_at, updated_at, completed_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
             params![
                 task.id,
                 task.workspace_id,
@@ -791,6 +796,8 @@ impl Database {
                 task.blocker,
                 task.is_next_action as i32,
                 max_position,
+                task.encrypted_title,
+                task.encrypted_description,
                 task.created_at,
                 task.updated_at,
                 task.completed_at,
@@ -802,7 +809,7 @@ impl Database {
     /// Get a task by ID
     pub fn get_task(&self, id: &str) -> Result<Option<Task>> {
         let mut stmt = self.connection().prepare(
-            "SELECT id, workspace_id, title, description, status, blocker, is_next_action, position, created_at, updated_at, completed_at
+            "SELECT id, workspace_id, title, description, status, blocker, is_next_action, position, encrypted_title, encrypted_description, created_at, updated_at, completed_at
              FROM tasks WHERE id = ?1",
         )?;
 
@@ -817,7 +824,7 @@ impl Database {
     /// List tasks for a workspace ordered by position
     pub fn list_tasks(&self, workspace_id: &str) -> Result<Vec<Task>> {
         let mut stmt = self.connection().prepare(
-            "SELECT id, workspace_id, title, description, status, blocker, is_next_action, position, created_at, updated_at, completed_at
+            "SELECT id, workspace_id, title, description, status, blocker, is_next_action, position, encrypted_title, encrypted_description, created_at, updated_at, completed_at
              FROM tasks WHERE workspace_id = ?1 ORDER BY position ASC",
         )?;
 
@@ -830,7 +837,8 @@ impl Database {
         self.connection().execute(
             "UPDATE tasks SET
              title = ?2, description = ?3, status = ?4, blocker = ?5, is_next_action = ?6,
-             position = ?7, updated_at = ?8, completed_at = ?9
+             position = ?7, encrypted_title = ?8, encrypted_description = ?9,
+             updated_at = ?10, completed_at = ?11
              WHERE id = ?1",
             params![
                 task.id,
@@ -840,6 +848,8 @@ impl Database {
                 task.blocker,
                 task.is_next_action as i32,
                 task.position,
+                task.encrypted_title,
+                task.encrypted_description,
                 now(),
                 task.completed_at,
             ],
@@ -868,7 +878,7 @@ impl Database {
     /// Get the next action task for a workspace
     pub fn get_next_action_task(&self, workspace_id: &str) -> Result<Option<Task>> {
         let mut stmt = self.connection().prepare(
-            "SELECT id, workspace_id, title, description, status, blocker, is_next_action, position, created_at, updated_at, completed_at
+            "SELECT id, workspace_id, title, description, status, blocker, is_next_action, position, encrypted_title, encrypted_description, created_at, updated_at, completed_at
              FROM tasks WHERE workspace_id = ?1 AND is_next_action = 1 LIMIT 1",
         )?;
 
@@ -887,8 +897,8 @@ impl Database {
     /// Create a new handoff
     pub fn create_handoff(&self, handoff: &Handoff) -> Result<()> {
         self.connection().execute(
-            "INSERT INTO handoffs (id, workspace_id, session_id, progress_summary, current_state, next_steps, blockers, what_worked, what_failed, key_decisions, created_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+            "INSERT INTO handoffs (id, workspace_id, session_id, progress_summary, current_state, next_steps, blockers, what_worked, what_failed, key_decisions, encrypted_progress, encrypted_state, encrypted_learnings, created_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)",
             params![
                 handoff.id,
                 handoff.workspace_id,
@@ -900,6 +910,9 @@ impl Database {
                 handoff.what_worked,
                 handoff.what_failed,
                 handoff.key_decisions,
+                handoff.encrypted_progress,
+                handoff.encrypted_state,
+                handoff.encrypted_learnings,
                 handoff.created_at,
             ],
         )?;
@@ -909,7 +922,7 @@ impl Database {
     /// Get the latest handoff for a workspace
     pub fn get_latest_handoff(&self, workspace_id: &str) -> Result<Option<Handoff>> {
         let mut stmt = self.connection().prepare(
-            "SELECT id, workspace_id, session_id, progress_summary, current_state, next_steps, blockers, what_worked, what_failed, key_decisions, created_at
+            "SELECT id, workspace_id, session_id, progress_summary, current_state, next_steps, blockers, what_worked, what_failed, key_decisions, encrypted_progress, encrypted_state, encrypted_learnings, created_at
              FROM handoffs WHERE workspace_id = ?1 ORDER BY created_at DESC LIMIT 1",
         )?;
 
@@ -924,7 +937,7 @@ impl Database {
     /// List handoffs for a workspace
     pub fn list_handoffs(&self, workspace_id: &str, limit: usize) -> Result<Vec<Handoff>> {
         let mut stmt = self.connection().prepare(
-            "SELECT id, workspace_id, session_id, progress_summary, current_state, next_steps, blockers, what_worked, what_failed, key_decisions, created_at
+            "SELECT id, workspace_id, session_id, progress_summary, current_state, next_steps, blockers, what_worked, what_failed, key_decisions, encrypted_progress, encrypted_state, encrypted_learnings, created_at
              FROM handoffs WHERE workspace_id = ?1 ORDER BY created_at DESC LIMIT ?2",
         )?;
 
@@ -935,7 +948,7 @@ impl Database {
     /// Get a handoff by ID
     pub fn get_handoff(&self, id: &str) -> Result<Option<Handoff>> {
         let mut stmt = self.connection().prepare(
-            "SELECT id, workspace_id, session_id, progress_summary, current_state, next_steps, blockers, what_worked, what_failed, key_decisions, created_at
+            "SELECT id, workspace_id, session_id, progress_summary, current_state, next_steps, blockers, what_worked, what_failed, key_decisions, encrypted_progress, encrypted_state, encrypted_learnings, created_at
              FROM handoffs WHERE id = ?1",
         )?;
 
@@ -956,6 +969,8 @@ impl Database {
 }
 
 /// Map a database row to a Workspace
+/// Column order: id, name, description, space_id, goal, success_criteria, status, blocker, context,
+///               encrypted_goal, encrypted_context, created_at, updated_at, completed_at
 fn row_to_workspace(row: &Row) -> Result<Workspace> {
     let status_str: String = row.get(6)?;
     Ok(Workspace {
@@ -968,13 +983,17 @@ fn row_to_workspace(row: &Row) -> Result<Workspace> {
         status: WorkspaceStatus::from_str(&status_str).unwrap_or_default(),
         blocker: row.get(7)?,
         context: row.get(8)?,
-        created_at: row.get(9)?,
-        updated_at: row.get(10)?,
-        completed_at: row.get(11)?,
+        encrypted_goal: row.get(9)?,
+        encrypted_context: row.get(10)?,
+        created_at: row.get(11)?,
+        updated_at: row.get(12)?,
+        completed_at: row.get(13)?,
     })
 }
 
 /// Map a database row to a Task
+/// Column order: id, workspace_id, title, description, status, blocker, is_next_action, position,
+///               encrypted_title, encrypted_description, created_at, updated_at, completed_at
 fn row_to_task(row: &Row) -> Result<Task> {
     let status_str: String = row.get(4)?;
     let is_next_action_int: i32 = row.get(6)?;
@@ -987,13 +1006,18 @@ fn row_to_task(row: &Row) -> Result<Task> {
         blocker: row.get(5)?,
         is_next_action: is_next_action_int != 0,
         position: row.get(7)?,
-        created_at: row.get(8)?,
-        updated_at: row.get(9)?,
-        completed_at: row.get(10)?,
+        encrypted_title: row.get(8)?,
+        encrypted_description: row.get(9)?,
+        created_at: row.get(10)?,
+        updated_at: row.get(11)?,
+        completed_at: row.get(12)?,
     })
 }
 
 /// Map a database row to a Handoff
+/// Column order: id, workspace_id, session_id, progress_summary, current_state, next_steps, blockers,
+///               what_worked, what_failed, key_decisions, encrypted_progress, encrypted_state,
+///               encrypted_learnings, created_at
 fn row_to_handoff(row: &Row) -> Result<Handoff> {
     Ok(Handoff {
         id: row.get(0)?,
@@ -1006,7 +1030,10 @@ fn row_to_handoff(row: &Row) -> Result<Handoff> {
         what_worked: row.get(7)?,
         what_failed: row.get(8)?,
         key_decisions: row.get(9)?,
-        created_at: row.get(10)?,
+        encrypted_progress: row.get(10)?,
+        encrypted_state: row.get(11)?,
+        encrypted_learnings: row.get(12)?,
+        created_at: row.get(13)?,
     })
 }
 

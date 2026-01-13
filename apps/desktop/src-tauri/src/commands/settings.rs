@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tauri::{AppHandle, Manager, State};
 
-use crate::encryption::VaultState;
 use crate::state::DatabaseState;
 
 /// Application settings

@@ -103,6 +103,12 @@ pub struct Workspace {
     pub status: WorkspaceStatus,
     pub blocker: Option<String>,
     pub context: Option<String>,
+    /// Encrypted goal (AES-256-GCM)
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub encrypted_goal: Option<Vec<u8>>,
+    /// Encrypted context (AES-256-GCM)
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub encrypted_context: Option<Vec<u8>>,
     pub created_at: i64,
     pub updated_at: i64,
     pub completed_at: Option<i64>,
@@ -125,6 +131,8 @@ impl Workspace {
             status: WorkspaceStatus::Pending,
             blocker: None,
             context: None,
+            encrypted_goal: None,
+            encrypted_context: None,
             created_at: now,
             updated_at: now,
             completed_at: None,
@@ -143,6 +151,12 @@ pub struct Task {
     pub blocker: Option<String>,
     pub is_next_action: bool,
     pub position: i32,
+    /// Encrypted title (AES-256-GCM)
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub encrypted_title: Option<Vec<u8>>,
+    /// Encrypted description (AES-256-GCM)
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub encrypted_description: Option<Vec<u8>>,
     pub created_at: i64,
     pub updated_at: i64,
     pub completed_at: Option<i64>,
@@ -164,6 +178,8 @@ impl Task {
             blocker: None,
             is_next_action: false,
             position: 0,
+            encrypted_title: None,
+            encrypted_description: None,
             created_at: now,
             updated_at: now,
             completed_at: None,
@@ -184,6 +200,15 @@ pub struct Handoff {
     pub what_worked: Option<String>,
     pub what_failed: Option<String>,
     pub key_decisions: Option<String>,
+    /// Encrypted progress summary (AES-256-GCM)
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub encrypted_progress: Option<Vec<u8>>,
+    /// Encrypted current state (AES-256-GCM)
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub encrypted_state: Option<Vec<u8>>,
+    /// Encrypted learnings (combined what_worked/what_failed/key_decisions)
+    #[serde(skip_serializing_if = "Option::is_none", default)]
+    pub encrypted_learnings: Option<Vec<u8>>,
     pub created_at: i64,
 }
 
@@ -209,6 +234,9 @@ impl Handoff {
             what_worked: None,
             what_failed: None,
             key_decisions: None,
+            encrypted_progress: None,
+            encrypted_state: None,
+            encrypted_learnings: None,
             created_at: now,
         }
     }
