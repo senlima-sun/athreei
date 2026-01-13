@@ -76,6 +76,27 @@ pub struct ListSpacesInput {
     pub include_counts: Option<bool>,
 }
 
+/// Tool input for get_relevant_context
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct GetRelevantContextInput {
+    /// Query to find relevant memories for
+    pub query: String,
+    /// Maximum number of memories to return (default: 5)
+    #[serde(default)]
+    pub limit: Option<usize>,
+    /// Optional space ID to filter results
+    pub space_id: Option<String>,
+    /// Minimum relevance score threshold (0.0-1.0, default: 0.3)
+    #[serde(default)]
+    pub min_relevance: Option<f64>,
+    /// Include recently accessed memories (default: true)
+    #[serde(default)]
+    pub include_recent: Option<bool>,
+    /// Output format: "markdown", "json", or "plain" (default: "markdown")
+    #[serde(default)]
+    pub format: Option<String>,
+}
+
 /// Decrypted memory for tool responses
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ToolMemory {
@@ -624,6 +645,141 @@ impl McpTools {
 
         Ok(results)
     }
+
+    /// Get relevant context for a query using intent extraction and relevance scoring
+    pub fn get_relevant_context(&self, input: GetRelevantContextInput) -> Result<String, String> {
+        use crate::context::{
+            compute_relevance, extract_intent, format_context, recency_decay, select_within_budget,
+            ContextFormat, RelevanceScore, ScoredMemory, DEFAULT_BUDGET, DEFAULT_WEIGHTS,
+        };
+        use crate::embedding::search_hybrid;
+
+        if !self.vault.is_unlocked() {
+            return Err("Vault is locked. Please unlock to access memories.".to_string());
+        }
+
+        let intent = extract_intent(&input.query);
+        if intent.keywords.is_empty() && intent.cleaned.is_empty() {
+            return Ok(
+                "No meaningful keywords found in query. Please provide more specific context."
+                    .to_string(),
+            );
+        }
+
+        let db_guard = self
+            .db
+            .db
+            .lock()
+            .map_err(|e| format!("Database lock error: {e}"))?;
+
+        let limit = input.limit.unwrap_or(5);
+        let min_relevance = input.min_relevance.unwrap_or(0.3);
+
+        let search_query = if !intent.cleaned.is_empty() {
+            &intent.cleaned
+        } else {
+            &input.query
+        };
+
+        let results = search_hybrid(&db_guard, search_query, limit * 2)
+            .map_err(|e| format!("Hybrid search failed: {e}"))?;
+
+        let mut scored_memories = Vec::new();
+
+        for hybrid_result in results {
+            if let Some(memory) = db_guard
+                .get_memory(&hybrid_result.memory_id)
+                .map_err(|e| format!("Failed to get memory: {e}"))?
+            {
+                if let Some(ref space_id) = input.space_id {
+                    if memory.space_id.as_ref() != Some(space_id) {
+                        continue;
+                    }
+                }
+
+                let aad = Self::build_aad(&memory.id, memory.space_id.as_deref());
+
+                let content = if let Some(encrypted) = &memory.content {
+                    let decrypted = self
+                        .vault
+                        .decrypt(encrypted, &aad)
+                        .map_err(|e| format!("Failed to decrypt content: {e}"))?;
+                    String::from_utf8(decrypted)
+                        .map_err(|e| format!("Invalid UTF-8 in content: {e}"))?
+                } else if let Some(ref standard) = memory.summary_standard {
+                    standard.clone()
+                } else if let Some(ref brief) = memory.summary_brief {
+                    brief.clone()
+                } else {
+                    continue;
+                };
+
+                let title = if let Some(encrypted) = &memory.title {
+                    let decrypted = self
+                        .vault
+                        .decrypt(encrypted, &aad)
+                        .map_err(|e| format!("Failed to decrypt title: {e}"))?;
+                    Some(
+                        String::from_utf8(decrypted)
+                            .map_err(|e| format!("Invalid UTF-8 in title: {e}"))?,
+                    )
+                } else {
+                    memory.summary_title.clone()
+                };
+
+                let semantic_score = (hybrid_result.score / 0.033).clamp(0.0, 1.0);
+                let keyword_score = compute_keyword_match(&intent.keywords, &content);
+                let recency = recency_decay(memory.updated_at, 0.1);
+
+                let relevance_score = RelevanceScore {
+                    semantic: semantic_score,
+                    keyword: keyword_score,
+                    recency,
+                    access_freq: 0.0,
+                    user_priority: 0.0,
+                };
+
+                let final_score = compute_relevance(&relevance_score, &DEFAULT_WEIGHTS);
+
+                if final_score >= min_relevance {
+                    scored_memories.push(ScoredMemory {
+                        id: memory.id.clone(),
+                        content,
+                        title,
+                        score: final_score,
+                    });
+                }
+            }
+        }
+
+        let selected = select_within_budget(scored_memories, &DEFAULT_BUDGET);
+
+        if selected.is_empty() {
+            return Ok("No relevant memories found matching the criteria.".to_string());
+        }
+
+        let format = match input.format.as_deref().unwrap_or("markdown") {
+            "json" => ContextFormat::Json,
+            "plain" => ContextFormat::Plain,
+            _ => ContextFormat::Markdown,
+        };
+
+        Ok(format_context(&selected, format))
+    }
+}
+
+fn compute_keyword_match(keywords: &[String], content: &str) -> f64 {
+    if keywords.is_empty() {
+        return 0.0;
+    }
+
+    let content_lower = content.to_lowercase();
+    let matched_count = keywords
+        .iter()
+        .filter(|k| content_lower.contains(&k.to_lowercase()))
+        .count();
+
+    (matched_count as f64 / keywords.len() as f64).clamp(0.0, 1.0)
 }
 
 #[cfg(test)]

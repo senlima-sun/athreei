@@ -16,8 +16,8 @@ use rmcp::{
 use std::sync::Arc;
 
 use super::tools::{
-    CreateMemoryInput, GetMemoryInput, ListSpacesInput, McpTools, SearchMemoriesInput,
-    UpdateMemoryInput,
+    CreateMemoryInput, GetMemoryInput, GetRelevantContextInput, ListSpacesInput, McpTools,
+    SearchMemoriesInput, UpdateMemoryInput,
 };
 use crate::encryption::VaultState;
 use crate::mcp::resources::AiiiResources;
@@ -104,6 +104,14 @@ impl ServerHandler for AiiiHandler {
                     "List all available memory spaces. \
                      Optionally include memory counts per space.",
                     schema_for_type::<ListSpacesInput>(),
+                ),
+                Tool::new(
+                    "get_relevant_context",
+                    "Retrieve memories relevant to the given query using intent extraction, \
+                     hybrid search (keyword + semantic), and relevance scoring. Returns formatted \
+                     memories with relevance scores. Use this to get context before performing \
+                     tasks that might benefit from historical information or past decisions.",
+                    schema_for_type::<GetRelevantContextInput>(),
                 ),
             ];
 
@@ -215,6 +223,21 @@ impl ServerHandler for AiiiHandler {
                         Ok(spaces) => serde_json::to_string_pretty(&spaces).map_err(|e| {
                             McpError::internal_error(format!("Serialization error: {e}"), None)
                         })?,
+                        Err(e) => {
+                            let entry = timer.finish_error(e.clone(), Some("tool_error".into()));
+                            self.trace_collector.record_trace(entry).await;
+                            return Err(McpError::internal_error(e, None));
+                        }
+                    }
+                }
+                "get_relevant_context" => {
+                    let input: GetRelevantContextInput =
+                        serde_json::from_value(arguments_value).map_err(|e| {
+                            McpError::invalid_params(format!("Invalid input: {e}"), None)
+                        })?;
+
+                    match self.tools.get_relevant_context(input) {
+                        Ok(result) => result,
                         Err(e) => {
                             let entry = timer.finish_error(e.clone(), Some("tool_error".into()));
                             self.trace_collector.record_trace(entry).await;
