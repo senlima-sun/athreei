@@ -15,6 +15,7 @@ pub mod encryption;
 pub mod mcp;
 pub mod state;
 pub mod storage;
+pub mod summarization;
 pub mod sync;
 
 use commands::SettingsState;

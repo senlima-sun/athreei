@@ -27,6 +27,10 @@ thiserror = "1.0"
 anyhow = "1.0"
 nanoid = "0.4"
 
+# Summarization
+sha2 = "0.10"
+hex = "0.4"
+
 # MCP SDK
 rmcp = { version = "0.12", features = ["server", "macros", "transport-io", "transport-streamable-http-server"] }
 async-trait = "0.1"

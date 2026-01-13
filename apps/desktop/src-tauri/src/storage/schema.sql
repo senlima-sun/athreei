@@ -21,9 +21,15 @@ CREATE TABLE IF NOT EXISTS memories (
     source TEXT NOT NULL,  -- e.g., "browser", "clipboard", "manual"
     source_id TEXT,        -- source-specific identifier (e.g., URL)
     title BLOB,            -- encrypted
-    summary BLOB,          -- encrypted
+    summary BLOB,          -- encrypted (user-provided summary)
     content BLOB,          -- encrypted
     metadata TEXT,         -- JSON, unencrypted for FTS indexing
+    -- Auto-generated multi-level summaries (extractive, unencrypted for MCP)
+    summary_title TEXT,    -- 5-15 tokens, auto-generated title/headline
+    summary_brief TEXT,    -- 30-60 tokens, first + key sentences
+    summary_standard TEXT, -- 100-200 tokens, top sentences by score
+    summary_version INTEGER DEFAULT 0,  -- incremented when regenerated
+    content_hash TEXT,     -- SHA-256 truncated, for staleness detection
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL
 );
@@ -33,6 +39,10 @@ CREATE INDEX IF NOT EXISTS idx_memories_space_id ON memories(space_id);
 CREATE INDEX IF NOT EXISTS idx_memories_source ON memories(source);
 CREATE INDEX IF NOT EXISTS idx_memories_created_at ON memories(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_memories_source_id ON memories(source_id);
+
+-- Index for finding memories with stale/missing summaries
+CREATE INDEX IF NOT EXISTS idx_memories_summary_version
+ON memories(summary_version) WHERE summary_version = 0 OR summary_version IS NULL;
 
 -- Tags table: reusable tags for categorization
 CREATE TABLE IF NOT EXISTS tags (
@@ -108,3 +118,49 @@ CREATE TRIGGER IF NOT EXISTS memory_tags_ad AFTER DELETE ON memory_tags BEGIN
     UPDATE memories SET updated_at = (strftime('%s', 'now'))
     WHERE id = OLD.memory_id;
 END;
+
+-- =============================================================================
+-- Trace Collector Schema
+-- =============================================================================
+
+-- Sessions table: tracks MCP client sessions
+CREATE TABLE IF NOT EXISTS sessions (
+    id TEXT PRIMARY KEY NOT NULL,
+    client_name TEXT,
+    client_version TEXT,
+    started_at INTEGER NOT NULL,
+    ended_at INTEGER,
+    last_activity_at INTEGER,
+    total_tool_calls INTEGER DEFAULT 0,
+    total_errors INTEGER DEFAULT 0,
+    total_duration_ms INTEGER DEFAULT 0,
+    end_reason TEXT CHECK (end_reason IN ('client_disconnect', 'timeout', 'explicit', 'error'))
+);
+
+-- Sessions indexes
+CREATE INDEX IF NOT EXISTS idx_sessions_started ON sessions(started_at DESC);
+CREATE INDEX IF NOT EXISTS idx_sessions_ended ON sessions(ended_at DESC);
+
+-- Traces table: records individual MCP tool calls
+CREATE TABLE IF NOT EXISTS traces (
+    id TEXT PRIMARY KEY NOT NULL,
+    session_id TEXT NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+    tool_name TEXT NOT NULL,
+    input_params TEXT,
+    output_result TEXT,
+    started_at INTEGER NOT NULL,
+    duration_ms INTEGER,
+    status TEXT NOT NULL CHECK (status IN ('success', 'error', 'timeout')),
+    error_message TEXT,
+    error_type TEXT,
+    memory_ids TEXT,
+    space_ids TEXT,
+    input_size_bytes INTEGER,
+    output_size_bytes INTEGER
+);
+
+-- Traces indexes for common query patterns
+CREATE INDEX IF NOT EXISTS idx_traces_session ON traces(session_id, started_at);
+CREATE INDEX IF NOT EXISTS idx_traces_tool ON traces(tool_name, started_at);
+CREATE INDEX IF NOT EXISTS idx_traces_status ON traces(status, started_at);
+CREATE INDEX IF NOT EXISTS idx_traces_started ON traces(started_at DESC);
