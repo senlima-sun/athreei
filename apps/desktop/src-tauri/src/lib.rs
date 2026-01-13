@@ -11,6 +11,7 @@ use tauri::{
 
 pub mod backup;
 mod commands;
+pub mod context;
 pub mod embedding;
 pub mod encryption;
 pub mod mcp;
