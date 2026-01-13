@@ -20,6 +20,7 @@ pub mod storage;
 pub mod summarization;
 pub mod sync;
 pub mod trace;
+pub mod workspace;
 
 use commands::SettingsState;
 use encryption::VaultState;
@@ -198,6 +199,26 @@ pub fn run() {
             commands::init_embedding_model,
             commands::backfill_memory_embeddings,
             commands::get_embedding_model_config,
+            // Workspace commands
+            commands::list_workspaces,
+            commands::get_workspace,
+            commands::create_workspace,
+            commands::update_workspace,
+            commands::delete_workspace,
+            commands::count_workspaces,
+            // Task commands
+            commands::list_tasks,
+            commands::get_task,
+            commands::create_task,
+            commands::update_task,
+            commands::delete_task,
+            commands::reorder_tasks,
+            // Handoff commands
+            commands::list_handoffs,
+            commands::get_handoff,
+            commands::create_handoff,
+            commands::delete_handoff,
+            commands::get_latest_handoff,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

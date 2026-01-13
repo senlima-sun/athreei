@@ -97,3 +97,24 @@ export {
   type ImportStrategy,
   type BackupInfo,
 } from "./backup"
+
+// Workspace operations
+export {
+  listWorkspaces,
+  getWorkspace,
+  createWorkspace,
+  updateWorkspace,
+  deleteWorkspace,
+  countWorkspaces,
+  listTasks,
+  getTask,
+  createTask,
+  updateTask,
+  deleteTask,
+  reorderTasks,
+  listHandoffs,
+  getHandoff,
+  createHandoff,
+  deleteHandoff,
+  getLatestHandoff,
+} from "./workspaces"

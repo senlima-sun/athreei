@@ -16,8 +16,10 @@ use rmcp::{
 use std::sync::Arc;
 
 use super::tools::{
-    CreateMemoryInput, GetMemoryInput, GetRelevantContextInput, ListSpacesInput, McpTools,
-    SearchMemoriesInput, UpdateMemoryInput,
+    AddTaskInput, CreateMemoryInput, CreateWorkspaceInput, GetMemoryInput, GetRelevantContextInput,
+    GetWorkspaceInput, ListSpacesInput, ListWorkspacesInput, McpTools, ResumeWorkspaceInput,
+    SaveHandoffInput, SearchMemoriesInput, UpdateMemoryInput, UpdateTaskInputMcp,
+    UpdateWorkspaceInput,
 };
 use crate::encryption::VaultState;
 use crate::mcp::resources::AiiiResources;
@@ -112,6 +114,58 @@ impl ServerHandler for AiiiHandler {
                      memories with relevance scores. Use this to get context before performing \
                      tasks that might benefit from historical information or past decisions.",
                     schema_for_type::<GetRelevantContextInput>(),
+                ),
+                // Workspace & Handoff Tools
+                Tool::new(
+                    "create_workspace",
+                    "Create a new workspace for tracking a goal-oriented task. Workspaces contain \
+                     tasks and handoffs for session continuity. Use when starting work on a \
+                     multi-session project or complex task.",
+                    schema_for_type::<CreateWorkspaceInput>(),
+                ),
+                Tool::new(
+                    "get_workspace",
+                    "Get a workspace by ID, including its tasks and latest handoff. Use this to \
+                     understand the current state of work on a project.",
+                    schema_for_type::<GetWorkspaceInput>(),
+                ),
+                Tool::new(
+                    "update_workspace",
+                    "Update a workspace's status, goal, context, or blocker. Use to mark progress, \
+                     note blockers, or update the goal as understanding evolves.",
+                    schema_for_type::<UpdateWorkspaceInput>(),
+                ),
+                Tool::new(
+                    "list_workspaces",
+                    "List workspaces with optional filters. Use to find active or pending workspaces \
+                     that need attention.",
+                    schema_for_type::<ListWorkspacesInput>(),
+                ),
+                Tool::new(
+                    "add_task",
+                    "Add a task to a workspace. Tasks break down the workspace goal into actionable \
+                     items. Mark high-priority tasks as next actions.",
+                    schema_for_type::<AddTaskInput>(),
+                ),
+                Tool::new(
+                    "update_task",
+                    "Update a task's status, title, or other properties. Use to mark tasks complete, \
+                     blocked, or update their details.",
+                    schema_for_type::<UpdateTaskInputMcp>(),
+                ),
+                Tool::new(
+                    "save_handoff",
+                    "Save a handoff for session continuity. Document progress, current state, \
+                     next steps, blockers, and learnings. ALWAYS call this before ending a session \
+                     so the next session can resume effectively.",
+                    schema_for_type::<SaveHandoffInput>(),
+                ),
+                Tool::new(
+                    "resume_workspace",
+                    "Resume work on a workspace. Returns the workspace with all tasks and the \
+                     latest handoff context. Use this at the start of a session to get context \
+                     about where work left off.",
+                    schema_for_type::<ResumeWorkspaceInput>(),
                 ),
             ];
 
@@ -238,6 +292,143 @@ impl ServerHandler for AiiiHandler {
 
                     match self.tools.get_relevant_context(input) {
                         Ok(result) => result,
+                        Err(e) => {
+                            let entry = timer.finish_error(e.clone(), Some("tool_error".into()));
+                            self.trace_collector.record_trace(entry).await;
+                            return Err(McpError::internal_error(e, None));
+                        }
+                    }
+                }
+                "create_workspace" => {
+                    let input: CreateWorkspaceInput =
+                        serde_json::from_value(arguments_value).map_err(|e| {
+                            McpError::invalid_params(format!("Invalid input: {e}"), None)
+                        })?;
+
+                    match self.tools.create_workspace(input) {
+                        Ok(workspace) => serde_json::to_string_pretty(&workspace).map_err(|e| {
+                            McpError::internal_error(format!("Serialization error: {e}"), None)
+                        })?,
+                        Err(e) => {
+                            let entry = timer.finish_error(e.clone(), Some("tool_error".into()));
+                            self.trace_collector.record_trace(entry).await;
+                            return Err(McpError::internal_error(e, None));
+                        }
+                    }
+                }
+                "get_workspace" => {
+                    let input: GetWorkspaceInput =
+                        serde_json::from_value(arguments_value).map_err(|e| {
+                            McpError::invalid_params(format!("Invalid input: {e}"), None)
+                        })?;
+
+                    match self.tools.get_workspace(input) {
+                        Ok(Some(workspace)) => serde_json::to_string_pretty(&workspace).map_err(|e| {
+                            McpError::internal_error(format!("Serialization error: {e}"), None)
+                        })?,
+                        Ok(None) => "Workspace not found".to_string(),
+                        Err(e) => {
+                            let entry = timer.finish_error(e.clone(), Some("tool_error".into()));
+                            self.trace_collector.record_trace(entry).await;
+                            return Err(McpError::internal_error(e, None));
+                        }
+                    }
+                }
+                "update_workspace" => {
+                    let input: UpdateWorkspaceInput =
+                        serde_json::from_value(arguments_value).map_err(|e| {
+                            McpError::invalid_params(format!("Invalid input: {e}"), None)
+                        })?;
+
+                    match self.tools.update_workspace(input) {
+                        Ok(workspace) => serde_json::to_string_pretty(&workspace).map_err(|e| {
+                            McpError::internal_error(format!("Serialization error: {e}"), None)
+                        })?,
+                        Err(e) => {
+                            let entry = timer.finish_error(e.clone(), Some("tool_error".into()));
+                            self.trace_collector.record_trace(entry).await;
+                            return Err(McpError::internal_error(e, None));
+                        }
+                    }
+                }
+                "list_workspaces" => {
+                    let input: ListWorkspacesInput =
+                        serde_json::from_value(arguments_value).map_err(|e| {
+                            McpError::invalid_params(format!("Invalid input: {e}"), None)
+                        })?;
+
+                    match self.tools.list_workspaces(input) {
+                        Ok(workspaces) => serde_json::to_string_pretty(&workspaces).map_err(|e| {
+                            McpError::internal_error(format!("Serialization error: {e}"), None)
+                        })?,
+                        Err(e) => {
+                            let entry = timer.finish_error(e.clone(), Some("tool_error".into()));
+                            self.trace_collector.record_trace(entry).await;
+                            return Err(McpError::internal_error(e, None));
+                        }
+                    }
+                }
+                "add_task" => {
+                    let input: AddTaskInput =
+                        serde_json::from_value(arguments_value).map_err(|e| {
+                            McpError::invalid_params(format!("Invalid input: {e}"), None)
+                        })?;
+
+                    match self.tools.add_task(input) {
+                        Ok(task) => serde_json::to_string_pretty(&task).map_err(|e| {
+                            McpError::internal_error(format!("Serialization error: {e}"), None)
+                        })?,
+                        Err(e) => {
+                            let entry = timer.finish_error(e.clone(), Some("tool_error".into()));
+                            self.trace_collector.record_trace(entry).await;
+                            return Err(McpError::internal_error(e, None));
+                        }
+                    }
+                }
+                "update_task" => {
+                    let input: UpdateTaskInputMcp =
+                        serde_json::from_value(arguments_value).map_err(|e| {
+                            McpError::invalid_params(format!("Invalid input: {e}"), None)
+                        })?;
+
+                    match self.tools.update_task(input) {
+                        Ok(task) => serde_json::to_string_pretty(&task).map_err(|e| {
+                            McpError::internal_error(format!("Serialization error: {e}"), None)
+                        })?,
+                        Err(e) => {
+                            let entry = timer.finish_error(e.clone(), Some("tool_error".into()));
+                            self.trace_collector.record_trace(entry).await;
+                            return Err(McpError::internal_error(e, None));
+                        }
+                    }
+                }
+                "save_handoff" => {
+                    let input: SaveHandoffInput =
+                        serde_json::from_value(arguments_value).map_err(|e| {
+                            McpError::invalid_params(format!("Invalid input: {e}"), None)
+                        })?;
+
+                    match self.tools.save_handoff(input) {
+                        Ok(handoff) => serde_json::to_string_pretty(&handoff).map_err(|e| {
+                            McpError::internal_error(format!("Serialization error: {e}"), None)
+                        })?,
+                        Err(e) => {
+                            let entry = timer.finish_error(e.clone(), Some("tool_error".into()));
+                            self.trace_collector.record_trace(entry).await;
+                            return Err(McpError::internal_error(e, None));
+                        }
+                    }
+                }
+                "resume_workspace" => {
+                    let input: ResumeWorkspaceInput =
+                        serde_json::from_value(arguments_value).map_err(|e| {
+                            McpError::invalid_params(format!("Invalid input: {e}"), None)
+                        })?;
+
+                    match self.tools.resume_workspace(input) {
+                        Ok(workspace) => serde_json::to_string_pretty(&workspace).map_err(|e| {
+                            McpError::internal_error(format!("Serialization error: {e}"), None)
+                        })?,
                         Err(e) => {
                             let entry = timer.finish_error(e.clone(), Some("tool_error".into()));
                             self.trace_collector.record_trace(entry).await;

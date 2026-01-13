@@ -4,6 +4,10 @@
 
 use super::db::Database;
 use super::models::{Memory, MemoryWithTags, Space, Tag};
+use crate::workspace::types::{
+    Handoff, ListWorkspacesFilter, Task, TaskStatus, Workspace, WorkspaceStatus,
+    WorkspaceWithTasks,
+};
 use rusqlite::{params, Result, Row};
 
 /// Helper to get current Unix timestamp
@@ -615,6 +619,395 @@ impl Database {
             |row| row.get(0),
         )
     }
+
+    // =========================================================================
+    // Workspace Operations
+    // =========================================================================
+
+    /// Create a new workspace
+    pub fn create_workspace(&self, workspace: &Workspace) -> Result<()> {
+        self.connection().execute(
+            "INSERT INTO workspaces (id, name, description, space_id, goal, success_criteria, status, blocker, context, created_at, updated_at, completed_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
+            params![
+                workspace.id,
+                workspace.name,
+                workspace.description,
+                workspace.space_id,
+                workspace.goal,
+                workspace.success_criteria,
+                workspace.status.as_str(),
+                workspace.blocker,
+                workspace.context,
+                workspace.created_at,
+                workspace.updated_at,
+                workspace.completed_at,
+            ],
+        )?;
+        Ok(())
+    }
+
+    /// Get a workspace by ID
+    pub fn get_workspace(&self, id: &str) -> Result<Option<Workspace>> {
+        let mut stmt = self.connection().prepare(
+            "SELECT id, name, description, space_id, goal, success_criteria, status, blocker, context, created_at, updated_at, completed_at
+             FROM workspaces WHERE id = ?1",
+        )?;
+
+        let mut rows = stmt.query(params![id])?;
+
+        match rows.next()? {
+            Some(row) => Ok(Some(row_to_workspace(row)?)),
+            None => Ok(None),
+        }
+    }
+
+    /// Get a workspace with its tasks and latest handoff
+    pub fn get_workspace_with_tasks(&self, id: &str) -> Result<Option<WorkspaceWithTasks>> {
+        let workspace = match self.get_workspace(id)? {
+            Some(w) => w,
+            None => return Ok(None),
+        };
+
+        let tasks = self.list_tasks(id)?;
+        let latest_handoff = self.get_latest_handoff(id)?;
+
+        Ok(Some(WorkspaceWithTasks {
+            workspace,
+            tasks,
+            latest_handoff,
+        }))
+    }
+
+    /// List workspaces with optional filters
+    pub fn list_workspaces(&self, filter: &ListWorkspacesFilter) -> Result<Vec<Workspace>> {
+        let mut sql = String::from(
+            "SELECT id, name, description, space_id, goal, success_criteria, status, blocker, context, created_at, updated_at, completed_at
+             FROM workspaces WHERE 1=1",
+        );
+        let mut params_vec: Vec<Box<dyn rusqlite::ToSql>> = Vec::new();
+
+        if let Some(ref space_id) = filter.space_id {
+            sql.push_str(" AND space_id = ?");
+            params_vec.push(Box::new(space_id.clone()));
+        }
+
+        if let Some(ref statuses) = filter.statuses {
+            if !statuses.is_empty() {
+                let placeholders: Vec<&str> = statuses.iter().map(|_| "?").collect();
+                sql.push_str(&format!(" AND status IN ({})", placeholders.join(",")));
+                for status in statuses {
+                    params_vec.push(Box::new(status.as_str().to_string()));
+                }
+            }
+        }
+
+        sql.push_str(" ORDER BY updated_at DESC");
+
+        if let Some(limit) = filter.limit {
+            sql.push_str(&format!(" LIMIT {}", limit));
+        }
+        if let Some(offset) = filter.offset {
+            sql.push_str(&format!(" OFFSET {}", offset));
+        }
+
+        let mut stmt = self.connection().prepare(&sql)?;
+        let params_refs: Vec<&dyn rusqlite::ToSql> = params_vec.iter().map(|p| p.as_ref()).collect();
+        let rows = stmt.query_map(params_refs.as_slice(), |row| row_to_workspace(row))?;
+        rows.collect()
+    }
+
+    /// Update a workspace
+    pub fn update_workspace(&self, workspace: &Workspace) -> Result<()> {
+        self.connection().execute(
+            "UPDATE workspaces SET
+             name = ?2, description = ?3, space_id = ?4, goal = ?5, success_criteria = ?6,
+             status = ?7, blocker = ?8, context = ?9, updated_at = ?10, completed_at = ?11
+             WHERE id = ?1",
+            params![
+                workspace.id,
+                workspace.name,
+                workspace.description,
+                workspace.space_id,
+                workspace.goal,
+                workspace.success_criteria,
+                workspace.status.as_str(),
+                workspace.blocker,
+                workspace.context,
+                now(),
+                workspace.completed_at,
+            ],
+        )?;
+        Ok(())
+    }
+
+    /// Delete a workspace by ID (cascades to tasks and handoffs)
+    pub fn delete_workspace(&self, id: &str) -> Result<()> {
+        self.connection()
+            .execute("DELETE FROM workspaces WHERE id = ?1", params![id])?;
+        Ok(())
+    }
+
+    /// Count workspaces with optional status filter
+    pub fn count_workspaces(&self, statuses: Option<&[WorkspaceStatus]>) -> Result<i64> {
+        if let Some(statuses) = statuses {
+            if !statuses.is_empty() {
+                let placeholders: Vec<&str> = statuses.iter().map(|_| "?").collect();
+                let sql = format!(
+                    "SELECT COUNT(*) FROM workspaces WHERE status IN ({})",
+                    placeholders.join(",")
+                );
+                let mut stmt = self.connection().prepare(&sql)?;
+                let params: Vec<String> = statuses.iter().map(|s| s.as_str().to_string()).collect();
+                let params_refs: Vec<&dyn rusqlite::ToSql> = params.iter().map(|s| s as &dyn rusqlite::ToSql).collect();
+                return stmt.query_row(params_refs.as_slice(), |row| row.get(0));
+            }
+        }
+        self.connection()
+            .query_row("SELECT COUNT(*) FROM workspaces", [], |row| row.get(0))
+    }
+
+    // =========================================================================
+    // Task Operations
+    // =========================================================================
+
+    /// Create a new task
+    pub fn create_task(&self, task: &Task) -> Result<()> {
+        let max_position: i32 = self.connection().query_row(
+            "SELECT COALESCE(MAX(position), -1) + 1 FROM tasks WHERE workspace_id = ?1",
+            params![task.workspace_id],
+            |row| row.get(0),
+        )?;
+
+        self.connection().execute(
+            "INSERT INTO tasks (id, workspace_id, title, description, status, blocker, is_next_action, position, created_at, updated_at, completed_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+            params![
+                task.id,
+                task.workspace_id,
+                task.title,
+                task.description,
+                task.status.as_str(),
+                task.blocker,
+                task.is_next_action as i32,
+                max_position,
+                task.created_at,
+                task.updated_at,
+                task.completed_at,
+            ],
+        )?;
+        Ok(())
+    }
+
+    /// Get a task by ID
+    pub fn get_task(&self, id: &str) -> Result<Option<Task>> {
+        let mut stmt = self.connection().prepare(
+            "SELECT id, workspace_id, title, description, status, blocker, is_next_action, position, created_at, updated_at, completed_at
+             FROM tasks WHERE id = ?1",
+        )?;
+
+        let mut rows = stmt.query(params![id])?;
+
+        match rows.next()? {
+            Some(row) => Ok(Some(row_to_task(row)?)),
+            None => Ok(None),
+        }
+    }
+
+    /// List tasks for a workspace ordered by position
+    pub fn list_tasks(&self, workspace_id: &str) -> Result<Vec<Task>> {
+        let mut stmt = self.connection().prepare(
+            "SELECT id, workspace_id, title, description, status, blocker, is_next_action, position, created_at, updated_at, completed_at
+             FROM tasks WHERE workspace_id = ?1 ORDER BY position ASC",
+        )?;
+
+        let rows = stmt.query_map(params![workspace_id], |row| row_to_task(row))?;
+        rows.collect()
+    }
+
+    /// Update a task
+    pub fn update_task(&self, task: &Task) -> Result<()> {
+        self.connection().execute(
+            "UPDATE tasks SET
+             title = ?2, description = ?3, status = ?4, blocker = ?5, is_next_action = ?6,
+             position = ?7, updated_at = ?8, completed_at = ?9
+             WHERE id = ?1",
+            params![
+                task.id,
+                task.title,
+                task.description,
+                task.status.as_str(),
+                task.blocker,
+                task.is_next_action as i32,
+                task.position,
+                now(),
+                task.completed_at,
+            ],
+        )?;
+        Ok(())
+    }
+
+    /// Delete a task by ID
+    pub fn delete_task(&self, id: &str) -> Result<()> {
+        self.connection()
+            .execute("DELETE FROM tasks WHERE id = ?1", params![id])?;
+        Ok(())
+    }
+
+    /// Reorder tasks within a workspace
+    pub fn reorder_tasks(&self, workspace_id: &str, task_ids: &[String]) -> Result<()> {
+        for (position, task_id) in task_ids.iter().enumerate() {
+            self.connection().execute(
+                "UPDATE tasks SET position = ?1, updated_at = ?2 WHERE id = ?3 AND workspace_id = ?4",
+                params![position as i32, now(), task_id, workspace_id],
+            )?;
+        }
+        Ok(())
+    }
+
+    /// Get the next action task for a workspace
+    pub fn get_next_action_task(&self, workspace_id: &str) -> Result<Option<Task>> {
+        let mut stmt = self.connection().prepare(
+            "SELECT id, workspace_id, title, description, status, blocker, is_next_action, position, created_at, updated_at, completed_at
+             FROM tasks WHERE workspace_id = ?1 AND is_next_action = 1 LIMIT 1",
+        )?;
+
+        let mut rows = stmt.query(params![workspace_id])?;
+
+        match rows.next()? {
+            Some(row) => Ok(Some(row_to_task(row)?)),
+            None => Ok(None),
+        }
+    }
+
+    // =========================================================================
+    // Handoff Operations
+    // =========================================================================
+
+    /// Create a new handoff
+    pub fn create_handoff(&self, handoff: &Handoff) -> Result<()> {
+        self.connection().execute(
+            "INSERT INTO handoffs (id, workspace_id, session_id, progress_summary, current_state, next_steps, blockers, what_worked, what_failed, key_decisions, created_at)
+             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+            params![
+                handoff.id,
+                handoff.workspace_id,
+                handoff.session_id,
+                handoff.progress_summary,
+                handoff.current_state,
+                handoff.next_steps,
+                handoff.blockers,
+                handoff.what_worked,
+                handoff.what_failed,
+                handoff.key_decisions,
+                handoff.created_at,
+            ],
+        )?;
+        Ok(())
+    }
+
+    /// Get the latest handoff for a workspace
+    pub fn get_latest_handoff(&self, workspace_id: &str) -> Result<Option<Handoff>> {
+        let mut stmt = self.connection().prepare(
+            "SELECT id, workspace_id, session_id, progress_summary, current_state, next_steps, blockers, what_worked, what_failed, key_decisions, created_at
+             FROM handoffs WHERE workspace_id = ?1 ORDER BY created_at DESC LIMIT 1",
+        )?;
+
+        let mut rows = stmt.query(params![workspace_id])?;
+
+        match rows.next()? {
+            Some(row) => Ok(Some(row_to_handoff(row)?)),
+            None => Ok(None),
+        }
+    }
+
+    /// List handoffs for a workspace
+    pub fn list_handoffs(&self, workspace_id: &str, limit: usize) -> Result<Vec<Handoff>> {
+        let mut stmt = self.connection().prepare(
+            "SELECT id, workspace_id, session_id, progress_summary, current_state, next_steps, blockers, what_worked, what_failed, key_decisions, created_at
+             FROM handoffs WHERE workspace_id = ?1 ORDER BY created_at DESC LIMIT ?2",
+        )?;
+
+        let rows = stmt.query_map(params![workspace_id, limit as i64], |row| row_to_handoff(row))?;
+        rows.collect()
+    }
+
+    /// Get a handoff by ID
+    pub fn get_handoff(&self, id: &str) -> Result<Option<Handoff>> {
+        let mut stmt = self.connection().prepare(
+            "SELECT id, workspace_id, session_id, progress_summary, current_state, next_steps, blockers, what_worked, what_failed, key_decisions, created_at
+             FROM handoffs WHERE id = ?1",
+        )?;
+
+        let mut rows = stmt.query(params![id])?;
+
+        match rows.next()? {
+            Some(row) => Ok(Some(row_to_handoff(row)?)),
+            None => Ok(None),
+        }
+    }
+
+    /// Delete a handoff by ID
+    pub fn delete_handoff(&self, id: &str) -> Result<()> {
+        self.connection()
+            .execute("DELETE FROM handoffs WHERE id = ?1", params![id])?;
+        Ok(())
+    }
+}
+
+/// Map a database row to a Workspace
+fn row_to_workspace(row: &Row) -> Result<Workspace> {
+    let status_str: String = row.get(6)?;
+    Ok(Workspace {
+        id: row.get(0)?,
+        name: row.get(1)?,
+        description: row.get(2)?,
+        space_id: row.get(3)?,
+        goal: row.get(4)?,
+        success_criteria: row.get(5)?,
+        status: WorkspaceStatus::from_str(&status_str).unwrap_or_default(),
+        blocker: row.get(7)?,
+        context: row.get(8)?,
+        created_at: row.get(9)?,
+        updated_at: row.get(10)?,
+        completed_at: row.get(11)?,
+    })
+}
+
+/// Map a database row to a Task
+fn row_to_task(row: &Row) -> Result<Task> {
+    let status_str: String = row.get(4)?;
+    let is_next_action_int: i32 = row.get(6)?;
+    Ok(Task {
+        id: row.get(0)?,
+        workspace_id: row.get(1)?,
+        title: row.get(2)?,
+        description: row.get(3)?,
+        status: TaskStatus::from_str(&status_str).unwrap_or_default(),
+        blocker: row.get(5)?,
+        is_next_action: is_next_action_int != 0,
+        position: row.get(7)?,
+        created_at: row.get(8)?,
+        updated_at: row.get(9)?,
+        completed_at: row.get(10)?,
+    })
+}
+
+/// Map a database row to a Handoff
+fn row_to_handoff(row: &Row) -> Result<Handoff> {
+    Ok(Handoff {
+        id: row.get(0)?,
+        workspace_id: row.get(1)?,
+        session_id: row.get(2)?,
+        progress_summary: row.get(3)?,
+        current_state: row.get(4)?,
+        next_steps: row.get(5)?,
+        blockers: row.get(6)?,
+        what_worked: row.get(7)?,
+        what_failed: row.get(8)?,
+        key_decisions: row.get(9)?,
+        created_at: row.get(10)?,
+    })
 }
 
 #[cfg(test)]

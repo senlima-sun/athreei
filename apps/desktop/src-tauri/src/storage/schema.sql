@@ -211,3 +211,77 @@ AFTER DELETE ON memory_embeddings
 BEGIN
     DELETE FROM memories_vec WHERE memory_id = OLD.memory_id;
 END;
+
+-- =============================================================================
+-- Workspace & Handoff Schema
+-- =============================================================================
+
+-- Workspaces table: goal-oriented containers for AI task tracking
+CREATE TABLE IF NOT EXISTS workspaces (
+    id TEXT PRIMARY KEY NOT NULL,
+    name TEXT NOT NULL,
+    description TEXT,
+    space_id TEXT REFERENCES spaces(id) ON DELETE SET NULL,
+    goal TEXT NOT NULL,
+    success_criteria TEXT,
+    status TEXT NOT NULL DEFAULT 'pending'
+        CHECK(status IN ('pending', 'in_progress', 'blocked', 'paused', 'completed', 'abandoned', 'archived')),
+    blocker TEXT,
+    context TEXT,
+    encrypted_goal BLOB,
+    encrypted_context BLOB,
+    created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+    updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+    completed_at INTEGER
+);
+
+-- Workspace indexes
+CREATE INDEX IF NOT EXISTS idx_workspaces_space ON workspaces(space_id);
+CREATE INDEX IF NOT EXISTS idx_workspaces_status ON workspaces(status);
+CREATE INDEX IF NOT EXISTS idx_workspaces_updated ON workspaces(updated_at DESC);
+
+-- Tasks table: individual work items within a workspace
+CREATE TABLE IF NOT EXISTS tasks (
+    id TEXT PRIMARY KEY NOT NULL,
+    workspace_id TEXT NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    description TEXT,
+    status TEXT NOT NULL DEFAULT 'pending'
+        CHECK(status IN ('pending', 'in_progress', 'completed', 'blocked', 'deferred')),
+    blocker TEXT,
+    is_next_action INTEGER NOT NULL DEFAULT 0,
+    position INTEGER NOT NULL DEFAULT 0,
+    encrypted_title BLOB,
+    encrypted_description BLOB,
+    created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+    updated_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now')),
+    completed_at INTEGER
+);
+
+-- Task indexes
+CREATE INDEX IF NOT EXISTS idx_tasks_workspace ON tasks(workspace_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
+CREATE INDEX IF NOT EXISTS idx_tasks_next ON tasks(workspace_id, is_next_action) WHERE is_next_action = 1;
+CREATE INDEX IF NOT EXISTS idx_tasks_position ON tasks(workspace_id, position);
+
+-- Handoffs table: session state captures for seamless resumption
+CREATE TABLE IF NOT EXISTS handoffs (
+    id TEXT PRIMARY KEY NOT NULL,
+    workspace_id TEXT NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
+    session_id TEXT,
+    progress_summary TEXT NOT NULL,
+    current_state TEXT NOT NULL,
+    next_steps TEXT,
+    blockers TEXT,
+    what_worked TEXT,
+    what_failed TEXT,
+    key_decisions TEXT,
+    encrypted_progress BLOB,
+    encrypted_state BLOB,
+    encrypted_learnings BLOB,
+    created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+);
+
+-- Handoff indexes
+CREATE INDEX IF NOT EXISTS idx_handoffs_workspace ON handoffs(workspace_id);
+CREATE INDEX IF NOT EXISTS idx_handoffs_created ON handoffs(workspace_id, created_at DESC);

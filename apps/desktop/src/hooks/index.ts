@@ -85,3 +85,23 @@ export {
 } from "./use-settings"
 
 export { useExportBackup, useImportBackup, useBackupInfo } from "./use-backup"
+
+export {
+  useWorkspaces,
+  useWorkspace,
+  useWorkspaceCount,
+  useCreateWorkspace,
+  useUpdateWorkspace,
+  useDeleteWorkspace,
+  useTasks,
+  useTask,
+  useCreateTask,
+  useUpdateTask,
+  useDeleteTask,
+  useReorderTasks,
+  useHandoffs,
+  useHandoff,
+  useLatestHandoff,
+  useCreateHandoff,
+  useDeleteHandoff,
+} from "./use-workspaces"

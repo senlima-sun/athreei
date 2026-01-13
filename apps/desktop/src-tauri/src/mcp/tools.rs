@@ -14,6 +14,9 @@ use std::sync::Arc;
 use crate::encryption::VaultState;
 use crate::state::DatabaseState;
 use crate::storage::Memory;
+use crate::workspace::{
+    Handoff, ListWorkspacesFilter, Task, TaskStatus, Workspace, WorkspaceStatus,
+};
 
 /// Tool input for search_memories
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
@@ -97,6 +100,116 @@ pub struct GetRelevantContextInput {
     pub format: Option<String>,
 }
 
+// =============================================================================
+// Workspace & Handoff Tool Inputs
+// =============================================================================
+
+/// Tool input for create_workspace
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct CreateWorkspaceInput {
+    /// Name of the workspace
+    pub name: String,
+    /// The main goal or objective of this workspace
+    pub goal: String,
+    /// Optional description providing more context
+    pub description: Option<String>,
+    /// Optional space ID to associate with
+    pub space_id: Option<String>,
+    /// Optional success criteria for completing the workspace
+    pub success_criteria: Option<String>,
+}
+
+/// Tool input for get_workspace
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct GetWorkspaceInput {
+    /// Workspace ID to retrieve
+    pub workspace_id: String,
+}
+
+/// Tool input for update_workspace
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct UpdateWorkspaceInput {
+    /// Workspace ID to update
+    pub workspace_id: String,
+    /// New status: "pending", "in_progress", "blocked", "paused", "completed", "abandoned", "archived"
+    pub status: Option<String>,
+    /// Updated goal
+    pub goal: Option<String>,
+    /// Updated context notes
+    pub context: Option<String>,
+    /// Blocker description (when status is "blocked")
+    pub blocker: Option<String>,
+}
+
+/// Tool input for list_workspaces
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct ListWorkspacesInput {
+    /// Optional space ID to filter by
+    pub space_id: Option<String>,
+    /// Filter by status: "pending", "in_progress", "blocked", "paused", "completed", "abandoned", "archived"
+    pub status: Option<Vec<String>>,
+    /// Maximum number of workspaces to return (default: 20)
+    pub limit: Option<usize>,
+}
+
+/// Tool input for add_task
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct AddTaskInput {
+    /// Workspace ID to add the task to
+    pub workspace_id: String,
+    /// Title of the task
+    pub title: String,
+    /// Optional description
+    pub description: Option<String>,
+    /// Mark as next action (highest priority task)
+    pub is_next_action: Option<bool>,
+}
+
+/// Tool input for update_task
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct UpdateTaskInputMcp {
+    /// Task ID to update
+    pub task_id: String,
+    /// New status: "pending", "in_progress", "completed", "blocked", "deferred"
+    pub status: Option<String>,
+    /// Updated title
+    pub title: Option<String>,
+    /// Updated description
+    pub description: Option<String>,
+    /// Mark as next action
+    pub is_next_action: Option<bool>,
+    /// Blocker description (when status is "blocked")
+    pub blocker: Option<String>,
+}
+
+/// Tool input for save_handoff
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct SaveHandoffInput {
+    /// Workspace ID to save handoff for
+    pub workspace_id: String,
+    /// Summary of what was accomplished in this session
+    pub progress_summary: String,
+    /// Current state of the work
+    pub current_state: String,
+    /// Suggested next steps for resuming
+    pub next_steps: Option<String>,
+    /// Any blockers or issues encountered
+    pub blockers: Option<String>,
+    /// What approaches worked well
+    pub what_worked: Option<String>,
+    /// What approaches didn't work
+    pub what_failed: Option<String>,
+    /// Key decisions made during the session
+    pub key_decisions: Option<String>,
+}
+
+/// Tool input for resume_workspace
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
+pub struct ResumeWorkspaceInput {
+    /// Workspace ID to resume work on
+    pub workspace_id: String,
+}
+
 /// Decrypted memory for tool responses
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ToolMemory {
@@ -131,6 +244,64 @@ pub struct ToolSpace {
 pub struct SearchResult {
     pub memories: Vec<ToolMemory>,
     pub total: usize,
+}
+
+/// Workspace response for MCP tools
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ToolWorkspace {
+    pub id: String,
+    pub name: String,
+    pub description: Option<String>,
+    pub space_id: Option<String>,
+    pub goal: String,
+    pub success_criteria: Option<String>,
+    pub status: String,
+    pub blocker: Option<String>,
+    pub context: Option<String>,
+    pub created_at: i64,
+    pub updated_at: i64,
+    pub completed_at: Option<i64>,
+}
+
+/// Task response for MCP tools
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ToolTask {
+    pub id: String,
+    pub workspace_id: String,
+    pub title: String,
+    pub description: Option<String>,
+    pub status: String,
+    pub blocker: Option<String>,
+    pub is_next_action: bool,
+    pub position: i32,
+    pub created_at: i64,
+    pub updated_at: i64,
+    pub completed_at: Option<i64>,
+}
+
+/// Handoff response for MCP tools
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ToolHandoff {
+    pub id: String,
+    pub workspace_id: String,
+    pub session_id: Option<String>,
+    pub progress_summary: String,
+    pub current_state: String,
+    pub next_steps: Option<String>,
+    pub blockers: Option<String>,
+    pub what_worked: Option<String>,
+    pub what_failed: Option<String>,
+    pub key_decisions: Option<String>,
+    pub created_at: i64,
+}
+
+/// Workspace with tasks and latest handoff
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ToolWorkspaceWithTasks {
+    #[serde(flatten)]
+    pub workspace: ToolWorkspace,
+    pub tasks: Vec<ToolTask>,
+    pub latest_handoff: Option<ToolHandoff>,
 }
 
 /// MCP Tools handler
@@ -780,6 +951,333 @@ impl McpTools {
         };
 
         Ok(format_context(&selected, format))
+    }
+
+    // =========================================================================
+    // Workspace & Handoff Tools
+    // =========================================================================
+
+    /// Create a new workspace
+    pub fn create_workspace(
+        &self,
+        input: CreateWorkspaceInput,
+    ) -> Result<ToolWorkspace, String> {
+        let db_guard = self
+            .db
+            .db
+            .lock()
+            .map_err(|e| format!("Database lock error: {e}"))?;
+
+        let mut workspace = Workspace::new(input.name, input.goal, input.space_id);
+        workspace.description = input.description;
+        workspace.success_criteria = input.success_criteria;
+
+        db_guard
+            .create_workspace(&workspace)
+            .map_err(|e| format!("Failed to create workspace: {e}"))?;
+
+        Ok(workspace_to_tool(&workspace))
+    }
+
+    /// Get a workspace with its tasks and latest handoff
+    pub fn get_workspace(
+        &self,
+        input: GetWorkspaceInput,
+    ) -> Result<Option<ToolWorkspaceWithTasks>, String> {
+        let db_guard = self
+            .db
+            .db
+            .lock()
+            .map_err(|e| format!("Database lock error: {e}"))?;
+
+        let workspace_with_tasks = db_guard
+            .get_workspace_with_tasks(&input.workspace_id)
+            .map_err(|e| format!("Failed to get workspace: {e}"))?;
+
+        Ok(workspace_with_tasks.map(|wt| ToolWorkspaceWithTasks {
+            workspace: workspace_to_tool(&wt.workspace),
+            tasks: wt.tasks.iter().map(task_to_tool).collect(),
+            latest_handoff: wt.latest_handoff.as_ref().map(handoff_to_tool),
+        }))
+    }
+
+    /// Update a workspace
+    pub fn update_workspace(
+        &self,
+        input: UpdateWorkspaceInput,
+    ) -> Result<ToolWorkspace, String> {
+        let db_guard = self
+            .db
+            .db
+            .lock()
+            .map_err(|e| format!("Database lock error: {e}"))?;
+
+        let mut workspace = db_guard
+            .get_workspace(&input.workspace_id)
+            .map_err(|e| format!("Failed to get workspace: {e}"))?
+            .ok_or_else(|| format!("Workspace not found: {}", input.workspace_id))?;
+
+        if let Some(status_str) = input.status {
+            if let Some(status) = WorkspaceStatus::from_str(&status_str) {
+                workspace.status = status;
+                if status == WorkspaceStatus::Completed {
+                    workspace.completed_at = Some(
+                        std::time::SystemTime::now()
+                            .duration_since(std::time::UNIX_EPOCH)
+                            .unwrap()
+                            .as_secs() as i64,
+                    );
+                }
+            }
+        }
+
+        if let Some(goal) = input.goal {
+            workspace.goal = goal;
+        }
+
+        if let Some(context) = input.context {
+            workspace.context = Some(context);
+        }
+
+        if let Some(blocker) = input.blocker {
+            workspace.blocker = Some(blocker);
+        }
+
+        db_guard
+            .update_workspace(&workspace)
+            .map_err(|e| format!("Failed to update workspace: {e}"))?;
+
+        Ok(workspace_to_tool(&workspace))
+    }
+
+    /// List workspaces with optional filters
+    pub fn list_workspaces(
+        &self,
+        input: ListWorkspacesInput,
+    ) -> Result<Vec<ToolWorkspace>, String> {
+        let db_guard = self
+            .db
+            .db
+            .lock()
+            .map_err(|e| format!("Database lock error: {e}"))?;
+
+        let statuses = input.status.map(|status_strs| {
+            status_strs
+                .iter()
+                .filter_map(|s| WorkspaceStatus::from_str(s))
+                .collect::<Vec<_>>()
+        });
+
+        let filter = ListWorkspacesFilter {
+            space_id: input.space_id,
+            statuses,
+            limit: Some(input.limit.unwrap_or(20)),
+            offset: None,
+        };
+
+        let workspaces = db_guard
+            .list_workspaces(&filter)
+            .map_err(|e| format!("Failed to list workspaces: {e}"))?;
+
+        Ok(workspaces.iter().map(workspace_to_tool).collect())
+    }
+
+    /// Add a task to a workspace
+    pub fn add_task(&self, input: AddTaskInput) -> Result<ToolTask, String> {
+        let db_guard = self
+            .db
+            .db
+            .lock()
+            .map_err(|e| format!("Database lock error: {e}"))?;
+
+        // Verify workspace exists
+        db_guard
+            .get_workspace(&input.workspace_id)
+            .map_err(|e| format!("Failed to get workspace: {e}"))?
+            .ok_or_else(|| format!("Workspace not found: {}", input.workspace_id))?;
+
+        let mut task = Task::new(input.workspace_id, input.title);
+        task.description = input.description;
+        task.is_next_action = input.is_next_action.unwrap_or(false);
+
+        db_guard
+            .create_task(&task)
+            .map_err(|e| format!("Failed to create task: {e}"))?;
+
+        Ok(task_to_tool(&task))
+    }
+
+    /// Update a task
+    pub fn update_task(&self, input: UpdateTaskInputMcp) -> Result<ToolTask, String> {
+        let db_guard = self
+            .db
+            .db
+            .lock()
+            .map_err(|e| format!("Database lock error: {e}"))?;
+
+        let mut task = db_guard
+            .get_task(&input.task_id)
+            .map_err(|e| format!("Failed to get task: {e}"))?
+            .ok_or_else(|| format!("Task not found: {}", input.task_id))?;
+
+        if let Some(status_str) = input.status {
+            if let Some(status) = TaskStatus::from_str(&status_str) {
+                task.status = status;
+                if status == TaskStatus::Completed {
+                    task.completed_at = Some(
+                        std::time::SystemTime::now()
+                            .duration_since(std::time::UNIX_EPOCH)
+                            .unwrap()
+                            .as_secs() as i64,
+                    );
+                }
+            }
+        }
+
+        if let Some(title) = input.title {
+            task.title = title;
+        }
+
+        if let Some(description) = input.description {
+            task.description = Some(description);
+        }
+
+        if let Some(is_next_action) = input.is_next_action {
+            task.is_next_action = is_next_action;
+        }
+
+        if let Some(blocker) = input.blocker {
+            task.blocker = Some(blocker);
+        }
+
+        db_guard
+            .update_task(&task)
+            .map_err(|e| format!("Failed to update task: {e}"))?;
+
+        Ok(task_to_tool(&task))
+    }
+
+    /// Save a handoff for a workspace
+    pub fn save_handoff(&self, input: SaveHandoffInput) -> Result<ToolHandoff, String> {
+        let db_guard = self
+            .db
+            .db
+            .lock()
+            .map_err(|e| format!("Database lock error: {e}"))?;
+
+        // Verify workspace exists
+        db_guard
+            .get_workspace(&input.workspace_id)
+            .map_err(|e| format!("Failed to get workspace: {e}"))?
+            .ok_or_else(|| format!("Workspace not found: {}", input.workspace_id))?;
+
+        let mut handoff = Handoff::new(
+            input.workspace_id,
+            input.progress_summary,
+            input.current_state,
+        );
+        handoff.next_steps = input.next_steps;
+        handoff.blockers = input.blockers;
+        handoff.what_worked = input.what_worked;
+        handoff.what_failed = input.what_failed;
+        handoff.key_decisions = input.key_decisions;
+
+        db_guard
+            .create_handoff(&handoff)
+            .map_err(|e| format!("Failed to create handoff: {e}"))?;
+
+        Ok(handoff_to_tool(&handoff))
+    }
+
+    /// Resume a workspace - returns workspace with tasks and latest handoff context
+    pub fn resume_workspace(
+        &self,
+        input: ResumeWorkspaceInput,
+    ) -> Result<ToolWorkspaceWithTasks, String> {
+        let db_guard = self
+            .db
+            .db
+            .lock()
+            .map_err(|e| format!("Database lock error: {e}"))?;
+
+        let workspace_with_tasks = db_guard
+            .get_workspace_with_tasks(&input.workspace_id)
+            .map_err(|e| format!("Failed to get workspace: {e}"))?
+            .ok_or_else(|| format!("Workspace not found: {}", input.workspace_id))?;
+
+        // Update workspace status to in_progress if it was paused
+        if workspace_with_tasks.workspace.status == WorkspaceStatus::Paused {
+            let mut workspace = workspace_with_tasks.workspace.clone();
+            workspace.status = WorkspaceStatus::InProgress;
+            db_guard
+                .update_workspace(&workspace)
+                .map_err(|e| format!("Failed to update workspace status: {e}"))?;
+        }
+
+        Ok(ToolWorkspaceWithTasks {
+            workspace: workspace_to_tool(&workspace_with_tasks.workspace),
+            tasks: workspace_with_tasks
+                .tasks
+                .iter()
+                .map(task_to_tool)
+                .collect(),
+            latest_handoff: workspace_with_tasks
+                .latest_handoff
+                .as_ref()
+                .map(handoff_to_tool),
+        })
+    }
+}
+
+/// Convert Workspace to ToolWorkspace
+fn workspace_to_tool(w: &Workspace) -> ToolWorkspace {
+    ToolWorkspace {
+        id: w.id.clone(),
+        name: w.name.clone(),
+        description: w.description.clone(),
+        space_id: w.space_id.clone(),
+        goal: w.goal.clone(),
+        success_criteria: w.success_criteria.clone(),
+        status: w.status.as_str().to_string(),
+        blocker: w.blocker.clone(),
+        context: w.context.clone(),
+        created_at: w.created_at,
+        updated_at: w.updated_at,
+        completed_at: w.completed_at,
+    }
+}
+
+/// Convert Task to ToolTask
+fn task_to_tool(t: &Task) -> ToolTask {
+    ToolTask {
+        id: t.id.clone(),
+        workspace_id: t.workspace_id.clone(),
+        title: t.title.clone(),
+        description: t.description.clone(),
+        status: t.status.as_str().to_string(),
+        blocker: t.blocker.clone(),
+        is_next_action: t.is_next_action,
+        position: t.position,
+        created_at: t.created_at,
+        updated_at: t.updated_at,
+        completed_at: t.completed_at,
+    }
+}
+
+/// Convert Handoff to ToolHandoff
+fn handoff_to_tool(h: &Handoff) -> ToolHandoff {
+    ToolHandoff {
+        id: h.id.clone(),
+        workspace_id: h.workspace_id.clone(),
+        session_id: h.session_id.clone(),
+        progress_summary: h.progress_summary.clone(),
+        current_state: h.current_state.clone(),
+        next_steps: h.next_steps.clone(),
+        blockers: h.blockers.clone(),
+        what_worked: h.what_worked.clone(),
+        what_failed: h.what_failed.clone(),
+        key_decisions: h.key_decisions.clone(),
+        created_at: h.created_at,
     }
 }
 

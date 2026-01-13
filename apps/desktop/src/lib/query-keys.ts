@@ -57,6 +57,33 @@ export const queryKeys = {
   stats: {
     all: ["stats"] as const,
   },
+
+  workspaces: {
+    all: ["workspaces"] as const,
+    list: (params?: {
+      spaceId?: string
+      statuses?: string[]
+      limit?: number
+      offset?: number
+    }) => ["workspaces", params ?? {}] as const,
+    detail: (id: string) => ["workspaces", id] as const,
+    count: (statuses?: string[]) => ["workspaces", "count", statuses] as const,
+  },
+
+  tasks: {
+    all: ["tasks"] as const,
+    list: (workspaceId: string) => ["tasks", workspaceId] as const,
+    detail: (id: string) => ["tasks", "detail", id] as const,
+  },
+
+  handoffs: {
+    all: ["handoffs"] as const,
+    list: (workspaceId: string, limit?: number) =>
+      ["handoffs", workspaceId, limit] as const,
+    detail: (id: string) => ["handoffs", "detail", id] as const,
+    latest: (workspaceId: string) =>
+      ["handoffs", "latest", workspaceId] as const,
+  },
 } as const
 
 export type QueryKeys = typeof queryKeys

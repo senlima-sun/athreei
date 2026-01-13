@@ -1,7 +1,7 @@
 //! Tauri IPC commands
 //!
 //! This module contains all Tauri commands that can be invoked from the frontend.
-//! Commands are organized by domain: vault, spaces, memories, MCP server, sync, settings, backup, trace, and embedding.
+//! Commands are organized by domain: vault, spaces, memories, MCP server, sync, settings, backup, trace, embedding, and workspace.
 
 mod backup;
 mod embedding;
@@ -12,6 +12,7 @@ mod spaces;
 mod sync;
 mod trace;
 mod vault;
+mod workspace;
 
 pub use backup::*;
 pub use embedding::*;
@@ -22,3 +23,4 @@ pub use spaces::*;
 pub use sync::*;
 pub use trace::*;
 pub use vault::*;
+pub use workspace::*;
