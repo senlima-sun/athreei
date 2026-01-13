@@ -170,7 +170,9 @@ export function useUpdateTask() {
       queryClient.invalidateQueries({
         queryKey: queryKeys.tasks.list(variables.workspaceId),
       })
-      queryClient.invalidateQueries({ queryKey: queryKeys.tasks.detail(variables.id) })
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.tasks.detail(variables.id),
+      })
       queryClient.invalidateQueries({
         queryKey: queryKeys.workspaces.detail(variables.workspaceId),
       })

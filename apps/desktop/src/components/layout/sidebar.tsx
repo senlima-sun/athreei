@@ -1,4 +1,12 @@
-import { X, Home, Database, FolderOpen, Briefcase, Settings, Sparkles } from "lucide-react"
+import {
+  X,
+  Home,
+  Database,
+  FolderOpen,
+  Briefcase,
+  Settings,
+  Sparkles,
+} from "lucide-react"
 import { cn } from "@/lib/utils"
 import { SidebarLink } from "./sidebar-link"
 

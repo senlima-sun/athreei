@@ -16,16 +16,16 @@ import {
   Archive,
   Ban,
 } from "lucide-react"
-import {
-  useWorkspaces,
-  useCreateWorkspace,
-  useDeleteWorkspace,
-} from "@/hooks"
+import { useWorkspaces, useCreateWorkspace, useDeleteWorkspace } from "@/hooks"
 import { useSpaces } from "@/hooks"
 import { PageLoading } from "@/components/common/loading-spinner"
 import { ErrorDisplay } from "@/components/common/error-display"
 import { EmptyState } from "@/components/common/empty-state"
-import type { Workspace, WorkspaceStatus, CreateWorkspaceInput } from "@/lib/types"
+import type {
+  Workspace,
+  WorkspaceStatus,
+  CreateWorkspaceInput,
+} from "@/lib/types"
 
 const STATUS_CONFIG: Record<
   WorkspaceStatus,
@@ -185,9 +185,7 @@ function StatusFilter({
                 : "bg-card hover:bg-accent"
             }`}
           >
-            <span
-              className={`h-1.5 w-1.5 rounded-full ${config.color}`}
-            />
+            <span className={`h-1.5 w-1.5 rounded-full ${config.color}`} />
             {config.label}
           </button>
         )
@@ -242,10 +240,7 @@ function WorkspaceRow({ workspace }: WorkspaceRowProps): React.ReactElement {
           {workspace.goal}
         </span>
       </div>
-      <Badge
-        variant="outline"
-        className="shrink-0 text-[9px] font-normal"
-      >
+      <Badge variant="outline" className="shrink-0 text-[9px] font-normal">
         {config.label}
       </Badge>
       <button

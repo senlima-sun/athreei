@@ -65,12 +65,32 @@ const WORKSPACE_STATUS_CONFIG: Record<
   { color: string; bgColor: string; label: string }
 > = {
   pending: { color: "text-gray-600", bgColor: "bg-gray-100", label: "Pending" },
-  in_progress: { color: "text-blue-600", bgColor: "bg-blue-100", label: "In Progress" },
+  in_progress: {
+    color: "text-blue-600",
+    bgColor: "bg-blue-100",
+    label: "In Progress",
+  },
   blocked: { color: "text-red-600", bgColor: "bg-red-100", label: "Blocked" },
-  paused: { color: "text-yellow-600", bgColor: "bg-yellow-100", label: "Paused" },
-  completed: { color: "text-green-600", bgColor: "bg-green-100", label: "Completed" },
-  abandoned: { color: "text-gray-500", bgColor: "bg-gray-100", label: "Abandoned" },
-  archived: { color: "text-gray-400", bgColor: "bg-gray-50", label: "Archived" },
+  paused: {
+    color: "text-yellow-600",
+    bgColor: "bg-yellow-100",
+    label: "Paused",
+  },
+  completed: {
+    color: "text-green-600",
+    bgColor: "bg-green-100",
+    label: "Completed",
+  },
+  abandoned: {
+    color: "text-gray-500",
+    bgColor: "bg-gray-100",
+    label: "Abandoned",
+  },
+  archived: {
+    color: "text-gray-400",
+    bgColor: "bg-gray-50",
+    label: "Archived",
+  },
 }
 
 const TASK_STATUS_CONFIG: Record<
@@ -78,21 +98,29 @@ const TASK_STATUS_CONFIG: Record<
   { color: string; bgColor: string; label: string }
 > = {
   pending: { color: "text-gray-600", bgColor: "bg-gray-100", label: "Pending" },
-  in_progress: { color: "text-blue-600", bgColor: "bg-blue-100", label: "In Progress" },
-  completed: { color: "text-green-600", bgColor: "bg-green-100", label: "Completed" },
+  in_progress: {
+    color: "text-blue-600",
+    bgColor: "bg-blue-100",
+    label: "In Progress",
+  },
+  completed: {
+    color: "text-green-600",
+    bgColor: "bg-green-100",
+    label: "Completed",
+  },
   blocked: { color: "text-red-600", bgColor: "bg-red-100", label: "Blocked" },
-  deferred: { color: "text-orange-600", bgColor: "bg-orange-100", label: "Deferred" },
+  deferred: {
+    color: "text-orange-600",
+    bgColor: "bg-orange-100",
+    label: "Deferred",
+  },
 }
 
 export function WorkspaceDetailPage(): React.ReactElement {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
 
-  const {
-    data: workspace,
-    isLoading,
-    error,
-  } = useWorkspace(id ?? "")
+  const { data: workspace, isLoading, error } = useWorkspace(id ?? "")
 
   if (isLoading) {
     return <PageLoading message="Loading workspace..." />
@@ -142,7 +170,9 @@ interface WorkspaceHeaderProps {
   workspace: WorkspaceWithTasks
 }
 
-function WorkspaceHeader({ workspace }: WorkspaceHeaderProps): React.ReactElement {
+function WorkspaceHeader({
+  workspace,
+}: WorkspaceHeaderProps): React.ReactElement {
   const navigate = useNavigate()
   const [editingName, setEditingName] = useState(false)
   const [name, setName] = useState(workspace.name)
@@ -250,10 +280,10 @@ function WorkspaceInfo({ workspace }: WorkspaceInfoProps): React.ReactElement {
       field === "goal"
         ? workspace.goal
         : field === "success_criteria"
-          ? workspace.success_criteria ?? ""
+          ? (workspace.success_criteria ?? "")
           : field === "context"
-            ? workspace.context ?? ""
-            : workspace.blocker ?? ""
+            ? (workspace.context ?? "")
+            : (workspace.blocker ?? "")
 
     if (trimmed !== current) {
       await updateWorkspace.mutateAsync({
@@ -338,9 +368,7 @@ function WorkspaceInfo({ workspace }: WorkspaceInfoProps): React.ReactElement {
 
         {workspace.status === "blocked" && (
           <div>
-            <label className="text-xs font-medium text-red-500">
-              Blocker
-            </label>
+            <label className="text-xs font-medium text-red-500">Blocker</label>
             {editingField === "blocker" ? (
               <textarea
                 value={blocker}
@@ -380,7 +408,9 @@ function TaskSection({ workspace }: TaskSectionProps): React.ReactElement {
     })
   )
 
-  const sortedTasks = [...workspace.tasks].sort((a, b) => a.position - b.position)
+  const sortedTasks = [...workspace.tasks].sort(
+    (a, b) => a.position - b.position
+  )
 
   const handleDragEnd = async (event: DragEndEvent): Promise<void> => {
     const { active, over } = event
@@ -593,7 +623,11 @@ function TaskItem({
               ? "text-yellow-500"
               : "text-muted-foreground opacity-0 group-hover:opacity-100"
           }`}
-          title={task.is_next_action ? "Remove from next actions" : "Mark as next action"}
+          title={
+            task.is_next_action
+              ? "Remove from next actions"
+              : "Mark as next action"
+          }
         >
           <Star
             className="h-3.5 w-3.5"
@@ -754,7 +788,9 @@ interface HandoffSectionProps {
   workspaceId: string
 }
 
-function HandoffSection({ workspaceId }: HandoffSectionProps): React.ReactElement {
+function HandoffSection({
+  workspaceId,
+}: HandoffSectionProps): React.ReactElement {
   const [isCreating, setIsCreating] = useState(false)
   const [limit, setLimit] = useState(5)
   const { data: handoffs = [], isLoading } = useHandoffs(workspaceId, limit)
@@ -836,7 +872,8 @@ function HandoffCard({ handoff }: HandoffCardProps): React.ReactElement {
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
 
     if (diffHours < 1) return "Just now"
-    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`
+    if (diffHours < 24)
+      return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`
     if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`
     return date.toLocaleDateString()
   }

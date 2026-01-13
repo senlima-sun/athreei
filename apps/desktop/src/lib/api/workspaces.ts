@@ -152,10 +152,7 @@ export const createTask = (input: CreateTaskInput): Promise<Task> =>
  * @param input - Update fields
  * @returns The updated task
  */
-export const updateTask = (
-  id: string,
-  input: UpdateTaskInput
-): Promise<Task> =>
+export const updateTask = (id: string, input: UpdateTaskInput): Promise<Task> =>
   invoke("update_task", {
     id,
     title: input.title,
