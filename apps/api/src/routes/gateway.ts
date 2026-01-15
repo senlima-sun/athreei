@@ -2,6 +2,7 @@ import { Hono } from "hono"
 import { zValidator } from "@hono/zod-validator"
 import { eq, and } from "drizzle-orm"
 import { db } from "../lib/db-operations"
+import { logger } from "../lib/logger"
 import {
   namespace,
   namespaceResource,
@@ -168,7 +169,7 @@ gateway.get("/config", zValidator("query", getConfigQuerySchema), async (c) => {
               try {
                 return JSON.parse(t.inputSchema)
               } catch {
-                console.error(`Invalid inputSchema JSON for tool ${t.name}`)
+                logger.warn("Invalid inputSchema JSON", { toolName: t.name })
                 return null
               }
             })(),
@@ -230,9 +231,9 @@ gateway.post("/traces", zValidator("json", postTracesSchema), async (c) => {
 
     const MAX_ATTRIBUTES_SIZE = 1_000_000
     if (attributes.length > MAX_ATTRIBUTES_SIZE) {
-      console.warn(
-        `Trace ${traceData.traceId} attributes exceed size limit, skipping`
-      )
+      logger.warn("Trace attributes exceed size limit, skipping", {
+        traceId: traceData.traceId,
+      })
       continue
     }
 
@@ -261,14 +262,17 @@ gateway.post("/traces", zValidator("json", postTracesSchema), async (c) => {
 
       insertedIds.push(id)
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : "Unknown error"
-      console.error(`Failed to insert trace ${traceData.traceId}: ${errorMsg}`)
+      logger.error("Failed to insert trace", {
+        traceId: traceData.traceId,
+        error,
+      })
     }
   }
 
-  console.log(
-    `Stored ${insertedIds.length}/${traces.length} traces from gateway`
-  )
+  logger.info("Stored traces from gateway", {
+    stored: insertedIds.length,
+    total: traces.length,
+  })
 
   return c.json({
     received: traces.length,
