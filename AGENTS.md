@@ -210,7 +210,43 @@ Examples:
 1. Run `bun run lint:fix` first
 2. Check `.eslintrc` for rule config
 3. Unused imports → remove them
-4. Console.log → use console.error/warn
+4. Console calls → use structured logger (see Logging section)
+
+## Logging
+
+Use the structured logger from `@athreei/shared` instead of `console.log/error/warn`:
+
+```typescript
+import { createLogger, honoLogger } from "@athreei/shared"
+
+// Create service logger
+const logger = createLogger({
+  service: "api",
+  level: process.env.LOG_LEVEL || "info",
+  pretty: process.env.NODE_ENV !== "production",
+})
+
+// Use structured logging
+logger.info("Operation completed", { userId, duration })
+logger.warn("Rate limit approaching", { current: 95, limit: 100 })
+logger.error("Database error", { error, query })
+
+// For Hono apps, use middleware
+app.use("*", honoLogger({ logger }))
+
+// Access request-scoped logger in routes
+const log = c.get("logger")
+log.info("Processing request") // Includes requestId
+```
+
+### When to use each level
+
+| Level   | Use for                                      |
+| ------- | -------------------------------------------- |
+| `debug` | Detailed debugging (disabled in production)  |
+| `info`  | Normal operations, startup messages          |
+| `warn`  | Recoverable issues, deprecation notices      |
+| `error` | Errors requiring attention                   |
 
 ## Security Checklist
 
