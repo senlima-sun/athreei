@@ -1,0 +1,49 @@
+# API Server Development Dockerfile
+# Hot reload enabled via volume mounts and bun --watch
+
+FROM oven/bun:1
+
+WORKDIR /app
+
+# Install curl for healthcheck, python3 and build tools for native modules (better-sqlite3)
+RUN apt-get update && apt-get install -y \
+    curl \
+    python3 \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy package files for dependency installation
+COPY package.json bun.lock ./
+COPY packages/shared/package.json ./packages/shared/
+COPY packages/db/package.json ./packages/db/
+COPY packages/auth/package.json ./packages/auth/
+COPY packages/email/package.json ./packages/email/
+COPY apps/api/package.json ./apps/api/
+
+# Install dependencies at build time
+RUN bun install
+
+# Copy source code (will be overlaid by volume mounts for hot reload)
+COPY packages/shared ./packages/shared
+COPY packages/db ./packages/db
+COPY packages/auth ./packages/auth
+COPY packages/email ./packages/email
+COPY apps/api ./apps/api
+
+# Build workspace packages that export from dist
+RUN cd packages/shared && bun run build || true
+RUN cd packages/db && bun run build || true
+RUN cd packages/auth && bun run build || true
+RUN cd packages/email && bun run build || true
+
+# Set development environment
+ENV NODE_ENV=development
+ENV PORT=3001
+ENV HOST=0.0.0.0
+
+EXPOSE 3001
+
+WORKDIR /app/apps/api
+
+# Run with watch mode for hot reload
+CMD ["bun", "run", "--watch", "src/index.ts"]

@@ -4,6 +4,7 @@ import app from "./app"
 import { initDatabase } from "./lib/db"
 
 const PORT = process.env.PORT || 3001
+const HOST = process.env.HOST || "localhost"
 
 try {
   initDatabase()
@@ -15,7 +16,8 @@ try {
 
 export default {
   port: PORT,
+  hostname: HOST,
   fetch: app.fetch,
 }
 
-console.log(`API server running on port ${PORT}`)
+console.log(`API server running on http://${HOST}:${PORT}`)

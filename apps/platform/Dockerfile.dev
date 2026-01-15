@@ -1,0 +1,49 @@
+# Platform Development Dockerfile
+# Hot reload enabled via volume mounts and Next.js Turbopack
+
+FROM oven/bun:1
+
+WORKDIR /app
+
+# Install curl for healthcheck, python3 and build tools for potential native modules
+RUN apt-get update && apt-get install -y \
+    curl \
+    python3 \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy package files for dependency installation
+COPY package.json bun.lock ./
+COPY packages/shared/package.json ./packages/shared/
+COPY packages/db/package.json ./packages/db/
+COPY packages/auth/package.json ./packages/auth/
+COPY packages/ui/package.json ./packages/ui/
+COPY apps/platform/package.json ./apps/platform/
+
+# Install dependencies at build time
+RUN bun install
+
+# Copy source code (will be overlaid by volume mounts for hot reload)
+COPY packages/shared ./packages/shared
+COPY packages/db ./packages/db
+COPY packages/auth ./packages/auth
+COPY packages/ui ./packages/ui
+COPY apps/platform ./apps/platform
+
+# Build workspace packages that export from dist
+RUN cd packages/shared && bun run build || true
+RUN cd packages/db && bun run build || true
+RUN cd packages/auth && bun run build || true
+RUN cd packages/ui && bun run build || true
+
+# Set development environment
+ENV NODE_ENV=development
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+
+EXPOSE 3000
+
+WORKDIR /app/apps/platform
+
+# Run Next.js dev server bound to all interfaces
+CMD ["bun", "x", "next", "dev", "--turbopack", "--hostname", "0.0.0.0"]

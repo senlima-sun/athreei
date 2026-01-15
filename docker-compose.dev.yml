@@ -1,0 +1,83 @@
+# Docker Compose for Development
+# Usage: docker compose -f docker-compose.dev.yml up
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: athreei-db-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: athreei
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data-dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - athreei-dev
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile.dev
+    container_name: athreei-api-dev
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      HOST: 0.0.0.0
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/athreei
+      CORS_ORIGINS: http://localhost:3000
+      BETTER_AUTH_SECRET: dev-secret-change-in-production-minimum-32-chars
+      BETTER_AUTH_URL: http://localhost:3001
+    volumes:
+      # Mount source directories only (not node_modules)
+      - ./apps/api/src:/app/apps/api/src
+      - ./packages/shared/src:/app/packages/shared/src
+      - ./packages/db/src:/app/packages/db/src
+      - ./packages/auth/src:/app/packages/auth/src
+      - ./packages/email/src:/app/packages/email/src
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - athreei-dev
+
+  platform:
+    build:
+      context: .
+      dockerfile: apps/platform/Dockerfile.dev
+    container_name: athreei-platform-dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      NEXT_PUBLIC_API_URL: http://localhost:3001
+      NEXT_TELEMETRY_DISABLED: 1
+    volumes:
+      # Mount source directories only (not node_modules)
+      - ./apps/platform/src:/app/apps/platform/src
+      - ./apps/platform/public:/app/apps/platform/public
+      - ./packages/auth/src:/app/packages/auth/src
+      - ./packages/ui/src:/app/packages/ui/src
+    depends_on:
+      - api
+    networks:
+      - athreei-dev
+
+networks:
+  athreei-dev:
+    driver: bridge
+
+volumes:
+  postgres-data-dev:

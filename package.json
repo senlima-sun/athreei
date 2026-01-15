@@ -22,7 +22,12 @@
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
     "typecheck:all": "bun run --filter '*' typecheck",
-    "cli": "bun run --filter a3i dev"
+    "cli": "bun run --filter a3i dev",
+    "docker:dev": "docker compose -f docker-compose.dev.yml up",
+    "docker:dev:build": "docker compose -f docker-compose.dev.yml up --build",
+    "docker:dev:down": "docker compose -f docker-compose.dev.yml down",
+    "docker:dev:reset": "docker compose -f docker-compose.dev.yml down -v",
+    "docker:dev:logs": "docker compose -f docker-compose.dev.yml logs -f"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",

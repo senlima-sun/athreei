@@ -1,0 +1,46 @@
+# Git
+.git
+.gitignore
+
+# Dependencies (installed in container)
+node_modules
+*/node_modules
+**/node_modules
+
+# Build outputs
+dist
+*/dist
+**/dist
+.next
+**/.next
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Environment files (use docker-compose environment)
+.env
+.env.*
+!.env.docker.example
+
+# Tests and coverage
+coverage
+**/*.test.ts
+**/*.spec.ts
+
+# Documentation
+*.md
+!README.md
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+
+# Misc
+.claude
+.turbo

@@ -1,0 +1,11 @@
+# Platform-specific Docker ignore
+node_modules
+.next
+out
+coverage
+*.test.ts
+*.spec.ts
+.env
+.env.*
+playwright-report
+test-results
