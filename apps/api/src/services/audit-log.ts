@@ -1,3 +1,5 @@
+import { logger } from "../lib/logger"
+
 interface BaseAuditEvent {
   timestamp: string
   userId: string
@@ -57,7 +59,7 @@ export type AuditEvent =
   | OAuthAuditEvent
 
 export function logAuditEvent(event: AuditEvent): void {
-  console.error(JSON.stringify(event))
+  logger.info("Audit event", { ...event })
 }
 
 export function createEnvAccessEvent(params: {
