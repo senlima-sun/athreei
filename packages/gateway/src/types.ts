@@ -41,6 +41,46 @@ export interface GatewayConfig {
 export interface LocalConfig {
   /** MCP servers to connect to */
   servers: import("@athreei/gateway-core").McpServerConfig[]
+  /** Skills to expose to AI clients */
+  skills?: SkillConfig[]
+  /** Rules to apply to AI interactions */
+  rules?: RuleConfig[]
+}
+
+/**
+ * Skill configuration for AI capabilities
+ */
+export interface SkillConfig {
+  /** Unique skill ID */
+  id: string
+  /** Skill name */
+  name: string
+  /** Optional description */
+  description?: string | null
+  /** Markdown content defining the skill */
+  content: string
+  /** Tags for categorization */
+  tags?: string[]
+  /** Version number */
+  version?: number
+}
+
+/**
+ * Rule configuration for AI behavior guidelines
+ */
+export interface RuleConfig {
+  /** Unique rule ID */
+  id: string
+  /** Rule name */
+  name: string
+  /** Optional description */
+  description?: string | null
+  /** Markdown content defining the rule */
+  content: string
+  /** Priority for ordering (higher = applied first) */
+  priority: number
+  /** Scope of the rule */
+  scope: "global" | "namespace" | "endpoint"
 }
 
 /**
@@ -62,6 +102,10 @@ export interface NamespaceConfig {
   organizationId: string
   /** MCP servers in this namespace */
   servers: import("@athreei/gateway-core").McpServerConfig[]
+  /** Skills assigned to this namespace */
+  skills?: SkillConfig[]
+  /** Rules assigned to this namespace */
+  rules?: RuleConfig[]
   /** Config version for change detection */
   configVersion: string
 }

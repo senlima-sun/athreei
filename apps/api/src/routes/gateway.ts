@@ -9,6 +9,8 @@ import {
   mcpServer,
   mcpTool,
   trace,
+  skill,
+  rule,
 } from "@athreei/db"
 import { checkRateLimit } from "../middleware/rate-limit"
 import { getConfigQuerySchema, postTracesSchema } from "../schemas/gateway"
@@ -132,6 +134,44 @@ gateway.get("/config", zValidator("query", getConfigQuerySchema), async (c) => {
     serverTools.set(server.id, tools)
   }
 
+  const skillMappings = (await dbQuery.namespaceResource.findMany({
+    where: and(
+      eq(namespaceResource.namespaceId, namespaceRecord.id),
+      eq(namespaceResource.resourceType, "skill"),
+      eq(namespaceResource.enabled, true)
+    ),
+  })) as Array<typeof namespaceResource.$inferSelect>
+
+  const skills: Array<typeof skill.$inferSelect> = []
+  for (const mapping of skillMappings) {
+    const skillRecord = (await dbQuery.skill.findFirst({
+      where: and(eq(skill.id, mapping.resourceId), eq(skill.isEnabled, "true")),
+    })) as typeof skill.$inferSelect | undefined
+    if (skillRecord) {
+      skills.push(skillRecord)
+    }
+  }
+
+  const ruleMappings = (await dbQuery.namespaceResource.findMany({
+    where: and(
+      eq(namespaceResource.namespaceId, namespaceRecord.id),
+      eq(namespaceResource.resourceType, "rule"),
+      eq(namespaceResource.enabled, true)
+    ),
+  })) as Array<typeof namespaceResource.$inferSelect>
+
+  const rules: Array<typeof rule.$inferSelect> = []
+  for (const mapping of ruleMappings) {
+    const ruleRecord = (await dbQuery.rule.findFirst({
+      where: and(eq(rule.id, mapping.resourceId), eq(rule.isEnabled, "true")),
+    })) as typeof rule.$inferSelect | undefined
+    if (ruleRecord) {
+      rules.push(ruleRecord)
+    }
+  }
+
+  rules.sort((a, b) => b.priority - a.priority)
+
   const configVersion = generateConfigVersion(
     namespaceRecord.updatedAt,
     servers
@@ -177,6 +217,29 @@ gateway.get("/config", zValidator("query", getConfigQuerySchema), async (c) => {
           })),
       }
     }),
+    skills: skills.map((s) => ({
+      id: s.id,
+      name: s.name,
+      description: s.description,
+      content: s.content,
+      tags: (() => {
+        if (!s.tags) return []
+        try {
+          return JSON.parse(s.tags) as string[]
+        } catch {
+          return []
+        }
+      })(),
+      version: s.version,
+    })),
+    rules: rules.map((r) => ({
+      id: r.id,
+      name: r.name,
+      description: r.description,
+      content: r.content,
+      priority: r.priority,
+      scope: r.scope,
+    })),
   })
 })
 
