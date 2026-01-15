@@ -17,6 +17,7 @@ import {
   Shield,
   BookOpen,
   Scale,
+  BarChart3,
 } from "lucide-react"
 import { useState } from "react"
 import { OrgSwitcher } from "./org-switcher"
@@ -84,6 +85,7 @@ const getNavSections = (): NavSection[] => {
       items: [
         { label: "Skills", href: "/dashboard/skills", icon: BookOpen },
         { label: "Rules", href: "/dashboard/rules", icon: Scale },
+        { label: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
       ],
     },
     {
