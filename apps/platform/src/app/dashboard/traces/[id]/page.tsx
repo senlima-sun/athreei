@@ -4,7 +4,10 @@ import { use, useState, useEffect } from "react"
 import Link from "next/link"
 import { PageHeader } from "@/components/dashboard/page-header"
 import { TraceDetail } from "@/components/traces/trace-detail"
+import { TraceEvaluation } from "@/components/traces/trace-evaluation"
 import { Loader2, ArrowLeft, AlertCircle } from "lucide-react"
+import { useActiveOrganization } from "@/lib/auth-client"
+import { API_URL } from "@/constants"
 import type { Trace } from "@/types"
 
 interface PageProps {
@@ -13,6 +16,7 @@ interface PageProps {
 
 export default function TraceDetailPage({ params }: PageProps) {
   const { id } = use(params)
+  const { data: activeOrg } = useActiveOrganization()
   const [trace, setTrace] = useState<Trace | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -120,8 +124,15 @@ export default function TraceDetailPage({ params }: PageProps) {
   }
 
   return (
-    <div>
+    <div className="space-y-6">
       <TraceDetail trace={trace} />
+      {activeOrg && (
+        <TraceEvaluation
+          trace={trace}
+          apiUrl={API_URL}
+          organizationId={activeOrg.id}
+        />
+      )}
     </div>
   )
 }

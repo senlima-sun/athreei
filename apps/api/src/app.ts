@@ -20,6 +20,7 @@ import {
   permissionsRoutes,
   skillsRoutes,
   rulesRoutes,
+  evaluationsRoutes,
 } from "./routes"
 import { errorHandler, notFoundHandler } from "./middleware"
 import { getAuth } from "./lib/auth"
@@ -76,6 +77,7 @@ app.route("/api/audit", auditRoutes)
 app.route("/api/permissions", permissionsRoutes)
 app.route("/api/skills", skillsRoutes)
 app.route("/api/rules", rulesRoutes)
+app.route("/api/evaluations", evaluationsRoutes)
 
 app.notFound(notFoundHandler)
 app.onError(errorHandler)
