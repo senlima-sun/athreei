@@ -2,15 +2,16 @@ import "./instrument"
 
 import app from "./app"
 import { initDatabase } from "./lib/db"
+import { logger } from "./lib/logger"
 
 const PORT = process.env.PORT || 3001
 const HOST = process.env.HOST || "localhost"
 
 try {
   initDatabase()
-  console.log("Database connection initialized")
+  logger.info("Database connection initialized")
 } catch (error) {
-  console.error("Failed to initialize database:", error)
+  logger.error("Failed to initialize database", { error })
   process.exit(1)
 }
 
@@ -20,4 +21,4 @@ export default {
   fetch: app.fetch,
 }
 
-console.log(`API server running on http://${HOST}:${PORT}`)
+logger.info("API server started", { host: HOST, port: PORT })
