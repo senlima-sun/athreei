@@ -94,6 +94,62 @@ const safeObj = redactObject({ apiKey: "secret", name: "safe" })
 const logger = createSecureLogger(console)
 ```
 
+### Logger (`logger/`)
+
+Zero-dependency structured logging with JSON/pretty output:
+
+```typescript
+import { createLogger, honoLogger, type LoggerEnv } from "@athreei/shared"
+
+// Create a logger instance
+const logger = createLogger({
+  service: "api",
+  level: "info", // "debug" | "info" | "warn" | "error"
+  pretty: process.env.NODE_ENV !== "production",
+})
+
+// Basic logging
+logger.info("Server started", { port: 3000 })
+logger.warn("Rate limit approaching", { current: 95, limit: 100 })
+logger.error("Database connection failed", { error: new Error("timeout") })
+logger.debug("Processing request", { requestId: "abc123" }) // Only shown when level is "debug"
+
+// Child loggers inherit config and merge context
+const requestLogger = logger.child({ requestId: "req_123" })
+requestLogger.info("Processing") // Includes requestId in all logs
+
+// Hono middleware integration
+import { Hono } from "hono"
+
+const app = new Hono<LoggerEnv>()
+app.use("*", honoLogger({ logger }))
+
+// Access request-scoped logger in routes
+app.get("/", (c) => {
+  const log = c.get("logger") // Has requestId context
+  log.info("Handling request")
+  return c.json({ ok: true })
+})
+```
+
+**Output Formats:**
+
+JSON (production):
+```json
+{"level":"info","message":"Server started","timestamp":"2024-01-15T10:30:00.000Z","context":{"service":"api"},"data":{"port":3000}}
+```
+
+Pretty (development):
+```
+[2024-01-15T10:30:00.000Z] INFO  Server started {"service":"api"} {"port":3000}
+```
+
+**Log Levels:**
+- `debug` - Detailed debugging information
+- `info` - General operational messages
+- `warn` - Warning conditions (rate limits, deprecations)
+- `error` - Error conditions requiring attention
+
 ## Directory Structure
 
 ```
@@ -105,6 +161,12 @@ src/
 │   ├── trace-encryption.ts    # Trace-specific encryption
 │   ├── types.ts               # Crypto type definitions
 │   └── index.ts               # Crypto module exports
+├── logger/                    # Structured logging module
+│   ├── types.ts               # Logger type definitions
+│   ├── formatters.ts          # JSON/pretty output formatters
+│   ├── logger.ts              # Logger class implementation
+│   ├── hono-middleware.ts     # Hono request logging middleware
+│   └── index.ts               # Logger module exports
 ├── types/                     # Shared type definitions
 │   ├── index.ts               # Core types (permissions, audit, native messaging)
 │   ├── mcp-tools.ts           # MCP tool schemas and definitions
@@ -136,6 +198,14 @@ import {
   deriveKey,
   encrypt,
   decrypt,
+
+  // Logger
+  createLogger,
+  honoLogger,
+  Logger,
+  type LogLevel,
+  type LoggerConfig,
+  type LoggerEnv,
 
   // Utils
   redact,
