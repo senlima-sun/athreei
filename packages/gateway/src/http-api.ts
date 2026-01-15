@@ -301,9 +301,7 @@ export function createHttpApi(
     const format = c.req.query("format")
     const scope = c.req.query("scope")
 
-    const filteredRules = scope
-      ? rules.filter((r) => r.scope === scope)
-      : rules
+    const filteredRules = scope ? rules.filter((r) => r.scope === scope) : rules
 
     if (format === "markdown") {
       const markdown = filteredRules

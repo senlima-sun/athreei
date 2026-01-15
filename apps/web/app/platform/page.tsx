@@ -319,8 +319,8 @@ export default function PlatformPage() {
                   </div>
                   <h3 className="mt-4 font-semibold">Configure Servers</h3>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    Add your MCP servers via JSON config or the dashboard. stdio,
-                    SSE, or HTTP—all supported.
+                    Add your MCP servers via JSON config or the dashboard.
+                    stdio, SSE, or HTTP—all supported.
                   </p>
                 </div>
 
@@ -330,8 +330,8 @@ export default function PlatformPage() {
                   </div>
                   <h3 className="mt-4 font-semibold">Connect Once</h3>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    Point your AI app to athreei. One connection gives you access
-                    to all your servers.
+                    Point your AI app to athreei. One connection gives you
+                    access to all your servers.
                   </p>
                 </div>
 

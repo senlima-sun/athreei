@@ -5,7 +5,10 @@ export const createRuleSchema = z.object({
   description: z.string().max(500).nullable().optional(),
   content: z.string().min(1).max(50000),
   priority: z.number().int().min(0).max(1000).optional().default(0),
-  scope: z.enum(["global", "namespace", "endpoint"]).optional().default("namespace"),
+  scope: z
+    .enum(["global", "namespace", "endpoint"])
+    .optional()
+    .default("namespace"),
   isEnabled: z.boolean().optional().default(true),
 })
 

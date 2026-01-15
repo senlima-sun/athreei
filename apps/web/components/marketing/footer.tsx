@@ -29,7 +29,14 @@ const footerLinks = {
 function Logo() {
   return (
     <svg viewBox="0 0 32 32" fill="none" className="size-8" aria-hidden="true">
-      <rect x="2" y="2" width="28" height="28" rx="6" className="fill-primary" />
+      <rect
+        x="2"
+        y="2"
+        width="28"
+        height="28"
+        rx="6"
+        className="fill-primary"
+      />
       <path
         d="M16 8L22 12V20L16 24L10 20V12L16 8Z"
         className="fill-primary-foreground"

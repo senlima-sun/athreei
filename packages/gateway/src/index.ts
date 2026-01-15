@@ -48,10 +48,7 @@ import {
   stopSessionCleanup,
   cleanupAllSessions,
 } from "./session.js"
-import {
-  startHttpApiServer,
-  setHttpApiNamespaceConfig,
-} from "./http-api.js"
+import { startHttpApiServer, setHttpApiNamespaceConfig } from "./http-api.js"
 
 // Re-export for library use
 export { TraceCollector } from "./trace-collector.js"

@@ -69,19 +69,19 @@ const useCases = [
     title: "Context That Follows You",
     description:
       "Save important details once, access them in any AI conversation. Your preferences, project context, and history—always available.",
-    example: "\"Remember I prefer TypeScript with strict mode...\"",
+    example: '"Remember I prefer TypeScript with strict mode..."',
   },
   {
     title: "Cross-App Workflows",
     description:
       "Research in ChatGPT, code in Cursor, review in Claude. Your shared context makes every app smarter.",
-    example: "\"Based on our earlier discussion about the API design...\"",
+    example: '"Based on our earlier discussion about the API design..."',
   },
   {
     title: "Team Knowledge Base",
     description:
       "Sync team decisions, coding standards, and project requirements. Everyone's AI assistant knows the same context.",
-    example: "\"Our deployment process requires...\"",
+    example: '"Our deployment process requires..."',
   },
 ]
 
@@ -193,7 +193,9 @@ export default function DesktopPage() {
                   <div className="flex size-12 items-center justify-center rounded-xl bg-primary/10 transition-colors group-hover:bg-primary/20">
                     <feature.icon className="size-6 text-primary" />
                   </div>
-                  <h3 className="mt-4 text-lg font-semibold">{feature.title}</h3>
+                  <h3 className="mt-4 text-lg font-semibold">
+                    {feature.title}
+                  </h3>
                   <p className="mt-2 text-sm text-muted-foreground">
                     {feature.description}
                   </p>
@@ -262,7 +264,9 @@ export default function DesktopPage() {
                   </p>
                 </div>
                 <div className="rounded-xl border border-border/50 bg-card p-6">
-                  <p className="text-2xl font-bold text-primary">Zero-Knowledge</p>
+                  <p className="text-2xl font-bold text-primary">
+                    Zero-Knowledge
+                  </p>
                   <p className="mt-1 text-sm text-muted-foreground">
                     We never see your data
                   </p>

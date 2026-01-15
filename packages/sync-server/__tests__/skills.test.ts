@@ -278,7 +278,8 @@ describe("Skill Database Schema Types", () => {
 describe("Helper Functions", () => {
   describe("Base64 encoding/decoding for encrypted content", () => {
     it("roundtrips skill content through base64", () => {
-      const originalContent = "# Code Review Best Practices\n\n- Review within 24h"
+      const originalContent =
+        "# Code Review Best Practices\n\n- Review within 24h"
       const encoder = new TextEncoder()
       const original = encoder.encode(originalContent)
 

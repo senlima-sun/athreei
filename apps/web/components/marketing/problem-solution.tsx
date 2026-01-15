@@ -78,7 +78,8 @@ export function ProblemSolution() {
           <h2 className="mt-4 max-w-2xl text-3xl font-bold tracking-tight sm:text-4xl">
             MCP is powerful.
             <span className="text-muted-foreground">
-              {" "}Managing it shouldn&apos;t be painful.
+              {" "}
+              Managing it shouldn&apos;t be painful.
             </span>
           </h2>
 

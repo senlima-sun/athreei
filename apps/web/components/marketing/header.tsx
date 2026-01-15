@@ -67,52 +67,52 @@ export function Header() {
         </Link>
 
         <NavigationMenu className="absolute left-1/2 hidden -translate-x-1/2 lg:flex">
-            <NavigationMenuList>
-              <NavigationMenuItem>
-                <NavigationMenuTrigger>Products</NavigationMenuTrigger>
-                <NavigationMenuContent>
-                  <ul className="grid w-[380px] gap-1 p-2">
-                    {productLinks.map((link) => (
-                      <li key={link.title}>
-                        <NavigationMenuLink
-                          href={link.href}
-                          className="flex select-none gap-3 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-muted focus:bg-muted"
-                        >
-                          <link.icon className="mt-0.5 size-5 shrink-0 text-primary" />
-                          <div>
-                            <div className="text-sm font-medium">
-                              {link.title}
-                            </div>
-                            <p className="mt-1 text-sm text-muted-foreground">
-                              {link.description}
-                            </p>
+          <NavigationMenuList>
+            <NavigationMenuItem>
+              <NavigationMenuTrigger>Products</NavigationMenuTrigger>
+              <NavigationMenuContent>
+                <ul className="grid w-[380px] gap-1 p-2">
+                  {productLinks.map((link) => (
+                    <li key={link.title}>
+                      <NavigationMenuLink
+                        href={link.href}
+                        className="flex select-none gap-3 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-muted focus:bg-muted"
+                      >
+                        <link.icon className="mt-0.5 size-5 shrink-0 text-primary" />
+                        <div>
+                          <div className="text-sm font-medium">
+                            {link.title}
                           </div>
-                        </NavigationMenuLink>
-                      </li>
-                    ))}
-                  </ul>
-                </NavigationMenuContent>
-              </NavigationMenuItem>
+                          <p className="mt-1 text-sm text-muted-foreground">
+                            {link.description}
+                          </p>
+                        </div>
+                      </NavigationMenuLink>
+                    </li>
+                  ))}
+                </ul>
+              </NavigationMenuContent>
+            </NavigationMenuItem>
 
-              <NavigationMenuItem>
-                <NavigationMenuLink
-                  href="/docs"
-                  className="flex h-9 items-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-muted"
-                >
-                  Docs
-                </NavigationMenuLink>
-              </NavigationMenuItem>
+            <NavigationMenuItem>
+              <NavigationMenuLink
+                href="/docs"
+                className="flex h-9 items-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-muted"
+              >
+                Docs
+              </NavigationMenuLink>
+            </NavigationMenuItem>
 
-              <NavigationMenuItem>
-                <NavigationMenuLink
-                  href="/pricing"
-                  className="flex h-9 items-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-muted"
-                >
-                  Pricing
-                </NavigationMenuLink>
-              </NavigationMenuItem>
-            </NavigationMenuList>
-          </NavigationMenu>
+            <NavigationMenuItem>
+              <NavigationMenuLink
+                href="/pricing"
+                className="flex h-9 items-center rounded-md px-4 py-2 text-sm font-medium transition-colors hover:bg-muted"
+              >
+                Pricing
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+          </NavigationMenuList>
+        </NavigationMenu>
 
         <div className="flex items-center gap-3">
           <div className="hidden sm:flex sm:items-center sm:gap-3">

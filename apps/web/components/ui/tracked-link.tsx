@@ -23,7 +23,8 @@ export function TrackedLink({
       cta_name: trackName,
       cta_location: trackLocation,
       cta_variant: trackVariant,
-      destination: typeof props.href === "string" ? props.href : props.href.toString(),
+      destination:
+        typeof props.href === "string" ? props.href : props.href.toString(),
     })
     onClick?.(e)
   }

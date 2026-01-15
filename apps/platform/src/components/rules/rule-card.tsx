@@ -1,10 +1,21 @@
 "use client"
 
 import Link from "next/link"
-import { Scale, Settings, ToggleLeft, ToggleRight, Globe, Boxes, Server } from "lucide-react"
+import {
+  Scale,
+  Settings,
+  ToggleLeft,
+  ToggleRight,
+  Globe,
+  Boxes,
+  Server,
+} from "lucide-react"
 import type { Rule, RuleScope } from "@/types"
 
-const SCOPE_ICONS: Record<RuleScope, React.ComponentType<{ className?: string }>> = {
+const SCOPE_ICONS: Record<
+  RuleScope,
+  React.ComponentType<{ className?: string }>
+> = {
   global: Globe,
   namespace: Boxes,
   endpoint: Server,

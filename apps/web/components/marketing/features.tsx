@@ -47,7 +47,8 @@ const features = [
   {
     icon: ServerIcon,
     title: "Self-Host or Cloud",
-    description: "Single binary or managed cloud. Your infrastructure, your choice.",
+    description:
+      "Single binary or managed cloud. Your infrastructure, your choice.",
     size: "small",
   },
 ]
@@ -135,7 +136,10 @@ export function Features() {
 
             <FeatureCard feature={features[4]} />
 
-            <FeatureCard feature={features[5]} className="md:col-span-2 lg:col-span-2" />
+            <FeatureCard
+              feature={features[5]}
+              className="md:col-span-2 lg:col-span-2"
+            />
           </div>
         </div>
       </div>

@@ -113,7 +113,10 @@ export const RuleCreateSchema = z.object({
   description: z.string().max(500).nullable().optional(),
   encryptedContent: z.string(), // Base64 encoded encrypted content
   priority: z.number().int().min(0).max(1000).optional().default(0),
-  scope: z.enum(["global", "namespace", "endpoint"]).optional().default("global"),
+  scope: z
+    .enum(["global", "namespace", "endpoint"])
+    .optional()
+    .default("global"),
   isEnabled: z.boolean().optional().default(true),
 })
 

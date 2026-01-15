@@ -17,9 +17,21 @@ function AggregationDiagram() {
       >
         <defs>
           <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="oklch(0.646 0.222 41.116)" stopOpacity="0.2" />
-            <stop offset="50%" stopColor="oklch(0.646 0.222 41.116)" stopOpacity="0.8" />
-            <stop offset="100%" stopColor="oklch(0.646 0.222 41.116)" stopOpacity="0.2" />
+            <stop
+              offset="0%"
+              stopColor="oklch(0.646 0.222 41.116)"
+              stopOpacity="0.2"
+            />
+            <stop
+              offset="50%"
+              stopColor="oklch(0.646 0.222 41.116)"
+              stopOpacity="0.8"
+            />
+            <stop
+              offset="100%"
+              stopColor="oklch(0.646 0.222 41.116)"
+              stopOpacity="0.2"
+            />
           </linearGradient>
 
           <filter id="glow">
@@ -33,75 +45,325 @@ function AggregationDiagram() {
 
         <g className="ai-apps">
           <g className="animate-fade-in" style={{ animationDelay: "0ms" }}>
-            <rect x="40" y="60" width="120" height="50" rx="8" className="fill-muted stroke-border" strokeWidth="1" />
-            <text x="100" y="90" textAnchor="middle" className="fill-foreground text-xs font-medium">Claude Desktop</text>
+            <rect
+              x="40"
+              y="60"
+              width="120"
+              height="50"
+              rx="8"
+              className="fill-muted stroke-border"
+              strokeWidth="1"
+            />
+            <text
+              x="100"
+              y="90"
+              textAnchor="middle"
+              className="fill-foreground text-xs font-medium"
+            >
+              Claude Desktop
+            </text>
           </g>
           <g className="animate-fade-in" style={{ animationDelay: "100ms" }}>
-            <rect x="40" y="130" width="120" height="50" rx="8" className="fill-muted stroke-border" strokeWidth="1" />
-            <text x="100" y="160" textAnchor="middle" className="fill-foreground text-xs font-medium">Cursor</text>
+            <rect
+              x="40"
+              y="130"
+              width="120"
+              height="50"
+              rx="8"
+              className="fill-muted stroke-border"
+              strokeWidth="1"
+            />
+            <text
+              x="100"
+              y="160"
+              textAnchor="middle"
+              className="fill-foreground text-xs font-medium"
+            >
+              Cursor
+            </text>
           </g>
           <g className="animate-fade-in" style={{ animationDelay: "200ms" }}>
-            <rect x="40" y="200" width="120" height="50" rx="8" className="fill-muted stroke-border" strokeWidth="1" />
-            <text x="100" y="230" textAnchor="middle" className="fill-foreground text-xs font-medium">ChatGPT</text>
+            <rect
+              x="40"
+              y="200"
+              width="120"
+              height="50"
+              rx="8"
+              className="fill-muted stroke-border"
+              strokeWidth="1"
+            />
+            <text
+              x="100"
+              y="230"
+              textAnchor="middle"
+              className="fill-foreground text-xs font-medium"
+            >
+              ChatGPT
+            </text>
           </g>
           <g className="animate-fade-in" style={{ animationDelay: "300ms" }}>
-            <rect x="40" y="270" width="120" height="50" rx="8" className="fill-muted stroke-border" strokeWidth="1" />
-            <text x="100" y="300" textAnchor="middle" className="fill-foreground text-xs font-medium">Your AI App</text>
+            <rect
+              x="40"
+              y="270"
+              width="120"
+              height="50"
+              rx="8"
+              className="fill-muted stroke-border"
+              strokeWidth="1"
+            />
+            <text
+              x="100"
+              y="300"
+              textAnchor="middle"
+              className="fill-foreground text-xs font-medium"
+            >
+              Your AI App
+            </text>
           </g>
         </g>
 
         <g className="connection-lines-left">
-          <path d="M160 85 Q 250 85 300 190" fill="none" stroke="url(#lineGradient)" strokeWidth="2" className="animate-draw-line" style={{ animationDelay: "400ms" }} />
-          <path d="M160 155 Q 230 155 300 190" fill="none" stroke="url(#lineGradient)" strokeWidth="2" className="animate-draw-line" style={{ animationDelay: "500ms" }} />
-          <path d="M160 225 Q 230 225 300 210" fill="none" stroke="url(#lineGradient)" strokeWidth="2" className="animate-draw-line" style={{ animationDelay: "600ms" }} />
-          <path d="M160 295 Q 250 295 300 210" fill="none" stroke="url(#lineGradient)" strokeWidth="2" className="animate-draw-line" style={{ animationDelay: "700ms" }} />
+          <path
+            d="M160 85 Q 250 85 300 190"
+            fill="none"
+            stroke="url(#lineGradient)"
+            strokeWidth="2"
+            className="animate-draw-line"
+            style={{ animationDelay: "400ms" }}
+          />
+          <path
+            d="M160 155 Q 230 155 300 190"
+            fill="none"
+            stroke="url(#lineGradient)"
+            strokeWidth="2"
+            className="animate-draw-line"
+            style={{ animationDelay: "500ms" }}
+          />
+          <path
+            d="M160 225 Q 230 225 300 210"
+            fill="none"
+            stroke="url(#lineGradient)"
+            strokeWidth="2"
+            className="animate-draw-line"
+            style={{ animationDelay: "600ms" }}
+          />
+          <path
+            d="M160 295 Q 250 295 300 210"
+            fill="none"
+            stroke="url(#lineGradient)"
+            strokeWidth="2"
+            className="animate-draw-line"
+            style={{ animationDelay: "700ms" }}
+          />
         </g>
 
-        <g className="gateway animate-scale-in" style={{ animationDelay: "800ms" }}>
-          <rect x="300" y="150" width="200" height="100" rx="12" className="fill-primary" filter="url(#glow)" />
-          <rect x="305" y="155" width="190" height="90" rx="10" className="fill-primary" />
-          <text x="400" y="195" textAnchor="middle" className="fill-primary-foreground text-sm font-semibold">athreei</text>
-          <text x="400" y="215" textAnchor="middle" className="fill-primary-foreground/80 text-xs">Gateway</text>
+        <g
+          className="gateway animate-scale-in"
+          style={{ animationDelay: "800ms" }}
+        >
+          <rect
+            x="300"
+            y="150"
+            width="200"
+            height="100"
+            rx="12"
+            className="fill-primary"
+            filter="url(#glow)"
+          />
+          <rect
+            x="305"
+            y="155"
+            width="190"
+            height="90"
+            rx="10"
+            className="fill-primary"
+          />
+          <text
+            x="400"
+            y="195"
+            textAnchor="middle"
+            className="fill-primary-foreground text-sm font-semibold"
+          >
+            athreei
+          </text>
+          <text
+            x="400"
+            y="215"
+            textAnchor="middle"
+            className="fill-primary-foreground/80 text-xs"
+          >
+            Gateway
+          </text>
         </g>
 
         <g className="connection-lines-right">
-          <path d="M500 170 Q 550 170 580 85" fill="none" stroke="url(#lineGradient)" strokeWidth="2" className="animate-draw-line" style={{ animationDelay: "1000ms" }} />
-          <path d="M500 185 Q 560 185 580 155" fill="none" stroke="url(#lineGradient)" strokeWidth="2" className="animate-draw-line" style={{ animationDelay: "1100ms" }} />
-          <path d="M500 200 Q 560 200 580 225" fill="none" stroke="url(#lineGradient)" strokeWidth="2" className="animate-draw-line" style={{ animationDelay: "1200ms" }} />
-          <path d="M500 215 Q 560 215 580 295" fill="none" stroke="url(#lineGradient)" strokeWidth="2" className="animate-draw-line" style={{ animationDelay: "1300ms" }} />
-          <path d="M500 230 Q 550 270 580 365" fill="none" stroke="url(#lineGradient)" strokeWidth="2" className="animate-draw-line" style={{ animationDelay: "1400ms" }} />
+          <path
+            d="M500 170 Q 550 170 580 85"
+            fill="none"
+            stroke="url(#lineGradient)"
+            strokeWidth="2"
+            className="animate-draw-line"
+            style={{ animationDelay: "1000ms" }}
+          />
+          <path
+            d="M500 185 Q 560 185 580 155"
+            fill="none"
+            stroke="url(#lineGradient)"
+            strokeWidth="2"
+            className="animate-draw-line"
+            style={{ animationDelay: "1100ms" }}
+          />
+          <path
+            d="M500 200 Q 560 200 580 225"
+            fill="none"
+            stroke="url(#lineGradient)"
+            strokeWidth="2"
+            className="animate-draw-line"
+            style={{ animationDelay: "1200ms" }}
+          />
+          <path
+            d="M500 215 Q 560 215 580 295"
+            fill="none"
+            stroke="url(#lineGradient)"
+            strokeWidth="2"
+            className="animate-draw-line"
+            style={{ animationDelay: "1300ms" }}
+          />
+          <path
+            d="M500 230 Q 550 270 580 365"
+            fill="none"
+            stroke="url(#lineGradient)"
+            strokeWidth="2"
+            className="animate-draw-line"
+            style={{ animationDelay: "1400ms" }}
+          />
         </g>
 
         <g className="mcp-servers">
           <g className="animate-fade-in" style={{ animationDelay: "1100ms" }}>
-            <rect x="580" y="60" width="120" height="50" rx="8" className="fill-muted stroke-border" strokeWidth="1" />
-            <text x="640" y="90" textAnchor="middle" className="fill-foreground text-xs font-medium">GitHub</text>
+            <rect
+              x="580"
+              y="60"
+              width="120"
+              height="50"
+              rx="8"
+              className="fill-muted stroke-border"
+              strokeWidth="1"
+            />
+            <text
+              x="640"
+              y="90"
+              textAnchor="middle"
+              className="fill-foreground text-xs font-medium"
+            >
+              GitHub
+            </text>
           </g>
           <g className="animate-fade-in" style={{ animationDelay: "1200ms" }}>
-            <rect x="580" y="130" width="120" height="50" rx="8" className="fill-muted stroke-border" strokeWidth="1" />
-            <text x="640" y="160" textAnchor="middle" className="fill-foreground text-xs font-medium">Figma</text>
+            <rect
+              x="580"
+              y="130"
+              width="120"
+              height="50"
+              rx="8"
+              className="fill-muted stroke-border"
+              strokeWidth="1"
+            />
+            <text
+              x="640"
+              y="160"
+              textAnchor="middle"
+              className="fill-foreground text-xs font-medium"
+            >
+              Figma
+            </text>
           </g>
           <g className="animate-fade-in" style={{ animationDelay: "1300ms" }}>
-            <rect x="580" y="200" width="120" height="50" rx="8" className="fill-muted stroke-border" strokeWidth="1" />
-            <text x="640" y="230" textAnchor="middle" className="fill-foreground text-xs font-medium">Sentry</text>
+            <rect
+              x="580"
+              y="200"
+              width="120"
+              height="50"
+              rx="8"
+              className="fill-muted stroke-border"
+              strokeWidth="1"
+            />
+            <text
+              x="640"
+              y="230"
+              textAnchor="middle"
+              className="fill-foreground text-xs font-medium"
+            >
+              Sentry
+            </text>
           </g>
           <g className="animate-fade-in" style={{ animationDelay: "1400ms" }}>
-            <rect x="580" y="270" width="120" height="50" rx="8" className="fill-muted stroke-border" strokeWidth="1" />
-            <text x="640" y="300" textAnchor="middle" className="fill-foreground text-xs font-medium">Linear</text>
+            <rect
+              x="580"
+              y="270"
+              width="120"
+              height="50"
+              rx="8"
+              className="fill-muted stroke-border"
+              strokeWidth="1"
+            />
+            <text
+              x="640"
+              y="300"
+              textAnchor="middle"
+              className="fill-foreground text-xs font-medium"
+            >
+              Linear
+            </text>
           </g>
           <g className="animate-fade-in" style={{ animationDelay: "1500ms" }}>
-            <rect x="580" y="340" width="120" height="50" rx="8" className="fill-muted stroke-border" strokeWidth="1" />
-            <text x="640" y="370" textAnchor="middle" className="fill-foreground text-xs font-medium">Your MCP Server</text>
+            <rect
+              x="580"
+              y="340"
+              width="120"
+              height="50"
+              rx="8"
+              className="fill-muted stroke-border"
+              strokeWidth="1"
+            />
+            <text
+              x="640"
+              y="370"
+              textAnchor="middle"
+              className="fill-foreground text-xs font-medium"
+            >
+              Your MCP Server
+            </text>
           </g>
         </g>
 
         <g className="labels">
-          <text x="100" y="35" textAnchor="middle" className="fill-muted-foreground text-xs uppercase tracking-wider">AI Apps</text>
-          <text x="400" y="130" textAnchor="middle" className="fill-muted-foreground text-xs uppercase tracking-wider">Single Connection</text>
-          <text x="640" y="35" textAnchor="middle" className="fill-muted-foreground text-xs uppercase tracking-wider">MCP Servers</text>
+          <text
+            x="100"
+            y="35"
+            textAnchor="middle"
+            className="fill-muted-foreground text-xs uppercase tracking-wider"
+          >
+            AI Apps
+          </text>
+          <text
+            x="400"
+            y="130"
+            textAnchor="middle"
+            className="fill-muted-foreground text-xs uppercase tracking-wider"
+          >
+            Single Connection
+          </text>
+          <text
+            x="640"
+            y="35"
+            textAnchor="middle"
+            className="fill-muted-foreground text-xs uppercase tracking-wider"
+          >
+            MCP Servers
+          </text>
         </g>
       </svg>
-
     </div>
   )
 }

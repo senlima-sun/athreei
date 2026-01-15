@@ -13,16 +13,6 @@ export {
   updateServerMapping,
 } from "./servers"
 
-export {
-  addSkill,
-  removeSkill,
-  listSkills,
-  updateSkillMapping,
-} from "./skills"
+export { addSkill, removeSkill, listSkills, updateSkillMapping } from "./skills"
 
-export {
-  addRule,
-  removeRule,
-  listRules,
-  updateRuleMapping,
-} from "./rules"
+export { addRule, removeRule, listRules, updateRuleMapping } from "./rules"
