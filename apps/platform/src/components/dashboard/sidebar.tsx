@@ -15,6 +15,8 @@ import {
   HardDrive,
   FileText,
   Shield,
+  BookOpen,
+  Scale,
 } from "lucide-react"
 import { useState } from "react"
 import { OrgSwitcher } from "./org-switcher"
@@ -75,6 +77,13 @@ const getNavSections = (): NavSection[] => {
         },
         { label: "Namespaces", href: "/dashboard/namespaces", icon: Boxes },
         { label: "Endpoints", href: "/dashboard/endpoints", icon: Server },
+      ],
+    },
+    {
+      title: "AI Config",
+      items: [
+        { label: "Skills", href: "/dashboard/skills", icon: BookOpen },
+        { label: "Rules", href: "/dashboard/rules", icon: Scale },
       ],
     },
     {

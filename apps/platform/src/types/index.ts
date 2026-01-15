@@ -21,3 +21,18 @@ export type {
 } from "./permission"
 
 export type { Session } from "./session"
+
+export type {
+  Skill,
+  SkillFormData,
+  CreateSkillInput,
+  UpdateSkillInput,
+} from "./skills"
+
+export type {
+  Rule,
+  RuleScope,
+  RuleFormData,
+  CreateRuleInput,
+  UpdateRuleInput,
+} from "./rules"
