@@ -1,4 +1,10 @@
-export type { Trace, TraceAttributes, TracesResponse } from "./trace"
+export type {
+  Trace,
+  TraceAttributes,
+  TracesResponse,
+  TraceActiveSkill,
+  TraceActiveRule,
+} from "./trace"
 
 export type {
   TransportType,

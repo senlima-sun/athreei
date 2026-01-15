@@ -8,6 +8,8 @@ import {
   ArrowLeft,
   Server,
   Wrench,
+  BookOpen,
+  Scale,
 } from "lucide-react"
 import type { Trace } from "@/types"
 import { formatDuration, formatTime } from "@/utils"
@@ -120,6 +122,61 @@ export function TraceDetail({ trace }: TraceDetailProps) {
           <pre className="whitespace-pre-wrap text-sm text-red-700">
             {trace.statusMessage}
           </pre>
+        </div>
+      )}
+
+      {/* Active Skills and Rules */}
+      {((trace.activeSkills && trace.activeSkills.length > 0) ||
+        (trace.activeRules && trace.activeRules.length > 0)) && (
+        <div className="grid gap-4 md:grid-cols-2">
+          {/* Active Skills */}
+          {trace.activeSkills && trace.activeSkills.length > 0 && (
+            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+              <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-blue-800">
+                <BookOpen className="h-4 w-4" />
+                Active Skills ({trace.activeSkills.length})
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {trace.activeSkills.map((skill) => (
+                  <Link
+                    key={skill.id}
+                    href={`/dashboard/skills/${skill.id}`}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700 transition-colors hover:bg-blue-200"
+                  >
+                    <BookOpen className="h-3.5 w-3.5" />
+                    {skill.name}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Active Rules */}
+          {trace.activeRules && trace.activeRules.length > 0 && (
+            <div className="rounded-lg border border-purple-200 bg-purple-50 p-4">
+              <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-purple-800">
+                <Scale className="h-4 w-4" />
+                Active Rules ({trace.activeRules.length})
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {trace.activeRules
+                  .sort((a, b) => a.priority - b.priority)
+                  .map((rule) => (
+                    <Link
+                      key={rule.id}
+                      href={`/dashboard/rules/${rule.id}`}
+                      className="inline-flex items-center gap-1.5 rounded-full bg-purple-100 px-3 py-1 text-sm font-medium text-purple-700 transition-colors hover:bg-purple-200"
+                    >
+                      <Scale className="h-3.5 w-3.5" />
+                      {rule.name}
+                      <span className="ml-1 rounded bg-purple-200 px-1.5 py-0.5 text-xs">
+                        #{rule.priority}
+                      </span>
+                    </Link>
+                  ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

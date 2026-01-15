@@ -3,6 +3,23 @@
  */
 
 /**
+ * Active skill reference in a trace
+ */
+export interface TraceActiveSkill {
+  id: string
+  name: string
+}
+
+/**
+ * Active rule reference in a trace
+ */
+export interface TraceActiveRule {
+  id: string
+  name: string
+  priority: number
+}
+
+/**
  * Attributes attached to a trace for filtering and display
  */
 export interface TraceAttributes {
@@ -11,6 +28,8 @@ export interface TraceAttributes {
   aggregatedToolName?: string
   arguments?: unknown
   result?: unknown
+  activeSkillIds?: string[]
+  activeRuleIds?: string[]
   [key: string]: unknown
 }
 
@@ -32,6 +51,8 @@ export interface Trace {
   attributes?: TraceAttributes | null
   events?: unknown[] | null
   createdAt?: string
+  activeSkills?: TraceActiveSkill[]
+  activeRules?: TraceActiveRule[]
 }
 
 /**
