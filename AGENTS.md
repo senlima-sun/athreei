@@ -241,12 +241,12 @@ log.info("Processing request") // Includes requestId
 
 ### When to use each level
 
-| Level   | Use for                                      |
-| ------- | -------------------------------------------- |
-| `debug` | Detailed debugging (disabled in production)  |
-| `info`  | Normal operations, startup messages          |
-| `warn`  | Recoverable issues, deprecation notices      |
-| `error` | Errors requiring attention                   |
+| Level   | Use for                                     |
+| ------- | ------------------------------------------- |
+| `debug` | Detailed debugging (disabled in production) |
+| `info`  | Normal operations, startup messages         |
+| `warn`  | Recoverable issues, deprecation notices     |
+| `error` | Errors requiring attention                  |
 
 ## Security Checklist
 

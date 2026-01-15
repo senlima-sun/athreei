@@ -135,16 +135,25 @@ app.get("/", (c) => {
 **Output Formats:**
 
 JSON (production):
+
 ```json
-{"level":"info","message":"Server started","timestamp":"2024-01-15T10:30:00.000Z","context":{"service":"api"},"data":{"port":3000}}
+{
+  "level": "info",
+  "message": "Server started",
+  "timestamp": "2024-01-15T10:30:00.000Z",
+  "context": { "service": "api" },
+  "data": { "port": 3000 }
+}
 ```
 
 Pretty (development):
+
 ```
 [2024-01-15T10:30:00.000Z] INFO  Server started {"service":"api"} {"port":3000}
 ```
 
 **Log Levels:**
+
 - `debug` - Detailed debugging information
 - `info` - General operational messages
 - `warn` - Warning conditions (rate limits, deprecations)

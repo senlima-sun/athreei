@@ -2,7 +2,12 @@
  * Logger class implementation
  */
 
-import { formatError, formatJson, formatPretty, getTimestamp } from "./formatters.js"
+import {
+  formatError,
+  formatJson,
+  formatPretty,
+  getTimestamp,
+} from "./formatters.js"
 import type {
   ILogger,
   LogContext,
@@ -66,7 +71,8 @@ export class Logger implements ILogger {
       timestamp: getTimestamp(),
       ...(Object.keys(this.context).length > 0 && { context: this.context }),
       ...(errorInfo && { error: errorInfo }),
-      ...(cleanData && Object.keys(cleanData).length > 0 && { data: cleanData }),
+      ...(cleanData &&
+        Object.keys(cleanData).length > 0 && { data: cleanData }),
     }
 
     const output = this.config.pretty ? formatPretty(entry) : formatJson(entry)

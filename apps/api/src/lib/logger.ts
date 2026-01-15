@@ -10,7 +10,8 @@ import { createLogger, honoLogger, type LoggerEnv } from "@athreei/shared"
  */
 export const logger = createLogger({
   service: "api",
-  level: (process.env.LOG_LEVEL as "debug" | "info" | "warn" | "error") || "info",
+  level:
+    (process.env.LOG_LEVEL as "debug" | "info" | "warn" | "error") || "info",
   pretty: process.env.NODE_ENV !== "production",
 })
 

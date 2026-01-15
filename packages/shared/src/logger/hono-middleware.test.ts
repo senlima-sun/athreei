@@ -103,9 +103,7 @@ describe("honoLogger middleware", () => {
 
     await app.request("/notfound")
 
-    const warnLog = consoleErrors.find((log) =>
-      log.includes("client error")
-    )
+    const warnLog = consoleErrors.find((log) => log.includes("client error"))
     expect(warnLog).toBeDefined()
 
     const parsed = JSON.parse(warnLog!)
@@ -122,9 +120,7 @@ describe("honoLogger middleware", () => {
 
     await app.request("/error")
 
-    const errorLog = consoleErrors.find((log) =>
-      log.includes("server error")
-    )
+    const errorLog = consoleErrors.find((log) => log.includes("server error"))
     expect(errorLog).toBeDefined()
 
     const parsed = JSON.parse(errorLog!)
