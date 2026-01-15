@@ -1,6 +1,5 @@
 import { Hono } from "hono"
 import { cors } from "hono/cors"
-import { logger } from "hono/logger"
 import {
   healthRoutes,
   configRoutes,
@@ -22,10 +21,11 @@ import {
 } from "./routes"
 import { errorHandler, notFoundHandler } from "./middleware"
 import { getAuth } from "./lib/auth"
+import { apiLogger } from "./lib/logger"
 
 const app = new Hono()
 
-app.use("*", logger())
+app.use("*", apiLogger())
 
 app.use(
   "*",

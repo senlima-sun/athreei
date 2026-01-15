@@ -1,4 +1,4 @@
-import { createLogger, type LoggerEnv } from "@athreei/shared"
+import { createLogger, honoLogger, type LoggerEnv } from "@athreei/shared"
 
 /**
  * API service logger instance
@@ -13,6 +13,13 @@ export const logger = createLogger({
   level: (process.env.LOG_LEVEL as "debug" | "info" | "warn" | "error") || "info",
   pretty: process.env.NODE_ENV !== "production",
 })
+
+/**
+ * Pre-configured Hono middleware with API logger
+ */
+export function apiLogger() {
+  return honoLogger({ logger })
+}
 
 /**
  * Re-export LoggerEnv for route handlers that need typed access to logger
