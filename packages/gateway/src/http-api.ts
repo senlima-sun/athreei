@@ -9,9 +9,16 @@ import { Hono } from "hono"
 import { cors } from "hono/cors"
 import type { GatewayState } from "./server.js"
 import type { TraceCollector } from "./trace-collector.js"
+import type { NamespaceConfig, SkillConfig, RuleConfig } from "./types.js"
 import { log } from "./logger.js"
 
 const VERSION = "0.1.0"
+
+let currentNamespaceConfig: NamespaceConfig | null = null
+
+export function setHttpApiNamespaceConfig(config: NamespaceConfig): void {
+  currentNamespaceConfig = config
+}
 
 /**
  * Create the HTTP API app for local gateway
@@ -240,6 +247,107 @@ export function createHttpApi(
     }
   })
 
+  // GET /api/skills - List active skills as markdown
+  app.get("/api/skills", (c) => {
+    const skills = currentNamespaceConfig?.skills ?? []
+    const format = c.req.query("format")
+
+    if (format === "markdown") {
+      const markdown = skills
+        .filter((s) => s.isEnabled !== false)
+        .map((s) => `# ${s.name}\n\n${s.content}`)
+        .join("\n\n---\n\n")
+      return c.text(markdown, 200, { "Content-Type": "text/markdown" })
+    }
+
+    return c.json({
+      skills: skills.map((s) => ({
+        id: s.id,
+        name: s.name,
+        description: s.description,
+        content: s.content,
+        tags: s.tags ?? [],
+        isEnabled: s.isEnabled ?? true,
+      })),
+      total: skills.length,
+    })
+  })
+
+  // GET /api/skills/:id - Get single skill by ID
+  app.get("/api/skills/:id", (c) => {
+    const skillId = c.req.param("id")
+    const skills = currentNamespaceConfig?.skills ?? []
+    const skill = skills.find((s) => s.id === skillId)
+
+    if (!skill) {
+      return c.json({ error: "Skill not found" }, 404)
+    }
+
+    return c.json({
+      id: skill.id,
+      name: skill.name,
+      description: skill.description,
+      content: skill.content,
+      tags: skill.tags ?? [],
+      isEnabled: skill.isEnabled ?? true,
+    })
+  })
+
+  // GET /api/rules - List active rules as markdown (ordered by priority)
+  app.get("/api/rules", (c) => {
+    const rules = [...(currentNamespaceConfig?.rules ?? [])].sort(
+      (a, b) => (b.priority ?? 0) - (a.priority ?? 0)
+    )
+    const format = c.req.query("format")
+    const scope = c.req.query("scope")
+
+    const filteredRules = scope
+      ? rules.filter((r) => r.scope === scope)
+      : rules
+
+    if (format === "markdown") {
+      const markdown = filteredRules
+        .filter((r) => r.isEnabled !== false)
+        .map((r) => `# ${r.name}\n\n${r.content}`)
+        .join("\n\n---\n\n")
+      return c.text(markdown, 200, { "Content-Type": "text/markdown" })
+    }
+
+    return c.json({
+      rules: filteredRules.map((r) => ({
+        id: r.id,
+        name: r.name,
+        description: r.description,
+        content: r.content,
+        priority: r.priority ?? 0,
+        scope: r.scope ?? "global",
+        isEnabled: r.isEnabled ?? true,
+      })),
+      total: filteredRules.length,
+    })
+  })
+
+  // GET /api/rules/:id - Get single rule by ID
+  app.get("/api/rules/:id", (c) => {
+    const ruleId = c.req.param("id")
+    const rules = currentNamespaceConfig?.rules ?? []
+    const rule = rules.find((r) => r.id === ruleId)
+
+    if (!rule) {
+      return c.json({ error: "Rule not found" }, 404)
+    }
+
+    return c.json({
+      id: rule.id,
+      name: rule.name,
+      description: rule.description,
+      content: rule.content,
+      priority: rule.priority ?? 0,
+      scope: rule.scope ?? "global",
+      isEnabled: rule.isEnabled ?? true,
+    })
+  })
+
   return app
 }
 
@@ -263,6 +371,8 @@ export function startHttpApiServer(
   log.info(`  - Traces: http://localhost:${port}/api/traces`)
   log.info(`  - Servers: http://localhost:${port}/api/servers`)
   log.info(`  - Tools: http://localhost:${port}/api/tools`)
+  log.info(`  - Skills: http://localhost:${port}/api/skills`)
+  log.info(`  - Rules: http://localhost:${port}/api/rules`)
 
   return {
     stop: () => {

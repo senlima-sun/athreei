@@ -63,6 +63,8 @@ export interface SkillConfig {
   tags?: string[]
   /** Version number */
   version?: number
+  /** Whether the skill is enabled */
+  isEnabled?: boolean
 }
 
 /**
@@ -81,6 +83,8 @@ export interface RuleConfig {
   priority: number
   /** Scope of the rule */
   scope: "global" | "namespace" | "endpoint"
+  /** Whether the rule is enabled */
+  isEnabled?: boolean
 }
 
 /**

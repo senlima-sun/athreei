@@ -48,7 +48,10 @@ import {
   stopSessionCleanup,
   cleanupAllSessions,
 } from "./session.js"
-import { startHttpApiServer } from "./http-api.js"
+import {
+  startHttpApiServer,
+  setHttpApiNamespaceConfig,
+} from "./http-api.js"
 
 // Re-export for library use
 export { TraceCollector } from "./trace-collector.js"
@@ -510,6 +513,7 @@ async function main(): Promise<void> {
     // Mock mode: use mock config (no servers, no Platform)
     namespaceConfig = createMockNamespaceConfig()
     setSseNamespaceConfig(namespaceConfig)
+    setHttpApiNamespaceConfig(namespaceConfig)
   } else if (cliArgs.local) {
     // Local mode: read servers from local config, no Platform sync
     log.info("Running in LOCAL mode (no Platform sync)")
@@ -517,6 +521,7 @@ async function main(): Promise<void> {
       const localConfig = loadLocalConfig(cliArgs.configPath)
       namespaceConfig = createLocalNamespaceConfig(localConfig)
       setSseNamespaceConfig(namespaceConfig)
+      setHttpApiNamespaceConfig(namespaceConfig)
 
       if (localConfig.skills?.length) {
         log.info(`Loaded ${localConfig.skills.length} skills`)
@@ -566,6 +571,7 @@ async function main(): Promise<void> {
       }
 
       setSseNamespaceConfig(namespaceConfig)
+      setHttpApiNamespaceConfig(namespaceConfig)
     } catch (error) {
       log.error("Failed to fetch namespace config:", error)
       process.exit(1)
@@ -587,6 +593,7 @@ async function main(): Promise<void> {
     syncManager.setOnConfigChange((newConfig) => {
       // Update SSE namespace config
       setSseNamespaceConfig(newConfig)
+      setHttpApiNamespaceConfig(newConfig)
 
       // Handle stdio mode config change
       if (cliArgs.transport === "stdio") {
