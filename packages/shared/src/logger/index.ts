@@ -23,6 +23,10 @@ export {
 // Re-export Logger class
 export { Logger } from "./logger.js"
 
+// Re-export Hono middleware and types
+export { honoLogger } from "./hono-middleware.js"
+export type { HonoLoggerOptions, LoggerEnv } from "./hono-middleware.js"
+
 import type { LoggerConfig, LogLevel } from "./types.js"
 import { Logger } from "./logger.js"
 
