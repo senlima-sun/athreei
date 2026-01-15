@@ -1,5 +1,6 @@
 import type { Context, Next } from "hono"
 import { getAuth } from "../lib/auth"
+import { logger } from "../lib/logger"
 
 export interface AuthContext {
   userId: string
@@ -39,7 +40,9 @@ export async function authMiddleware(c: Context, next: Next) {
 
     await next()
   } catch (error) {
-    console.error("Auth middleware error:", error)
+    // Use request-scoped logger if available, otherwise fallback to service logger
+    const log = c.get("logger") ?? logger
+    log.error("Authentication failed", { error })
     return c.json({ error: "Authentication failed" }, 401)
   }
 }
