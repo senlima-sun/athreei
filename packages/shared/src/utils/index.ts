@@ -8,7 +8,7 @@ export {
   redact,
   redactObject,
   createSecureLogger,
-  type Logger,
+  type BaseLogger,
 } from "./redact.js"
 
 // Re-export config path utilities

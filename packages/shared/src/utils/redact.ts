@@ -202,9 +202,11 @@ export function redactObject(obj: unknown): unknown {
 }
 
 /**
- * Logger interface for createSecureLogger
+ * Base logger interface for createSecureLogger
+ * This is a simple interface that matches console-like loggers.
+ * For the full structured logger, use Logger from @athreei/shared/logger
  */
-export interface Logger {
+export interface BaseLogger {
   debug: (...args: unknown[]) => void
   info: (...args: unknown[]) => void
   warn: (...args: unknown[]) => void
@@ -230,7 +232,7 @@ export interface Logger {
  * // Logs: "Response:" { access_token: "[REDACTED]" }
  * ```
  */
-export function createSecureLogger(baseLogger: Logger): Logger {
+export function createSecureLogger(baseLogger: BaseLogger): BaseLogger {
   const redactArgs = (...args: unknown[]): unknown[] => {
     return args.map((arg) => {
       if (typeof arg === "string") {

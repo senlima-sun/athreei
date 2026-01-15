@@ -25,7 +25,10 @@ export class Logger implements ILogger {
       service: config.service ?? "",
       pretty: config.pretty ?? process.env.NODE_ENV !== "production",
     }
-    this.context = context
+    // Merge service into context if provided
+    this.context = this.config.service
+      ? { service: this.config.service, ...context }
+      : context
   }
 
   /**
@@ -53,8 +56,7 @@ export class Logger implements ILogger {
 
     if (data?.error !== undefined) {
       errorInfo = formatError(data.error)
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { error: _, ...rest } = data
+      const { error: _error, ...rest } = data
       cleanData = Object.keys(rest).length > 0 ? rest : undefined
     }
 
@@ -70,6 +72,7 @@ export class Logger implements ILogger {
     const output = this.config.pretty ? formatPretty(entry) : formatJson(entry)
 
     // Use stderr for errors and warnings, stdout for others
+    // eslint-disable-next-line no-console
     if (level === "error" || level === "warn") {
       console.error(output)
     } else {
