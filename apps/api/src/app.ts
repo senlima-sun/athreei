@@ -18,6 +18,8 @@ import {
   dashboardRoutes,
   auditRoutes,
   permissionsRoutes,
+  skillsRoutes,
+  rulesRoutes,
 } from "./routes"
 import { errorHandler, notFoundHandler } from "./middleware"
 import { getAuth } from "./lib/auth"
@@ -72,6 +74,8 @@ app.route("/api/sessions", sessionsRoutes)
 app.route("/api/dashboard", dashboardRoutes)
 app.route("/api/audit", auditRoutes)
 app.route("/api/permissions", permissionsRoutes)
+app.route("/api/skills", skillsRoutes)
+app.route("/api/rules", rulesRoutes)
 
 app.notFound(notFoundHandler)
 app.onError(errorHandler)
