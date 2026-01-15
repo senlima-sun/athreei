@@ -72,7 +72,6 @@ export class Logger implements ILogger {
     const output = this.config.pretty ? formatPretty(entry) : formatJson(entry)
 
     // Use stderr for errors and warnings, stdout for others
-    // eslint-disable-next-line no-console
     if (level === "error" || level === "warn") {
       console.error(output)
     } else {

@@ -24,8 +24,9 @@
     "@noble/ciphers": "^1.0.0"
   },
   "devDependencies": {
-    "vitest": "^2.1.8",
     "@types/node": "^22.10.2",
-    "typescript": "^5.7.2"
+    "hono": "^4.11.4",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
   }
 }
