@@ -19,10 +19,19 @@ export const itemTypeEnum = pgEnum("item_type", [
   "session",
   "audit_log",
   "settings",
+  "skill",
+  "rule",
 ])
 
 // Enum for trace status
 export const traceStatusEnum = pgEnum("trace_status", ["success", "error"])
+
+// Enum for rule scope
+export const ruleScopeEnum = pgEnum("rule_scope", [
+  "global",
+  "namespace",
+  "endpoint",
+])
 
 // Custom type for bytea (binary data)
 const bytea = customType<{ data: Uint8Array; dpiName: string }>({
@@ -205,6 +214,68 @@ export const traces = pgTable(
   })
 )
 
+// Skills table - stores encrypted skill content
+export const skills = pgTable(
+  "skills",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    account_id: uuid("account_id")
+      .notNull()
+      .references(() => accounts.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    description: text("description"),
+    encrypted_content: bytea("encrypted_content").notNull(),
+    tags: text("tags").array(),
+    is_enabled: boolean("is_enabled").default(true).notNull(),
+    version: integer("version").default(1).notNull(),
+    created_at: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updated_at: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    deleted_at: timestamp("deleted_at", { withTimezone: true }),
+  },
+  (table) => ({
+    accountIdIdx: index("idx_skills_account_id").on(table.account_id),
+    nameIdx: index("idx_skills_name").on(table.name),
+    isEnabledIdx: index("idx_skills_is_enabled").on(table.is_enabled),
+    deletedAtIdx: index("idx_skills_deleted_at").on(table.deleted_at),
+  })
+)
+
+// Rules table - stores encrypted rule content
+export const rules = pgTable(
+  "rules",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    account_id: uuid("account_id")
+      .notNull()
+      .references(() => accounts.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    description: text("description"),
+    encrypted_content: bytea("encrypted_content").notNull(),
+    priority: integer("priority").default(0).notNull(),
+    scope: ruleScopeEnum("scope").default("global").notNull(),
+    is_enabled: boolean("is_enabled").default(true).notNull(),
+    created_at: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updated_at: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    deleted_at: timestamp("deleted_at", { withTimezone: true }),
+  },
+  (table) => ({
+    accountIdIdx: index("idx_rules_account_id").on(table.account_id),
+    nameIdx: index("idx_rules_name").on(table.name),
+    priorityIdx: index("idx_rules_priority").on(table.priority),
+    scopeIdx: index("idx_rules_scope").on(table.scope),
+    isEnabledIdx: index("idx_rules_is_enabled").on(table.is_enabled),
+    deletedAtIdx: index("idx_rules_deleted_at").on(table.deleted_at),
+  })
+)
+
 // Inferred types for TypeScript
 export type Account = InferSelectModel<typeof accounts>
 export type NewAccount = InferInsertModel<typeof accounts>
@@ -224,9 +295,16 @@ export type NewSyncSettings = InferInsertModel<typeof syncSettings>
 export type Trace = InferSelectModel<typeof traces>
 export type NewTrace = InferInsertModel<typeof traces>
 
+export type Skill = InferSelectModel<typeof skills>
+export type NewSkill = InferInsertModel<typeof skills>
+
+export type Rule = InferSelectModel<typeof rules>
+export type NewRule = InferInsertModel<typeof rules>
+
 // Derived union type from enum values
 export type ItemType = (typeof itemTypeEnum.enumValues)[number]
 export type TraceStatus = (typeof traceStatusEnum.enumValues)[number]
+export type RuleScope = (typeof ruleScopeEnum.enumValues)[number]
 
 // Relations
 export const accountsRelations = relations(accounts, ({ many, one }) => ({
@@ -235,6 +313,8 @@ export const accountsRelations = relations(accounts, ({ many, one }) => ({
   syncSettings: one(syncSettings),
   syncStates: many(syncState),
   traces: many(traces),
+  skills: many(skills),
+  rules: many(rules),
 }))
 
 export const devicesRelations = relations(devices, ({ one, many }) => ({
@@ -278,6 +358,20 @@ export const syncSettingsRelations = relations(syncSettings, ({ one }) => ({
 export const tracesRelations = relations(traces, ({ one }) => ({
   account: one(accounts, {
     fields: [traces.account_id],
+    references: [accounts.id],
+  }),
+}))
+
+export const skillsRelations = relations(skills, ({ one }) => ({
+  account: one(accounts, {
+    fields: [skills.account_id],
+    references: [accounts.id],
+  }),
+}))
+
+export const rulesRelations = relations(rules, ({ one }) => ({
+  account: one(accounts, {
+    fields: [rules.account_id],
     references: [accounts.id],
   }),
 }))

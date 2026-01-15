@@ -80,6 +80,63 @@ export const TraceAnalyticsQuerySchema = z.object({
   mcpServer: z.string().uuid().optional(),
 })
 
+// Skill schemas
+export const SkillCreateSchema = z.object({
+  name: z.string().min(1).max(100),
+  description: z.string().max(500).nullable().optional(),
+  encryptedContent: z.string(), // Base64 encoded encrypted content
+  tags: z.array(z.string().max(50)).max(20).optional(),
+  isEnabled: z.boolean().optional().default(true),
+})
+
+export const SkillUpdateSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  description: z.string().max(500).nullable().optional(),
+  encryptedContent: z.string().optional(), // Base64 encoded encrypted content
+  tags: z.array(z.string().max(50)).max(20).optional(),
+  isEnabled: z.boolean().optional(),
+})
+
+export const SkillQuerySchema = z.object({
+  isEnabled: z
+    .string()
+    .transform((v) => v === "true")
+    .optional(),
+  search: z.string().optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+  offset: z.coerce.number().int().min(0).default(0),
+})
+
+// Rule schemas
+export const RuleCreateSchema = z.object({
+  name: z.string().min(1).max(100),
+  description: z.string().max(500).nullable().optional(),
+  encryptedContent: z.string(), // Base64 encoded encrypted content
+  priority: z.number().int().min(0).max(1000).optional().default(0),
+  scope: z.enum(["global", "namespace", "endpoint"]).optional().default("global"),
+  isEnabled: z.boolean().optional().default(true),
+})
+
+export const RuleUpdateSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  description: z.string().max(500).nullable().optional(),
+  encryptedContent: z.string().optional(), // Base64 encoded encrypted content
+  priority: z.number().int().min(0).max(1000).optional(),
+  scope: z.enum(["global", "namespace", "endpoint"]).optional(),
+  isEnabled: z.boolean().optional(),
+})
+
+export const RuleQuerySchema = z.object({
+  isEnabled: z
+    .string()
+    .transform((v) => v === "true")
+    .optional(),
+  scope: z.enum(["global", "namespace", "endpoint"]).optional(),
+  search: z.string().optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+  offset: z.coerce.number().int().min(0).default(0),
+})
+
 export type RegisterRequest = z.infer<typeof RegisterRequestSchema>
 export type LoginRequest = z.infer<typeof LoginRequestSchema>
 export type RegisterDeviceRequest = z.infer<typeof RegisterDeviceRequestSchema>
@@ -90,6 +147,12 @@ export type TraceUploadRequest = z.infer<typeof TraceUploadRequestSchema>
 export type TraceQuery = z.infer<typeof TraceQuerySchema>
 export type TraceBulkDelete = z.infer<typeof TraceBulkDeleteSchema>
 export type TraceAnalyticsQuery = z.infer<typeof TraceAnalyticsQuerySchema>
+export type SkillCreate = z.infer<typeof SkillCreateSchema>
+export type SkillUpdate = z.infer<typeof SkillUpdateSchema>
+export type SkillQuery = z.infer<typeof SkillQuerySchema>
+export type RuleCreate = z.infer<typeof RuleCreateSchema>
+export type RuleUpdate = z.infer<typeof RuleUpdateSchema>
+export type RuleQuery = z.infer<typeof RuleQuerySchema>
 
 // Response types
 export interface AuthResponse {
@@ -190,6 +253,44 @@ export interface TraceAnalyticsResponse {
     count: number
     percentage: number
   }[]
+}
+
+// Skill response types
+export interface SkillResponse {
+  id: string
+  name: string
+  description: string | null
+  encryptedContent: string // Base64 encoded
+  tags: string[]
+  isEnabled: boolean
+  version: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface SkillListResponse {
+  skills: SkillResponse[]
+  total: number
+  hasMore: boolean
+}
+
+// Rule response types
+export interface RuleResponse {
+  id: string
+  name: string
+  description: string | null
+  encryptedContent: string // Base64 encoded
+  priority: number
+  scope: "global" | "namespace" | "endpoint"
+  isEnabled: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface RuleListResponse {
+  rules: RuleResponse[]
+  total: number
+  hasMore: boolean
 }
 
 // JWT payload

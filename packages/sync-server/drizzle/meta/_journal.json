@@ -29,6 +29,13 @@
       "when": 1735578000000,
       "tag": "0003_add_encryption_salt",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1768518566160,
+      "tag": "0004_amusing_true_believers",
+      "breakpoints": true
     }
   ]
 }
