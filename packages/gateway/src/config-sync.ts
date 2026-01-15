@@ -10,7 +10,13 @@
 import { existsSync, readFileSync, mkdirSync, writeFileSync } from "node:fs"
 import { homedir } from "node:os"
 import { join, dirname } from "node:path"
-import type { GatewayConfig, LocalConfig, NamespaceConfig } from "./types.js"
+import type {
+  GatewayConfig,
+  LocalConfig,
+  NamespaceConfig,
+  SkillConfig,
+  RuleConfig,
+} from "./types.js"
 import type { McpServerConfig } from "@athreei/gateway-core"
 import { log } from "./logger.js"
 
@@ -210,8 +216,80 @@ export function loadLocalConfig(configPath?: string): LocalConfig {
     })
   }
 
-  log.info(`Local config loaded: ${servers.length} servers`)
-  return { servers }
+  // Parse skills if present
+  const skills: SkillConfig[] = []
+  if (Array.isArray(cfg.skills)) {
+    for (const [index, skill] of cfg.skills.entries()) {
+      if (!skill || typeof skill !== "object") {
+        throw new Error(`skills[${index}] must be an object`)
+      }
+
+      const sk = skill as Record<string, unknown>
+
+      if (typeof sk.name !== "string" || !sk.name) {
+        throw new Error(`skills[${index}].name is required`)
+      }
+
+      if (typeof sk.content !== "string" || !sk.content) {
+        throw new Error(`skills[${index}].content is required`)
+      }
+
+      skills.push({
+        id: typeof sk.id === "string" ? sk.id : `local-skill-${index}`,
+        name: sk.name,
+        description: typeof sk.description === "string" ? sk.description : null,
+        content: sk.content,
+        tags: Array.isArray(sk.tags)
+          ? sk.tags.filter((t): t is string => typeof t === "string")
+          : [],
+        version: typeof sk.version === "number" ? sk.version : 1,
+      })
+    }
+  }
+
+  // Parse rules if present
+  const rules: RuleConfig[] = []
+  if (Array.isArray(cfg.rules)) {
+    for (const [index, rule] of cfg.rules.entries()) {
+      if (!rule || typeof rule !== "object") {
+        throw new Error(`rules[${index}] must be an object`)
+      }
+
+      const r = rule as Record<string, unknown>
+
+      if (typeof r.name !== "string" || !r.name) {
+        throw new Error(`rules[${index}].name is required`)
+      }
+
+      if (typeof r.content !== "string" || !r.content) {
+        throw new Error(`rules[${index}].content is required`)
+      }
+
+      const scope = r.scope as string | undefined
+      const validScopes = ["global", "namespace", "endpoint"] as const
+
+      rules.push({
+        id: typeof r.id === "string" ? r.id : `local-rule-${index}`,
+        name: r.name,
+        description: typeof r.description === "string" ? r.description : null,
+        content: r.content,
+        priority: typeof r.priority === "number" ? r.priority : index,
+        scope:
+          scope && validScopes.includes(scope as (typeof validScopes)[number])
+            ? (scope as (typeof validScopes)[number])
+            : "global",
+      })
+    }
+  }
+
+  log.info(
+    `Local config loaded: ${servers.length} servers, ${skills.length} skills, ${rules.length} rules`
+  )
+  return {
+    servers,
+    skills: skills.length > 0 ? skills : undefined,
+    rules: rules.length > 0 ? rules : undefined,
+  }
 }
 
 /**

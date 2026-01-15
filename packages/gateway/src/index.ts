@@ -55,6 +55,19 @@ export { TraceCollector } from "./trace-collector.js"
 export { TraceSyncClient, createTraceSyncClient } from "./trace-sync.js"
 export { log, setLogLevel } from "./logger.js"
 export * from "./types.js"
+export {
+  loadConfig,
+  loadLocalConfig,
+  ConfigSyncManager,
+} from "./config-sync.js"
+export {
+  loadSkillFromFile,
+  loadRuleFromFile,
+  loadSkillsFromDirectory,
+  loadRulesFromDirectory,
+  exportSkillToMarkdown,
+  exportRuleToMarkdown,
+} from "./skill-file-loader.js"
 
 interface CliArgs {
   configPath?: string
@@ -434,10 +447,10 @@ function createMockNamespaceConfig(): NamespaceConfig {
 }
 
 /**
- * Create namespace config from local servers (for --local mode)
+ * Create namespace config from local config (for --local mode)
  */
 function createLocalNamespaceConfig(
-  servers: import("@athreei/gateway-core").McpServerConfig[]
+  localConfig: import("./types.js").LocalConfig
 ): NamespaceConfig {
   return {
     namespaceId: "local-namespace",
@@ -446,7 +459,9 @@ function createLocalNamespaceConfig(
     endpointId: "local-endpoint",
     endpointName: "local",
     organizationId: "local-org",
-    servers,
+    servers: localConfig.servers,
+    skills: localConfig.skills,
+    rules: localConfig.rules,
     configVersion: `local-v${Date.now()}`,
   }
 }
@@ -500,8 +515,15 @@ async function main(): Promise<void> {
     log.info("Running in LOCAL mode (no Platform sync)")
     try {
       const localConfig = loadLocalConfig(cliArgs.configPath)
-      namespaceConfig = createLocalNamespaceConfig(localConfig.servers)
+      namespaceConfig = createLocalNamespaceConfig(localConfig)
       setSseNamespaceConfig(namespaceConfig)
+
+      if (localConfig.skills?.length) {
+        log.info(`Loaded ${localConfig.skills.length} skills`)
+      }
+      if (localConfig.rules?.length) {
+        log.info(`Loaded ${localConfig.rules.length} rules`)
+      }
     } catch (error) {
       log.error("Failed to load local config:", error)
       process.exit(1)
