@@ -138,6 +138,10 @@ export interface ToolCallTrace {
   durationMs?: number
   /** Status of the trace */
   status: "success" | "error"
+  /** IDs of skills that were active during this trace */
+  activeSkillIds?: string[]
+  /** IDs of rules that were active during this trace */
+  activeRuleIds?: string[]
 }
 
 /**
@@ -162,6 +166,10 @@ export interface EncryptedToolCallTrace {
   durationMs?: number
   /** Status of the trace */
   status: "success" | "error"
+  /** IDs of skills that were active during this trace (unencrypted for filtering) */
+  activeSkillIds?: string[]
+  /** IDs of rules that were active during this trace (unencrypted for filtering) */
+  activeRuleIds?: string[]
   /** Encrypted payload containing arguments, result, and error */
   encryptedPayload: {
     /** Base64-encoded nonce */

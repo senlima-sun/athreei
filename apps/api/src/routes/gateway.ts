@@ -289,6 +289,8 @@ gateway.post("/traces", zValidator("json", postTracesSchema), async (c) => {
       result: traceData.result,
       endpointId: endpointRecord.id,
       apiKeyId: apiKeyRecord.id,
+      activeSkillIds: traceData.activeSkillIds,
+      activeRuleIds: traceData.activeRuleIds,
     }
     const attributes = JSON.stringify(attributesObj)
 

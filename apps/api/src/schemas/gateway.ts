@@ -17,6 +17,8 @@ export const postTracesSchema = z.object({
       startedAt: z.string().datetime(),
       endedAt: z.string().datetime().optional(),
       durationMs: z.number().optional(),
+      activeSkillIds: z.array(z.string()).optional(),
+      activeRuleIds: z.array(z.string()).optional(),
     })
   ),
 })

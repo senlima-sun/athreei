@@ -113,6 +113,8 @@ export function encryptTracePayload(
     endedAt: trace.endedAt,
     durationMs: trace.durationMs,
     status: trace.status,
+    activeSkillIds: trace.activeSkillIds,
+    activeRuleIds: trace.activeRuleIds,
     encryptedPayload: {
       nonce: encrypted.nonce,
       ciphertext: encrypted.ciphertext,
@@ -155,6 +157,8 @@ export function decryptTracePayload(
     endedAt: encryptedTrace.endedAt,
     durationMs: encryptedTrace.durationMs,
     status: encryptedTrace.status,
+    activeSkillIds: encryptedTrace.activeSkillIds,
+    activeRuleIds: encryptedTrace.activeRuleIds,
   }
 }
 
