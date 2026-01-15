@@ -7,12 +7,28 @@ import { PageHeader } from "@/components/dashboard/page-header"
 import {
   NamespaceServerList,
   ServerPickerModal,
+  NamespaceSkillList,
+  NamespaceRuleList,
+  SkillPickerModal,
+  RulePickerModal,
   type NamespaceServer,
   type McpServer,
+  type NamespaceSkill,
+  type NamespaceRule,
+  type PickerSkill,
+  type PickerRule,
 } from "@/components/namespaces"
 import { useActiveOrganization } from "@/lib/auth-client"
-import { Plus, Trash2, Loader2, AlertTriangle } from "lucide-react"
+import {
+  Plus,
+  Trash2,
+  Loader2,
+  AlertTriangle,
+  BookOpen,
+  Scale,
+} from "lucide-react"
 import { API_URL } from "@/constants"
+import type { RuleScope } from "@/types"
 
 interface NamespaceDetails {
   id: string
@@ -35,6 +51,27 @@ interface ApiServer {
   enabled?: boolean
 }
 
+interface ApiSkill {
+  id: string
+  name: string
+  description?: string | null
+  tags: string[]
+  isEnabled: boolean
+  mappingId: string
+  enabled?: boolean
+}
+
+interface ApiRule {
+  id: string
+  name: string
+  description?: string | null
+  scope: RuleScope
+  priority: number
+  isEnabled: boolean
+  mappingId: string
+  enabled?: boolean
+}
+
 export default function NamespaceDetailsPage() {
   const params = useParams()
   const router = useRouter()
@@ -43,14 +80,19 @@ export default function NamespaceDetailsPage() {
 
   const [namespace, setNamespace] = useState<NamespaceDetails | null>(null)
   const [servers, setServers] = useState<NamespaceServer[]>([])
+  const [skills, setSkills] = useState<NamespaceSkill[]>([])
+  const [rules, setRules] = useState<NamespaceRule[]>([])
   const [availableServers, setAvailableServers] = useState<McpServer[]>([])
+  const [availableSkills, setAvailableSkills] = useState<PickerSkill[]>([])
+  const [availableRules, setAvailableRules] = useState<PickerRule[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [showPickerModal, setShowPickerModal] = useState(false)
+  const [showServerPickerModal, setShowServerPickerModal] = useState(false)
+  const [showSkillPickerModal, setShowSkillPickerModal] = useState(false)
+  const [showRulePickerModal, setShowRulePickerModal] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Load namespace details
   const loadNamespace = useCallback(async () => {
     if (!activeOrg?.id) return
 
@@ -70,7 +112,6 @@ export default function NamespaceDetailsPage() {
       const data = await response.json()
       setNamespace(data.namespace)
 
-      // Transform servers to match NamespaceServer type
       const transformedServers: NamespaceServer[] = (data.servers || []).map(
         (server: ApiServer) => ({
           id: server.mappingId,
@@ -89,7 +130,63 @@ export default function NamespaceDetailsPage() {
     }
   }, [activeOrg?.id, namespaceId])
 
-  // Load available servers (not in namespace)
+  const loadNamespaceSkills = useCallback(async () => {
+    if (!activeOrg?.id) return
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/namespaces/${namespaceId}/skills`,
+        { credentials: "include" }
+      )
+
+      if (!response.ok) return
+
+      const data = await response.json()
+      const transformedSkills: NamespaceSkill[] = (data.data || []).map(
+        (skill: ApiSkill) => ({
+          id: skill.mappingId,
+          skillId: skill.id,
+          name: skill.name,
+          description: skill.description,
+          tags: skill.tags || [],
+          enabled: skill.enabled ?? true,
+        })
+      )
+      setSkills(transformedSkills)
+    } catch {
+      // Silently fail
+    }
+  }, [activeOrg?.id, namespaceId])
+
+  const loadNamespaceRules = useCallback(async () => {
+    if (!activeOrg?.id) return
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/namespaces/${namespaceId}/rules`,
+        { credentials: "include" }
+      )
+
+      if (!response.ok) return
+
+      const data = await response.json()
+      const transformedRules: NamespaceRule[] = (data.data || []).map(
+        (rule: ApiRule) => ({
+          id: rule.mappingId,
+          ruleId: rule.id,
+          name: rule.name,
+          description: rule.description,
+          scope: rule.scope,
+          priority: rule.priority,
+          enabled: rule.enabled ?? true,
+        })
+      )
+      setRules(transformedRules)
+    } catch {
+      // Silently fail
+    }
+  }, [activeOrg?.id, namespaceId])
+
   const loadAvailableServers = useCallback(async () => {
     if (!activeOrg?.id) return
 
@@ -117,16 +214,97 @@ export default function NamespaceDetailsPage() {
       )
       setAvailableServers(allServers)
     } catch {
-      // Silently fail - available servers are not critical
+      // Silently fail
+    }
+  }, [activeOrg?.id])
+
+  const loadAvailableSkills = useCallback(async () => {
+    if (!activeOrg?.id) return
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/skills?organizationId=${activeOrg.id}`,
+        { credentials: "include" }
+      )
+
+      if (!response.ok) return
+
+      const data = await response.json()
+      const allSkills: PickerSkill[] = (data.data || []).map(
+        (skill: {
+          id: string
+          name: string
+          description?: string | null
+          tags: string[]
+          isEnabled: boolean
+        }) => ({
+          id: skill.id,
+          name: skill.name,
+          description: skill.description,
+          tags: skill.tags || [],
+          isEnabled: skill.isEnabled,
+        })
+      )
+      setAvailableSkills(allSkills)
+    } catch {
+      // Silently fail
+    }
+  }, [activeOrg?.id])
+
+  const loadAvailableRules = useCallback(async () => {
+    if (!activeOrg?.id) return
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/rules?organizationId=${activeOrg.id}`,
+        { credentials: "include" }
+      )
+
+      if (!response.ok) return
+
+      const data = await response.json()
+      const allRules: PickerRule[] = (data.data || []).map(
+        (rule: {
+          id: string
+          name: string
+          description?: string | null
+          scope: RuleScope
+          priority: number
+          isEnabled: boolean
+        }) => ({
+          id: rule.id,
+          name: rule.name,
+          description: rule.description,
+          scope: rule.scope,
+          priority: rule.priority,
+          isEnabled: rule.isEnabled,
+        })
+      )
+      setAvailableRules(allRules)
+    } catch {
+      // Silently fail
     }
   }, [activeOrg?.id])
 
   useEffect(() => {
     if (!isOrgPending && activeOrg?.id) {
       loadNamespace()
+      loadNamespaceSkills()
+      loadNamespaceRules()
       loadAvailableServers()
+      loadAvailableSkills()
+      loadAvailableRules()
     }
-  }, [isOrgPending, activeOrg?.id, loadNamespace, loadAvailableServers])
+  }, [
+    isOrgPending,
+    activeOrg?.id,
+    loadNamespace,
+    loadNamespaceSkills,
+    loadNamespaceRules,
+    loadAvailableServers,
+    loadAvailableSkills,
+    loadAvailableRules,
+  ])
 
   const handleAddServer = async (serverId: string) => {
     try {
@@ -146,8 +324,6 @@ export default function NamespaceDetailsPage() {
       }
 
       const data = await response.json()
-
-      // Add the new server to the list
       const newServer: NamespaceServer = {
         id: data.mapping.id,
         serverId: data.server.id,
@@ -156,7 +332,6 @@ export default function NamespaceDetailsPage() {
         status: data.server.status === "active" ? "online" : "offline",
         enabled: true,
       }
-
       setServers((prev) => [...prev, newServer])
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to add server")
@@ -167,16 +342,10 @@ export default function NamespaceDetailsPage() {
     try {
       const response = await fetch(
         `${API_URL}/api/namespaces/${namespaceId}/servers/${serverId}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-        }
+        { method: "DELETE", credentials: "include" }
       )
 
-      if (!response.ok) {
-        throw new Error("Failed to remove server")
-      }
-
+      if (!response.ok) throw new Error("Failed to remove server")
       setServers((prev) => prev.filter((s) => s.serverId !== serverId))
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to remove server")
@@ -200,13 +369,159 @@ export default function NamespaceDetailsPage() {
         throw new Error(errorData?.message || "Failed to update server status")
       }
 
-      // Update local state on success
       setServers((prev) =>
         prev.map((s) => (s.serverId === serverId ? { ...s, enabled } : s))
       )
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to update server status"
+      )
+    }
+  }
+
+  const handleAddSkill = async (skillId: string) => {
+    try {
+      const response = await fetch(
+        `${API_URL}/api/namespaces/${namespaceId}/skills`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ skillId }),
+        }
+      )
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null)
+        throw new Error(errorData?.message || "Failed to add skill")
+      }
+
+      const data = await response.json()
+      const newSkill: NamespaceSkill = {
+        id: data.mapping.id,
+        skillId: data.skill.id,
+        name: data.skill.name,
+        description: data.skill.description,
+        tags: data.skill.tags || [],
+        enabled: true,
+      }
+      setSkills((prev) => [...prev, newSkill])
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to add skill")
+    }
+  }
+
+  const handleRemoveSkill = async (skillId: string) => {
+    try {
+      const response = await fetch(
+        `${API_URL}/api/namespaces/${namespaceId}/skills/${skillId}`,
+        { method: "DELETE", credentials: "include" }
+      )
+
+      if (!response.ok) throw new Error("Failed to remove skill")
+      setSkills((prev) => prev.filter((s) => s.skillId !== skillId))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to remove skill")
+    }
+  }
+
+  const handleToggleSkill = async (skillId: string, enabled: boolean) => {
+    try {
+      const response = await fetch(
+        `${API_URL}/api/namespaces/${namespaceId}/skills/${skillId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ enabled }),
+        }
+      )
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null)
+        throw new Error(errorData?.message || "Failed to update skill status")
+      }
+
+      setSkills((prev) =>
+        prev.map((s) => (s.skillId === skillId ? { ...s, enabled } : s))
+      )
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to update skill status"
+      )
+    }
+  }
+
+  const handleAddRule = async (ruleId: string) => {
+    try {
+      const response = await fetch(
+        `${API_URL}/api/namespaces/${namespaceId}/rules`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ ruleId }),
+        }
+      )
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null)
+        throw new Error(errorData?.message || "Failed to add rule")
+      }
+
+      const data = await response.json()
+      const newRule: NamespaceRule = {
+        id: data.mapping.id,
+        ruleId: data.rule.id,
+        name: data.rule.name,
+        description: data.rule.description,
+        scope: data.rule.scope,
+        priority: data.rule.priority,
+        enabled: true,
+      }
+      setRules((prev) => [...prev, newRule])
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to add rule")
+    }
+  }
+
+  const handleRemoveRule = async (ruleId: string) => {
+    try {
+      const response = await fetch(
+        `${API_URL}/api/namespaces/${namespaceId}/rules/${ruleId}`,
+        { method: "DELETE", credentials: "include" }
+      )
+
+      if (!response.ok) throw new Error("Failed to remove rule")
+      setRules((prev) => prev.filter((r) => r.ruleId !== ruleId))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to remove rule")
+    }
+  }
+
+  const handleToggleRule = async (ruleId: string, enabled: boolean) => {
+    try {
+      const response = await fetch(
+        `${API_URL}/api/namespaces/${namespaceId}/rules/${ruleId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ enabled }),
+        }
+      )
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null)
+        throw new Error(errorData?.message || "Failed to update rule status")
+      }
+
+      setRules((prev) =>
+        prev.map((r) => (r.ruleId === ruleId ? { ...r, enabled } : r))
+      )
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to update rule status"
       )
     }
   }
@@ -282,9 +597,17 @@ export default function NamespaceDetailsPage() {
   }
 
   const existingServerIds = servers.map((s) => s.serverId)
-  // Filter available servers to exclude ones already in the namespace
+  const existingSkillIds = skills.map((s) => s.skillId)
+  const existingRuleIds = rules.map((r) => r.ruleId)
+
   const serversToShow = availableServers.filter(
     (s) => !existingServerIds.includes(s.id)
+  )
+  const skillsToShow = availableSkills.filter(
+    (s) => !existingSkillIds.includes(s.id)
+  )
+  const rulesToShow = availableRules.filter(
+    (r) => !existingRuleIds.includes(r.id)
   )
 
   return (
@@ -292,17 +615,7 @@ export default function NamespaceDetailsPage() {
       <PageHeader
         title={namespace.name}
         description={
-          namespace.description || "Manage servers in this namespace"
-        }
-        actions={
-          <button
-            type="button"
-            onClick={() => setShowPickerModal(true)}
-            className="inline-flex items-center gap-2 rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
-          >
-            <Plus className="h-4 w-4" />
-            Add server
-          </button>
+          namespace.description || "Manage servers, skills, and rules"
         }
       />
 
@@ -320,11 +633,21 @@ export default function NamespaceDetailsPage() {
       )}
 
       <div className="space-y-8">
-        {/* Servers list */}
+        {/* Servers */}
         <div>
-          <h2 className="mb-4 text-lg font-medium text-gray-900">
-            Servers ({servers.length})
-          </h2>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-medium text-gray-900">
+              Servers ({servers.length})
+            </h2>
+            <button
+              type="button"
+              onClick={() => setShowServerPickerModal(true)}
+              className="inline-flex items-center gap-2 rounded-md bg-gray-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-gray-800"
+            >
+              <Plus className="h-4 w-4" />
+              Add server
+            </button>
+          </div>
           <NamespaceServerList
             servers={servers}
             onRemove={handleRemoveServer}
@@ -332,7 +655,57 @@ export default function NamespaceDetailsPage() {
           />
         </div>
 
-        {/* Namespace settings */}
+        {/* Skills */}
+        <div>
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-blue-600" />
+              <h2 className="text-lg font-medium text-gray-900">
+                Skills ({skills.length})
+              </h2>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowSkillPickerModal(true)}
+              className="inline-flex items-center gap-2 rounded-md bg-gray-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-gray-800"
+            >
+              <Plus className="h-4 w-4" />
+              Add skill
+            </button>
+          </div>
+          <NamespaceSkillList
+            skills={skills}
+            onRemove={handleRemoveSkill}
+            onToggleEnabled={handleToggleSkill}
+          />
+        </div>
+
+        {/* Rules */}
+        <div>
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Scale className="h-5 w-5 text-purple-600" />
+              <h2 className="text-lg font-medium text-gray-900">
+                Rules ({rules.length})
+              </h2>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowRulePickerModal(true)}
+              className="inline-flex items-center gap-2 rounded-md bg-gray-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-gray-800"
+            >
+              <Plus className="h-4 w-4" />
+              Add rule
+            </button>
+          </div>
+          <NamespaceRuleList
+            rules={rules}
+            onRemove={handleRemoveRule}
+            onToggleEnabled={handleToggleRule}
+          />
+        </div>
+
+        {/* Settings */}
         <div className="rounded-lg border border-gray-200 bg-white p-6">
           <h2 className="text-lg font-medium text-gray-900">Settings</h2>
           <p className="mt-1 text-sm text-gray-500">
@@ -351,7 +724,7 @@ export default function NamespaceDetailsPage() {
               <label className="block text-sm font-medium text-gray-700">
                 Slug
               </label>
-              <p className="mt-1 text-sm text-gray-500 font-mono">
+              <p className="mt-1 font-mono text-sm text-gray-500">
                 {namespace.slug}
               </p>
             </div>
@@ -414,8 +787,8 @@ export default function NamespaceDetailsPage() {
                       Are you sure you want to delete this namespace?
                     </p>
                     <p className="mt-1 text-sm text-red-600">
-                      This action cannot be undone. All server associations will
-                      be removed.
+                      This action cannot be undone. All server, skill, and rule
+                      associations will be removed.
                     </p>
                     <div className="mt-4 flex gap-3">
                       <button
@@ -451,13 +824,29 @@ export default function NamespaceDetailsPage() {
         </div>
       </div>
 
-      {/* Server picker modal */}
+      {/* Modals */}
       <ServerPickerModal
-        isOpen={showPickerModal}
-        onClose={() => setShowPickerModal(false)}
+        isOpen={showServerPickerModal}
+        onClose={() => setShowServerPickerModal(false)}
         onSelect={handleAddServer}
         availableServers={serversToShow}
         excludeServerIds={existingServerIds}
+      />
+
+      <SkillPickerModal
+        isOpen={showSkillPickerModal}
+        onClose={() => setShowSkillPickerModal(false)}
+        onSelect={handleAddSkill}
+        availableSkills={skillsToShow}
+        excludeSkillIds={existingSkillIds}
+      />
+
+      <RulePickerModal
+        isOpen={showRulePickerModal}
+        onClose={() => setShowRulePickerModal(false)}
+        onSelect={handleAddRule}
+        availableRules={rulesToShow}
+        excludeRuleIds={existingRuleIds}
       />
     </div>
   )
