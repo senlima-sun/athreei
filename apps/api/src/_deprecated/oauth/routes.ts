@@ -17,6 +17,7 @@ import { zValidator } from "@hono/zod-validator"
 import { eq, and } from "drizzle-orm"
 import { authMiddleware, getAuthContext, ApiError } from "../../middleware"
 import { getDb } from "../../lib/db"
+import { logger } from "../../lib/logger"
 // Note: OAuth schema is deprecated - import from local deprecated schema
 // The original @athreei/db exports were removed but schema preserved for DB compatibility
 import { oauthSession, oauthToken } from "./pg-oauth-schema"
@@ -437,7 +438,10 @@ oauth.get("/callback", callbackRateLimiter, async (c) => {
 
     if (!tokenResponse.ok) {
       const errorBody = await tokenResponse.text()
-      console.error("Token exchange failed:", tokenResponse.status, errorBody)
+      logger.error("OAuth token exchange failed", {
+        status: tokenResponse.status,
+        error: errorBody,
+      })
 
       logOAuthEvent("oauth_auth_error", {
         provider: session.provider,
@@ -526,7 +530,7 @@ oauth.get("/callback", callbackRateLimiter, async (c) => {
       `/dashboard?oauth_success=${encodeURIComponent(session.provider)}`
     )
   } catch (err) {
-    console.error("OAuth callback error:", err)
+    logger.error("OAuth callback error", { error: err })
 
     logOAuthEvent("oauth_auth_error", {
       provider: session.provider,
@@ -604,7 +608,7 @@ oauth.post(
           })
         }
       } catch (err) {
-        console.error("Proactive token refresh failed:", err)
+        logger.error("Proactive OAuth token refresh failed", { error: err })
         // Fall through to return current token
       }
     }

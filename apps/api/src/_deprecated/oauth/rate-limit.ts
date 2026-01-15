@@ -14,6 +14,7 @@ import {
   type RateLimitConfig,
 } from "../../middleware/rate-limit"
 import { getAuthContext } from "../../middleware/auth"
+import { logger } from "../../lib/logger"
 
 /**
  * OAuth rate limit configurations
@@ -34,9 +35,12 @@ function logRateLimitHit(
   limit: number,
   resetIn: number
 ): void {
-  console.warn(
-    `[oauth-rate-limit] Rate limit hit: endpoint=${endpoint}, key=${key.substring(0, 8)}..., limit=${limit}, resetIn=${resetIn}ms`
-  )
+  logger.warn("OAuth rate limit hit", {
+    endpoint,
+    key: key.substring(0, 8) + "...",
+    limit,
+    resetIn,
+  })
 }
 
 /**
