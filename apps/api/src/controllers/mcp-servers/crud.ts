@@ -2,6 +2,7 @@ import type { Context } from "hono"
 import { eq, and, or, like, sql } from "drizzle-orm"
 import { getAuthContext, ApiError } from "../../middleware"
 import { db } from "../../lib/db-operations"
+import { logger } from "../../lib/logger"
 import { mcpServer, mcpTool } from "@athreei/db"
 import {
   encryptEnv,
@@ -117,10 +118,10 @@ export async function getServer(c: Context): Promise<Response> {
       const decrypted = decryptEnv(server.encryptedEnv)
       envKeys = Object.keys(decrypted)
     } catch (error) {
-      console.error(
-        `Failed to decrypt env keys for server ${serverId}:`,
-        error instanceof Error ? error.message : String(error)
-      )
+      logger.error("Failed to decrypt env keys for server", {
+        serverId,
+        error,
+      })
       envKeys = []
     }
   }
@@ -299,10 +300,10 @@ export async function updateServer(c: Context): Promise<Response> {
       const decrypted = decryptEnv(updated.encryptedEnv)
       envKeys = Object.keys(decrypted)
     } catch (error) {
-      console.error(
-        `Failed to decrypt env keys for server ${serverId}:`,
-        error instanceof Error ? error.message : String(error)
-      )
+      logger.error("Failed to decrypt env keys for server", {
+        serverId,
+        error,
+      })
       envKeys = []
     }
   }
