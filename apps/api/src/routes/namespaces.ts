@@ -6,6 +6,10 @@ import {
   updateNamespaceSchema,
   addServerSchema,
   updateServerMappingSchema,
+  addSkillSchema,
+  updateSkillMappingSchema,
+  addRuleSchema,
+  updateRuleMappingSchema,
 } from "../schemas/namespaces"
 import {
   listNamespaces,
@@ -17,6 +21,14 @@ import {
   removeServer,
   listServers,
   updateServerMapping,
+  addSkill,
+  removeSkill,
+  listSkills,
+  updateSkillMapping,
+  addRule,
+  removeRule,
+  listRules,
+  updateRuleMapping,
 } from "../controllers/namespaces"
 
 const namespaces = new Hono()
@@ -52,6 +64,30 @@ namespaces.patch(
   "/:id/servers/:serverId",
   zValidator("json", updateServerMappingSchema),
   updateServerMapping
+)
+
+namespaces.post("/:id/skills", zValidator("json", addSkillSchema), addSkill)
+
+namespaces.delete("/:id/skills/:skillId", removeSkill)
+
+namespaces.get("/:id/skills", listSkills)
+
+namespaces.patch(
+  "/:id/skills/:skillId",
+  zValidator("json", updateSkillMappingSchema),
+  updateSkillMapping
+)
+
+namespaces.post("/:id/rules", zValidator("json", addRuleSchema), addRule)
+
+namespaces.delete("/:id/rules/:ruleId", removeRule)
+
+namespaces.get("/:id/rules", listRules)
+
+namespaces.patch(
+  "/:id/rules/:ruleId",
+  zValidator("json", updateRuleMappingSchema),
+  updateRuleMapping
 )
 
 export default namespaces

@@ -17,10 +17,18 @@ export {
   updateNamespaceSchema,
   addServerSchema,
   updateServerMappingSchema,
+  addSkillSchema,
+  updateSkillMappingSchema,
+  addRuleSchema,
+  updateRuleMappingSchema,
   type CreateNamespaceInput,
   type UpdateNamespaceInput,
   type AddServerInput,
   type UpdateServerMappingInput,
+  type AddSkillInput,
+  type UpdateSkillMappingInput,
+  type AddRuleInput,
+  type UpdateRuleMappingInput,
 } from "./namespaces"
 
 // Endpoints

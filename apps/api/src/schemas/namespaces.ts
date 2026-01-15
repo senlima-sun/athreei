@@ -20,7 +20,27 @@ export const updateServerMappingSchema = z.object({
   enabled: z.boolean(),
 })
 
+export const addSkillSchema = z.object({
+  skillId: z.string().min(1, "Skill ID is required"),
+})
+
+export const updateSkillMappingSchema = z.object({
+  enabled: z.boolean(),
+})
+
+export const addRuleSchema = z.object({
+  ruleId: z.string().min(1, "Rule ID is required"),
+})
+
+export const updateRuleMappingSchema = z.object({
+  enabled: z.boolean(),
+})
+
 export type CreateNamespaceInput = z.infer<typeof createNamespaceSchema>
 export type UpdateNamespaceInput = z.infer<typeof updateNamespaceSchema>
 export type AddServerInput = z.infer<typeof addServerSchema>
 export type UpdateServerMappingInput = z.infer<typeof updateServerMappingSchema>
+export type AddSkillInput = z.infer<typeof addSkillSchema>
+export type UpdateSkillMappingInput = z.infer<typeof updateSkillMappingSchema>
+export type AddRuleInput = z.infer<typeof addRuleSchema>
+export type UpdateRuleMappingInput = z.infer<typeof updateRuleMappingSchema>
