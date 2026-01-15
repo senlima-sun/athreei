@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm"
 import { authMiddleware, getAuthContext, ApiError } from "../middleware"
 import { db } from "../lib/db-operations"
 import { getAuth } from "../lib/auth"
+import { logger } from "../lib/logger"
 import { detectDatabaseType, getSchema, user as pgUser } from "@athreei/db"
 
 const MIN_PASSWORD_LENGTH = 8
@@ -157,7 +158,7 @@ profile.post(
         }
       }
 
-      console.error("Password change error:", error)
+      logger.error("Password change failed", { error })
       throw ApiError.internal("Failed to change password")
     }
   }

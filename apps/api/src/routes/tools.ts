@@ -3,6 +3,7 @@ import { zValidator } from "@hono/zod-validator"
 import { eq } from "drizzle-orm"
 import { authMiddleware, getAuthContext, ApiError } from "../middleware"
 import { db } from "../lib/db-operations"
+import { logger } from "../lib/logger"
 import { mcpTool, mcpServer } from "@athreei/db"
 import { listToolsQuerySchema, updateToolSchema } from "../schemas/tools"
 import { verifyOrganizationMembership } from "../services"
@@ -60,7 +61,7 @@ tools.get("/", zValidator("query", listToolsQuerySchema), async (c) => {
           try {
             return JSON.parse(t.inputSchema)
           } catch {
-            console.error(`Invalid inputSchema JSON for tool ${t.id}`)
+            logger.warn("Invalid inputSchema JSON", { toolId: t.id })
             return null
           }
         })(),
