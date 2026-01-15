@@ -16,5 +16,8 @@ export * from "./utils/index.js"
 // Re-export schemas
 export * from "./schemas/index.js"
 
+// Re-export logger module
+export * from "./logger/index.js"
+
 // Version info
 export const VERSION = "0.1.0"
