@@ -1,6 +1,7 @@
 import * as Sentry from "@sentry/bun"
 import type { Context, ErrorHandler } from "hono"
 import type { ContentfulStatusCode } from "hono/utils/http-status"
+import { logger } from "../lib/logger"
 
 export interface ErrorResponse {
   error: string
@@ -44,7 +45,13 @@ export class ApiError extends Error {
 }
 
 export const errorHandler: ErrorHandler = (err: Error, c: Context) => {
-  console.error("API Error:", err)
+  // Use request-scoped logger if available, otherwise fallback to service logger
+  const log = c.get("logger") ?? logger
+  log.error("API error", {
+    error: err,
+    path: c.req.path,
+    method: c.req.method,
+  })
 
   if (err instanceof ApiError) {
     if (err.statusCode >= 500) {
