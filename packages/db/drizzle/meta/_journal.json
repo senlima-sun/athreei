@@ -43,6 +43,13 @@
       "when": 1767749156122,
       "tag": "0005_sloppy_ben_grimm",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1768467461075,
+      "tag": "0006_unique_wendell_vaughn",
+      "breakpoints": true
     }
   ]
 }
