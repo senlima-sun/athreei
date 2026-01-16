@@ -48,9 +48,9 @@ export class ProcessPool {
       return item.process
     }
 
-    const totalForKey = pooled?.length ?? 0
+    const liveCount = pooled?.filter((p) => !p.process.killed).length ?? 0
     const pending = this.pendingCreations.get(key) ?? 0
-    if (totalForKey + pending >= this.config.maxProcesses) {
+    if (liveCount + pending >= this.config.maxProcesses) {
       throw new Error(`Process pool limit reached for key: ${key}`)
     }
 
@@ -133,11 +133,12 @@ export class ProcessPool {
   }
 
   async warmup(key: string, factory: () => Promise<Subprocess>): Promise<void> {
-    const existing = this.pool.get(key)?.length ?? 0
+    const pooled = this.pool.get(key)
+    const liveCount = pooled?.filter((p) => !p.process.killed).length ?? 0
     const pending = this.pendingCreations.get(key) ?? 0
     const toCreate = Math.min(
-      this.config.warmupCount - existing,
-      this.config.maxProcesses - existing - pending
+      this.config.warmupCount - liveCount,
+      this.config.maxProcesses - liveCount - pending
     )
 
     if (toCreate <= 0) return
