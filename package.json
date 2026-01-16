@@ -27,7 +27,14 @@
     "docker:dev:build": "docker compose -f docker-compose.dev.yml up --build",
     "docker:dev:down": "docker compose -f docker-compose.dev.yml down",
     "docker:dev:reset": "docker compose -f docker-compose.dev.yml down -v",
-    "docker:dev:logs": "docker compose -f docker-compose.dev.yml logs -f"
+    "docker:dev:logs": "docker compose -f docker-compose.dev.yml logs -f",
+    "worktree:create": "./scripts/create-worktree.sh",
+    "worktree:list": "./scripts/list-worktrees.sh",
+    "db:generate": "bun --filter @athreei/db generate",
+    "db:migrate": "bun --filter @athreei/db migrate",
+    "db:push": "bun --filter @athreei/db push",
+    "db:studio": "bun --filter @athreei/db studio",
+    "db:seed": "bun --filter @athreei/db seed"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
