@@ -27,6 +27,25 @@ function mapServerStatus(apiStatus: ApiMcpServer["status"]): ServerStatus {
   return apiStatus === "pending" ? "inactive" : apiStatus
 }
 
+function safeParseArgs(args: string | null | undefined): string[] | undefined {
+  if (!args) return undefined
+
+  try {
+    const parsed = JSON.parse(args)
+    if (
+      Array.isArray(parsed) &&
+      parsed.every((item) => typeof item === "string")
+    ) {
+      return parsed
+    }
+    console.warn("MCP server args is not a valid string array:", args)
+    return undefined
+  } catch {
+    console.warn("Failed to parse MCP server args:", args)
+    return undefined
+  }
+}
+
 /**
  * Transform API response format to frontend display format.
  */
@@ -38,7 +57,7 @@ export function toFrontendFormat(server: ApiMcpServer): McpServer {
     transportType: mapTransportType(server.transport),
     status: mapServerStatus(server.status),
     command: server.command || undefined,
-    args: server.args ? JSON.parse(server.args) : undefined,
+    args: safeParseArgs(server.args),
     url: server.url || undefined,
     envKeys: server.envKeys,
     createdAt: new Date(server.createdAt),

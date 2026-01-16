@@ -3,6 +3,24 @@ import { z } from "zod"
 export const transportTypes = ["stdio", "sse", "streamable-http"] as const
 export const statusTypes = ["active", "inactive", "pending"] as const
 
+const jsonArrayStringSchema = z
+  .string()
+  .max(1000)
+  .refine(
+    (val) => {
+      try {
+        const parsed = JSON.parse(val)
+        return (
+          Array.isArray(parsed) &&
+          parsed.every((item) => typeof item === "string")
+        )
+      } catch {
+        return false
+      }
+    },
+    { message: "Args must be a valid JSON array of strings" }
+  )
+
 export const createServerSchema = z.object({
   name: z.string().min(1, "Name is required").max(100, "Name too long"),
   description: z.string().max(500, "Description too long").optional(),
@@ -10,7 +28,7 @@ export const createServerSchema = z.object({
     errorMap: () => ({ message: "Invalid transport type" }),
   }),
   command: z.string().max(500).optional(),
-  args: z.string().max(1000).optional(),
+  args: jsonArrayStringSchema.optional(),
   url: z.string().url("Invalid URL").optional(),
   version: z.string().max(50).optional(),
   capabilities: z.string().max(5000).optional(),
@@ -26,7 +44,7 @@ export const updateServerSchema = z.object({
     })
     .optional(),
   command: z.string().max(500).nullable().optional(),
-  args: z.string().max(1000).nullable().optional(),
+  args: jsonArrayStringSchema.nullable().optional(),
   url: z.string().url("Invalid URL").nullable().optional(),
   status: z
     .enum(statusTypes, {
