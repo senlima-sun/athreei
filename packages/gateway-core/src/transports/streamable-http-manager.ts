@@ -70,7 +70,9 @@ export class StreamableHttpTransportManager {
         const result = await initResponse.json()
         session.messageQueue.push(result as McpMessage)
       } else if (contentType?.includes("text/event-stream")) {
-        await this.parseEventStream(session, initResponse.body!)
+        if (initResponse.body) {
+          await this.parseEventStream(session, initResponse.body)
+        }
       }
 
       await this.sendNotification(session, {
@@ -111,11 +113,16 @@ export class StreamableHttpTransportManager {
       headers["Mcp-Session-Id"] = session.sessionId
     }
 
+    const signals = [AbortSignal.timeout(config.requestTimeout ?? 30000)]
+    if (session?.abortController) {
+      signals.push(session.abortController.signal)
+    }
+
     const response = await fetch(config.url, {
       method: "POST",
       headers,
       body: JSON.stringify(message),
-      signal: AbortSignal.timeout(config.requestTimeout ?? 30000),
+      signal: AbortSignal.any(signals),
     })
 
     if (!response.ok) {
@@ -181,12 +188,13 @@ export class StreamableHttpTransportManager {
 
       if (
         !response.ok ||
-        !response.headers.get("content-type")?.includes("text/event-stream")
+        !response.headers.get("content-type")?.includes("text/event-stream") ||
+        !response.body
       ) {
         return
       }
 
-      this.parseEventStream(session, response.body!)
+      this.parseEventStream(session, response.body)
     } catch {
       // SSE stream error - often expected during cleanup
     }
@@ -304,6 +312,10 @@ export class StreamableHttpTransportManager {
           signal: currentSession.abortController.signal,
         })
 
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        }
+
         const contentType = response.headers.get("content-type")
 
         if (contentType?.includes("application/json")) {
@@ -313,8 +325,8 @@ export class StreamableHttpTransportManager {
 
           const handler = messageHandlers.get(id)
           handler?.(result)
-        } else if (contentType?.includes("text/event-stream")) {
-          await parseEventStream(currentSession, response.body!)
+        } else if (contentType?.includes("text/event-stream") && response.body) {
+          await parseEventStream(currentSession, response.body)
         }
       },
 
@@ -335,6 +347,9 @@ export class StreamableHttpTransportManager {
             // Ignore errors on close
           }
         }
+
+        const closeHandler = closeHandlers.get(id)
+        closeHandler?.()
 
         sessions.delete(id)
         messageHandlers.delete(id)
@@ -380,6 +395,9 @@ export class StreamableHttpTransportManager {
           // Ignore errors
         }
       }
+
+      const closeHandler = this.closeHandlers.get(session.id)
+      closeHandler?.()
     })
 
     await Promise.all(promises)
