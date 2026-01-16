@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import { Loader2, Wrench, AlertCircle } from "lucide-react"
 import { ToolCard, type Tool } from "./tool-card"
 import { ToolEditModal } from "./tool-edit-modal"
+import { API_URL } from "@/constants"
 
 interface ToolListProps {
   serverId: string
@@ -22,7 +23,12 @@ export function ToolList({ serverId }: ToolListProps) {
   const fetchTools = useCallback(async () => {
     setFetchState({ status: "loading" })
     try {
-      const response = await fetch(`/api/tools?serverId=${serverId}`)
+      const response = await fetch(
+        `${API_URL}/api/tools?serverId=${serverId}`,
+        {
+          credentials: "include",
+        }
+      )
       if (!response.ok) {
         throw new Error("Failed to fetch tools")
       }
@@ -52,9 +58,10 @@ export function ToolList({ serverId }: ToolListProps) {
     }
 
     try {
-      const response = await fetch(`/api/tools/${toolId}`, {
+      const response = await fetch(`${API_URL}/api/tools/${toolId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ isEnabled: enabled }),
       })
 
@@ -62,7 +69,6 @@ export function ToolList({ serverId }: ToolListProps) {
         throw new Error("Failed to update tool")
       }
     } catch (err) {
-      // Revert optimistic update on error
       fetchTools()
       console.error("Failed to toggle tool:", err)
     }
@@ -77,9 +83,10 @@ export function ToolList({ serverId }: ToolListProps) {
     updates: { customDescription: string | null; customPrompt: string | null }
   ) => {
     try {
-      const response = await fetch(`/api/tools/${toolId}`, {
+      const response = await fetch(`${API_URL}/api/tools/${toolId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(updates),
       })
 
@@ -87,7 +94,6 @@ export function ToolList({ serverId }: ToolListProps) {
         throw new Error("Failed to update tool")
       }
 
-      // Refresh the list after save
       await fetchTools()
       setEditingTool(null)
     } catch (err) {

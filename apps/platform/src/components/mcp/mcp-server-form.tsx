@@ -87,13 +87,9 @@ export function McpServerForm({
   })
 
   // Environment variables
-  // When editing, show existing keys with empty values (user can fill in new values)
-  const [envVars, setEnvVars] = useState<EnvVarRow[]>(() => {
-    if (server?.envKeys?.length) {
-      return server.envKeys.map((key) => ({ key, value: "" }))
-    }
-    return []
-  })
+  // Start with empty array when editing - show "Configured variables" info instead
+  // This prevents accidentally clearing env vars when user saves without modifications
+  const [envVars, setEnvVars] = useState<EnvVarRow[]>([])
 
   // OAuth detection state (for showing provider-specific token instructions)
   const [detectedProvider, setDetectedProvider] =
