@@ -56,7 +56,7 @@ export class ConnectionHealthChecker {
             reject(new Error("Health check timeout"))
           }, this.config.timeout)
 
-          const originalOnMessage = connection.onMessage
+          const _originalOnMessage = connection.onMessage
           connection.onMessage((msg: McpMessage) => {
             if (msg.id === pingId) {
               clearTimeout(timeout)
@@ -99,7 +99,9 @@ export class ConnectionHealthChecker {
     return result
   }
 
-  async checkWithPing(connection: TransportConnection): Promise<HealthCheckResult> {
+  async checkWithPing(
+    connection: TransportConnection
+  ): Promise<HealthCheckResult> {
     const start = Date.now()
     const previousResult = this.results.get(connection.id)
 

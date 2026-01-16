@@ -5,9 +5,14 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
-import type { StdioTransportConfig, McpMessage } from "../../types/transports.js"
+import type {
+  StdioTransportConfig,
+  McpMessage,
+} from "../../types/transports.js"
 
-function createMockReadableStream(data: string[] = []): ReadableStream<Uint8Array> {
+function createMockReadableStream(
+  data: string[] = []
+): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder()
   let index = 0
 
@@ -37,12 +42,14 @@ function createMockWritableStream(): {
   }
 }
 
-function createMockSubprocess(options: {
-  stdout?: ReadableStream<Uint8Array>
-  stderr?: ReadableStream<Uint8Array>
-  stdin?: { write: (data: string) => void; flush: () => void }
-  killed?: boolean
-} = {}) {
+function createMockSubprocess(
+  options: {
+    stdout?: ReadableStream<Uint8Array>
+    stderr?: ReadableStream<Uint8Array>
+    stdin?: { write: (data: string) => void; flush: () => void }
+    killed?: boolean
+  } = {}
+) {
   return {
     stdout: options.stdout ?? createMockReadableStream(),
     stderr: options.stderr ?? createMockReadableStream(),
@@ -214,7 +221,9 @@ describe("StdioTransportManager", () => {
 
       await connection.send(message)
 
-      expect(mockStdin.written).toContain('{"jsonrpc":"2.0","id":1,"method":"test"}\n')
+      expect(mockStdin.written).toContain(
+        '{"jsonrpc":"2.0","id":1,"method":"test"}\n'
+      )
     })
 
     it("allows messages with newlines in values (escaped by JSON.stringify)", async () => {
@@ -493,7 +502,9 @@ describe("StdioTransportManager", () => {
       const config = createMockConfig({ command: "cat" })
       const connection = await manager.connect("test-1", config)
 
-      expect((connection.config as StdioTransportConfig).maxRestarts).toBeUndefined()
+      expect(
+        (connection.config as StdioTransportConfig).maxRestarts
+      ).toBeUndefined()
     })
 
     it("respects custom maxRestarts", async () => {
@@ -516,7 +527,9 @@ describe("StdioTransportManager", () => {
       const config = createMockConfig({ command: "cat" })
       const connection = await manager.connect("test-1", config)
 
-      expect((connection.config as StdioTransportConfig).restartDelay).toBeUndefined()
+      expect(
+        (connection.config as StdioTransportConfig).restartDelay
+      ).toBeUndefined()
     })
 
     it("respects custom restartDelay", async () => {
@@ -529,7 +542,9 @@ describe("StdioTransportManager", () => {
       })
       const connection = await manager.connect("test-1", config)
 
-      expect((connection.config as StdioTransportConfig).restartDelay).toBe(2000)
+      expect((connection.config as StdioTransportConfig).restartDelay).toBe(
+        2000
+      )
     })
   })
 })

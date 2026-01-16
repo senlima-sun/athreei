@@ -175,7 +175,7 @@ export class StreamableHttpTransportManager {
       })
 
       if (response.status === 405) {
-        console.debug(`[http:${session.id}] Server doesn't support SSE GET`)
+        // Server doesn't support SSE GET - this is fine, not an error
         return
       }
 
@@ -187,10 +187,8 @@ export class StreamableHttpTransportManager {
       }
 
       this.parseEventStream(session, response.body!)
-    } catch (e) {
-      if (!session.abortController.signal.aborted) {
-        console.debug(`[http:${session.id}] SSE stream error:`, e)
-      }
+    } catch {
+      // SSE stream error - often expected during cleanup
     }
   }
 
@@ -257,23 +255,27 @@ export class StreamableHttpTransportManager {
     id: string,
     session: HttpSession
   ): TransportConnection {
-    const self = this
+    const sessions = this.sessions
+    const messageHandlers = this.messageHandlers
+    const errorHandlers = this.errorHandlers
+    const closeHandlers = this.closeHandlers
+    const parseEventStream = this.parseEventStream.bind(this)
 
     return {
       id,
       config: session.config,
       get status() {
-        return self.sessions.get(id)?.status ?? "disconnected"
+        return sessions.get(id)?.status ?? "disconnected"
       },
       get connectedAt() {
-        return self.sessions.get(id)?.connectedAt
+        return sessions.get(id)?.connectedAt
       },
       get lastMessageAt() {
-        return self.sessions.get(id)?.lastMessageAt
+        return sessions.get(id)?.lastMessageAt
       },
 
       send: async (message: McpMessage) => {
-        const currentSession = self.sessions.get(id)
+        const currentSession = sessions.get(id)
         if (!currentSession || currentSession.abortController.signal.aborted) {
           throw new Error(`Connection ${id} is closed`)
         }
@@ -303,15 +305,15 @@ export class StreamableHttpTransportManager {
           currentSession.lastMessageAt = new Date()
           currentSession.messageQueue.push(result)
 
-          const handler = self.messageHandlers.get(id)
+          const handler = messageHandlers.get(id)
           handler?.(result)
         } else if (contentType?.includes("text/event-stream")) {
-          await self.parseEventStream(currentSession, response.body!)
+          await parseEventStream(currentSession, response.body!)
         }
       },
 
       close: async () => {
-        const currentSession = self.sessions.get(id)
+        const currentSession = sessions.get(id)
         if (!currentSession) return
 
         currentSession.abortController.abort()
@@ -328,16 +330,16 @@ export class StreamableHttpTransportManager {
           }
         }
 
-        self.sessions.delete(id)
-        self.messageHandlers.delete(id)
-        self.errorHandlers.delete(id)
-        self.closeHandlers.delete(id)
+        sessions.delete(id)
+        messageHandlers.delete(id)
+        errorHandlers.delete(id)
+        closeHandlers.delete(id)
       },
 
       onMessage: (handler) => {
-        self.messageHandlers.set(id, handler)
+        messageHandlers.set(id, handler)
 
-        const currentSession = self.sessions.get(id)
+        const currentSession = sessions.get(id)
         if (currentSession) {
           for (const msg of currentSession.messageQueue) {
             handler(msg)
@@ -347,11 +349,11 @@ export class StreamableHttpTransportManager {
       },
 
       onError: (handler) => {
-        self.errorHandlers.set(id, handler)
+        errorHandlers.set(id, handler)
       },
 
       onClose: (handler) => {
-        self.closeHandlers.set(id, handler)
+        closeHandlers.set(id, handler)
       },
     }
   }

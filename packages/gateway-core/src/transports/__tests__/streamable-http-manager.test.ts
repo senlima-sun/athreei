@@ -9,13 +9,15 @@ import type {
   McpMessage,
 } from "../../types/transports.js"
 
-const createMockResponse = (options: {
-  status?: number
-  ok?: boolean
-  headers?: Record<string, string>
-  json?: () => Promise<unknown>
-  body?: ReadableStream<Uint8Array> | null
-} = {}): Response => {
+const createMockResponse = (
+  options: {
+    status?: number
+    ok?: boolean
+    headers?: Record<string, string>
+    json?: () => Promise<unknown>
+    body?: ReadableStream<Uint8Array> | null
+  } = {}
+): Response => {
   const headers = new Headers(options.headers)
   return {
     status: options.status ?? 200,
@@ -301,8 +303,7 @@ describe("StreamableHttpTransportManager", () => {
       mockFetch.mockResolvedValueOnce(
         createMockResponse({
           headers: { "content-type": "application/json" },
-          json: () =>
-            Promise.resolve({ jsonrpc: "2.0", id: 2, result: {} }),
+          json: () => Promise.resolve({ jsonrpc: "2.0", id: 2, result: {} }),
         })
       )
 

@@ -28,7 +28,9 @@ export interface StreamableHttpTransportConfig {
   requestTimeout?: number
 }
 
-export type TransportConfig = StdioTransportConfig | StreamableHttpTransportConfig
+export type TransportConfig =
+  | StdioTransportConfig
+  | StreamableHttpTransportConfig
 
 export interface McpMessage {
   jsonrpc: "2.0"

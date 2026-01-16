@@ -4,16 +4,12 @@
  * Tests the components working together end-to-end.
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
+import { describe, it, expect, vi, beforeEach } from "vitest"
 import { TransportFactory } from "../transports/transport-factory.js"
 import { NamespaceRouter } from "../routing/namespace-router.js"
 import { ProcessPool } from "../transports/process-pool.js"
 import { ConnectionHealthChecker } from "../transports/health-check.js"
-import type {
-  StdioTransportConfig,
-  StreamableHttpTransportConfig,
-  McpMessage,
-} from "../types/transports.js"
+import type { StdioTransportConfig } from "../types/transports.js"
 
 function createMockReadableStream(): ReadableStream<Uint8Array> {
   return new ReadableStream({
@@ -73,7 +69,9 @@ describe("Gateway Core Integration", () => {
 
       expect(router.hasTool("github__create_issue")).toBe(true)
       expect(router.hasTool("github__list_repos")).toBe(true)
-      expect(router.getConnectionForTool("github__create_issue")).toBe(connection)
+      expect(router.getConnectionForTool("github__create_issue")).toBe(
+        connection
+      )
 
       await factory.closeAll()
     })
@@ -217,7 +215,7 @@ describe("Gateway Core Integration", () => {
       }
 
       const proc1 = await pool.acquire("github-mcp", factory)
-      const proc2 = await pool.acquire("github-mcp", factory)
+      await pool.acquire("github-mcp", factory)
 
       expect(spawnCount).toBe(2)
 

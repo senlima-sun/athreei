@@ -195,7 +195,7 @@ export class ProcessPool {
   }
 
   async drainAll(): Promise<void> {
-    for (const [key, processes] of this.pool) {
+    for (const [_key, processes] of this.pool) {
       for (const p of processes) {
         if (!p.process.killed) {
           p.process.kill("SIGTERM")

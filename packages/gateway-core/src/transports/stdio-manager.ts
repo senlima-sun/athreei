@@ -13,8 +13,10 @@ import type {
   TransportStatus,
 } from "../types/transports.js"
 
+type SubprocessWithPipes = Subprocess<"pipe", "pipe", "pipe">
+
 interface ManagedProcess {
-  process: Subprocess
+  process: SubprocessWithPipes
   restartCount: number
   config: StdioTransportConfig
   abortController: AbortController
@@ -47,9 +49,9 @@ export class StdioTransportManager {
       stdout: "pipe",
       stderr: "pipe",
       onExit: (_proc, exitCode, signalCode, _error) => {
-        this.handleProcessExit(id, exitCode, signalCode)
+        this.handleProcessExit(id, exitCode, signalCode as string | null)
       },
-    })
+    }) as SubprocessWithPipes
 
     const managed: ManagedProcess = {
       process: proc,
@@ -98,19 +100,18 @@ export class StdioTransportManager {
 
   private async startStderrReader(
     id: string,
-    proc: Subprocess
+    proc: SubprocessWithPipes
   ): Promise<void> {
     const stderr = proc.stderr
-    if (!stderr) return
+    if (!stderr || typeof stderr === "number") return
 
     const reader = stderr.getReader()
-    const decoder = new TextDecoder()
 
     try {
       while (true) {
-        const { done, value } = await reader.read()
+        const { done } = await reader.read()
         if (done) break
-        console.debug(`[stdio:${id}:stderr]`, decoder.decode(value))
+        // stderr output captured but not logged to avoid noise
       }
     } catch {
       // Ignore stderr read errors
@@ -150,23 +151,26 @@ export class StdioTransportManager {
     id: string,
     managed: ManagedProcess
   ): TransportConnection {
-    const self = this
+    const processes = this.processes
+    const messageHandlers = this.messageHandlers
+    const errorHandlers = this.errorHandlers
+    const closeHandlers = this.closeHandlers
 
     return {
       id,
       config: managed.config,
       get status() {
-        return self.processes.get(id)?.status ?? "disconnected"
+        return processes.get(id)?.status ?? "disconnected"
       },
       get connectedAt() {
-        return self.processes.get(id)?.connectedAt
+        return processes.get(id)?.connectedAt
       },
       get lastMessageAt() {
-        return self.processes.get(id)?.lastMessageAt
+        return processes.get(id)?.lastMessageAt
       },
 
       send: async (message: McpMessage) => {
-        const currentManaged = self.processes.get(id)
+        const currentManaged = processes.get(id)
         if (!currentManaged || currentManaged.abortController.signal.aborted) {
           throw new Error(`Connection ${id} is closed`)
         }
@@ -186,7 +190,7 @@ export class StdioTransportManager {
       },
 
       close: async () => {
-        const currentManaged = self.processes.get(id)
+        const currentManaged = processes.get(id)
         if (!currentManaged) return
 
         currentManaged.abortController.abort()
@@ -199,22 +203,22 @@ export class StdioTransportManager {
           }
         }, 5000)
 
-        self.processes.delete(id)
-        self.messageHandlers.delete(id)
-        self.errorHandlers.delete(id)
-        self.closeHandlers.delete(id)
+        processes.delete(id)
+        messageHandlers.delete(id)
+        errorHandlers.delete(id)
+        closeHandlers.delete(id)
       },
 
       onMessage: (handler) => {
-        self.messageHandlers.set(id, handler)
+        messageHandlers.set(id, handler)
       },
 
       onError: (handler) => {
-        self.errorHandlers.set(id, handler)
+        errorHandlers.set(id, handler)
       },
 
       onClose: (handler) => {
-        self.closeHandlers.set(id, handler)
+        closeHandlers.set(id, handler)
       },
     }
   }
@@ -233,7 +237,7 @@ export class StdioTransportManager {
     const restartDelay = managed.config.restartDelay ?? 1000
 
     if (managed.restartCount < maxRestarts) {
-      console.log(
+      console.warn(
         `[stdio:${id}] Process exited (code=${code}, signal=${signal}). Restarting (${managed.restartCount + 1}/${maxRestarts})...`
       )
       managed.restartCount++
@@ -259,7 +263,7 @@ export class StdioTransportManager {
 
   async disconnectAll(): Promise<void> {
     const promises = Array.from(this.processes.entries()).map(
-      async ([id, managed]) => {
+      async ([_id, managed]) => {
         managed.abortController.abort()
         managed.status = "disconnected"
         managed.process.kill("SIGTERM")

@@ -175,9 +175,9 @@ describe("NamespaceRouter", () => {
     })
 
     it("handles multiple double underscores", () => {
-      expect(router.getOriginalToolName("github__tool__with__underscores")).toBe(
-        "tool__with__underscores"
-      )
+      expect(
+        router.getOriginalToolName("github__tool__with__underscores")
+      ).toBe("tool__with__underscores")
     })
   })
 
