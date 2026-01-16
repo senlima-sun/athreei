@@ -25,6 +25,7 @@ export class ProcessPool {
   private config: PoolConfig
   private cleanupTimers = new Map<string, Timer>()
   private pendingCreations = new Map<string, number>()
+  private generation = new Map<string, number>()
 
   constructor(config: Partial<PoolConfig> = {}) {
     this.config = {
@@ -54,9 +55,16 @@ export class ProcessPool {
       throw new Error(`Process pool limit reached for key: ${key}`)
     }
 
+    const gen = this.generation.get(key) ?? 0
     this.pendingCreations.set(key, pending + 1)
     try {
       const proc = await factory()
+
+      if ((this.generation.get(key) ?? 0) !== gen) {
+        proc.kill("SIGTERM")
+        throw new Error(`Pool was drained during process creation for key: ${key}`)
+      }
+
       const pooledItem: PooledProcess = {
         process: proc,
         inUse: true,
@@ -143,6 +151,7 @@ export class ProcessPool {
 
     if (toCreate <= 0) return
 
+    const gen = this.generation.get(key) ?? 0
     this.pendingCreations.set(key, pending + toCreate)
 
     const promises: Promise<void>[] = []
@@ -151,6 +160,11 @@ export class ProcessPool {
       promises.push(
         factory()
           .then((proc) => {
+            if ((this.generation.get(key) ?? 0) !== gen) {
+              proc.kill("SIGTERM")
+              return
+            }
+
             const pooledItem: PooledProcess = {
               process: proc,
               inUse: false,
@@ -195,6 +209,9 @@ export class ProcessPool {
   }
 
   async drainKey(key: string): Promise<void> {
+    const currentGen = this.generation.get(key) ?? 0
+    this.generation.set(key, currentGen + 1)
+
     const pooled = this.pool.get(key)
     if (!pooled) return
 
@@ -214,7 +231,10 @@ export class ProcessPool {
   }
 
   async drainAll(): Promise<void> {
-    for (const [_key, processes] of this.pool) {
+    for (const [key, processes] of this.pool) {
+      const currentGen = this.generation.get(key) ?? 0
+      this.generation.set(key, currentGen + 1)
+
       for (const p of processes) {
         if (!p.process.killed) {
           p.process.kill("SIGTERM")
