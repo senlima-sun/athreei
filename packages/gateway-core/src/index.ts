@@ -42,3 +42,37 @@ export {
   getAvailableServers,
   type RouteToolCallOptions,
 } from "./router.js"
+
+// Transport types
+export type {
+  TransportType,
+  TransportConfig,
+  StdioTransportConfig,
+  StreamableHttpTransportConfig,
+  McpMessage,
+  TransportStatus,
+  TransportConnection,
+  TransportEvents,
+} from "./types/transports.js"
+
+// Transport managers
+export { StdioTransportManager } from "./transports/stdio-manager.js"
+export { StreamableHttpTransportManager } from "./transports/streamable-http-manager.js"
+export {
+  TransportFactory,
+  transportFactory,
+} from "./transports/transport-factory.js"
+export { ProcessPool, type PoolConfig } from "./transports/process-pool.js"
+export {
+  ConnectionHealthChecker,
+  type HealthCheckResult,
+  type HealthCheckConfig,
+} from "./transports/health-check.js"
+
+// Routing
+export {
+  NamespaceRouter,
+  type Tool as NamespaceTool,
+  type NamespaceRoute,
+  type NamespacedTool,
+} from "./routing/namespace-router.js"
