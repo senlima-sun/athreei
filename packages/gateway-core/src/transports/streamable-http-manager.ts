@@ -216,7 +216,13 @@ export class StreamableHttpTransportManager {
           if (line.startsWith("id:")) {
             eventId = line.slice(3).trim()
           } else if (line.startsWith("data:")) {
-            eventData += line.slice(5).trim()
+            const dataContent = line.slice(5).startsWith(" ")
+              ? line.slice(6)
+              : line.slice(5)
+            if (eventData) {
+              eventData += "\n"
+            }
+            eventData += dataContent
           } else if (line === "") {
             if (eventData) {
               if (eventId) {
@@ -341,10 +347,11 @@ export class StreamableHttpTransportManager {
 
         const currentSession = sessions.get(id)
         if (currentSession) {
-          for (const msg of currentSession.messageQueue) {
+          const queued = currentSession.messageQueue
+          currentSession.messageQueue = []
+          for (const msg of queued) {
             handler(msg)
           }
-          currentSession.messageQueue = []
         }
       },
 
