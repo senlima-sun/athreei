@@ -147,11 +147,16 @@ export class StreamableHttpTransportManager {
       headers["Mcp-Session-Id"] = session.sessionId
     }
 
+    const signals = [
+      session.abortController.signal,
+      AbortSignal.timeout(session.config.requestTimeout ?? 30000),
+    ]
+
     const response = await fetch(session.config.url, {
       method: "POST",
       headers,
       body: JSON.stringify(message),
-      signal: session.abortController.signal,
+      signal: AbortSignal.any(signals),
     })
 
     if (response.status !== 202 && response.status !== 200) {
