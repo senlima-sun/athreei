@@ -42,6 +42,7 @@ export class StdioTransportManager {
       existingProcess.abortController.abort()
       existingProcess.process.kill("SIGTERM")
       this.processes.delete(id)
+      await Bun.sleep(100)
     }
 
     const proc = Bun.spawn([config.command, ...(config.args || [])], {
@@ -257,9 +258,13 @@ export class StdioTransportManager {
       }
     } else {
       console.error(`[stdio:${id}] Max restarts (${maxRestarts}) exceeded`)
-      this.processes.delete(id)
       const closeHandler = this.closeHandlers.get(id)
       closeHandler?.()
+
+      this.processes.delete(id)
+      this.messageHandlers.delete(id)
+      this.errorHandlers.delete(id)
+      this.closeHandlers.delete(id)
     }
   }
 
