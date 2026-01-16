@@ -34,11 +34,14 @@ app.use(
   "*",
   cors({
     origin: (origin) => {
+      const allowedOrigins = process.env.CORS_ORIGINS?.split(",") || []
+
       if (process.env.NODE_ENV === "production") {
-        const allowedOrigins = process.env.CORS_ORIGINS?.split(",") || []
         return allowedOrigins.includes(origin) ? origin : allowedOrigins[0]
       }
-      return origin
+
+      if (origin) return origin
+      return allowedOrigins[0] || "http://localhost:3000"
     },
     credentials: true,
     allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
