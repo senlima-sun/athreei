@@ -24,6 +24,7 @@ export class ProcessPool {
   private pool = new Map<string, PooledProcess[]>()
   private config: PoolConfig
   private cleanupTimers = new Map<string, Timer>()
+  private pendingCreations = new Map<string, number>()
 
   constructor(config: Partial<PoolConfig> = {}) {
     this.config = {
@@ -48,22 +49,29 @@ export class ProcessPool {
     }
 
     const totalForKey = pooled?.length ?? 0
-    if (totalForKey >= this.config.maxProcesses) {
+    const pending = this.pendingCreations.get(key) ?? 0
+    if (totalForKey + pending >= this.config.maxProcesses) {
       throw new Error(`Process pool limit reached for key: ${key}`)
     }
 
-    const proc = await factory()
-    const pooledItem: PooledProcess = {
-      process: proc,
-      inUse: true,
-      lastUsed: Date.now(),
-      createdAt: Date.now(),
+    this.pendingCreations.set(key, pending + 1)
+    try {
+      const proc = await factory()
+      const pooledItem: PooledProcess = {
+        process: proc,
+        inUse: true,
+        lastUsed: Date.now(),
+        createdAt: Date.now(),
+      }
+
+      const existing = this.pool.get(key) || []
+      this.pool.set(key, [...existing, pooledItem])
+
+      return proc
+    } finally {
+      const current = this.pendingCreations.get(key) ?? 1
+      this.pendingCreations.set(key, current - 1)
     }
-
-    const existing = this.pool.get(key) || []
-    this.pool.set(key, [...existing, pooledItem])
-
-    return proc
   }
 
   release(key: string, process: Subprocess): void {
@@ -126,26 +134,36 @@ export class ProcessPool {
 
   async warmup(key: string, factory: () => Promise<Subprocess>): Promise<void> {
     const existing = this.pool.get(key)?.length ?? 0
+    const pending = this.pendingCreations.get(key) ?? 0
     const toCreate = Math.min(
       this.config.warmupCount - existing,
-      this.config.maxProcesses - existing
+      this.config.maxProcesses - existing - pending
     )
+
+    if (toCreate <= 0) return
+
+    this.pendingCreations.set(key, pending + toCreate)
 
     const promises: Promise<void>[] = []
 
     for (let i = 0; i < toCreate; i++) {
       promises.push(
-        factory().then((proc) => {
-          const pooledItem: PooledProcess = {
-            process: proc,
-            inUse: false,
-            lastUsed: Date.now(),
-            createdAt: Date.now(),
-          }
+        factory()
+          .then((proc) => {
+            const pooledItem: PooledProcess = {
+              process: proc,
+              inUse: false,
+              lastUsed: Date.now(),
+              createdAt: Date.now(),
+            }
 
-          const items = this.pool.get(key) || []
-          this.pool.set(key, [...items, pooledItem])
-        })
+            const items = this.pool.get(key) || []
+            this.pool.set(key, [...items, pooledItem])
+          })
+          .finally(() => {
+            const current = this.pendingCreations.get(key) ?? 1
+            this.pendingCreations.set(key, current - 1)
+          })
       )
     }
 
