@@ -1,6 +1,6 @@
 "use client"
 
-import { ReactNode } from "react"
+import { ReactNode, useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { useListOrganizations, useSession } from "@/lib/auth-client"
 import { isLocalMode } from "@/lib/mode"
@@ -23,19 +23,38 @@ export function OnboardingGuard({ children }: OnboardingGuardProps) {
   const pathname = usePathname()
   const { data: session, isPending: sessionPending } = useSession()
   const { data: orgList, isPending: orgsPending } = useListOrganizations()
+  const [isRedirecting, setIsRedirecting] = useState(false)
 
-  // Local mode bypass - no onboarding required
-  if (isLocalMode()) {
+  const isLocalModeActive = isLocalMode()
+  const isOnboardingRoute = pathname.startsWith("/onboarding")
+  const isLoading = sessionPending || orgsPending
+  const isAuthenticated = !!session?.user
+  const hasNoOrganizations = !orgList || orgList.length === 0
+  const shouldRedirect =
+    !isLocalModeActive &&
+    !isOnboardingRoute &&
+    !isLoading &&
+    isAuthenticated &&
+    hasNoOrganizations
+
+  useEffect(() => {
+    if (shouldRedirect && !isRedirecting) {
+      setIsRedirecting(true)
+      router.replace("/onboarding")
+    } else if (!shouldRedirect && isRedirecting) {
+      setIsRedirecting(false)
+    }
+  }, [shouldRedirect, isRedirecting, router])
+
+  if (isLocalModeActive) {
     return <>{children}</>
   }
 
-  // Skip check if already on onboarding route
-  if (pathname.startsWith("/onboarding")) {
+  if (isOnboardingRoute) {
     return <>{children}</>
   }
 
-  // Show loading while checking auth state
-  if (sessionPending || orgsPending) {
+  if (isLoading || isRedirecting) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
@@ -43,21 +62,9 @@ export function OnboardingGuard({ children }: OnboardingGuardProps) {
     )
   }
 
-  // Not authenticated - let auth guards handle this
-  if (!session?.user) {
+  if (!isAuthenticated) {
     return <>{children}</>
   }
 
-  // User has no organizations - redirect to onboarding
-  if (!orgList || orgList.length === 0) {
-    router.replace("/onboarding")
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-      </div>
-    )
-  }
-
-  // User has organizations - allow access
   return <>{children}</>
 }
