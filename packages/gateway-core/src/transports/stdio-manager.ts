@@ -206,6 +206,9 @@ export class StdioTransportManager {
           }
         }, GRACEFUL_SHUTDOWN_TIMEOUT)
 
+        const closeHandler = closeHandlers.get(id)
+        closeHandler?.()
+
         processes.delete(id)
         messageHandlers.delete(id)
         errorHandlers.delete(id)
@@ -254,6 +257,11 @@ export class StdioTransportManager {
           console.error(`[stdio:${id}] Restart failed:`, e)
           const closeHandler = this.closeHandlers.get(id)
           closeHandler?.()
+
+          this.processes.delete(id)
+          this.messageHandlers.delete(id)
+          this.errorHandlers.delete(id)
+          this.closeHandlers.delete(id)
         }
       }
     } else {
@@ -294,7 +302,7 @@ export class StdioTransportManager {
 
   async disconnectAll(): Promise<void> {
     const promises = Array.from(this.processes.entries()).map(
-      async ([_id, managed]) => {
+      async ([id, managed]) => {
         managed.abortController.abort()
         managed.status = "disconnected"
         managed.process.kill("SIGTERM")
@@ -304,6 +312,9 @@ export class StdioTransportManager {
         if (!managed.process.killed) {
           managed.process.kill("SIGKILL")
         }
+
+        const closeHandler = this.closeHandlers.get(id)
+        closeHandler?.()
       }
     )
 
