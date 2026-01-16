@@ -25,6 +25,8 @@ interface ManagedProcess {
   lastMessageAt?: Date
 }
 
+const GRACEFUL_SHUTDOWN_TIMEOUT = 5000
+
 export class StdioTransportManager {
   private processes = new Map<string, ManagedProcess>()
   private messageHandlers = new Map<string, (msg: McpMessage) => void>()
@@ -201,7 +203,7 @@ export class StdioTransportManager {
           if (!currentManaged.process.killed) {
             currentManaged.process.kill("SIGKILL")
           }
-        }, 5000)
+        }, GRACEFUL_SHUTDOWN_TIMEOUT)
 
         processes.delete(id)
         messageHandlers.delete(id)
@@ -246,7 +248,7 @@ export class StdioTransportManager {
 
       if (!managed.abortController.signal.aborted) {
         try {
-          await this.connect(id, managed.config)
+          await this.restartProcess(id, managed)
         } catch (e) {
           console.error(`[stdio:${id}] Restart failed:`, e)
           const closeHandler = this.closeHandlers.get(id)
@@ -261,6 +263,30 @@ export class StdioTransportManager {
     }
   }
 
+  private async restartProcess(
+    id: string,
+    managed: ManagedProcess
+  ): Promise<void> {
+    const proc = Bun.spawn([managed.config.command, ...(managed.config.args || [])], {
+      cwd: managed.config.cwd,
+      env: { ...process.env, ...managed.config.env },
+      stdin: "pipe",
+      stdout: "pipe",
+      stderr: "pipe",
+      onExit: (_proc, exitCode, signalCode, _error) => {
+        this.handleProcessExit(id, exitCode, signalCode as string | null)
+      },
+    }) as SubprocessWithPipes
+
+    managed.process = proc
+    managed.status = "connected"
+    managed.connectedAt = new Date()
+    managed.abortController = new AbortController()
+
+    this.startLineReader(id, managed)
+    this.startStderrReader(id, proc)
+  }
+
   async disconnectAll(): Promise<void> {
     const promises = Array.from(this.processes.entries()).map(
       async ([_id, managed]) => {
@@ -268,7 +294,7 @@ export class StdioTransportManager {
         managed.status = "disconnected"
         managed.process.kill("SIGTERM")
 
-        await Bun.sleep(100)
+        await Bun.sleep(GRACEFUL_SHUTDOWN_TIMEOUT)
 
         if (!managed.process.killed) {
           managed.process.kill("SIGKILL")
