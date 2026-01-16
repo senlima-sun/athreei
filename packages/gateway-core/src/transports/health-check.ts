@@ -48,19 +48,24 @@ export class ConnectionHealthChecker {
         )
       }
 
+      let originalHandler: ((msg: McpMessage) => void) | null = null
+      let timeoutId: Timer | null = null
+
       try {
         const pingId = `health-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 
         const responsePromise = new Promise<McpMessage>((resolve, reject) => {
-          const timeout = setTimeout(() => {
+          timeoutId = setTimeout(() => {
             reject(new Error("Health check timeout"))
           }, this.config.timeout)
 
-          const _originalOnMessage = connection.onMessage
+          originalHandler = (connection as { _messageHandler?: (msg: McpMessage) => void })._messageHandler ?? null
           connection.onMessage((msg: McpMessage) => {
             if (msg.id === pingId) {
-              clearTimeout(timeout)
+              if (timeoutId) clearTimeout(timeoutId)
               resolve(msg)
+            } else if (originalHandler) {
+              originalHandler(msg)
             }
           })
         })
@@ -73,6 +78,10 @@ export class ConnectionHealthChecker {
 
         await responsePromise
 
+        if (originalHandler) {
+          connection.onMessage(originalHandler)
+        }
+
         const result: HealthCheckResult = {
           healthy: true,
           latencyMs: Date.now() - start,
@@ -83,6 +92,10 @@ export class ConnectionHealthChecker {
         this.results.set(connection.id, result)
         return result
       } catch (e) {
+        if (timeoutId) clearTimeout(timeoutId)
+        if (originalHandler) {
+          connection.onMessage(originalHandler)
+        }
         lastError = e instanceof Error ? e.message : String(e)
       }
     }
@@ -99,7 +112,11 @@ export class ConnectionHealthChecker {
     return result
   }
 
-  async checkWithPing(
+  /**
+   * Sends a ping and validates only that the send path works.
+   * Does NOT wait for a pong response. Use check() for full round-trip validation.
+   */
+  async sendPing(
     connection: TransportConnection
   ): Promise<HealthCheckResult> {
     const start = Date.now()
@@ -143,8 +160,12 @@ export class ConnectionHealthChecker {
     this.stopPeriodicCheck(connection.id)
 
     const timer = setInterval(async () => {
-      const result = await this.checkWithPing(connection)
-      onResult?.(result)
+      try {
+        const result = await this.sendPing(connection)
+        onResult?.(result)
+      } catch {
+        // Swallow errors in periodic checks to prevent unhandled rejections
+      }
     }, intervalMs)
 
     this.intervalTimers.set(connection.id, timer)
