@@ -1,11 +1,13 @@
 import { defineConfig } from "vitest/config"
 import { resolve } from "path"
+import react from "@vitejs/plugin-react"
 
 export default defineConfig({
+  plugins: [react()],
   test: {
     globals: true,
     environment: "node",
-    include: ["packages/**/*.test.ts", "apps/**/*.test.ts"],
+    include: ["packages/**/*.test.{ts,tsx}", "apps/**/*.test.{ts,tsx}"],
     exclude: [
       "**/node_modules/**",
       "**/dist/**",
@@ -24,6 +26,8 @@ export default defineConfig({
     environmentMatchGlobs: [
       // Use jsdom for extension tests (browser environment)
       ["packages/extension/**/*.test.ts", "jsdom"],
+      // Use jsdom for React component tests
+      ["apps/platform/**/*.test.tsx", "jsdom"],
     ],
     coverage: {
       reporter: ["text", "json", "html"],
@@ -37,6 +41,7 @@ export default defineConfig({
       "@/constants": resolve(__dirname, "./apps/platform/src/constants"),
       "@/lib": resolve(__dirname, "./apps/platform/src/lib"),
       "@/components": resolve(__dirname, "./apps/platform/src/components"),
+      "@/hooks": resolve(__dirname, "./apps/platform/src/hooks"),
     },
   },
 })

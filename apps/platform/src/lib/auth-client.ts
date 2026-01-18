@@ -1,7 +1,7 @@
 "use client"
 
 import { createAuthClient } from "better-auth/react"
-import { organizationClient } from "better-auth/client/plugins"
+import { organizationClient, adminClient } from "better-auth/client/plugins"
 import { API_URL } from "@/constants"
 import { isLocalMode } from "./mode"
 
@@ -12,7 +12,7 @@ import { isLocalMode } from "./mode"
 
 export const authClient = createAuthClient({
   baseURL: API_URL,
-  plugins: [organizationClient()],
+  plugins: [organizationClient(), adminClient()],
 })
 
 /**

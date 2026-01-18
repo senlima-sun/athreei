@@ -32,3 +32,13 @@ export {
 
 // Client exports
 export { createClient, type AuthClient } from "./client.ts"
+
+// Permissions exports
+export {
+  ac,
+  baseStatement,
+  baseAdminRole,
+  baseModeratorRole,
+  roles,
+  type BaseStatement,
+} from "./permissions.ts"

@@ -1,6 +1,7 @@
 import { drizzleAdapter } from "better-auth/adapters/drizzle"
-import { organization } from "better-auth/plugins"
+import { organization, admin } from "better-auth/plugins"
 import type { BetterAuthOptions } from "better-auth"
+import { ac, roles } from "./permissions"
 
 export type DatabaseProvider = "sqlite" | "pg" | "mysql"
 
@@ -109,22 +110,18 @@ export function createAuthConfig(
     // Plugins
     plugins: [
       organization({
-        // Organization creator gets owner role by default
         creatorRole: "owner",
-        // Allow users to create organizations
         allowUserToCreateOrganization: true,
-        // Optional: Limit organizations per user
-        // organizationLimit: 5,
-        // Optional: Limit members per organization
-        // membershipLimit: 100,
-        // Optional: Send invitation emails
-        // sendInvitationEmail: async ({ email, organization, inviter, url }) => {
-        //   await sendEmail({
-        //     to: email,
-        //     subject: `You've been invited to ${organization.name}`,
-        //     text: `${inviter.name} invited you to join ${organization.name}. Click here: ${url}`,
-        //   });
-        // },
+      }),
+
+      admin({
+        ac,
+        roles,
+        adminUserIds:
+          process.env.ADMIN_USER_IDS?.split(",")
+            .map((id) => id.trim())
+            .filter(Boolean) || [],
+        defaultRole: "user",
       }),
     ],
 

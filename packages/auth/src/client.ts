@@ -1,5 +1,6 @@
 import { createAuthClient } from "better-auth/react"
-import { organizationClient } from "better-auth/client/plugins"
+import { organizationClient, adminClient } from "better-auth/client/plugins"
+import { ac, roles } from "./permissions"
 
 /**
  * Auth client type
@@ -37,7 +38,13 @@ export type AuthClient = ReturnType<typeof createAuthClient>
 export function createClient(baseURL: string): AuthClient {
   return createAuthClient({
     baseURL,
-    plugins: [organizationClient()],
+    plugins: [
+      organizationClient(),
+      adminClient({
+        ac,
+        roles,
+      }),
+    ],
   })
 }
 
@@ -45,4 +52,5 @@ export function createClient(baseURL: string): AuthClient {
  * Re-export createAuthClient for advanced use cases
  */
 export { createAuthClient } from "better-auth/react"
-export { organizationClient } from "better-auth/client/plugins"
+export { organizationClient, adminClient } from "better-auth/client/plugins"
+export { ac, roles, baseAdminRole, baseModeratorRole } from "./permissions"
