@@ -76,7 +76,8 @@ vi.mock("@/components/ui/dropdown-menu", () => ({
     React.createElement(
       "div",
       { "data-testid": "dropdown-trigger" },
-      render || children
+      render,
+      children
     ),
   DropdownMenuContent: ({ children }: React.PropsWithChildren) =>
     React.createElement(

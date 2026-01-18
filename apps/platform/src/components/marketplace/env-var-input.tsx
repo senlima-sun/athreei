@@ -28,14 +28,14 @@ export function EnvVarInput({
   error,
   disabled = false,
 }: EnvVarInputProps) {
-  const [showValue, setShowValue] = useState(!sensitive)
-
   const isSensitive =
     sensitive ||
     name.toLowerCase().includes("key") ||
     name.toLowerCase().includes("secret") ||
     name.toLowerCase().includes("token") ||
     name.toLowerCase().includes("password")
+
+  const [showValue, setShowValue] = useState(!isSensitive)
 
   return (
     <div className="space-y-1.5">
