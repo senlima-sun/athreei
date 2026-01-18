@@ -11,7 +11,7 @@ import type {
   TransportConnection,
   McpMessage,
   TransportStatus,
-} from "../types/transports.js"
+} from "../types/transports"
 
 type SubprocessWithPipes = Subprocess<"pipe", "pipe", "pipe">
 
@@ -102,7 +102,7 @@ export class StdioTransportManager {
   }
 
   private async startStderrReader(
-    id: string,
+    _id: string,
     proc: SubprocessWithPipes
   ): Promise<void> {
     const stderr = proc.stderr
@@ -280,16 +280,19 @@ export class StdioTransportManager {
     id: string,
     managed: ManagedProcess
   ): Promise<void> {
-    const proc = Bun.spawn([managed.config.command, ...(managed.config.args || [])], {
-      cwd: managed.config.cwd,
-      env: { ...process.env, ...managed.config.env },
-      stdin: "pipe",
-      stdout: "pipe",
-      stderr: "pipe",
-      onExit: (_proc, exitCode, signalCode, _error) => {
-        this.handleProcessExit(id, exitCode, signalCode as string | null)
-      },
-    }) as SubprocessWithPipes
+    const proc = Bun.spawn(
+      [managed.config.command, ...(managed.config.args || [])],
+      {
+        cwd: managed.config.cwd,
+        env: { ...process.env, ...managed.config.env },
+        stdin: "pipe",
+        stdout: "pipe",
+        stderr: "pipe",
+        onExit: (_proc, exitCode, signalCode, _error) => {
+          this.handleProcessExit(id, exitCode, signalCode as string | null)
+        },
+      }
+    ) as SubprocessWithPipes
 
     managed.process = proc
     managed.status = "connected"

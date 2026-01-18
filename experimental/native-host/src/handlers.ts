@@ -7,7 +7,7 @@
 
 import { z } from "zod"
 import type { NativeRequest, NativeResponse } from "@athreei/shared"
-import { createResponse } from "./protocol.js"
+import { createResponse } from "./protocol"
 
 /**
  * Handler function type with typed payload validation

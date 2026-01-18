@@ -1,4 +1,4 @@
-import type { McpServer } from "../../types/api.js"
+import type { McpServer } from "../../types/api"
 
 export type TransportType = "stdio" | "sse" | "streamable-http"
 

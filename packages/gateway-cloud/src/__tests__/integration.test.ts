@@ -7,9 +7,9 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { Hono } from "hono"
-import { app } from "../index.js"
-import sseRoutes, { configureSseRoutes } from "../routes/sse.js"
-import healthRoutes from "../routes/health.js"
+import { app as _app } from "../index"
+import sseRoutes, { configureSseRoutes } from "../routes/sse"
+import healthRoutes from "../routes/health"
 import {
   createSession,
   getSession,
@@ -21,8 +21,8 @@ import {
   listSessionTools,
   callSessionTool,
   _resetForTesting,
-} from "../gateway/session.js"
-import { GatewayErrorCode } from "../types.js"
+} from "../gateway/session"
+import { GatewayErrorCode } from "../types"
 
 const mockFetch = vi.fn()
 global.fetch = mockFetch

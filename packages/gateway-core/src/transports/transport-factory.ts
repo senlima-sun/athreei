@@ -9,9 +9,9 @@ import type {
   TransportConfig,
   TransportConnection,
   TransportStatus,
-} from "../types/transports.js"
-import { StdioTransportManager } from "./stdio-manager.js"
-import { StreamableHttpTransportManager } from "./streamable-http-manager.js"
+} from "../types/transports"
+import { StdioTransportManager } from "./stdio-manager"
+import { StreamableHttpTransportManager } from "./streamable-http-manager"
 
 export class TransportFactory {
   private stdioManager = new StdioTransportManager()

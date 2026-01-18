@@ -405,12 +405,12 @@ describe("API Keys Routes", () => {
 
       expect(response.status).toBe(200)
       expect(data.keys).toHaveLength(1)
-      expect(data.keys[0].id).toBe(mockApiKey.id)
-      expect(data.keys[0].name).toBe(mockApiKey.name)
-      expect(data.keys[0].prefix).toBe(mockApiKey.keyPrefix)
-      expect(data.keys[0].usageCount).toBe(42)
+      expect(data.keys[0]!.id).toBe(mockApiKey.id)
+      expect(data.keys[0]!.name).toBe(mockApiKey.name)
+      expect(data.keys[0]!.prefix).toBe(mockApiKey.keyPrefix)
+      expect(data.keys[0]!.usageCount).toBe(42)
       // Should NOT include the full key or key hash
-      expect(data.keys[0].key).toBeUndefined()
+      expect(data.keys[0]!.key).toBeUndefined()
     })
 
     it("should return multiple API keys for an endpoint", async () => {
@@ -435,8 +435,8 @@ describe("API Keys Routes", () => {
 
       expect(response.status).toBe(200)
       expect(data.keys).toHaveLength(2)
-      expect(data.keys[0].id).toBe("key_123")
-      expect(data.keys[1].id).toBe("key_456")
+      expect(data.keys[0]!.id).toBe("key_123")
+      expect(data.keys[1]!.id).toBe("key_456")
     })
 
     it("should include scopes when present on API key", async () => {
@@ -457,7 +457,7 @@ describe("API Keys Routes", () => {
       const data = (await response.json()) as ListKeysResponse
 
       expect(response.status).toBe(200)
-      expect(data.keys[0].scopes).toEqual(["read", "write"])
+      expect(data.keys[0]!.scopes).toEqual(["read", "write"])
     })
   })
   describe("POST /endpoints/:endpointId/keys", () => {
@@ -877,7 +877,7 @@ describe("API Keys Routes", () => {
       const data = (await response.json()) as ListKeysResponse
 
       expect(response.status).toBe(200)
-      expect(data.keys[0].scopes).toBeNull()
+      expect(data.keys[0]!.scopes).toBeNull()
     })
 
     it("should handle API key with lastUsedAt date", async () => {
@@ -895,7 +895,7 @@ describe("API Keys Routes", () => {
       const data = (await response.json()) as ListKeysResponse
 
       expect(response.status).toBe(200)
-      expect(data.keys[0].lastUsedAt).toBe("2025-01-15T10:30:00.000Z")
+      expect(data.keys[0]!.lastUsedAt).toBe("2025-01-15T10:30:00.000Z")
     })
 
     it("should handle API key with null lastUsedAt", async () => {
@@ -911,7 +911,7 @@ describe("API Keys Routes", () => {
       const data = (await response.json()) as ListKeysResponse
 
       expect(response.status).toBe(200)
-      expect(data.keys[0].lastUsedAt).toBeNull()
+      expect(data.keys[0]!.lastUsedAt).toBeNull()
     })
 
     it("should handle API key with expiresAt date", async () => {
@@ -929,7 +929,7 @@ describe("API Keys Routes", () => {
       const data = (await response.json()) as ListKeysResponse
 
       expect(response.status).toBe(200)
-      expect(data.keys[0].expiresAt).toBe("2025-12-31T23:59:59.000Z")
+      expect(data.keys[0]!.expiresAt).toBe("2025-12-31T23:59:59.000Z")
     })
   })
 })

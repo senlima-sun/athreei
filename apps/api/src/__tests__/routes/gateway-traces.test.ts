@@ -451,7 +451,7 @@ describe("Gateway Traces POST Endpoint", () => {
         body: JSON.stringify({ traces }),
       })
 
-      const insertCall = mockInsertValues.mock.calls[0][0]
+      const insertCall = mockInsertValues.mock.calls[0]![0]
       const attributes = JSON.parse(insertCall.attributes)
 
       expect(attributes.aggregatedToolName).toBe("browser__screenshot")

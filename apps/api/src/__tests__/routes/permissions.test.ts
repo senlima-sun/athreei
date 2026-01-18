@@ -12,7 +12,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest"
 import { Hono, type Context, type ErrorHandler } from "hono"
 import type { ContentfulStatusCode } from "hono/utils/http-status"
 
-// Error handler to properly handle thrown errors
 const testErrorHandler: ErrorHandler = (err: Error, c: Context) => {
   const statusCode =
     (err as Error & { statusCode?: ContentfulStatusCode }).statusCode || 500
@@ -22,7 +21,94 @@ const testErrorHandler: ErrorHandler = (err: Error, c: Context) => {
   )
 }
 
-// Mock modules before importing the routes
+const {
+  mockDb,
+  mockSchema,
+  mockAuthContext,
+  mockPermissions,
+  mockVerifyOrganizationMembership,
+} = vi.hoisted(() => {
+  const mockAuthContext = {
+    userId: "user_123",
+    email: "test@example.com",
+    name: "Test User",
+    session: {
+      id: "session_123",
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    },
+  }
+
+  const now = new Date()
+  const mockPermissions = [
+    {
+      id: "perm_123",
+      origin: "https://example.com",
+      tool: "browser_navigate",
+      allowed: "allowed",
+      organizationId: "org_123",
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: "perm_456",
+      origin: "https://example.com",
+      tool: "browser_click",
+      allowed: "ask",
+      organizationId: "org_123",
+      createdAt: now,
+      updatedAt: now,
+    },
+    {
+      id: "perm_789",
+      origin: "https://malicious.com",
+      tool: "browser_evaluate",
+      allowed: "denied",
+      organizationId: "org_123",
+      createdAt: now,
+      updatedAt: now,
+    },
+  ]
+
+  const mockSchema = {
+    permission: {
+      id: "id",
+      origin: "origin",
+      tool: "tool",
+      allowed: "allowed",
+      organizationId: "organizationId",
+      createdAt: "createdAt",
+      updatedAt: "updatedAt",
+    },
+  }
+
+  const mockDb = {
+    query: {
+      permission: {
+        findFirst: vi.fn(),
+        findMany: vi.fn(),
+      },
+    },
+    update: vi.fn(() => ({
+      set: vi.fn(() => ({
+        where: vi.fn(() => Promise.resolve()),
+      })),
+    })),
+    delete: vi.fn(() => ({
+      where: vi.fn(() => Promise.resolve()),
+    })),
+  }
+
+  const mockVerifyOrganizationMembership = vi.fn()
+
+  return {
+    mockDb,
+    mockSchema,
+    mockAuthContext,
+    mockPermissions,
+    mockVerifyOrganizationMembership,
+  }
+})
+
 vi.mock("../../lib/db-operations", () => ({
   db: vi.fn(() => mockDb),
 }))
@@ -70,10 +156,9 @@ vi.mock("../../middleware", () => ({
 }))
 
 vi.mock("../../services", () => ({
-  verifyOrganizationMembership: vi.fn(),
+  verifyOrganizationMembership: mockVerifyOrganizationMembership,
 }))
 
-// Type for test response data
 interface PermissionResponse {
   id: string
   origin: string
@@ -97,85 +182,9 @@ interface ErrorResponse {
   code?: string
 }
 
-// Mock data
-const mockAuthContext = {
-  userId: "user_123",
-  email: "test@example.com",
-  name: "Test User",
-  session: {
-    id: "session_123",
-    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-  },
-}
-
-const now = new Date()
-const mockPermissions = [
-  {
-    id: "perm_123",
-    origin: "https://example.com",
-    tool: "browser_navigate",
-    allowed: "allowed",
-    organizationId: "org_123",
-    createdAt: now,
-    updatedAt: now,
-  },
-  {
-    id: "perm_456",
-    origin: "https://example.com",
-    tool: "browser_click",
-    allowed: "ask",
-    organizationId: "org_123",
-    createdAt: now,
-    updatedAt: now,
-  },
-  {
-    id: "perm_789",
-    origin: "https://malicious.com",
-    tool: "browser_evaluate",
-    allowed: "denied",
-    organizationId: "org_123",
-    createdAt: now,
-    updatedAt: now,
-  },
-]
-
-// Mock schema
-const mockSchema = {
-  permission: {
-    id: "id",
-    origin: "origin",
-    tool: "tool",
-    allowed: "allowed",
-    organizationId: "organizationId",
-    createdAt: "createdAt",
-    updatedAt: "updatedAt",
-  },
-}
-
-// Mock database
-const mockDb = {
-  query: {
-    permission: {
-      findFirst: vi.fn(),
-      findMany: vi.fn(),
-    },
-  },
-  update: vi.fn(() => ({
-    set: vi.fn(() => ({
-      where: vi.fn(() => Promise.resolve()),
-    })),
-  })),
-  delete: vi.fn(() => ({
-    where: vi.fn(() => Promise.resolve()),
-  })),
-}
-
-// Import the mock for verifyOrganizationMembership
-import { verifyOrganizationMembership } from "../../services"
-const mockVerifyOrganizationMembership = vi.mocked(verifyOrganizationMembership)
-
 describe("Permissions Routes", () => {
   beforeEach(() => {
+    vi.resetModules()
     vi.clearAllMocks()
   })
 
@@ -263,8 +272,8 @@ describe("Permissions Routes", () => {
       const data = (await response.json()) as PermissionListResponse
 
       expect(response.status).toBe(200)
-      expect(typeof data.data[0].createdAt).toBe("number")
-      expect(typeof data.data[0].updatedAt).toBe("number")
+      expect(typeof data.data[0]!.createdAt).toBe("number")
+      expect(typeof data.data[0]!.updatedAt).toBe("number")
     })
   })
 
@@ -503,7 +512,6 @@ describe("Permissions Routes", () => {
         method: "DELETE",
       })
 
-      // Route doesn't match empty param
       expect(response.status).toBe(404)
     })
   })
@@ -529,8 +537,8 @@ describe("Permissions Routes", () => {
       const data = (await response.json()) as PermissionListResponse
 
       expect(response.status).toBe(200)
-      expect(data.data[0].createdAt).toBe(1704067200000)
-      expect(data.data[0].updatedAt).toBe(1704067200000)
+      expect(data.data[0]!.createdAt).toBe(1704067200000)
+      expect(data.data[0]!.updatedAt).toBe(1704067200000)
     })
 
     it("should handle permission with Date object timestamp", async () => {
@@ -553,8 +561,8 @@ describe("Permissions Routes", () => {
       const data = (await response.json()) as PermissionListResponse
 
       expect(response.status).toBe(200)
-      expect(data.data[0].createdAt).toBe(1704067200000)
-      expect(data.data[0].updatedAt).toBe(1704067200000)
+      expect(data.data[0]!.createdAt).toBe(1704067200000)
+      expect(data.data[0]!.updatedAt).toBe(1704067200000)
     })
 
     it("should handle multiple permissions with different allowed states", async () => {
@@ -610,7 +618,6 @@ describe("Permissions Routes", () => {
       await app.request("/permissions?organizationId=org_test_123")
 
       expect(mockVerifyOrganizationMembership).toHaveBeenCalledWith(
-        mockDb,
         "user_123",
         "org_test_123"
       )
@@ -632,7 +639,6 @@ describe("Permissions Routes", () => {
       })
 
       expect(mockVerifyOrganizationMembership).toHaveBeenCalledWith(
-        mockDb,
         "user_123",
         "org_123"
       )

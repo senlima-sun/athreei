@@ -131,6 +131,10 @@ rules.post(
       })
       .returning()
 
+    if (!created) {
+      throw ApiError.badRequest("Failed to create rule")
+    }
+
     return c.json(
       {
         rule: {
@@ -202,6 +206,10 @@ rules.patch("/:id", zValidator("json", updateRuleSchema), async (c) => {
     .where(eq(rule.id, id))
     .returning()
 
+  if (!updated) {
+    throw ApiError.notFound("Rule not found")
+  }
+
   return c.json({
     rule: {
       id: updated.id,
@@ -251,6 +259,10 @@ rules.patch(
       })
       .where(eq(rule.id, id))
       .returning()
+
+    if (!updated) {
+      throw ApiError.notFound("Rule not found")
+    }
 
     return c.json({
       rule: {

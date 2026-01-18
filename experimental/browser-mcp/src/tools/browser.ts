@@ -9,10 +9,10 @@
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { MCP_TOOL_DEFINITIONS } from "@athreei/shared"
-import { logger } from "../utils/logger.js"
-import { getIPCClient } from "../bridge/index.js"
-import { createAuditLogEntry } from "../db/repositories/audit-log.js"
-import { getAiAppName } from "../context/index.js"
+import { logger } from "../utils/logger"
+import { getIPCClient } from "../bridge/index"
+import { createAuditLogEntry } from "../db/repositories/audit-log"
+import { getAiAppName } from "../context/index"
 import type { AuditStatus } from "@athreei/shared"
 
 // Type definitions for tool arguments to avoid implicit any
@@ -249,7 +249,7 @@ export function registerBrowserTools(server: McpServer) {
     "browser_navigate",
     MCP_TOOL_DEFINITIONS.browser_navigate.description,
     MCP_TOOL_DEFINITIONS.browser_navigate.inputSchema.shape,
-    // @ts-ignore - Type instantiation too deep
+    // @ts-expect-error - Type instantiation too deep
     async (args: NavigateArgs) => {
       const { url, tabId, waitUntil } = args
       logger.debug(

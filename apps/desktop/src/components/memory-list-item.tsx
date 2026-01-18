@@ -48,8 +48,12 @@ const SOURCE_CONFIG: Record<
   },
 }
 
-function getSourceConfig(source: string) {
-  return SOURCE_CONFIG[source.toLowerCase()] ?? SOURCE_CONFIG.default
+function getSourceConfig(source: string): {
+  icon: typeof Globe
+  color: string
+  bg: string
+} {
+  return SOURCE_CONFIG[source.toLowerCase()] ?? SOURCE_CONFIG.default!
 }
 
 function stripMarkdown(text: string): string {

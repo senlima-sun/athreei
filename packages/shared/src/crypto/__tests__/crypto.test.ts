@@ -27,7 +27,7 @@ import {
   type Permission,
   type AuditLogEntry,
   type Session,
-} from "../index.js"
+} from "../index"
 
 describe("Argon2 Key Derivation", () => {
   it("should derive a key from password", async () => {

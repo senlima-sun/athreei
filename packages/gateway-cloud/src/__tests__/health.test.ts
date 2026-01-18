@@ -4,8 +4,8 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { Hono } from "hono"
-import healthRoutes from "../routes/health.js"
-import { _resetForTesting, createSession } from "../gateway/session.js"
+import healthRoutes from "../routes/health"
+import { _resetForTesting, createSession } from "../gateway/session"
 
 // Mock the MCP SDK
 vi.mock("@modelcontextprotocol/sdk/client/index.js", () => ({

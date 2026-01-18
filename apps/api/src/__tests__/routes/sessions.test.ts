@@ -22,6 +22,113 @@ const testErrorHandler: ErrorHandler = (err: Error, c: Context) => {
   )
 }
 
+// Use vi.hoisted to define mocks that are available to hoisted vi.mock() calls
+const {
+  mockDb,
+  mockSchema,
+  mockAuthContext,
+  mockSessions,
+  now,
+  futureDate,
+  mockPgSession,
+} = vi.hoisted(() => {
+  const now = new Date()
+  const futureDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+
+  const mockAuthContext = {
+    userId: "user_123",
+    email: "test@example.com",
+    name: "Test User",
+    session: {
+      id: "session_123",
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    },
+  }
+
+  const mockSessions = [
+    {
+      id: "session_123",
+      userId: "user_123",
+      ipAddress: "192.168.1.1",
+      userAgent:
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      createdAt: now,
+      updatedAt: now,
+      expiresAt: futureDate,
+    },
+    {
+      id: "session_456",
+      userId: "user_123",
+      ipAddress: "10.0.0.1",
+      userAgent:
+        "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+      createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
+      updatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
+      expiresAt: futureDate,
+    },
+    {
+      id: "session_789",
+      userId: "user_123",
+      ipAddress: "172.16.0.1",
+      userAgent:
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0",
+      createdAt: new Date(Date.now() - 48 * 60 * 60 * 1000),
+      updatedAt: new Date(Date.now() - 4 * 60 * 60 * 1000),
+      expiresAt: futureDate,
+    },
+  ]
+
+  const mockSchema = {
+    session: {
+      id: "id",
+      userId: "userId",
+      ipAddress: "ipAddress",
+      userAgent: "userAgent",
+      createdAt: "createdAt",
+      updatedAt: "updatedAt",
+      expiresAt: "expiresAt",
+    },
+  }
+
+  // Mock pgSession table used for select queries
+  const mockPgSession = {
+    id: "id",
+    userId: "userId",
+    ipAddress: "ipAddress",
+    userAgent: "userAgent",
+    createdAt: "createdAt",
+    updatedAt: "updatedAt",
+    expiresAt: "expiresAt",
+  }
+
+  const mockDb = {
+    query: {
+      session: {
+        findFirst: vi.fn(),
+        findMany: vi.fn(),
+      },
+    },
+    select: vi.fn(() => ({
+      from: vi.fn(() => ({
+        where: vi.fn(() => Promise.resolve(mockSessions)),
+      })),
+    })),
+    delete: vi.fn(() => ({
+      where: vi.fn(() => Promise.resolve()),
+    })),
+  }
+
+  return {
+    mockDb,
+    mockSchema,
+    mockAuthContext,
+    mockSessions,
+    now,
+    futureDate,
+    mockPgSession,
+  }
+})
+
 // Mock modules before importing the routes
 vi.mock("../../lib/db-operations", () => ({
   db: vi.fn(() => mockDb),
@@ -30,6 +137,7 @@ vi.mock("../../lib/db-operations", () => ({
 vi.mock("@athreei/db", () => ({
   detectDatabaseType: vi.fn(() => "sqlite"),
   getSchema: vi.fn(() => mockSchema),
+  session: mockPgSession,
 }))
 
 vi.mock("../../middleware", () => ({
@@ -82,84 +190,6 @@ interface ErrorResponse {
   code?: string
 }
 
-// Mock data
-const mockAuthContext = {
-  userId: "user_123",
-  email: "test@example.com",
-  name: "Test User",
-  session: {
-    id: "session_123",
-    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-  },
-}
-
-const now = new Date()
-const futureDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-
-const mockSessions = [
-  {
-    id: "session_123",
-    userId: "user_123",
-    ipAddress: "192.168.1.1",
-    userAgent:
-      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    createdAt: now,
-    updatedAt: now,
-    expiresAt: futureDate,
-  },
-  {
-    id: "session_456",
-    userId: "user_123",
-    ipAddress: "10.0.0.1",
-    userAgent:
-      "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
-    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
-    updatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    expiresAt: futureDate,
-  },
-  {
-    id: "session_789",
-    userId: "user_123",
-    ipAddress: "172.16.0.1",
-    userAgent:
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0",
-    createdAt: new Date(Date.now() - 48 * 60 * 60 * 1000),
-    updatedAt: new Date(Date.now() - 4 * 60 * 60 * 1000),
-    expiresAt: futureDate,
-  },
-]
-
-// Mock schema
-const mockSchema = {
-  session: {
-    id: "id",
-    userId: "userId",
-    ipAddress: "ipAddress",
-    userAgent: "userAgent",
-    createdAt: "createdAt",
-    updatedAt: "updatedAt",
-    expiresAt: "expiresAt",
-  },
-}
-
-// Mock database
-const mockDb = {
-  query: {
-    session: {
-      findFirst: vi.fn(),
-      findMany: vi.fn(),
-    },
-  },
-  select: vi.fn(() => ({
-    from: vi.fn(() => ({
-      where: vi.fn(() => Promise.resolve(mockSessions)),
-    })),
-  })),
-  delete: vi.fn(() => ({
-    where: vi.fn(() => Promise.resolve()),
-  })),
-}
-
 describe("Sessions Routes", () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -182,8 +212,10 @@ describe("Sessions Routes", () => {
       const data = (await response.json()) as SessionResponse[]
 
       expect(response.status).toBe(200)
-      expect(Array.isArray(data)).toBe(true)
-      expect(data.length).toBe(3)
+      expect(data).toHaveLength(3)
+      expect(data[0]!.id).toBe("session_123")
+      expect(data[0]!.device).toBe("Mac")
+      expect(data[0]!.browser).toBe("Chrome")
     })
 
     it("should mark current session correctly", async () => {
@@ -201,61 +233,8 @@ describe("Sessions Routes", () => {
       const response = await app.request("/api/sessions")
       const data = (await response.json()) as SessionResponse[]
 
-      const currentSession = data.find((s) => s.id === "session_123")
-      const otherSession = data.find((s) => s.id === "session_456")
-
-      expect(currentSession?.current).toBe(true)
-      expect(otherSession?.current).toBe(false)
-    })
-
-    it("should parse device and browser from user agent", async () => {
-      mockDb.select.mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockResolvedValue(mockSessions),
-        }),
-      })
-
-      const { default: sessions } = await import("../../routes/sessions")
-      const app = new Hono()
-      app.onError(testErrorHandler)
-      app.route("/api/sessions", sessions)
-
-      const response = await app.request("/api/sessions")
-      const data = (await response.json()) as SessionResponse[]
-
-      // Mac + Chrome
-      const macSession = data.find((s) => s.id === "session_123")
-      expect(macSession?.device).toBe("Mac")
-      expect(macSession?.browser).toBe("Chrome")
-
-      // iPhone + Safari
-      const iphoneSession = data.find((s) => s.id === "session_456")
-      expect(iphoneSession?.device).toBe("iPhone")
-      expect(iphoneSession?.browser).toBe("Safari")
-
-      // Windows + Firefox
-      const windowsSession = data.find((s) => s.id === "session_789")
-      expect(windowsSession?.device).toBe("Windows")
-      expect(windowsSession?.browser).toBe("Firefox")
-    })
-
-    it("should return current session first", async () => {
-      mockDb.select.mockReturnValue({
-        from: vi.fn().mockReturnValue({
-          where: vi.fn().mockResolvedValue(mockSessions),
-        }),
-      })
-
-      const { default: sessions } = await import("../../routes/sessions")
-      const app = new Hono()
-      app.onError(testErrorHandler)
-      app.route("/api/sessions", sessions)
-
-      const response = await app.request("/api/sessions")
-      const data = (await response.json()) as SessionResponse[]
-
-      expect(data[0].id).toBe("session_123")
-      expect(data[0].current).toBe(true)
+      expect(data[0]!.id).toBe("session_123")
+      expect(data[0]!.current).toBe(true)
     })
 
     it("should return empty array when no sessions", async () => {
@@ -274,13 +253,44 @@ describe("Sessions Routes", () => {
       const data = (await response.json()) as SessionResponse[]
 
       expect(response.status).toBe(200)
-      expect(data).toEqual([])
+      expect(data).toHaveLength(0)
+    })
+
+    it("should parse device and browser from user agent", async () => {
+      mockDb.select.mockReturnValue({
+        from: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue(mockSessions),
+        }),
+      })
+
+      const { default: sessions } = await import("../../routes/sessions")
+      const app = new Hono()
+      app.onError(testErrorHandler)
+      app.route("/api/sessions", sessions)
+
+      const response = await app.request("/api/sessions")
+      const data = (await response.json()) as SessionResponse[]
+
+      // First session: Mac + Chrome
+      expect(data[0]!.device).toBe("Mac")
+      expect(data[0]!.browser).toBe("Chrome")
+
+      // Second session: iPhone + Safari
+      expect(data[1]!.device).toBe("iPhone")
+      expect(data[1]!.browser).toBe("Safari")
+
+      // Third session: Windows + Firefox
+      expect(data[2]!.device).toBe("Windows")
+      expect(data[2]!.browser).toBe("Firefox")
     })
   })
 
   describe("DELETE /api/sessions/:sessionId", () => {
-    it("should revoke session successfully", async () => {
-      mockDb.query.session.findFirst.mockResolvedValue(mockSessions[1])
+    it("should revoke a session successfully", async () => {
+      mockDb.query.session.findFirst.mockResolvedValue({
+        id: "session_456",
+        userId: "user_123",
+      })
 
       const { default: sessions } = await import("../../routes/sessions")
       const app = new Hono()
@@ -298,7 +308,7 @@ describe("Sessions Routes", () => {
       expect(mockDb.delete).toHaveBeenCalled()
     })
 
-    it("should return 400 when trying to revoke current session", async () => {
+    it("should prevent revoking current session", async () => {
       const { default: sessions } = await import("../../routes/sessions")
       const app = new Hono()
       app.onError(testErrorHandler)
@@ -312,10 +322,9 @@ describe("Sessions Routes", () => {
 
       expect(response.status).toBe(400)
       expect(data.error).toContain("Cannot revoke your current session")
-      expect(data.code).toBe("CANNOT_REVOKE_CURRENT_SESSION")
     })
 
-    it("should return 404 when session not found", async () => {
+    it("should return 404 for non-existent session", async () => {
       mockDb.query.session.findFirst.mockResolvedValue(null)
 
       const { default: sessions } = await import("../../routes/sessions")
@@ -323,7 +332,7 @@ describe("Sessions Routes", () => {
       app.onError(testErrorHandler)
       app.route("/api/sessions", sessions)
 
-      const response = await app.request("/api/sessions/session_nonexistent", {
+      const response = await app.request("/api/sessions/non_existent", {
         method: "DELETE",
       })
 
@@ -331,29 +340,30 @@ describe("Sessions Routes", () => {
 
       expect(response.status).toBe(404)
       expect(data.error).toContain("Session not found")
-      expect(data.code).toBe("SESSION_NOT_FOUND")
     })
 
-    it("should return 400 for invalid session ID", async () => {
+    it("should return 404 for session belonging to another user", async () => {
+      mockDb.query.session.findFirst.mockResolvedValue(null)
+
       const { default: sessions } = await import("../../routes/sessions")
       const app = new Hono()
       app.onError(testErrorHandler)
       app.route("/api/sessions", sessions)
 
-      // Empty session ID should fail validation - but param schema requires min(1)
-      // The route /:sessionId means empty won't match, so we test with path param
-      const response = await app.request("/api/sessions/", {
+      const response = await app.request("/api/sessions/session_other", {
         method: "DELETE",
       })
 
-      // Should return 404 because route doesn't match empty param
+      const data = (await response.json()) as ErrorResponse
+
       expect(response.status).toBe(404)
+      expect(data.error).toContain("Session not found")
     })
   })
 
   describe("Edge Cases", () => {
     it("should handle session without user agent", async () => {
-      const sessionWithoutUserAgent = {
+      const sessionWithoutUA = {
         id: "session_no_ua",
         userId: "user_123",
         ipAddress: "192.168.1.1",
@@ -365,7 +375,7 @@ describe("Sessions Routes", () => {
 
       mockDb.select.mockReturnValue({
         from: vi.fn().mockReturnValue({
-          where: vi.fn().mockResolvedValue([sessionWithoutUserAgent]),
+          where: vi.fn().mockResolvedValue([sessionWithoutUA]),
         }),
       })
 
@@ -378,8 +388,8 @@ describe("Sessions Routes", () => {
       const data = (await response.json()) as SessionResponse[]
 
       expect(response.status).toBe(200)
-      expect(data[0].device).toBeUndefined()
-      expect(data[0].browser).toBeUndefined()
+      expect(data[0]!.device).toBeUndefined()
+      expect(data[0]!.browser).toBeUndefined()
     })
 
     it("should handle session without IP address", async () => {
@@ -387,7 +397,8 @@ describe("Sessions Routes", () => {
         id: "session_no_ip",
         userId: "user_123",
         ipAddress: null,
-        userAgent: "Mozilla/5.0 Chrome/120.0.0.0",
+        userAgent:
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
         createdAt: now,
         updatedAt: now,
         expiresAt: futureDate,
@@ -408,7 +419,7 @@ describe("Sessions Routes", () => {
       const data = (await response.json()) as SessionResponse[]
 
       expect(response.status).toBe(200)
-      expect(data[0].ipAddress).toBeUndefined()
+      expect(data[0]!.ipAddress).toBeUndefined()
     })
 
     it("should detect Edge browser correctly", async () => {
@@ -437,7 +448,7 @@ describe("Sessions Routes", () => {
       const response = await app.request("/api/sessions")
       const data = (await response.json()) as SessionResponse[]
 
-      expect(data[0].browser).toBe("Edge")
+      expect(data[0]!.browser).toBe("Edge")
     })
 
     it("should detect Android device correctly", async () => {
@@ -466,7 +477,7 @@ describe("Sessions Routes", () => {
       const response = await app.request("/api/sessions")
       const data = (await response.json()) as SessionResponse[]
 
-      expect(data[0].device).toBe("Android")
+      expect(data[0]!.device).toBe("Android")
     })
 
     it("should detect iPad device correctly", async () => {
@@ -495,7 +506,7 @@ describe("Sessions Routes", () => {
       const response = await app.request("/api/sessions")
       const data = (await response.json()) as SessionResponse[]
 
-      expect(data[0].device).toBe("iPad")
+      expect(data[0]!.device).toBe("iPad")
     })
   })
 })

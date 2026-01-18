@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/postgres-js"
 import postgres from "postgres"
-import { eq, and, gt, desc, sql as drizzleSql } from "drizzle-orm"
+import { eq, and, gt, desc } from "drizzle-orm"
 import * as schema from "./schema"
 import type {
   Account,
@@ -52,6 +52,9 @@ export async function createAccount(
       password_hash: passwordHash,
     })
     .returning()
+  if (!account) {
+    throw new Error("Failed to create account")
+  }
   return account
 }
 
@@ -94,6 +97,9 @@ export async function createDevice(
       last_seen: new Date(),
     })
     .returning()
+  if (!device) {
+    throw new Error("Failed to create device")
+  }
   return device
 }
 
@@ -153,6 +159,9 @@ export async function createSyncItem(
       encrypted_data: encryptedData,
     })
     .returning()
+  if (!item) {
+    throw new Error("Failed to create sync item")
+  }
   return item
 }
 
@@ -322,5 +331,8 @@ export async function updateSyncSettings(
     .where(eq(schema.syncSettings.account_id, accountId))
     .returning()
 
+  if (!updated) {
+    throw new Error("Failed to update sync settings")
+  }
   return updated
 }

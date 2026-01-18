@@ -140,7 +140,10 @@ describe("saveConfigTemplate", () => {
     expect(existsSync(configPath)).toBe(true)
 
     // Verify it's valid JSON
-    const content = JSON.parse(require("fs").readFileSync(configPath, "utf-8"))
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const content = JSON.parse(
+      (require("fs") as typeof import("fs")).readFileSync(configPath, "utf-8")
+    )
     expect(content.apiKey).toBeDefined()
     expect(content.endpoint).toBeDefined()
     expect(content.platformUrl).toBeDefined()
@@ -176,7 +179,9 @@ describe("ConfigSyncManager", () => {
     beforeEach(() => {
       originalFetch = global.fetch
       mockFetch = vi.fn()
-      global.fetch = mockFetch
+      ;(mockFetch as unknown as { preconnect: typeof vi.fn }).preconnect =
+        vi.fn()
+      global.fetch = mockFetch as unknown as typeof fetch
     })
 
     afterEach(() => {

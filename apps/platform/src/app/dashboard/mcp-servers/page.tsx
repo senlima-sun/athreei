@@ -29,6 +29,10 @@ export default function McpServersPage() {
     // Redirect to new page with first server pre-filled
     // Full implementation would batch-create all servers
     const server = parsedServers[0]
+    if (!server) {
+      setShowJsonImport(false)
+      return
+    }
     const params = new URLSearchParams({
       name: server.name,
       transport: server.transport,

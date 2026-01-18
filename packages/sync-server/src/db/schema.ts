@@ -11,7 +11,11 @@ import {
   primaryKey,
   customType,
 } from "drizzle-orm/pg-core"
-import { InferSelectModel, InferInsertModel, relations } from "drizzle-orm"
+import {
+  type InferSelectModel,
+  type InferInsertModel,
+  relations,
+} from "drizzle-orm"
 
 // Enum for sync item types
 export const itemTypeEnum = pgEnum("item_type", [

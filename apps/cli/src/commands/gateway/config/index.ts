@@ -1,4 +1,4 @@
-export { GatewayConfigShow } from "./show.js"
+export { GatewayConfigShow } from "./show"
 
-export { GatewayConfigSet } from "./set.js"
-export type { GatewayConfigSetProps } from "./set.js"
+export { GatewayConfigSet } from "./set"
+export type { GatewayConfigSetProps } from "./set"

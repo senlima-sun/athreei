@@ -25,7 +25,7 @@ async function clean() {
   console.log("🧹 Cleaning dist directory...")
   try {
     await rm(DIST_DIR, { recursive: true, force: true })
-  } catch (error) {
+  } catch (_error) {
     // Ignore errors if directory doesn't exist
   }
   await mkdir(DIST_DIR, { recursive: true })

@@ -12,6 +12,7 @@
     "dev:sse:mock": "bun run --watch src/index.ts -- --transport sse --port 3000 --mock",
     "start": "bun run dist/index.js",
     "typecheck": "tsc --noEmit",
+    "typecheck:test": "tsc -p tsconfig.test.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:sse": "bun run scripts/test-sse.ts"

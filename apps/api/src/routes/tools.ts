@@ -126,6 +126,10 @@ tools.patch("/:id", zValidator("json", updateToolSchema), async (c) => {
     .where(eq(mcpTool.id, id))
     .returning()
 
+  if (!updated) {
+    throw ApiError.notFound("Tool not found")
+  }
+
   return c.json({
     tool: {
       id: updated.id,

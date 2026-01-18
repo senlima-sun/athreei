@@ -2,7 +2,7 @@
  * Tests for Native Messaging Client (MCP Server Side)
  */
 
-import { describe, test, expect, beforeEach, afterEach, vi } from "vitest"
+import { describe, test, expect, vi } from "vitest"
 import type {
   NativeRequest,
   NativeResponse,

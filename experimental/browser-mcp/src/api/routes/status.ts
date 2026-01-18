@@ -5,7 +5,7 @@
  */
 
 import { Hono } from "hono"
-import { getIPCClient } from "../../bridge/ipc-client.js"
+import { getIPCClient } from "../../bridge/ipc-client"
 
 // Track server start time for uptime calculation
 const serverStartedAt = Date.now()

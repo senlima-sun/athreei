@@ -489,7 +489,7 @@ describe("MCP Servers Environment Variables API", () => {
 
       // Verify that update was called and name/transport were not changed
       expect(mockDb.update).toHaveBeenCalled()
-      const updateCall = mockSet.mock.calls[0][0]
+      const updateCall = mockSet.mock.calls[0]![0]
       expect(updateCall.name).toBeUndefined()
       expect(updateCall.transport).toBeUndefined()
     })

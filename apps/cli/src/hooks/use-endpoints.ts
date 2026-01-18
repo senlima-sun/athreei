@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react"
 import { useApp } from "ink"
-import { getApiClient, ApiError } from "../lib/api.js"
-import { createCredentialStore } from "../auth/credentials.js"
-import type { Endpoint } from "../types/api.js"
+import { getApiClient, ApiError } from "../lib/api"
+import { createCredentialStore } from "../auth/credentials"
+import type { Endpoint } from "../types/api"
 
 interface EndpointListResponse {
   data: Endpoint[]
@@ -63,7 +63,7 @@ export function useEndpoints({
           if (exitOnError) {
             setTimeout(() => exit(), 100)
           }
-        } else if (data.data.length === 1) {
+        } else if (data.data.length === 1 && data.data[0]) {
           setSelectedEndpoint(data.data[0].id)
         }
       } catch (err) {

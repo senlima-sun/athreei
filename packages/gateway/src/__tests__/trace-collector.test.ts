@@ -2,7 +2,7 @@
  * Tests for Trace Collector
  */
 
-import { describe, it, expect, beforeEach, vi } from "vitest"
+import { describe, it, expect, beforeEach } from "vitest"
 import {
   TraceCollector,
   generateRequestId,
@@ -10,7 +10,7 @@ import {
   encryptTracePayload,
   decryptTracePayload,
 } from "../trace-collector"
-import type { ToolCallTrace, EncryptedToolCallTrace } from "../types"
+import type { ToolCallTrace } from "../types"
 
 // Generate a valid 32-byte test key using Node crypto
 function generateTestKey(): Uint8Array {
@@ -51,7 +51,7 @@ describe("TraceCollector", () => {
 
       const traces = collector.getTraces()
       expect(traces).toHaveLength(1)
-      expect(traces[0].traceId).toBe(trace.traceId)
+      expect(traces[0]!.traceId).toBe(trace.traceId)
     })
 
     it("respects maxTraces limit", () => {
@@ -64,8 +64,8 @@ describe("TraceCollector", () => {
       const traces = smallCollector.getTraces()
       expect(traces).toHaveLength(3)
       // Should keep the most recent traces
-      expect(traces[0].traceId).toBe("trace-2")
-      expect(traces[2].traceId).toBe("trace-4")
+      expect(traces[0]!.traceId).toBe("trace-2")
+      expect(traces[2]!.traceId).toBe("trace-4")
     })
   })
 
@@ -78,8 +78,8 @@ describe("TraceCollector", () => {
       const recent = collector.getRecentTraces(3)
 
       expect(recent).toHaveLength(3)
-      expect(recent[0].traceId).toBe("trace-7")
-      expect(recent[2].traceId).toBe("trace-9")
+      expect(recent[0]!.traceId).toBe("trace-7")
+      expect(recent[2]!.traceId).toBe("trace-9")
     })
 
     it("returns all traces if less than N available", () => {
@@ -155,8 +155,8 @@ describe("TraceCollector", () => {
       const failed = collector.getFailedTraces()
 
       expect(failed).toHaveLength(2)
-      expect(failed[0].error).toBe("Connection failed")
-      expect(failed[1].error).toBe("Timeout")
+      expect(failed[0]!.error).toBe("Connection failed")
+      expect(failed[1]!.error).toBe("Timeout")
     })
   })
 
@@ -458,8 +458,8 @@ describe("TraceCollector with Encryption", () => {
       const encrypted = collector.exportEncryptedTraces()
 
       expect(encrypted).toHaveLength(2)
-      expect(encrypted![0].encryptedPayload).toBeDefined()
-      expect(encrypted![1].encryptedPayload).toBeDefined()
+      expect(encrypted![0]!.encryptedPayload).toBeDefined()
+      expect(encrypted![1]!.encryptedPayload).toBeDefined()
     })
 
     it("returns null when encryption is disabled", () => {
@@ -496,8 +496,8 @@ describe("TraceCollector with Encryption", () => {
       collector.importEncryptedTraces(encrypted, testKey)
 
       expect(collector.getTraces()).toHaveLength(2)
-      expect(collector.getTraces()[0].arguments).toEqual({ id: 1 })
-      expect(collector.getTraces()[1].error).toBe("Failed")
+      expect(collector.getTraces()[0]!.arguments).toEqual({ id: 1 })
+      expect(collector.getTraces()[1]!.error).toBe("Failed")
     })
   })
 })

@@ -1,8 +1,6 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "../../configs/tsconfig/react.json",
   "compilerOptions": {
-    "outDir": "./dist",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": ["chrome", "node"]
   },
   "include": ["src/**/*"],

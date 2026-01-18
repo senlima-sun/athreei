@@ -3,11 +3,8 @@ import {
   isCloudConfig,
   tryLoadConfigSync,
 } from "@athreei/shared"
-import type { CliMode, ModeOptions } from "../types/index.js"
-import {
-  CloudModeRequiredError,
-  LocalModeRequiredError,
-} from "../errors/index.js"
+import type { CliMode, ModeOptions } from "../types/index"
+import { CloudModeRequiredError, LocalModeRequiredError } from "../errors/index"
 
 export type { CliMode, ModeOptions }
 export { CloudModeRequiredError, LocalModeRequiredError }

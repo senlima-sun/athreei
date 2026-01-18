@@ -1,6 +1,5 @@
 "use client"
 
-import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { TrackedLink } from "@/components/ui/tracked-link"
 import { ArrowRightIcon, PlayIcon, GithubIcon } from "lucide-react"

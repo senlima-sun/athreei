@@ -7,9 +7,9 @@
  */
 
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
-import { createServer } from "./server.js"
-import { startApiServer } from "./api/index.js"
-import { logger } from "./utils/logger.js"
+import { createServer } from "./server"
+import { startApiServer } from "./api/index"
+import { logger } from "./utils/logger"
 
 /**
  * Parse CLI arguments
@@ -26,7 +26,7 @@ function parseArgs() {
     const arg = args[i]
     switch (arg) {
       case "--transport":
-      case "-t":
+      case "-t": {
         const transport = args[++i]
         if (transport === "stdio" || transport === "sse") {
           config.transport = transport
@@ -37,9 +37,10 @@ function parseArgs() {
           process.exit(1)
         }
         break
+      }
       case "--port":
       case "-p":
-        config.port = parseInt(args[++i], 10)
+        config.port = parseInt(args[++i] ?? "", 10)
         if (isNaN(config.port)) {
           logger.error("Invalid port number")
           process.exit(1)
@@ -68,8 +69,9 @@ Examples:
   bun run src/index.ts -c work-claude    # Tag this instance as "work-claude"
 `)
         process.exit(0)
+        break
       default:
-        if (arg.startsWith("-")) {
+        if (arg?.startsWith("-")) {
           logger.error(`Unknown option: ${arg}`)
           process.exit(1)
         }

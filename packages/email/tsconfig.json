@@ -1,13 +1,12 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "../../configs/tsconfig/react.json",
   "compilerOptions": {
-    "outDir": "./dist",
-    "rootDir": "./src",
     "noEmit": false,
     "declaration": true,
-    "declarationDir": "./dist",
+    "declarationMap": true,
     "allowImportingTsExtensions": false,
-    "jsx": "react-jsx"
+    "rootDir": "./src",
+    "outDir": "./dist"
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

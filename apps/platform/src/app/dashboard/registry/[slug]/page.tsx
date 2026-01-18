@@ -102,7 +102,10 @@ export default function RegistryDetailPage({
 
       // Add OAuth token if provided
       if (oauthProvider && oauthToken) {
-        env[oauthProvider.envVarNames[0]] = oauthToken
+        const envVarName = oauthProvider.envVarNames[0]
+        if (envVarName) {
+          env[envVarName] = oauthToken
+        }
       }
 
       // Add custom env vars
@@ -193,7 +196,6 @@ export default function RegistryDetailPage({
         {/* Icon or initial placeholder */}
         <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-gray-100">
           {server.iconUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={server.iconUrl}
               alt={server.name}
@@ -230,7 +232,7 @@ export default function RegistryDetailPage({
         {oauthProvider ? (
           <OAuthSetupGuide
             provider={oauthProvider}
-            envVarName={oauthProvider.envVarNames[0]}
+            envVarName={oauthProvider.envVarNames[0] ?? ""}
             currentValue={oauthToken}
             onTokenChange={setOauthToken}
           />

@@ -12,9 +12,9 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js"
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js"
 import type { Tool } from "@modelcontextprotocol/sdk/types.js"
-import type { McpServerConfig, ConnectedMcp } from "./types.js"
-import { sanitizeName } from "./aggregator.js"
-import { log } from "./logger.js"
+import type { McpServerConfig, ConnectedMcp } from "./types"
+import { sanitizeName } from "./aggregator"
+import { log } from "./logger"
 
 /**
  * Connect to a single MCP server

@@ -42,7 +42,7 @@ export function findGatewayBinary(): string | null {
       encoding: "utf-8",
     })
     if (result.status === 0 && result.stdout.trim()) {
-      return result.stdout.trim().split("\n")[0]
+      return result.stdout.trim().split("\n")[0] ?? null
     }
   } catch {
     // Not found in PATH

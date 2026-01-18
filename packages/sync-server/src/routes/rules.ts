@@ -20,7 +20,7 @@ rules.use("*", authMiddleware)
 function uint8ArrayToBase64(bytes: Uint8Array): string {
   let binary = ""
   for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i])
+    binary += String.fromCharCode(bytes[i] ?? 0)
   }
   return btoa(binary)
 }
@@ -152,6 +152,9 @@ rules.post("/", zValidator("json", RuleCreateSchema), async (c) => {
       })
       .returning()
 
+    if (!created) {
+      return c.json<ErrorResponse>({ error: "Failed to create rule" }, 500)
+    }
     return c.json<RuleResponse>(ruleToResponse(created), 201)
   } catch (error) {
     const message =
@@ -199,6 +202,9 @@ rules.patch("/:id", zValidator("json", RuleUpdateSchema), async (c) => {
       .where(eq(schema.rules.id, ruleId))
       .returning()
 
+    if (!updated) {
+      return c.json<ErrorResponse>({ error: "Failed to update rule" }, 500)
+    }
     return c.json<RuleResponse>(ruleToResponse(updated), 200)
   } catch (error) {
     const message =

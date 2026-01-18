@@ -6,13 +6,9 @@
  */
 
 import { describe, it, expect, beforeEach } from "vitest"
-import { createServer } from "./server.js"
+import { createServer } from "./server"
 import { MCP_TOOL_NAMES } from "@athreei/shared"
-import {
-  getMcpContext,
-  clearMcpContext,
-  getAiAppName,
-} from "./context/index.js"
+import { getMcpContext, clearMcpContext, getAiAppName } from "./context/index"
 
 describe("MCP Server", () => {
   it("should create server successfully", () => {
@@ -21,7 +17,7 @@ describe("MCP Server", () => {
   })
 
   it("should register all browser tools", () => {
-    const server = createServer()
+    const _server = createServer()
 
     // The MCP SDK doesn't expose a way to list registered tools,
     // but we can verify by checking that tool names are valid

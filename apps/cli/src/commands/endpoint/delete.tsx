@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Box, Text, useApp, useInput } from "ink"
-import { getApiClient, ApiError } from "../../lib/api.js"
-import { ErrorDisplay } from "../../components/error.js"
-import { LoadingSpinner } from "../../components/loading-spinner.js"
-import type { Endpoint } from "../../types/api.js"
+import { getApiClient, ApiError } from "../../lib/api"
+import { ErrorDisplay } from "../../components/error"
+import { LoadingSpinner } from "../../components/loading-spinner"
+import type { Endpoint } from "../../types/api"
 
 interface EndpointResponse {
   data: Endpoint

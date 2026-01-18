@@ -181,8 +181,8 @@ describe("Registry Loader Service", () => {
       const servers = await getRegistryServers()
 
       expect(servers).toHaveLength(2)
-      expect(servers[0].slug).toBe("test-server")
-      expect(servers[1].slug).toBe("another-server")
+      expect(servers[0]!.slug).toBe("test-server")
+      expect(servers[1]!.slug).toBe("another-server")
     })
   })
 

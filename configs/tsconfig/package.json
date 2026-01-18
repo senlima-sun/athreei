@@ -1,0 +1,11 @@
+{
+  "name": "@athreei/tsconfig",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    "./base.json": "./base.json",
+    "./build.json": "./build.json",
+    "./react.json": "./react.json",
+    "./nextjs.json": "./nextjs.json"
+  }
+}

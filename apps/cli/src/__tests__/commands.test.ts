@@ -20,7 +20,7 @@ const mockCredentialStore = {
   list: vi.fn(),
 }
 
-vi.mock("../lib/api.js", () => ({
+vi.mock("../lib/api", () => ({
   getApiClient: vi.fn(() => mockApiClient),
   ApiError: class ApiError extends Error {
     constructor(
@@ -55,17 +55,17 @@ vi.mock("../lib/api.js", () => ({
   },
 }))
 
-vi.mock("../auth/credentials.js", () => ({
+vi.mock("../auth/credentials", () => ({
   createCredentialStore: vi.fn(() => mockCredentialStore),
 }))
 
 // Mock mode detection for mcp commands
-vi.mock("../index.js", () => ({
+vi.mock("../index", () => ({
   getMode: vi.fn(() => "cloud"),
 }))
 
 // Mock local config operations
-vi.mock("../lib/local-config.js", () => ({
+vi.mock("../lib/local-config", () => ({
   listLocalServers: vi.fn(() => []),
   addLocalServer: vi.fn(),
   removeLocalServer: vi.fn(),
@@ -73,7 +73,7 @@ vi.mock("../lib/local-config.js", () => ({
 }))
 
 // Mock MCP client
-vi.mock("../lib/mcp-client.js", () => ({
+vi.mock("../lib/mcp-client", () => ({
   verifyMcpServer: vi.fn(),
   listMcpTools: vi.fn(),
 }))

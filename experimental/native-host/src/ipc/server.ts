@@ -6,11 +6,7 @@
  */
 
 import { createServer, Server, Socket } from "net"
-import {
-  getSocketPath,
-  cleanupStaleSocket,
-  ensureSocketDir,
-} from "./protocol.js"
+import { getSocketPath, cleanupStaleSocket, ensureSocketDir } from "./protocol"
 
 /**
  * Connected IPC client state

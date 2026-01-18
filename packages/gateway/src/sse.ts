@@ -15,9 +15,9 @@ import {
   touchSession,
   listSessionTools,
   callSessionTool,
-} from "./session.js"
-import { log } from "./logger.js"
-import type { NamespaceConfig } from "./types.js"
+} from "./session"
+import { log } from "./logger"
+import type { NamespaceConfig } from "./types"
 
 interface McpRequest {
   jsonrpc: "2.0"

@@ -9,9 +9,9 @@ import {
   aggregateTools as coreAggregateTools,
   routeToolCall as coreRouteToolCall,
 } from "@athreei/gateway-core"
-import type { ConnectedMcp, AggregatedTool, McpServerConfig } from "./types.js"
-import { connectToAllServers, disconnectAllServers } from "./mcp-client.js"
-import { log } from "./logger.js"
+import type { ConnectedMcp, AggregatedTool, McpServerConfig } from "./types"
+import { connectToAllServers, disconnectAllServers } from "./mcp-client"
+import { log } from "./logger"
 
 export interface GatewaySession {
   id: string

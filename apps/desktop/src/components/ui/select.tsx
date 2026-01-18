@@ -87,7 +87,7 @@ interface SelectValueProps extends React.ComponentProps<
 
 function SelectValue({
   className,
-  placeholder,
+  placeholder: _placeholder,
   children,
   ...props
 }: SelectValueProps): React.ReactElement {

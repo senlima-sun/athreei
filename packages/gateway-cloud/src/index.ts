@@ -20,15 +20,15 @@ import "./instrument"
 import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { logger as honoLogger } from "hono/logger"
-import healthRoutes from "./routes/health.js"
-import sseRoutes, { configureSseRoutes } from "./routes/sse.js"
+import healthRoutes from "./routes/health"
+import sseRoutes, { configureSseRoutes } from "./routes/sse"
 import {
   configureSessionManager,
   startSessionCleanup,
   stopSessionCleanup,
   cleanupAllSessions,
-} from "./gateway/session.js"
-import { DEFAULT_CONFIG, type GatewayCloudConfig } from "./types.js"
+} from "./gateway/session"
+import { DEFAULT_CONFIG, type GatewayCloudConfig } from "./types"
 import type { Logger } from "@athreei/gateway-core"
 
 const app = new Hono()

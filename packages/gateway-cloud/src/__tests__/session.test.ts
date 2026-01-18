@@ -16,8 +16,8 @@ import {
   configureSessionManager,
   _resetForTesting,
   _getSessionsMap,
-} from "../gateway/session.js"
-import type { GatewaySession } from "../types.js"
+} from "../gateway/session"
+import type { GatewaySession as _GatewaySession } from "../types"
 
 // Mock the MCP SDK
 vi.mock("@modelcontextprotocol/sdk/client/index.js", () => ({

@@ -5,7 +5,6 @@ import { Footer } from "@/components/marketing/footer"
 import {
   ArrowRightIcon,
   BrainIcon,
-  CloudIcon,
   DownloadIcon,
   KeyIcon,
   LaptopIcon,

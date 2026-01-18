@@ -14,7 +14,7 @@ import {
   type GatewayError,
   type McpRequest,
   type McpResponse,
-} from "../types.js"
+} from "../types"
 import {
   createSession,
   getSession,
@@ -22,9 +22,9 @@ import {
   touchSession,
   listSessionTools,
   callSessionTool,
-} from "../gateway/session.js"
+} from "../gateway/session"
 import { noopLogger, type Logger } from "@athreei/gateway-core"
-import { getTraceRecorder } from "../services/trace-recorder.js"
+import { getTraceRecorder } from "../services/trace-recorder"
 
 const sse = new Hono()
 
@@ -162,9 +162,11 @@ async function handleToolsCall(
   }
 
   // Parse aggregated tool name (serverName__toolName)
-  const [serverName, toolName] = params.name.includes("__")
+  const parts = params.name.includes("__")
     ? params.name.split("__", 2)
     : ["unknown", params.name]
+  const serverName = parts[0] ?? "unknown"
+  const toolName = parts[1] ?? params.name
 
   try {
     const result = await callSessionTool(

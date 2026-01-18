@@ -42,8 +42,8 @@ export class ProcessPool {
     const pooled = this.pool.get(key)
     const available = pooled?.filter((p) => !p.inUse && !p.process.killed)
 
-    if (available && available.length > 0) {
-      const item = available[0]
+    const item = available?.[0]
+    if (item) {
       item.inUse = true
       item.lastUsed = Date.now()
       return item.process
@@ -62,7 +62,9 @@ export class ProcessPool {
 
       if ((this.generation.get(key) ?? 0) !== gen) {
         proc.kill("SIGTERM")
-        throw new Error(`Pool was drained during process creation for key: ${key}`)
+        throw new Error(
+          `Pool was drained during process creation for key: ${key}`
+        )
       }
 
       const pooledItem: PooledProcess = {

@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { Box, Text, useApp } from "ink"
-import { loadConfig, getConfigValue } from "../../lib/config-loader.js"
-import { ErrorDisplay } from "../../components/error.js"
-import { LoadingSpinner } from "../../components/loading-spinner.js"
+import { loadConfig, getConfigValue } from "../../lib/config-loader"
+import { ErrorDisplay } from "../../components/error"
+import { LoadingSpinner } from "../../components/loading-spinner"
 
 export interface ConfigGetProps {
   configKey: string

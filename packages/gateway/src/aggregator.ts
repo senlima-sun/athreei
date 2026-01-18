@@ -18,8 +18,8 @@ export {
 
 // The log import is used by other modules in the gateway package
 // that may want to use the aggregation functions with logging
-import { log } from "./logger.js"
-import type { ConnectedMcp, AggregatedTool } from "./types.js"
+import { log } from "./logger"
+import type { ConnectedMcp, AggregatedTool } from "./types"
 import { aggregateTools as coreAggregateTools } from "@athreei/gateway-core"
 
 /**

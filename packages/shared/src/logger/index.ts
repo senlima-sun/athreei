@@ -9,8 +9,8 @@ export type {
   LogEntry,
   LoggerConfig,
   LogLevel,
-} from "./types.js"
-export { LOG_LEVELS } from "./types.js"
+} from "./types"
+export { LOG_LEVELS } from "./types"
 
 // Re-export formatters
 export {
@@ -18,17 +18,17 @@ export {
   formatJson,
   formatPretty,
   getTimestamp,
-} from "./formatters.js"
+} from "./formatters"
 
 // Re-export Logger class
-export { Logger } from "./logger.js"
+export { Logger } from "./logger"
 
 // Re-export Hono middleware and types
-export { honoLogger } from "./hono-middleware.js"
-export type { HonoLoggerOptions, LoggerEnv } from "./hono-middleware.js"
+export { honoLogger } from "./hono-middleware"
+export type { HonoLoggerOptions, LoggerEnv } from "./hono-middleware"
 
-import type { LoggerConfig, LogLevel } from "./types.js"
-import { Logger } from "./logger.js"
+import type { LoggerConfig, LogLevel } from "./types"
+import { Logger } from "./logger"
 
 /**
  * Create a new logger instance with the given configuration

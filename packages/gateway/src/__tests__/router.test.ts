@@ -100,7 +100,7 @@ describe("validateToolCall", () => {
 
     // Add mock MCP
     const mcp = createMockMcp("browser", [
-      { name: "screenshot", inputSchema: {} },
+      { name: "screenshot", inputSchema: { type: "object" } },
     ])
     state.connectedMcps.set("browser", mcp)
 
@@ -159,7 +159,7 @@ describe("getRoutingInfo", () => {
     const state = createGatewayState()
 
     const mcp = createMockMcp("browser", [
-      { name: "screenshot", inputSchema: {} },
+      { name: "screenshot", inputSchema: { type: "object" } },
     ])
     state.connectedMcps.set("browser", mcp)
 

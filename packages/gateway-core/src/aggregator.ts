@@ -8,8 +8,8 @@
  * and cloud gateway implementations.
  */
 
-import type { ConnectedMcp, AggregatedTool, Logger } from "./types.js"
-import { noopLogger } from "./types.js"
+import type { ConnectedMcp, AggregatedTool, Logger } from "./types"
+import { noopLogger } from "./types"
 
 /**
  * Sanitize a server name for use as a tool prefix.

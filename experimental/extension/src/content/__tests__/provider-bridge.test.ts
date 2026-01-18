@@ -3,7 +3,7 @@
  * Tests for provider bridge
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
+import { describe, it, expect, vi, beforeEach } from "vitest"
 import { ProviderBridge, initBridge, getBridge } from "../provider-bridge"
 import type { AiiiActionBeforeDetail, AiiiClickArgs } from "@athreei/shared"
 

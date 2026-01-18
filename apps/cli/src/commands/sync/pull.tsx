@@ -1,20 +1,20 @@
-import React, { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Box, Text, useApp, useInput } from "ink"
 import SelectInput from "ink-select-input"
-import { getApiClient, ApiError } from "../../lib/api.js"
-import { createCredentialStore } from "../../auth/credentials.js"
-import { ErrorDisplay } from "../../components/error.js"
-import { LoadingSpinner } from "../../components/loading-spinner.js"
-import { loadConfig, writeConfig } from "../../lib/config-loader.js"
-import type { Config } from "../../lib/config-schema.js"
-import type { McpServer } from "../../types/index.js"
+import { getApiClient, ApiError } from "../../lib/api"
+import { createCredentialStore } from "../../auth/credentials"
+import { ErrorDisplay } from "../../components/error"
+import { LoadingSpinner } from "../../components/loading-spinner"
+import { loadConfig, writeConfig } from "../../lib/config-loader"
+import type { Config } from "../../lib/config-schema"
+import type { McpServer } from "../../types/index"
 import {
   compareConfigs,
   mergeMcpServers,
   type SyncDiffResult,
   type ServerComparison,
   type ConflictResolution,
-} from "../../lib/sync-utils.js"
+} from "../../lib/sync-utils"
 
 interface McpServerListResponse {
   data: McpServer[]
@@ -198,6 +198,7 @@ export function SyncPull(props: SyncPullProps) {
       const resolution = item.value as ConflictResolution
       const currentConflict =
         conflictState.conflicts[conflictState.currentIndex]
+      if (!currentConflict) return
 
       const newResolutions = new Map(conflictState.resolutions)
       newResolutions.set(currentConflict.name, resolution)
@@ -299,6 +300,7 @@ export function SyncPull(props: SyncPullProps) {
 
   if (phase === "resolving-conflicts" && conflictState) {
     const currentConflict = conflictState.conflicts[conflictState.currentIndex]
+    if (!currentConflict) return null
 
     return (
       <Box flexDirection="column" padding={1}>

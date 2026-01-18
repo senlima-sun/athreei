@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { Box, Text, useApp } from "ink"
-import { getApiClient, ApiError } from "../../lib/api.js"
-import { ErrorDisplay } from "../../components/error.js"
-import { LoadingSpinner } from "../../components/loading-spinner.js"
-import type { VerifyResult } from "../../types/api.js"
+import { getApiClient, ApiError } from "../../lib/api"
+import { ErrorDisplay } from "../../components/error"
+import { LoadingSpinner } from "../../components/loading-spinner"
+import type { VerifyResult } from "../../types/api"
 
 interface VerifyResponse {
   data: VerifyResult

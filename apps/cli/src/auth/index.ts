@@ -1,16 +1,13 @@
-export { AuthManager, getAuthManager, AuthSession } from "./manager.js"
-export {
+export { AuthManager, getAuthManager } from "./manager"
+export type { AuthSession } from "./manager"
+export type {
   CredentialStore,
   StoredCredentials,
   ProfileState,
-  createCredentialStore,
-} from "./credentials.js"
-export { OAuthConfig, OAuthTokens, performOAuthFlow } from "./oauth.js"
-export {
-  AuthProvider,
-  UserInfo,
-  getProvider,
-  listProviders,
-  registerProvider,
-} from "./providers/index.js"
-export { GitHubProvider } from "./providers/github.js"
+} from "./credentials"
+export { createCredentialStore } from "./credentials"
+export { performOAuthFlow } from "./oauth"
+export type { OAuthConfig, OAuthTokens } from "./oauth"
+export { getProvider, listProviders, registerProvider } from "./providers/index"
+export type { AuthProvider, UserInfo } from "./providers/index"
+export { GitHubProvider } from "./providers/github"

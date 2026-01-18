@@ -5,7 +5,7 @@
  */
 
 import { Hono } from "hono"
-import { listSessions, countSessions } from "../../db/repositories/sessions.js"
+import { listSessions, countSessions } from "../../db/repositories/sessions"
 
 export const sessionsRoutes = new Hono()
 

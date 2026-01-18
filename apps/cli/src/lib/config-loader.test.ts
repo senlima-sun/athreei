@@ -102,7 +102,7 @@ describe("setConfigValue", () => {
     ]
     const result = setConfigValue(baseConfig, "mcpServers", newServers)
     expect(result.mcpServers).toHaveLength(1)
-    expect(result.mcpServers[0].name).toBe("new-server")
+    expect(result.mcpServers?.[0]?.name).toBe("new-server")
   })
 })
 

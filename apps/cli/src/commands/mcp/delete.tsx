@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Box, Text, useApp, useInput } from "ink"
-import { getApiClient, ApiError } from "../../lib/api.js"
-import { ErrorDisplay } from "../../components/error.js"
-import { LoadingSpinner } from "../../components/loading-spinner.js"
-import type { McpServer } from "../../types/api.js"
-import type { McpServerResponse } from "./types.js"
+import { getApiClient, ApiError } from "../../lib/api"
+import { ErrorDisplay } from "../../components/error"
+import { LoadingSpinner } from "../../components/loading-spinner"
+import type { McpServer } from "../../types/api"
+import type { McpServerResponse } from "./types"
 
 type DeleteState =
   | { phase: "loading" }

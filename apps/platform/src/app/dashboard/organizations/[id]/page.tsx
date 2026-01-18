@@ -57,7 +57,7 @@ export default function OrganizationSettingsPage() {
       }
 
       setSuccess("Organization updated successfully")
-    } catch (err) {
+    } catch (_err) {
       setError("An unexpected error occurred")
     } finally {
       setIsSaving(false)
@@ -80,7 +80,7 @@ export default function OrganizationSettingsPage() {
       }
 
       router.push("/dashboard/organizations")
-    } catch (err) {
+    } catch (_err) {
       setError("An unexpected error occurred")
       setShowDeleteConfirm(false)
     } finally {

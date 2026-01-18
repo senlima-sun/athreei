@@ -421,12 +421,12 @@ async function handleGetActiveTab(
     throw new Error("No active tab found")
   }
 
-  const tab = tabs[0]
+  const tab = tabs[0]!
   return {
-    id: tab.id,
-    url: tab.url || "",
-    title: tab.title || "",
-    windowId: tab.windowId,
+    id: tab.id!,
+    url: tab.url ?? "",
+    title: tab.title ?? "",
+    windowId: tab.windowId!,
   }
 }
 
@@ -451,7 +451,7 @@ async function handleNavigate(
     if (tabs.length === 0) {
       throw new Error("No active tab found")
     }
-    targetTabId = tabs[0].id
+    targetTabId = tabs[0]!.id
   }
 
   if (!targetTabId) {
@@ -490,7 +490,7 @@ async function handleScreenshot(
     if (tabs.length === 0) {
       throw new Error("No active tab found")
     }
-    targetTabId = tabs[0].id
+    targetTabId = tabs[0]!.id
   }
 
   if (!targetTabId) {
@@ -545,7 +545,7 @@ async function forwardToContentScript(
     if (tabs.length === 0) {
       throw new Error("No active tab found")
     }
-    targetTabId = tabs[0].id
+    targetTabId = tabs[0]!.id
   }
 
   if (!targetTabId) {
@@ -623,7 +623,7 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
               active: true,
               currentWindow: true,
             })
-            return tabs.length > 0 ? tabs[0].id : undefined
+            return tabs.length > 0 ? tabs[0]!.id : undefined
           },
         }
       )
@@ -728,7 +728,7 @@ async function showPermissionDialogToUser(
     if (tabs.length === 0) {
       throw new Error("No active tab found to show permission dialog")
     }
-    targetTabId = tabs[0].id
+    targetTabId = tabs[0]!.id
   }
 
   if (!targetTabId) {

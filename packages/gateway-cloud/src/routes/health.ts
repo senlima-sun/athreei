@@ -5,8 +5,8 @@
  */
 
 import { Hono } from "hono"
-import type { HealthCheckResponse } from "../types.js"
-import { getSessionCount, getAllSessions } from "../gateway/session.js"
+import type { HealthCheckResponse } from "../types"
+import { getSessionCount, getAllSessions } from "../gateway/session"
 
 const health = new Hono()
 

@@ -15,9 +15,9 @@
 
 import { xchacha20poly1305 } from "@noble/ciphers/chacha"
 import { randomBytes } from "@noble/ciphers/webcrypto"
-import type { DerivedKey, CryptoConfig } from "./types.js"
-import { deriveKey } from "./argon2.js"
-import { DEFAULT_CRYPTO_CONFIG } from "./types.js"
+import type { DerivedKey, CryptoConfig } from "./types"
+import { deriveKey } from "./argon2"
+import { DEFAULT_CRYPTO_CONFIG } from "./types"
 
 /**
  * Trace payload containing sensitive request/response data
@@ -193,7 +193,7 @@ export function decryptTrace(
   let plaintextBytes: Uint8Array
   try {
     plaintextBytes = cipher.decrypt(ciphertext)
-  } catch (error) {
+  } catch (_error) {
     throw new Error("Decryption failed: invalid key or corrupted data")
   }
 
@@ -202,7 +202,7 @@ export function decryptTrace(
 
   try {
     return JSON.parse(plaintextJson) as TracePayload
-  } catch (error) {
+  } catch (_error) {
     throw new Error("Decryption succeeded but payload is not valid JSON")
   }
 }
@@ -270,7 +270,7 @@ export function decryptTraceFromBytes(
   let plaintextBytes: Uint8Array
   try {
     plaintextBytes = cipher.decrypt(ciphertext)
-  } catch (error) {
+  } catch (_error) {
     throw new Error("Decryption failed: invalid key or corrupted data")
   }
 
@@ -278,7 +278,7 @@ export function decryptTraceFromBytes(
 
   try {
     return JSON.parse(plaintextJson) as TracePayload
-  } catch (error) {
+  } catch (_error) {
     throw new Error("Decryption succeeded but payload is not valid JSON")
   }
 }

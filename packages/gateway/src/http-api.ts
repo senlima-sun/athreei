@@ -7,10 +7,10 @@
 
 import { Hono } from "hono"
 import { cors } from "hono/cors"
-import type { GatewayState } from "./server.js"
-import type { TraceCollector } from "./trace-collector.js"
-import type { NamespaceConfig, SkillConfig, RuleConfig } from "./types.js"
-import { log } from "./logger.js"
+import type { GatewayState } from "./server"
+import type { TraceCollector } from "./trace-collector"
+import type { NamespaceConfig } from "./types"
+import { log } from "./logger"
 
 const VERSION = "0.1.0"
 
@@ -242,7 +242,7 @@ export function createHttpApi(
           hasHeaders: !!(body.headers && Object.keys(body.headers).length > 0),
         },
       })
-    } catch (error) {
+    } catch (_error) {
       return c.json({ success: false, error: "Invalid JSON body" }, 400)
     }
   })

@@ -1,27 +1,27 @@
-export { McpList } from "./list.js"
-export type { McpListProps } from "./list.js"
+export { McpList } from "./list"
+export type { McpListProps } from "./list"
 
-export { McpDetails } from "./details.js"
-export type { McpDetailsProps } from "./details.js"
+export { McpDetails } from "./details"
+export type { McpDetailsProps } from "./details"
 
-export { McpCreate } from "./create.js"
-export type { McpCreateProps } from "./create.js"
+export { McpCreate } from "./create"
+export type { McpCreateProps } from "./create"
 
-export { McpUpdate } from "./update.js"
-export type { McpUpdateProps } from "./update.js"
+export { McpUpdate } from "./update"
+export type { McpUpdateProps } from "./update"
 
-export { McpDelete } from "./delete.js"
-export type { McpDeleteProps } from "./delete.js"
+export { McpDelete } from "./delete"
+export type { McpDeleteProps } from "./delete"
 
-export { McpVerify } from "./verify.js"
-export type { McpVerifyProps } from "./verify.js"
+export { McpVerify } from "./verify"
+export type { McpVerifyProps } from "./verify"
 
-export { McpTools } from "./tools.js"
-export type { McpToolsProps } from "./tools.js"
+export { McpTools } from "./tools"
+export type { McpToolsProps } from "./tools"
 
-export { McpEnvList, McpEnvSet, McpEnvDelete } from "./env/index.js"
+export { McpEnvList, McpEnvSet, McpEnvDelete } from "./env/index"
 export type {
   McpEnvListProps,
   McpEnvSetProps,
   McpEnvDeleteProps,
-} from "./env/index.js"
+} from "./env/index"

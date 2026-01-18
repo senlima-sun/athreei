@@ -8,9 +8,9 @@
  */
 
 // Re-export server and CLI configuration types
-export * from "./server-config.js"
-export * from "./cli-config.js"
-export * from "./skills-rules.js"
+export * from "./server-config"
+export * from "./cli-config"
+export * from "./skills-rules"
 
 export type PermissionLevel = "denied" | "allowed" | "ask"
 

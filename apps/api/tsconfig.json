@@ -1,9 +1,9 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "../../configs/tsconfig/base.json",
   "compilerOptions": {
     "types": ["bun"],
-    "outDir": "./dist",
-    "rootDir": "./src"
+    "noUnusedLocals": false,
+    "noUnusedParameters": false
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "__tests__"]

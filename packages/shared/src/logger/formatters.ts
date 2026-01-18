@@ -2,7 +2,7 @@
  * Logger output formatters
  */
 
-import type { LogEntry, LogLevel } from "./types.js"
+import type { LogEntry, LogLevel } from "./types"
 
 /**
  * ANSI color codes for terminal output

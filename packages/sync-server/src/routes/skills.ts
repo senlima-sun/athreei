@@ -20,7 +20,7 @@ skills.use("*", authMiddleware)
 function uint8ArrayToBase64(bytes: Uint8Array): string {
   let binary = ""
   for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i])
+    binary += String.fromCharCode(bytes[i] ?? 0)
   }
   return btoa(binary)
 }
@@ -148,6 +148,9 @@ skills.post("/", zValidator("json", SkillCreateSchema), async (c) => {
       })
       .returning()
 
+    if (!created) {
+      return c.json<ErrorResponse>({ error: "Failed to create skill" }, 500)
+    }
     return c.json<SkillResponse>(skillToResponse(created), 201)
   } catch (error) {
     const message =
@@ -195,6 +198,9 @@ skills.patch("/:id", zValidator("json", SkillUpdateSchema), async (c) => {
       .where(eq(schema.skills.id, skillId))
       .returning()
 
+    if (!updated) {
+      return c.json<ErrorResponse>({ error: "Failed to update skill" }, 500)
+    }
     return c.json<SkillResponse>(skillToResponse(updated), 200)
   } catch (error) {
     const message =

@@ -1,12 +1,7 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "../../configs/tsconfig/base.json",
   "compilerOptions": {
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "noEmit": true,
-    "declaration": true,
-    "declarationDir": "./dist",
-    "allowImportingTsExtensions": true
+    "types": ["bun"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

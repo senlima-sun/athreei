@@ -10,7 +10,7 @@ import type {
   TransportConnection,
   McpMessage,
   TransportStatus,
-} from "../types/transports.js"
+} from "../types/transports"
 
 interface HttpSession {
   id: string
@@ -335,7 +335,10 @@ export class StreamableHttpTransportManager {
 
           const handler = messageHandlers.get(id)
           handler?.(result)
-        } else if (contentType?.includes("text/event-stream") && response.body) {
+        } else if (
+          contentType?.includes("text/event-stream") &&
+          response.body
+        ) {
           await parseEventStream(currentSession, response.body)
         }
       },

@@ -48,7 +48,10 @@ export function checkRateLimit(
   const info: RateLimitInfo = {
     current: timestamps.length,
     limit,
-    resetIn: timestamps.length > 0 ? timestamps[0] + windowMs - now : windowMs,
+    resetIn:
+      timestamps.length > 0
+        ? (timestamps[0] ?? now) + windowMs - now
+        : windowMs,
     limited: timestamps.length >= limit,
   }
 

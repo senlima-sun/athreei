@@ -184,6 +184,10 @@ evaluations.post(
       .values(newEvaluation)
       .returning()
 
+    if (!created) {
+      throw ApiError.badRequest("Failed to create evaluation")
+    }
+
     return c.json(
       {
         data: {

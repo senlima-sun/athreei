@@ -44,7 +44,6 @@ export default function SessionsPage() {
 
   useEffect(() => {
     fetchSessions()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeOrg?.id, isOrgPending])
 
   // Handle revoke session

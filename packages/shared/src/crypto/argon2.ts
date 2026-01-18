@@ -4,8 +4,8 @@
  */
 
 import { argon2id } from "@noble/hashes/argon2"
-import type { CryptoConfig, DerivedKey } from "./types.js"
-import { DEFAULT_CRYPTO_CONFIG } from "./types.js"
+import type { CryptoConfig, DerivedKey } from "./types"
+import { DEFAULT_CRYPTO_CONFIG } from "./types"
 
 /**
  * Generate a random salt for key derivation
@@ -20,7 +20,8 @@ export function generateSalt(
     crypto.getRandomValues(salt)
   } else {
     // Fallback for Node.js environments without global crypto
-    const nodeCrypto = require("crypto")
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const nodeCrypto = require("crypto") as typeof import("crypto")
     nodeCrypto.randomFillSync(salt)
   }
 
@@ -102,7 +103,7 @@ export function verifyKeys(key1: Uint8Array, key2: Uint8Array): boolean {
 
   let result = 0
   for (let i = 0; i < key1.length; i++) {
-    result |= key1[i] ^ key2[i]
+    result |= (key1[i] ?? 0) ^ (key2[i] ?? 0)
   }
 
   return result === 0

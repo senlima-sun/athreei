@@ -117,8 +117,8 @@ describe("aggregateTools", () => {
     const result = aggregateTools(mcps)
 
     expect(result).toHaveLength(2)
-    expect(result[0].name).toBe("browser__screenshot")
-    expect(result[1].name).toBe("browser__click")
+    expect(result[0]!.name).toBe("browser__screenshot")
+    expect(result[1]!.name).toBe("browser__click")
   })
 
   it("aggregates tools from multiple MCPs", () => {
@@ -141,8 +141,8 @@ describe("aggregateTools", () => {
 
     const result = aggregateTools(mcps)
 
-    expect(result[0].originalName).toBe("screenshot")
-    expect(result[0].serverName).toBe("browser")
+    expect(result[0]!.originalName).toBe("screenshot")
+    expect(result[0]!.serverName).toBe("browser")
   })
 
   it("prefixes description with server name", () => {
@@ -154,7 +154,7 @@ describe("aggregateTools", () => {
 
     const result = aggregateTools(mcps)
 
-    expect(result[0].description).toBe("[browser] Take a screenshot")
+    expect(result[0]!.description).toBe("[browser] Take a screenshot")
   })
 
   it("handles MCPs with no tools", () => {
@@ -166,7 +166,7 @@ describe("aggregateTools", () => {
     const result = aggregateTools(mcps)
 
     expect(result).toHaveLength(1)
-    expect(result[0].name).toBe("browser__screenshot")
+    expect(result[0]!.name).toBe("browser__screenshot")
   })
 
   it("handles empty MCP list", () => {
@@ -181,8 +181,8 @@ describe("aggregateTools", () => {
 
     const result = aggregateTools(mcps)
 
-    expect(result[0].name).toBe("my_github_server__create_issue")
-    expect(result[0].serverName).toBe("my_github_server")
+    expect(result[0]!.name).toBe("my_github_server__create_issue")
+    expect(result[0]!.serverName).toBe("my_github_server")
   })
 })
 

@@ -2,7 +2,7 @@
  * Tests for Rules Sync API Routes
  */
 
-import { describe, it, expect, beforeEach } from "vitest"
+import { describe, it, expect } from "vitest"
 import {
   RuleCreateSchema,
   RuleUpdateSchema,

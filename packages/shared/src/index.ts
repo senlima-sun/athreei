@@ -3,21 +3,21 @@
  */
 
 // Re-export all types
-export * from "./types/index.js"
-export * from "./types/mcp-tools.js"
-export * from "./types/aiii-events.js"
+export * from "./types/index"
+export * from "./types/mcp-tools"
+export * from "./types/aiii-events"
 
 // Re-export crypto module
-export * from "./crypto/index.js"
+export * from "./crypto/index"
 
 // Re-export utility functions
-export * from "./utils/index.js"
+export * from "./utils/index"
 
 // Re-export schemas
-export * from "./schemas/index.js"
+export * from "./schemas/index"
 
 // Re-export logger module
-export * from "./logger/index.js"
+export * from "./logger/index"
 
 // Version info
 export const VERSION = "0.1.0"

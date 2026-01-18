@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Box, Text, useApp, useInput } from "ink"
 import SelectInput from "ink-select-input"
 import { existsSync } from "fs"
-import { defaultConfig, type Config } from "../../lib/config-schema.js"
-import { writeConfig, getDefaultConfigPath } from "../../lib/config-loader.js"
-import { ErrorDisplay } from "../../components/error.js"
-import { LoadingSpinner } from "../../components/loading-spinner.js"
-import { getApiClient } from "../../lib/api.js"
+import { defaultConfig, type Config } from "../../lib/config-schema"
+import { writeConfig, getDefaultConfigPath } from "../../lib/config-loader"
+import { ErrorDisplay } from "../../components/error"
+import { LoadingSpinner } from "../../components/loading-spinner"
+import { getApiClient } from "../../lib/api"
 
 interface OrganizationOption {
   id: string

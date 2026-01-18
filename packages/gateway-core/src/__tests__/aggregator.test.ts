@@ -10,8 +10,8 @@ import {
   findAggregatedTool,
   getToolsForServer,
   getAggregationSummary,
-} from "../aggregator.js"
-import type { ConnectedMcp, Logger } from "../types.js"
+} from "../aggregator"
+import type { ConnectedMcp, Logger } from "../types"
 import type { Tool } from "@modelcontextprotocol/sdk/types.js"
 
 // Mock MCP client

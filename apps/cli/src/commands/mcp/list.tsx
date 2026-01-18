@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { Box, Text, useApp } from "ink"
-import { getApiClient, ApiError } from "../../lib/api.js"
-import { createCredentialStore } from "../../auth/credentials.js"
-import { ErrorDisplay } from "../../components/error.js"
-import { LoadingSpinner } from "../../components/loading-spinner.js"
-import type { McpServer } from "../../types/api.js"
-import { getMode } from "../../lib/mode.js"
-import { listLocalServers } from "../../lib/local-config.js"
+import { getApiClient, ApiError } from "../../lib/api"
+import { createCredentialStore } from "../../auth/credentials"
+import { ErrorDisplay } from "../../components/error"
+import { LoadingSpinner } from "../../components/loading-spinner"
+import type { McpServer } from "../../types/api"
+import { getMode } from "../../lib/mode"
+import { listLocalServers } from "../../lib/local-config"
 import type { ServerConfig } from "@athreei/shared"
-import type { McpServerListResponse } from "./types.js"
+import type { McpServerListResponse } from "./types"
 
 export interface McpListProps {
   search?: string

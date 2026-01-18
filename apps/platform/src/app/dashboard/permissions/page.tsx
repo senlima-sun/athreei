@@ -58,7 +58,6 @@ export default function PermissionsPage() {
 
   useEffect(() => {
     fetchPermissions()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeOrg?.id, isOrgPending])
 
   // Handle edit permission

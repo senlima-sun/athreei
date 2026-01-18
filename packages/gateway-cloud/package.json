@@ -9,6 +9,7 @@
     "dev": "bun run --watch src/index.ts",
     "start": "bun run dist/index.js",
     "typecheck": "tsc --noEmit",
+    "typecheck:test": "tsc -p tsconfig.test.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"

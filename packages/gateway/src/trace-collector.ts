@@ -15,8 +15,8 @@ import type {
   EncryptedToolCallTrace,
   GatewayEvent,
   GatewayEventHandler,
-} from "./types.js"
-import { log } from "./logger.js"
+} from "./types"
+import { log } from "./logger"
 import {
   encryptTrace,
   decryptTrace,

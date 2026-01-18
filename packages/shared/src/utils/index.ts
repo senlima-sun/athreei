@@ -9,7 +9,7 @@ export {
   redactObject,
   createSecureLogger,
   type BaseLogger,
-} from "./redact.js"
+} from "./redact"
 
 // Re-export config path utilities
 export {
@@ -23,7 +23,7 @@ export {
   configExists,
   legacyConfigExists,
   configDirExists,
-} from "./config-path.js"
+} from "./config-path"
 
 // Re-export config loader utilities
 export {
@@ -38,4 +38,4 @@ export {
   loadLegacyConfigSync,
   configFileExists,
   tryLoadConfigSync,
-} from "./config-loader.js"
+} from "./config-loader"

@@ -93,7 +93,9 @@ vi.mock("../../middleware/rate-limit", () => ({
       current: timestamps.length,
       limit,
       resetIn:
-        timestamps.length > 0 ? timestamps[0] + windowMs - now : windowMs,
+        timestamps.length > 0
+          ? (timestamps[0] ?? now) + windowMs - now
+          : windowMs,
       limited: timestamps.length >= limit,
     }
 

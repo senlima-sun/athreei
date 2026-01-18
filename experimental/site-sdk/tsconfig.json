@@ -1,8 +1,7 @@
 {
-  "extends": "../../tsconfig.json",
+  "extends": "../../configs/tsconfig/base.json",
   "compilerOptions": {
-    "lib": ["ES2022", "DOM"],
-    "outDir": "./dist"
+    "lib": ["ESNext", "DOM", "DOM.Iterable"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

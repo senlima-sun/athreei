@@ -87,7 +87,7 @@ export default function EndpointDetailPage() {
       await fetchEndpoint()
 
       return { key: data.key }
-    } catch (err) {
+    } catch (_err) {
       return { error: "An unexpected error occurred" }
     }
   }
@@ -201,10 +201,7 @@ export default function EndpointDetailPage() {
 
       <div className="space-y-8">
         {/* Connection Configuration */}
-        <ConnectionConfig
-          endpointName={endpoint.name}
-          endpointSlug={endpoint.slug}
-        />
+        <ConnectionConfig endpointSlug={endpoint.slug} />
 
         {/* API Keys Section */}
         <div className="rounded-lg border border-gray-200 bg-white">

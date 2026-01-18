@@ -40,7 +40,7 @@ interface TabProps {
   onClick: () => void
 }
 
-function Tab({ id, label, icon: Icon, active, onClick }: TabProps) {
+function Tab({ id: _id, label, icon: Icon, active, onClick }: TabProps) {
   return (
     <button
       type="button"

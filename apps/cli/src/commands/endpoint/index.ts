@@ -1,11 +1,11 @@
-export { EndpointList } from "./list.js"
-export type { EndpointListProps } from "./list.js"
+export { EndpointList } from "./list"
+export type { EndpointListProps } from "./list"
 
-export { EndpointDetails } from "./details.js"
-export type { EndpointDetailsProps } from "./details.js"
+export { EndpointDetails } from "./details"
+export type { EndpointDetailsProps } from "./details"
 
-export { EndpointCreate } from "./create.js"
-export type { EndpointCreateProps } from "./create.js"
+export { EndpointCreate } from "./create"
+export type { EndpointCreateProps } from "./create"
 
-export { EndpointDelete } from "./delete.js"
-export type { EndpointDeleteProps } from "./delete.js"
+export { EndpointDelete } from "./delete"
+export type { EndpointDeleteProps } from "./delete"

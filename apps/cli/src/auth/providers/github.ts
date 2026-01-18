@@ -1,6 +1,7 @@
-import { AuthProvider, UserInfo, registerProvider } from "./index.js"
-import { OAuthConfig, OAuthTokens } from "../oauth.js"
-import { StoredCredentials } from "../credentials.js"
+import { registerProvider } from "./index"
+import type { AuthProvider, UserInfo } from "./index"
+import type { OAuthConfig, OAuthTokens } from "../oauth"
+import type { StoredCredentials } from "../credentials"
 
 export class GitHubProvider implements AuthProvider {
   name = "github"

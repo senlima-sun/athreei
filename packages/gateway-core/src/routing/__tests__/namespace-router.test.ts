@@ -3,8 +3,8 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { NamespaceRouter } from "../namespace-router.js"
-import type { TransportConnection } from "../../types/transports.js"
+import { NamespaceRouter } from "../namespace-router"
+import type { TransportConnection } from "../../types/transports"
 
 const createMockConnection = (
   id: string,

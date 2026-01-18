@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { Box, Text, useApp } from "ink"
-import { getApiClient, ApiError } from "../../lib/api.js"
-import { createCredentialStore } from "../../auth/credentials.js"
-import { ErrorDisplay } from "../../components/error.js"
-import { LoadingSpinner } from "../../components/loading-spinner.js"
-import { loadConfig } from "../../lib/config-loader.js"
-import { compareConfigs, type SyncDiffResult } from "../../lib/sync-utils.js"
-import type { McpServer } from "../../types/index.js"
+import { getApiClient, ApiError } from "../../lib/api"
+import { createCredentialStore } from "../../auth/credentials"
+import { ErrorDisplay } from "../../components/error"
+import { LoadingSpinner } from "../../components/loading-spinner"
+import { loadConfig } from "../../lib/config-loader"
+import { compareConfigs, type SyncDiffResult } from "../../lib/sync-utils"
+import type { McpServer } from "../../types/index"
 
 interface McpServerListResponse {
   data: McpServer[]

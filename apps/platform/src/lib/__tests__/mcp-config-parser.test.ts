@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { parseMcpConfig, type ParsedMcpConfig } from "../mcp-config-parser"
+import { parseMcpConfig } from "../mcp-config-parser"
 
 describe("parseMcpConfig", () => {
   it("parses Claude Desktop format", () => {
@@ -19,11 +19,11 @@ describe("parseMcpConfig", () => {
 
     expect(result.success).toBe(true)
     expect(result.servers).toHaveLength(1)
-    expect(result.servers[0].name).toBe("figma")
-    expect(result.servers[0].transport).toBe("stdio")
-    expect(result.servers[0].command).toBe("npx")
-    expect(result.servers[0].args).toEqual(["-y", "@anthropic/mcp-figma"])
-    expect(result.servers[0].envVars).toEqual([
+    expect(result.servers[0]?.name).toBe("figma")
+    expect(result.servers[0]?.transport).toBe("stdio")
+    expect(result.servers[0]?.command).toBe("npx")
+    expect(result.servers[0]?.args).toEqual(["-y", "@anthropic/mcp-figma"])
+    expect(result.servers[0]?.envVars).toEqual([
       { key: "FIGMA_ACCESS_TOKEN", value: "your-token", isSecret: true },
     ])
   })
@@ -40,8 +40,8 @@ describe("parseMcpConfig", () => {
     const result = parseMcpConfig(input)
 
     expect(result.success).toBe(true)
-    expect(result.servers[0].transport).toBe("sse")
-    expect(result.servers[0].url).toBe("https://api.example.com/mcp/sse")
+    expect(result.servers[0]?.transport).toBe("sse")
+    expect(result.servers[0]?.url).toBe("https://api.example.com/mcp/sse")
   })
 
   it("handles multiple servers", () => {
@@ -90,7 +90,7 @@ describe("parseMcpConfig", () => {
     const result = parseMcpConfig(input)
 
     expect(result.success).toBe(true)
-    const envVars = result.servers[0].envVars
+    const envVars = result.servers[0]?.envVars ?? []
     expect(envVars.find((v) => v.key === "API_KEY")?.isSecret).toBe(true)
     expect(envVars.find((v) => v.key === "DEBUG")?.isSecret).toBe(false)
     expect(envVars.find((v) => v.key === "AUTH_TOKEN")?.isSecret).toBe(true)

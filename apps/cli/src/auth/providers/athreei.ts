@@ -2,9 +2,10 @@ import * as http from "http"
 import * as url from "url"
 import * as crypto from "crypto"
 import open from "open"
-import { AuthProvider, UserInfo, registerProvider } from "./index.js"
-import { OAuthConfig, OAuthTokens } from "../oauth.js"
-import { StoredCredentials } from "../credentials.js"
+import { registerProvider } from "./index"
+import type { AuthProvider, UserInfo } from "./index"
+import type { OAuthConfig, OAuthTokens } from "../oauth"
+import type { StoredCredentials } from "../credentials"
 
 const API_URL = process.env.ATHREEI_API_URL || "http://localhost:3001"
 

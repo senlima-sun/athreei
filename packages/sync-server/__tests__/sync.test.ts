@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest"
+import { describe, it, expect } from "vitest"
 import { signJwt, verifyJwt } from "../src/middleware/auth"
 import { detectConflict } from "../src/services/conflict"
 import type { SyncItem } from "../src/db/schema"
@@ -176,15 +176,10 @@ describe("Request Validation", () => {
 
 describe("Database Schema Types", () => {
   it("should have correct ItemType values", async () => {
-    const { ItemType } = await import("../src/db/schema")
+    const _ItemType = (await import("../src/db/schema")).ItemType
 
     // TypeScript will catch if these aren't valid ItemType values
-    const validTypes: Array<typeof ItemType> = [
-      "permission",
-      "session",
-      "audit_log",
-      "settings",
-    ] as any
+    const validTypes = ["permission", "session", "audit_log", "settings"]
 
     expect(validTypes).toHaveLength(4)
   })

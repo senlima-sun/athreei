@@ -64,7 +64,7 @@ export const SENSITIVE_PATTERNS: Array<{ name: string; pattern: RegExp }> = [
   { name: "oauth-refresh-token", pattern: /refresh_token=[^&\s]+/gi },
 
   // Anthropic API keys
-  { name: "anthropic-key", pattern: /sk-ant-[A-Za-z0-9\-]+/gi },
+  { name: "anthropic-key", pattern: /sk-ant-[A-Za-z0-9-]+/gi },
 
   // Generic API key patterns (be more conservative)
   { name: "api-key-param", pattern: /api_key=[^&\s]+/gi },

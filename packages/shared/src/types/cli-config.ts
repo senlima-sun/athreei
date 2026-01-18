@@ -9,7 +9,7 @@
  */
 
 import { z } from "zod"
-import { serverConfigSchema, type ServerConfig } from "./server-config.js"
+import { serverConfigSchema, type ServerConfig } from "./server-config"
 
 /** Default Platform URL */
 export const DEFAULT_PLATFORM_URL = "https://athreei.com"

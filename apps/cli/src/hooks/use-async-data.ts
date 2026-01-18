@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react"
 import { useApp } from "ink"
-import type { ApiError } from "../lib/api.js"
+import type { ApiError } from "../lib/api"
 
 export interface UseAsyncDataOptions<T> {
   fetcher: () => Promise<T>

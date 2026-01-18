@@ -10,7 +10,7 @@ import {
   getConfigPath,
   getLegacyConfigPath,
   ensureConfigDir,
-} from "./config-path.js"
+} from "./config-path"
 import {
   athreeiConfigSchema,
   localConfigSchema,
@@ -21,7 +21,7 @@ import {
   type AthreeiConfig,
   type LocalConfig,
   type CloudConfig,
-} from "../types/cli-config.js"
+} from "../types/cli-config"
 
 /**
  * Configuration error with context
@@ -30,7 +30,7 @@ export class ConfigError extends Error {
   constructor(
     message: string,
     public readonly path?: string,
-    public readonly cause?: unknown
+    override readonly cause?: unknown
   ) {
     super(message)
     this.name = "ConfigError"

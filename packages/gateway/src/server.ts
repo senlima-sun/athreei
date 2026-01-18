@@ -11,14 +11,10 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js"
-import type {
-  AggregatedTool,
-  GatewayEventHandler,
-  ConnectedMcp,
-} from "./types.js"
+import type { AggregatedTool, GatewayEventHandler } from "./types"
 import { aggregateTools } from "@athreei/gateway-core"
-import { routeToolCall } from "./router.js"
-import { log } from "./logger.js"
+import { routeToolCall } from "./router"
+import { log } from "./logger"
 
 /**
  * Gateway state managed by the server

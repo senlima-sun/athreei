@@ -12,12 +12,12 @@ import { logger as apiLogger } from "hono/logger"
 // Initialize database (runs migrations)
 import "../db/index.js"
 
-import { statusRoutes } from "./routes/status.js"
-import { auditRoutes } from "./routes/audit.js"
-import { sessionsRoutes } from "./routes/sessions.js"
-import { permissionsRoutes } from "./routes/permissions.js"
-import { settingsRoutes } from "./routes/settings.js"
-import { logger } from "../utils/logger.js"
+import { statusRoutes } from "./routes/status"
+import { auditRoutes } from "./routes/audit"
+import { sessionsRoutes } from "./routes/sessions"
+import { permissionsRoutes } from "./routes/permissions"
+import { settingsRoutes } from "./routes/settings"
+import { logger } from "../utils/logger"
 
 const API_PORT = 3001
 

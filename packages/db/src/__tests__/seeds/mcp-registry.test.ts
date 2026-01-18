@@ -85,7 +85,7 @@ describe("MCP Registry Seed Data", () => {
       let counter = 0
       const customIdGenerator = () => `custom-id-${++counter}`
       const seedData = getMcpServerSeedData("test-org", customIdGenerator)
-      expect(seedData[0].id).toBe("custom-id-1")
+      expect(seedData[0]!.id).toBe("custom-id-1")
     })
   })
 

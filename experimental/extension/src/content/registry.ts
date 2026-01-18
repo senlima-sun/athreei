@@ -125,7 +125,7 @@ export class ToolRegistry {
   parseKey(key: string): { name: string; origin: string } | null {
     const parts = key.split("@")
     if (parts.length !== 2) return null
-    return { name: parts[0], origin: parts[1] }
+    return { name: parts[0]!, origin: parts[1]! }
   }
 }
 

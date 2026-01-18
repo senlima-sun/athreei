@@ -16,9 +16,9 @@ import type {
   ToolCallValidation,
   RoutingInfo,
   Logger,
-} from "./types.js"
-import { findAggregatedTool } from "./aggregator.js"
-import { noopLogger } from "./types.js"
+} from "./types"
+import { findAggregatedTool } from "./aggregator"
+import { noopLogger } from "./types"
 
 /**
  * Parse a prefixed tool name into server and tool components.

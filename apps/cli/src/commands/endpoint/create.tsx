@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Box, Text, useApp, useInput } from "ink"
 import SelectInput from "ink-select-input"
-import { getApiClient, ApiError } from "../../lib/api.js"
-import { createCredentialStore } from "../../auth/credentials.js"
-import { ErrorDisplay } from "../../components/error.js"
-import { LoadingSpinner } from "../../components/loading-spinner.js"
-import { getStatusColor } from "../../lib/format.js"
-import type { Endpoint, McpServer } from "../../types/api.js"
+import { getApiClient, ApiError } from "../../lib/api"
+import { createCredentialStore } from "../../auth/credentials"
+import { ErrorDisplay } from "../../components/error"
+import { LoadingSpinner } from "../../components/loading-spinner"
+import { getStatusColor } from "../../lib/format"
+import type { Endpoint, McpServer } from "../../types/api"
 
 interface McpServerListResponse {
   data: McpServer[]
@@ -87,7 +87,7 @@ function ServerSelector({
       setCursor((prev) => Math.max(0, prev - 1))
     } else if (key.downArrow) {
       setCursor((prev) => Math.min(servers.length, prev + 1))
-    } else if (input === " " && cursor < servers.length) {
+    } else if (input === " " && cursor < servers.length && servers[cursor]) {
       onToggle(servers[cursor].id)
     } else if (key.return) {
       onDone()

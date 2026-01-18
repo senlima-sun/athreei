@@ -1,8 +1,8 @@
-export { McpEnvList } from "./list.js"
-export type { McpEnvListProps } from "./list.js"
+export { McpEnvList } from "./list"
+export type { McpEnvListProps } from "./list"
 
-export { McpEnvSet } from "./set.js"
-export type { McpEnvSetProps } from "./set.js"
+export { McpEnvSet } from "./set"
+export type { McpEnvSetProps } from "./set"
 
-export { McpEnvDelete } from "./delete.js"
-export type { McpEnvDeleteProps } from "./delete.js"
+export { McpEnvDelete } from "./delete"
+export type { McpEnvDeleteProps } from "./delete"

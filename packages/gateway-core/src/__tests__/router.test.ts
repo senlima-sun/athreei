@@ -10,14 +10,14 @@ import {
   getRoutingInfo,
   isServerAvailable,
   getAvailableServers,
-} from "../router.js"
-import { sanitizeName, aggregateTools } from "../aggregator.js"
+} from "../router"
+import { sanitizeName } from "../aggregator"
 import type {
   ConnectedMcp,
   AggregatedTool,
   RouterState,
   Logger,
-} from "../types.js"
+} from "../types"
 import type { Tool } from "@modelcontextprotocol/sdk/types.js"
 
 // Mock MCP client with callTool function

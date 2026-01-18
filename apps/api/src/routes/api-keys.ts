@@ -152,7 +152,10 @@ function getPastDays(days: number): string[] {
   for (let i = 0; i < days; i++) {
     const date = new Date(now)
     date.setDate(date.getDate() - i)
-    result.push(date.toISOString().split("T")[0])
+    const dayStr = date.toISOString().split("T")[0]
+    if (dayStr) {
+      result.push(dayStr)
+    }
   }
   return result
 }

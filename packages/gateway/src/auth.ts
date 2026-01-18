@@ -4,7 +4,7 @@
  * Handles API key validation and authentication for Gateway ↔ Platform communication.
  */
 
-import { log } from "./logger.js"
+import { log } from "./logger"
 
 /** API key prefix */
 const API_KEY_PREFIX = "ak_"
@@ -81,11 +81,11 @@ export function parseAuthHeader(header: string): string | null {
   }
 
   const [scheme, token] = parts
-  if (scheme.toLowerCase() !== "bearer") {
+  if (scheme?.toLowerCase() !== "bearer") {
     return null
   }
 
-  return token
+  return token ?? null
 }
 
 /**

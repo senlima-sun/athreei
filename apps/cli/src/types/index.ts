@@ -11,6 +11,6 @@ export type {
   PaginatedResponse,
   ListResponse,
   VerifyResult,
-} from "./api.js"
+} from "./api"
 
-export type { CliMode, ModeOptions } from "./mode.js"
+export type { CliMode, ModeOptions } from "./mode"

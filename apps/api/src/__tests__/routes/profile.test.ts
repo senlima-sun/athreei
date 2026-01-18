@@ -12,7 +12,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest"
 import { Hono, type Context, type ErrorHandler } from "hono"
 import type { ContentfulStatusCode } from "hono/utils/http-status"
 
-// Error handler to properly handle thrown errors
 const testErrorHandler: ErrorHandler = (err: Error, c: Context) => {
   const statusCode =
     (err as Error & { statusCode?: ContentfulStatusCode }).statusCode || 500
@@ -22,7 +21,79 @@ const testErrorHandler: ErrorHandler = (err: Error, c: Context) => {
   )
 }
 
-// Mock modules before importing the routes
+const { mockDb, mockSchema, mockAuthContext, mockUser, mockAuth, mockPgUser } =
+  vi.hoisted(() => {
+    const mockAuthContext = {
+      userId: "user_123",
+      email: "test@example.com",
+      name: "Test User",
+      session: {
+        id: "session_123",
+        expiresAt: new Date(),
+      },
+    }
+
+    const mockUser = {
+      id: "user_123",
+      name: "Test User",
+      email: "test@example.com",
+      image: "https://example.com/avatar.png",
+      emailVerified: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }
+
+    const mockSchema = {
+      user: {
+        id: "id",
+        name: "name",
+        email: "email",
+        image: "image",
+        emailVerified: "emailVerified",
+        createdAt: "createdAt",
+        updatedAt: "updatedAt",
+      },
+    }
+
+    const mockPgUser = {
+      id: "id",
+      name: "name",
+      email: "email",
+      image: "image",
+      emailVerified: "emailVerified",
+      createdAt: "createdAt",
+      updatedAt: "updatedAt",
+    }
+
+    const mockDb = {
+      query: {
+        user: {
+          findFirst: vi.fn(),
+        },
+      },
+      update: vi.fn(() => ({
+        set: vi.fn(() => ({
+          where: vi.fn(() => Promise.resolve()),
+        })),
+      })),
+    }
+
+    const mockAuth = {
+      api: {
+        changePassword: vi.fn(),
+      },
+    }
+
+    return {
+      mockDb,
+      mockSchema,
+      mockAuthContext,
+      mockUser,
+      mockAuth,
+      mockPgUser,
+    }
+  })
+
 vi.mock("../../lib/db-operations", () => ({
   db: vi.fn(() => mockDb),
 }))
@@ -34,6 +105,7 @@ vi.mock("../../lib/auth", () => ({
 vi.mock("@athreei/db", () => ({
   detectDatabaseType: vi.fn(() => "sqlite"),
   getSchema: vi.fn(() => mockSchema),
+  user: mockPgUser,
 }))
 
 vi.mock("../../middleware", () => ({
@@ -70,7 +142,6 @@ vi.mock("../../middleware", () => ({
   },
 }))
 
-// Type for test response data
 interface ProfileResponse {
   id: string
   name: string
@@ -92,63 +163,9 @@ interface ErrorResponse {
   code?: string
 }
 
-// Mock data
-const mockAuthContext = {
-  userId: "user_123",
-  email: "test@example.com",
-  name: "Test User",
-  session: {
-    id: "session_123",
-    expiresAt: new Date(),
-  },
-}
-
-const mockUser = {
-  id: "user_123",
-  name: "Test User",
-  email: "test@example.com",
-  image: "https://example.com/avatar.png",
-  emailVerified: true,
-  createdAt: new Date(),
-  updatedAt: new Date(),
-}
-
-// Mock schema
-const mockSchema = {
-  user: {
-    id: "id",
-    name: "name",
-    email: "email",
-    image: "image",
-    emailVerified: "emailVerified",
-    createdAt: "createdAt",
-    updatedAt: "updatedAt",
-  },
-}
-
-// Mock database
-const mockDb = {
-  query: {
-    user: {
-      findFirst: vi.fn(),
-    },
-  },
-  update: vi.fn(() => ({
-    set: vi.fn(() => ({
-      where: vi.fn(() => Promise.resolve()),
-    })),
-  })),
-}
-
-// Mock auth instance
-const mockAuth = {
-  api: {
-    changePassword: vi.fn(),
-  },
-}
-
 describe("Profile Routes", () => {
   beforeEach(() => {
+    vi.resetModules()
     vi.clearAllMocks()
   })
 

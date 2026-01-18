@@ -84,13 +84,17 @@ export function setConfigValue(
 
   for (let i = 0; i < parts.length - 1; i++) {
     const part = parts[i]
+    if (part === undefined) continue
     if (!(part in current)) {
       current[part] = {}
     }
     current = current[part] as Record<string, unknown>
   }
 
-  current[parts[parts.length - 1]] = value
+  const lastPart = parts[parts.length - 1]
+  if (lastPart !== undefined) {
+    current[lastPart] = value
+  }
   return configSchema.parse(result)
 }
 

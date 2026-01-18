@@ -1,10 +1,7 @@
-import {
-  createCredentialStore,
-  CredentialStore,
-  StoredCredentials,
-} from "./credentials.js"
-import { performOAuthFlow, refreshAccessToken } from "./oauth.js"
-import { getProvider, listProviders } from "./providers/index.js"
+import { createCredentialStore } from "./credentials"
+import type { CredentialStore, StoredCredentials } from "./credentials"
+import { performOAuthFlow, refreshAccessToken } from "./oauth"
+import { getProvider, listProviders } from "./providers/index"
 
 import "./providers/github.js"
 import "./providers/athreei.js"

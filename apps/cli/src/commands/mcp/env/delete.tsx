@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { Box, Text, useApp, useInput } from "ink"
-import { getApiClient, ApiError } from "../../../lib/api.js"
-import { ErrorDisplay } from "../../../components/error.js"
-import { LoadingSpinner } from "../../../components/loading-spinner.js"
+import { getApiClient, ApiError } from "../../../lib/api"
+import { ErrorDisplay } from "../../../components/error"
+import { LoadingSpinner } from "../../../components/loading-spinner"
 
 export interface McpEnvDeleteProps {
   id: string

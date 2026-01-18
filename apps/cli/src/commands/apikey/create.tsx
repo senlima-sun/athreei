@@ -1,16 +1,16 @@
-import React, { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Box, Text, useApp } from "ink"
 import SelectInput from "ink-select-input"
-import { getApiClient, ApiError } from "../../lib/api.js"
-import { createCredentialStore } from "../../auth/credentials.js"
-import { ErrorDisplay } from "../../components/error.js"
-import { LoadingSpinner } from "../../components/loading-spinner.js"
-import { TextInput } from "../../components/text-input.js"
-import { formatDate } from "../../lib/format.js"
+import { getApiClient, ApiError } from "../../lib/api"
+import { createCredentialStore } from "../../auth/credentials"
+import { ErrorDisplay } from "../../components/error"
+import { LoadingSpinner } from "../../components/loading-spinner"
+import { TextInput } from "../../components/text-input"
+import { formatDate } from "../../lib/format"
 import type {
   ApiKeyCreate as ApiKeyCreateType,
   Endpoint,
-} from "../../types/api.js"
+} from "../../types/api"
 
 interface ApiKeyCreateResponse {
   data: ApiKeyCreateType
@@ -87,7 +87,7 @@ export function ApiKeyCreate(props: ApiKeyCreateProps) {
           return
         }
 
-        if (data.data.length === 1) {
+        if (data.data.length === 1 && data.data[0]) {
           setSelectedEndpoint(data.data[0].id)
           setPhase("input-name")
         }

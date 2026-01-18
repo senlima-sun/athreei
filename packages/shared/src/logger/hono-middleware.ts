@@ -5,8 +5,8 @@
  */
 
 import type { Context, MiddlewareHandler } from "hono"
-import type { Logger } from "./logger.js"
-import { createLogger } from "./index.js"
+import type { Logger } from "./logger"
+import { createLogger } from "./index"
 
 /**
  * Environment type extension for Hono apps using the logger middleware

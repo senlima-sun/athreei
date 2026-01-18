@@ -207,7 +207,7 @@ function htmlToMarkdown(element: HTMLElement): string {
         result.push("\n")
         break
 
-      case "ol":
+      case "ol": {
         result.push("\n")
         let index = 1
         for (const child of el.children) {
@@ -220,6 +220,7 @@ function htmlToMarkdown(element: HTMLElement): string {
         }
         result.push("\n")
         break
+      }
 
       case "li":
         // Handled by parent ul/ol

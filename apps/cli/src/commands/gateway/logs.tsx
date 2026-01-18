@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useCallback, useRef } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { Box, Text, useApp, useInput } from "ink"
 import { existsSync, readFileSync, watchFile, unwatchFile, statSync } from "fs"
-import { ErrorDisplay } from "../../components/error.js"
-import { LoadingSpinner } from "../../components/loading-spinner.js"
-import { getGatewayLogPath } from "../../lib/gateway-process.js"
+import { ErrorDisplay } from "../../components/error"
+import { LoadingSpinner } from "../../components/loading-spinner"
+import { getGatewayLogPath } from "../../lib/gateway-process"
 
 export interface GatewayLogsProps {
   follow?: boolean

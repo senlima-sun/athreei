@@ -29,7 +29,10 @@ export default function CLIAuthPage() {
   // Set default selected org when organizations load
   useEffect(() => {
     if (organizations.length > 0 && !selectedOrg) {
-      setSelectedOrg(organizations[0].id)
+      const firstOrg = organizations[0]
+      if (firstOrg) {
+        setSelectedOrg(firstOrg.id)
+      }
     }
   }, [organizations, selectedOrg])
 

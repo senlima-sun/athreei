@@ -200,7 +200,7 @@ function setFormValues(
       if (element.multiple && Array.isArray(value)) {
         // Multi-select
         for (let i = 0; i < element.options.length; i++) {
-          const option = element.options[i]
+          const option = element.options[i]!
           option.selected = value.includes(option.value)
         }
       } else {

@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Box, Text, useApp, useInput } from "ink"
 import SelectInput from "ink-select-input"
-import { getApiClient, ApiError } from "../../lib/api.js"
-import { createCredentialStore } from "../../auth/credentials.js"
-import { ErrorDisplay } from "../../components/error.js"
-import { LoadingSpinner } from "../../components/loading-spinner.js"
-import { formatDate } from "../../lib/format.js"
-import type { ApiKey, Endpoint } from "../../types/api.js"
+import { getApiClient, ApiError } from "../../lib/api"
+import { createCredentialStore } from "../../auth/credentials"
+import { ErrorDisplay } from "../../components/error"
+import { LoadingSpinner } from "../../components/loading-spinner"
+import { formatDate } from "../../lib/format"
+import type { ApiKey, Endpoint } from "../../types/api"
 
 interface ApiKeyListResponse {
   data: ApiKey[]
@@ -77,7 +77,7 @@ export function ApiKeyRevoke(props: ApiKeyRevokeProps) {
           return
         }
 
-        if (data.data.length === 1) {
+        if (data.data.length === 1 && data.data[0]) {
           setSelectedEndpoint(data.data[0].id)
           setPhase("loading")
         }

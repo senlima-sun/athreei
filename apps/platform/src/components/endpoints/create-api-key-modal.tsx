@@ -34,7 +34,7 @@ export function CreateApiKeyModal({
       // Success - the parent component will show the key created modal
       setName("")
       onClose()
-    } catch (err) {
+    } catch (_err) {
       setError("An unexpected error occurred")
     } finally {
       setIsCreating(false)

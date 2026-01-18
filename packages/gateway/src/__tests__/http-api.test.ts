@@ -12,6 +12,9 @@ import { TraceCollector } from "../trace-collector"
 import type { ConnectedMcp, AggregatedTool, ToolCallTrace } from "../types"
 import type { Tool } from "@modelcontextprotocol/sdk/types.js"
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type JsonData = any
+
 // Mock logger to suppress output during tests
 vi.mock("../logger", () => ({
   log: {
@@ -119,7 +122,7 @@ describe("HTTP API", () => {
       const res = await app.request("/api/status")
 
       expect(res.status).toBe(200)
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
 
       expect(data.status).toBe("ok")
       expect(data.version).toBeDefined()
@@ -138,7 +141,7 @@ describe("HTTP API", () => {
 
       const app = createHttpApi(mockState, traceCollector)
       const res = await app.request("/api/status")
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
 
       expect(data.servers.connected).toBe(2)
       expect(data.servers.names).toContain("browser")
@@ -154,7 +157,7 @@ describe("HTTP API", () => {
 
       const app = createHttpApi(mockState, traceCollector)
       const res = await app.request("/api/status")
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
 
       expect(data.tools.count).toBe(3)
     })
@@ -172,7 +175,7 @@ describe("HTTP API", () => {
 
       const app = createHttpApi(mockState, traceCollector)
       const res = await app.request("/api/status")
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
 
       expect(data.traces.total).toBe(3)
       expect(data.traces.successful).toBe(2)
@@ -183,7 +186,7 @@ describe("HTTP API", () => {
     it("returns zero stats when no traces", async () => {
       const app = createHttpApi(mockState, traceCollector)
       const res = await app.request("/api/status")
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
 
       expect(data.traces.total).toBe(0)
       expect(data.traces.successful).toBe(0)
@@ -198,7 +201,7 @@ describe("HTTP API", () => {
 
       const app = createHttpApi(mockState, traceCollector)
       const res = await app.request("/api/traces")
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
 
       expect(res.status).toBe(200)
       expect(data.traces).toHaveLength(2)
@@ -214,7 +217,7 @@ describe("HTTP API", () => {
 
       const app = createHttpApi(mockState, traceCollector)
       const res = await app.request("/api/traces?limit=3")
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
 
       expect(data.traces).toHaveLength(3)
       expect(data.limit).toBe(3)
@@ -233,7 +236,7 @@ describe("HTTP API", () => {
 
       const app = createHttpApi(mockState, traceCollector)
       const res = await app.request("/api/traces?limit=3&offset=5")
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
 
       expect(data.traces).toHaveLength(3)
       expect(data.offset).toBe(5)
@@ -248,7 +251,7 @@ describe("HTTP API", () => {
 
       const app = createHttpApi(mockState, traceCollector)
       const res = await app.request("/api/traces?status=success")
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
 
       expect(data.traces).toHaveLength(2)
       expect(
@@ -268,7 +271,7 @@ describe("HTTP API", () => {
 
       const app = createHttpApi(mockState, traceCollector)
       const res = await app.request("/api/traces?status=error")
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
 
       expect(data.traces).toHaveLength(2)
       expect(
@@ -285,7 +288,7 @@ describe("HTTP API", () => {
 
       const app = createHttpApi(mockState, traceCollector)
       const res = await app.request("/api/traces?status=invalid")
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
 
       // Should return all traces when status is invalid
       expect(data.traces).toHaveLength(2)
@@ -314,7 +317,7 @@ describe("HTTP API", () => {
 
       const app = createHttpApi(mockState, traceCollector)
       const res = await app.request("/api/traces?search=screenshot")
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
 
       expect(data.traces).toHaveLength(1)
       expect(data.traces[0].toolName).toBe("screenshot")
@@ -346,7 +349,7 @@ describe("HTTP API", () => {
 
       const app = createHttpApi(mockState, traceCollector)
       const res = await app.request("/api/traces?search=github")
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
 
       expect(data.traces).toHaveLength(1)
       expect(data.total).toBe(1)
@@ -359,7 +362,7 @@ describe("HTTP API", () => {
 
       const app = createHttpApi(mockState, traceCollector)
       const res = await app.request("/api/traces?search=BROWSER")
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
 
       expect(data.traces).toHaveLength(1)
     })
@@ -393,7 +396,7 @@ describe("HTTP API", () => {
 
       const app = createHttpApi(mockState, traceCollector)
       const res = await app.request("/api/traces?status=success&search=figma")
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
 
       expect(data.traces).toHaveLength(1)
       expect(data.traces[0].serverName).toBe("figma")
@@ -406,7 +409,7 @@ describe("HTTP API", () => {
 
       const app = createHttpApi(mockState, traceCollector)
       const res = await app.request("/api/traces?search=nonexistent")
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
 
       expect(data.traces).toHaveLength(0)
       expect(data.total).toBe(0)
@@ -419,7 +422,7 @@ describe("HTTP API", () => {
 
       const app = createHttpApi(mockState, traceCollector)
       const res = await app.request("/api/traces?limit=10&offset=0")
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
 
       expect(data.traces).toHaveLength(10)
       expect(data.total).toBe(100)
@@ -436,7 +439,7 @@ describe("HTTP API", () => {
       const res = await app.request(`/api/traces/${traceId}`)
 
       expect(res.status).toBe(200)
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
       expect(data.traceId).toBe(traceId)
     })
 
@@ -457,7 +460,7 @@ describe("HTTP API", () => {
 
       const app = createHttpApi(mockState, traceCollector)
       const res = await app.request(`/api/traces/${traceId}`)
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
 
       expect(data.traceId).toBe(traceId)
       expect(data.requestId).toBe("req-123")
@@ -477,7 +480,7 @@ describe("HTTP API", () => {
       const res = await app.request("/api/traces/non-existent-id")
 
       expect(res.status).toBe(404)
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
       expect(data.error).toBe("Trace not found")
     })
 
@@ -501,7 +504,7 @@ describe("HTTP API", () => {
       const res = await app.request("/api/servers")
 
       expect(res.status).toBe(200)
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
 
       expect(data.servers).toHaveLength(2)
       expect(data.total).toBe(2)
@@ -513,7 +516,7 @@ describe("HTTP API", () => {
 
       const app = createHttpApi(mockState, traceCollector)
       const res = await app.request("/api/servers")
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
 
       const server = data.servers[0]
       expect(server.name).toBe("browser")
@@ -533,7 +536,7 @@ describe("HTTP API", () => {
 
       const app = createHttpApi(mockState, traceCollector)
       const res = await app.request("/api/servers")
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
 
       expect(data.servers[0].toolCount).toBe(3)
     })
@@ -547,7 +550,7 @@ describe("HTTP API", () => {
 
       const app = createHttpApi(mockState, traceCollector)
       const res = await app.request("/api/servers")
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
 
       const tools = data.servers[0].tools
       expect(tools).toHaveLength(2)
@@ -560,7 +563,7 @@ describe("HTTP API", () => {
     it("returns empty array when no servers connected", async () => {
       const app = createHttpApi(mockState, traceCollector)
       const res = await app.request("/api/servers")
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
 
       expect(data.servers).toHaveLength(0)
       expect(data.total).toBe(0)
@@ -584,7 +587,7 @@ describe("HTTP API", () => {
 
       const app = createHttpApi(mockState, traceCollector)
       const res = await app.request("/api/servers")
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
 
       expect(data.servers[0].transport).toBe("sse")
       expect(data.servers[0].url).toBe("https://api.example.com/mcp")
@@ -603,7 +606,7 @@ describe("HTTP API", () => {
       const res = await app.request("/api/tools")
 
       expect(res.status).toBe(200)
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
 
       expect(data.tools).toHaveLength(3)
       expect(data.total).toBe(3)
@@ -616,7 +619,7 @@ describe("HTTP API", () => {
 
       const app = createHttpApi(mockState, traceCollector)
       const res = await app.request("/api/tools")
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
 
       const tool = data.tools[0]
       expect(tool.name).toBe("browser__screenshot")
@@ -640,7 +643,7 @@ describe("HTTP API", () => {
 
       const app = createHttpApi(mockState, traceCollector)
       const res = await app.request("/api/tools")
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
 
       expect(data.tools[0].description).toBe(
         "[browser] Take a screenshot of the page"
@@ -656,7 +659,7 @@ describe("HTTP API", () => {
     it("returns empty array when no tools available", async () => {
       const app = createHttpApi(mockState, traceCollector)
       const res = await app.request("/api/tools")
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
 
       expect(data.tools).toHaveLength(0)
       expect(data.total).toBe(0)
@@ -671,7 +674,7 @@ describe("HTTP API", () => {
 
       const app = createHttpApi(mockState, traceCollector)
       const res = await app.request("/api/tools")
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
 
       const serverNames = data.tools.map((t: AggregatedTool) => t.serverName)
       expect(serverNames).toContain("browser")
@@ -751,7 +754,7 @@ describe("HTTP API", () => {
       const res = await app.request("/api/servers/nonexistent/test")
 
       expect(res.status).toBe(404)
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
       expect(data.success).toBe(false)
       expect(data.error).toContain("not found")
       expect(data.availableServers).toEqual(["filesystem"])
@@ -768,7 +771,7 @@ describe("HTTP API", () => {
       const res = await app.request("/api/servers/filesystem/test")
 
       expect(res.status).toBe(200)
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
       expect(data.success).toBe(true)
       expect(data.server).toBe("filesystem")
       expect(data.tools).toBe(2)
@@ -787,7 +790,7 @@ describe("HTTP API", () => {
       const res = await app.request("/api/servers/failing-server/test")
 
       expect(res.status).toBe(500)
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
       expect(data.success).toBe(false)
       expect(data.error).toBe("Connection lost")
     })
@@ -808,7 +811,7 @@ describe("HTTP API", () => {
       })
 
       expect(res.status).toBe(200)
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
       expect(data.success).toBe(true)
       expect(data.config.name).toBe("test-server")
       expect(data.config.transport).toBe("stdio")
@@ -828,7 +831,7 @@ describe("HTTP API", () => {
       })
 
       expect(res.status).toBe(200)
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
       expect(data.success).toBe(true)
       expect(data.config.hasHeaders).toBe(true)
     })
@@ -842,7 +845,7 @@ describe("HTTP API", () => {
       })
 
       expect(res.status).toBe(400)
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
       expect(data.error).toContain("name")
     })
 
@@ -855,7 +858,7 @@ describe("HTTP API", () => {
       })
 
       expect(res.status).toBe(400)
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
       expect(data.error).toContain("command")
     })
 
@@ -868,7 +871,7 @@ describe("HTTP API", () => {
       })
 
       expect(res.status).toBe(400)
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
       expect(data.error).toContain("url")
     })
 
@@ -885,7 +888,7 @@ describe("HTTP API", () => {
       })
 
       expect(res.status).toBe(400)
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
       expect(data.error).toContain("URL")
     })
 
@@ -898,7 +901,7 @@ describe("HTTP API", () => {
       })
 
       expect(res.status).toBe(400)
-      const data = await res.json()
+      const data = (await res.json()) as JsonData
       expect(data.error).toContain("Unknown transport")
     })
 

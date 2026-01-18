@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { Box, Text, useApp } from "ink"
-import { ErrorDisplay } from "../../components/error.js"
-import { LoadingSpinner } from "../../components/loading-spinner.js"
-import { loadConfig } from "../../lib/config-loader.js"
+import { ErrorDisplay } from "../../components/error"
+import { LoadingSpinner } from "../../components/loading-spinner"
+import { loadConfig } from "../../lib/config-loader"
 import {
   isGatewayRunning,
   getProcessStartTime,
   formatUptime,
-} from "../../lib/gateway-process.js"
+} from "../../lib/gateway-process"
 
 export interface GatewayStatusProps {
   json?: boolean

@@ -23,7 +23,7 @@ import {
   decryptTraceBatch,
   type TracePayload,
   type EncryptedTrace,
-} from "../trace-encryption.js"
+} from "../trace-encryption"
 import { randomBytes } from "@noble/ciphers/webcrypto"
 
 // Generate a valid 32-byte test key

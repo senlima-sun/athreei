@@ -154,6 +154,10 @@ skills.post(
 
     const [created] = await db().insert(skill).values(newSkill).returning()
 
+    if (!created) {
+      throw ApiError.badRequest("Failed to create skill")
+    }
+
     return c.json(
       {
         skill: {
@@ -228,6 +232,10 @@ skills.patch("/:id", zValidator("json", updateSkillSchema), async (c) => {
     .set(updateData)
     .where(eq(skill.id, id))
     .returning()
+
+  if (!updated) {
+    throw ApiError.notFound("Skill not found")
+  }
 
   return c.json({
     skill: {

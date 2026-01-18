@@ -273,7 +273,7 @@ describe("Audit Routes", () => {
 
       expect(response.status).toBe(200)
       expect(data.entries).toHaveLength(1)
-      expect(data.entries[0].action).toBe("mcp_server.created")
+      expect(data.entries[0]!.action).toBe("mcp_server.created")
     })
 
     it("should filter by actorId", async () => {
@@ -464,7 +464,7 @@ describe("Audit Routes", () => {
       const data = (await response.json()) as ListAuditResponse
 
       expect(response.status).toBe(200)
-      expect(data.entries[0].metadata).toEqual({ name: "Test Server" })
+      expect(data.entries[0]!.metadata).toEqual({ name: "Test Server" })
     })
 
     it("should handle null metadata gracefully", async () => {
@@ -495,7 +495,7 @@ describe("Audit Routes", () => {
       const data = (await response.json()) as ListAuditResponse
 
       expect(response.status).toBe(200)
-      expect(data.entries[0].metadata).toBeNull()
+      expect(data.entries[0]!.metadata).toBeNull()
     })
 
     it("should return 400 for missing organizationId", async () => {

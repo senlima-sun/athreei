@@ -3,11 +3,11 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
-import { StreamableHttpTransportManager } from "../streamable-http-manager.js"
+import { StreamableHttpTransportManager } from "../streamable-http-manager"
 import type {
   StreamableHttpTransportConfig,
   McpMessage,
-} from "../../types/transports.js"
+} from "../../types/transports"
 
 const createMockResponse = (
   options: {

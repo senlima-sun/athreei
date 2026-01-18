@@ -11,14 +11,12 @@ interface NamespaceFormProps {
   }
   onSubmit: (data: { name: string; description?: string }) => Promise<void>
   submitLabel?: string
-  isEdit?: boolean
 }
 
 export function NamespaceForm({
   initialData,
   onSubmit,
   submitLabel = "Create namespace",
-  isEdit = false,
 }: NamespaceFormProps) {
   const [name, setName] = useState(initialData?.name || "")
   const [description, setDescription] = useState(initialData?.description || "")

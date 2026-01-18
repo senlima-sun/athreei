@@ -28,38 +28,30 @@ import {
   refreshAggregatedTools,
   addEventHandler,
   type GatewayState,
-} from "./server.js"
-import {
-  loadConfig,
-  loadLocalConfig,
-  ConfigSyncManager,
-} from "./config-sync.js"
-import { connectToAllServers, disconnectAllServers } from "./mcp-client.js"
-import { TraceCollector } from "./trace-collector.js"
-import { TraceSyncClient, createTraceSyncClient } from "./trace-sync.js"
-import { log, setLogLevel } from "./logger.js"
-import type { NamespaceConfig, GatewayConfig } from "./types.js"
+} from "./server"
+import { loadConfig, loadLocalConfig, ConfigSyncManager } from "./config-sync"
+import { connectToAllServers, disconnectAllServers } from "./mcp-client"
+import { TraceCollector } from "./trace-collector"
+import { TraceSyncClient, createTraceSyncClient } from "./trace-sync"
+import { log, setLogLevel } from "./logger"
+import type { NamespaceConfig, GatewayConfig } from "./types"
 import {
   createSseApp,
   setNamespaceConfig as setSseNamespaceConfig,
-} from "./sse.js"
+} from "./sse"
 import {
   startSessionCleanup,
   stopSessionCleanup,
   cleanupAllSessions,
-} from "./session.js"
-import { startHttpApiServer, setHttpApiNamespaceConfig } from "./http-api.js"
+} from "./session"
+import { startHttpApiServer, setHttpApiNamespaceConfig } from "./http-api"
 
 // Re-export for library use
-export { TraceCollector } from "./trace-collector.js"
-export { TraceSyncClient, createTraceSyncClient } from "./trace-sync.js"
-export { log, setLogLevel } from "./logger.js"
-export * from "./types.js"
-export {
-  loadConfig,
-  loadLocalConfig,
-  ConfigSyncManager,
-} from "./config-sync.js"
+export { TraceCollector } from "./trace-collector"
+export { TraceSyncClient, createTraceSyncClient } from "./trace-sync"
+export { log, setLogLevel } from "./logger"
+export * from "./types"
+export { loadConfig, loadLocalConfig, ConfigSyncManager } from "./config-sync"
 export {
   loadSkillFromFile,
   loadRuleFromFile,
@@ -67,7 +59,7 @@ export {
   loadRulesFromDirectory,
   exportSkillToMarkdown,
   exportRuleToMarkdown,
-} from "./skill-file-loader.js"
+} from "./skill-file-loader"
 
 interface CliArgs {
   configPath?: string
@@ -104,7 +96,7 @@ function parseArgs(): CliArgs {
         break
 
       case "--transport":
-      case "-t":
+      case "-t": {
         const transport = args[++i]
         if (transport === "stdio" || transport === "sse") {
           config.transport = transport
@@ -113,23 +105,28 @@ function parseArgs(): CliArgs {
           process.exit(1)
         }
         break
+      }
 
       case "--port":
-      case "-p":
-        config.port = parseInt(args[++i], 10)
+      case "-p": {
+        const portArg = args[++i]
+        config.port = parseInt(portArg ?? "", 10)
         if (isNaN(config.port)) {
           log.error("Invalid port number")
           process.exit(1)
         }
         break
+      }
 
-      case "--api-port":
-        config.apiPort = parseInt(args[++i], 10)
+      case "--api-port": {
+        const apiPortArg = args[++i]
+        config.apiPort = parseInt(apiPortArg ?? "", 10)
         if (isNaN(config.apiPort)) {
           log.error("Invalid API port number")
           process.exit(1)
         }
         break
+      }
 
       case "--debug":
       case "-d":
@@ -157,7 +154,7 @@ function parseArgs(): CliArgs {
         break
 
       default:
-        if (arg.startsWith("-")) {
+        if (arg?.startsWith("-")) {
           log.error(`Unknown option: ${arg}`)
           process.exit(1)
         }

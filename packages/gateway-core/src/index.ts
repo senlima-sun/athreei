@@ -17,9 +17,9 @@ export type {
   ToolCallValidation,
   RoutingInfo,
   Logger,
-} from "./types.js"
+} from "./types"
 
-export { noopLogger } from "./types.js"
+export { noopLogger } from "./types"
 
 // Re-export aggregator functions
 export {
@@ -30,7 +30,7 @@ export {
   getToolsForServer,
   getAggregationSummary,
   type AggregateToolsOptions,
-} from "./aggregator.js"
+} from "./aggregator"
 
 // Re-export router functions
 export {
@@ -41,7 +41,7 @@ export {
   isServerAvailable,
   getAvailableServers,
   type RouteToolCallOptions,
-} from "./router.js"
+} from "./router"
 
 // Transport types
 export type {
@@ -53,21 +53,21 @@ export type {
   TransportStatus,
   TransportConnection,
   TransportEvents,
-} from "./types/transports.js"
+} from "./types/transports"
 
 // Transport managers
-export { StdioTransportManager } from "./transports/stdio-manager.js"
-export { StreamableHttpTransportManager } from "./transports/streamable-http-manager.js"
+export { StdioTransportManager } from "./transports/stdio-manager"
+export { StreamableHttpTransportManager } from "./transports/streamable-http-manager"
 export {
   TransportFactory,
   transportFactory,
-} from "./transports/transport-factory.js"
-export { ProcessPool, type PoolConfig } from "./transports/process-pool.js"
+} from "./transports/transport-factory"
+export { ProcessPool, type PoolConfig } from "./transports/process-pool"
 export {
   ConnectionHealthChecker,
   type HealthCheckResult,
   type HealthCheckConfig,
-} from "./transports/health-check.js"
+} from "./transports/health-check"
 
 // Routing
 export {
@@ -75,4 +75,4 @@ export {
   type Tool as NamespaceTool,
   type NamespaceRoute,
   type NamespacedTool,
-} from "./routing/namespace-router.js"
+} from "./routing/namespace-router"

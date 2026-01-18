@@ -1,7 +1,7 @@
 /**
  * Tests for the database client module
  */
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
+import { describe, it, expect, beforeEach, afterEach } from "vitest"
 import { detectDatabaseType, createClient, getDb, resetDb } from "../client"
 
 describe("client", () => {

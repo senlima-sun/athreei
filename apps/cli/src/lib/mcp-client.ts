@@ -1,4 +1,4 @@
-import { Client } from "@modelcontextprotocol/sdk/client/index.js"
+import { Client } from "@modelcontextprotocol/sdk/client"
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js"
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import {
@@ -7,7 +7,7 @@ import {
   type ServerConfig,
   type ServerVerifyResult,
 } from "@athreei/shared"
-import { DEFAULT_MCP_TIMEOUT, CLIENT_INFO } from "../constants/index.js"
+import { DEFAULT_MCP_TIMEOUT, CLIENT_INFO } from "../constants/index"
 
 export interface McpTool {
   name: string

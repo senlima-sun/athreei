@@ -110,7 +110,6 @@ export default function OrganizationMembersPage() {
 
   useEffect(() => {
     loadMembers()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orgId])
 
   const handleInvite = async (e: React.FormEvent) => {
@@ -134,7 +133,7 @@ export default function OrganizationMembersPage() {
       setShowInviteModal(false)
       setInviteEmail("")
       setInviteRole("member")
-    } catch (err) {
+    } catch (_err) {
       setError("An unexpected error occurred")
     } finally {
       setIsInviting(false)
@@ -389,7 +388,8 @@ export default function OrganizationMembersPage() {
                     />
                   ) : (
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-sm font-medium text-gray-600">
-                      {(member.user.name || member.user.email)[0].toUpperCase()}
+                      {(member.user.name ??
+                        member.user.email)[0]?.toUpperCase() ?? "?"}
                     </div>
                   )}
                   <div>

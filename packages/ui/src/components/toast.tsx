@@ -62,7 +62,7 @@ export function Toast({
   )
 }
 
-export interface ToastViewportProps extends React.HTMLAttributes<HTMLDivElement> {}
+export type ToastViewportProps = React.HTMLAttributes<HTMLDivElement>
 
 export function ToastViewport({ className, ...props }: ToastViewportProps) {
   return (

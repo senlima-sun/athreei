@@ -1,5 +1,5 @@
-import { OAuthConfig, OAuthTokens } from "../oauth.js"
-import { StoredCredentials } from "../credentials.js"
+import type { OAuthConfig, OAuthTokens } from "../oauth"
+import type { StoredCredentials } from "../credentials"
 
 export interface UserInfo {
   id: string

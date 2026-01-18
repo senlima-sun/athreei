@@ -1,17 +1,17 @@
 import { describe, it, expect } from "vitest"
-import type { Permission, AuditLogEntry, Session } from "./index.js"
-import type { BrowserListTabsOutput, ElementInfo } from "./mcp-tools.js"
-import type { AiiiRegisterEvent, AiiiRequestEvent } from "./aiii-events.js"
+import type { Permission, AuditLogEntry, Session } from "./index"
+import type { BrowserListTabsOutput, ElementInfo } from "./mcp-tools"
+import type { AiiiRegisterEvent, AiiiRequestEvent } from "./aiii-events"
 import {
   BrowserClickInputSchema,
   BrowserNavigateInputSchema,
   MCP_TOOL_NAMES,
-} from "./mcp-tools.js"
+} from "./mcp-tools"
 import {
   AiiiRegisterEventSchema,
   AiiiRequestEventSchema,
   AIII_EVENT_NAMES,
-} from "./aiii-events.js"
+} from "./aiii-events"
 
 describe("core types", () => {
   it("should allow creating a valid Permission object", () => {

@@ -21,7 +21,7 @@ function getDayLabel(date: Date): string {
   const dayIndex = date.getDay()
   // Convert Sunday (0) to 6, Monday (1) to 0, etc.
   const adjustedIndex = dayIndex === 0 ? 6 : dayIndex - 1
-  return DAY_LABELS[adjustedIndex]
+  return DAY_LABELS[adjustedIndex] ?? ""
 }
 
 /**

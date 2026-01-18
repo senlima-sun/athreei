@@ -1,6 +1,5 @@
-import React from "react"
 import { Box, Text } from "ink"
-import { ApiError, AuthError, RateLimitError } from "../lib/api.js"
+import { ApiError, AuthError, RateLimitError } from "../lib/api"
 
 interface ErrorDisplayProps {
   error: Error | ApiError

@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { Box, Text, useApp } from "ink"
-import { ErrorDisplay } from "../../../components/error.js"
-import { LoadingSpinner } from "../../../components/loading-spinner.js"
-import { loadConfig } from "../../../lib/config-loader.js"
-import type { Config } from "../../../lib/config-schema.js"
+import { ErrorDisplay } from "../../../components/error"
+import { LoadingSpinner } from "../../../components/loading-spinner"
+import { loadConfig } from "../../../lib/config-loader"
+import type { Config } from "../../../lib/config-schema"
 
 export function GatewayConfigShow() {
   const { exit } = useApp()

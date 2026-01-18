@@ -5,10 +5,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
-import type {
-  StdioTransportConfig,
-  McpMessage,
-} from "../../types/transports.js"
+import type { StdioTransportConfig, McpMessage } from "../../types/transports"
 
 function createMockReadableStream(
   data: string[] = []

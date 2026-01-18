@@ -8,7 +8,7 @@ import { describe, it, expect, beforeEach } from "vitest"
 import { Database } from "bun:sqlite"
 import { runMigrations } from "./migrations"
 import { createPermissionsRepository } from "./repositories/permissions-factory"
-import type { PermissionLevel, AuditStatus } from "@athreei/shared"
+import type { PermissionLevel } from "@athreei/shared"
 
 // We'll use the actual repositories for audit log and sessions since they're simpler
 // In a full implementation, we'd create factories for these too

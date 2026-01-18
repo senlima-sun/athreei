@@ -5,7 +5,7 @@
  * and tracking response latency.
  */
 
-import type { TransportConnection, McpMessage } from "../types/transports.js"
+import type { TransportConnection, McpMessage } from "../types/transports"
 
 export interface HealthCheckResult {
   healthy: boolean
@@ -59,7 +59,9 @@ export class ConnectionHealthChecker {
             reject(new Error("Health check timeout"))
           }, this.config.timeout)
 
-          originalHandler = (connection as { _messageHandler?: (msg: McpMessage) => void })._messageHandler ?? null
+          originalHandler =
+            (connection as { _messageHandler?: (msg: McpMessage) => void })
+              ._messageHandler ?? null
           connection.onMessage((msg: McpMessage) => {
             if (msg.id === pingId) {
               if (timeoutId) clearTimeout(timeoutId)
@@ -116,9 +118,7 @@ export class ConnectionHealthChecker {
    * Sends a ping and validates only that the send path works.
    * Does NOT wait for a pong response. Use check() for full round-trip validation.
    */
-  async sendPing(
-    connection: TransportConnection
-  ): Promise<HealthCheckResult> {
+  async sendPing(connection: TransportConnection): Promise<HealthCheckResult> {
     const start = Date.now()
     const previousResult = this.results.get(connection.id)
 

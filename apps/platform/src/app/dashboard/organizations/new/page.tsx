@@ -59,7 +59,7 @@ export default function NewOrganizationPage() {
       }
 
       router.push("/dashboard/organizations")
-    } catch (err) {
+    } catch (_err) {
       setError("An unexpected error occurred")
     } finally {
       setIsSubmitting(false)

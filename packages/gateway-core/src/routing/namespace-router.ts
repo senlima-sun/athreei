@@ -5,7 +5,7 @@
  * Manages the mapping between namespaced tool names and their connections.
  */
 
-import type { TransportConnection } from "../types/transports.js"
+import type { TransportConnection } from "../types/transports"
 
 export interface Tool {
   name: string

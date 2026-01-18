@@ -16,6 +16,10 @@ export default defineConfig({
       "packages/mcp-server/src/server.test.ts",
       "packages/gateway/src/__tests__/trace-collector.test.ts",
       "packages/gateway/src/__tests__/trace-sync.test.ts",
+      // Exclude desktop reference folder (requires external daemon)
+      "apps/desktop/reference/**/*.test.ts",
+      // Exclude integration tests that require running services
+      "**/__tests__/integration.test.ts",
     ],
     environmentMatchGlobs: [
       // Use jsdom for extension tests (browser environment)

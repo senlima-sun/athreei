@@ -9,7 +9,7 @@ import type { AuditStatus } from "@athreei/shared"
 import {
   listAuditLogEntries,
   countAuditLogEntries,
-} from "../../db/repositories/audit-log.js"
+} from "../../db/repositories/audit-log"
 
 export const auditRoutes = new Hono()
 

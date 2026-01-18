@@ -162,7 +162,7 @@ function getHeadingLevel(element: Element): number | undefined {
   }
 
   if (tagName.match(/^h[1-6]$/)) {
-    return parseInt(tagName[1], 10)
+    return parseInt(tagName[1]!, 10)
   }
 
   return undefined

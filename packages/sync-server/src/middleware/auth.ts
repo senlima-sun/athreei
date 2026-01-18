@@ -1,4 +1,4 @@
-import { Context, Next } from "hono"
+import type { Context, Next } from "hono"
 import type { JwtPayload, AuthContext } from "../types"
 
 function getJwtSecret(): string {
@@ -109,7 +109,7 @@ export async function verifyJwt(token: string): Promise<JwtPayload | null> {
     }
 
     return payload
-  } catch (error) {
+  } catch (_error) {
     return null
   }
 }

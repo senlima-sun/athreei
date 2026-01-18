@@ -1,16 +1,16 @@
-import React, { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Box, Text, useApp } from "ink"
 import SelectInput from "ink-select-input"
-import { getApiClient, ApiError } from "../../lib/api.js"
-import { createCredentialStore } from "../../auth/credentials.js"
-import { ErrorDisplay } from "../../components/error.js"
-import { LoadingSpinner } from "../../components/loading-spinner.js"
-import { TextInput } from "../../components/text-input.js"
+import { getApiClient, ApiError } from "../../lib/api"
+import { createCredentialStore } from "../../auth/credentials"
+import { ErrorDisplay } from "../../components/error"
+import { LoadingSpinner } from "../../components/loading-spinner"
+import { TextInput } from "../../components/text-input"
 import type {
   TransportType,
   CreateMcpServerRequest,
   CreateMcpServerResponse,
-} from "./types.js"
+} from "./types"
 
 export interface McpCreateProps {
   name?: string

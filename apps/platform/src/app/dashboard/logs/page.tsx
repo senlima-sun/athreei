@@ -15,9 +15,6 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
 } from "lucide-react"
 import type { AuditLogEntry, AuditLogsResponse, AuditStatus } from "@/types"
 
@@ -81,19 +78,6 @@ export default function LogsPage() {
 
   // Get unique tools for filter dropdown
   const uniqueTools = Array.from(new Set(logs.map((log) => log.tool)))
-
-  const getStatusIcon = (status: AuditStatus) => {
-    switch (status) {
-      case "success":
-        return <CheckCircle className="h-5 w-5 text-green-500" />
-      case "denied":
-        return <AlertCircle className="h-5 w-5 text-yellow-500" />
-      case "error":
-        return <XCircle className="h-5 w-5 text-red-500" />
-      default:
-        return null
-    }
-  }
 
   const getStatusBadge = (status: AuditStatus) => {
     const styles = {

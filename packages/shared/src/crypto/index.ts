@@ -28,12 +28,12 @@ export type {
   EncryptedData,
   DerivedKey,
   KeyRotationOptions,
-} from "./types.js"
+} from "./types"
 
-export { DEFAULT_CRYPTO_CONFIG } from "./types.js"
+export { DEFAULT_CRYPTO_CONFIG } from "./types"
 
 // Export key derivation functions
-export { deriveKey, reDeriveKey, generateSalt, verifyKeys } from "./argon2.js"
+export { deriveKey, reDeriveKey, generateSalt, verifyKeys } from "./argon2"
 
 // Export encryption functions
 export {
@@ -46,7 +46,7 @@ export {
   decryptAuditLog,
   encryptSession,
   decryptSession,
-} from "./encryption.js"
+} from "./encryption"
 
 // Export key rotation functions
 export {
@@ -56,14 +56,14 @@ export {
   verifyKeyVersion,
   getKeyVersionStats,
   planKeyRotation,
-} from "./rotation.js"
+} from "./rotation"
 
 // Export trace encryption functions
 export type {
   TracePayload,
   EncryptedTrace,
   TraceEncryptionConfig,
-} from "./trace-encryption.js"
+} from "./trace-encryption"
 
 export {
   encryptTrace,
@@ -75,4 +75,4 @@ export {
   isValidEncryptedTrace,
   encryptTraceBatch,
   decryptTraceBatch,
-} from "./trace-encryption.js"
+} from "./trace-encryption"

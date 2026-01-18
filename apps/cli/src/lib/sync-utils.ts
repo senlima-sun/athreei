@@ -1,5 +1,5 @@
 import type { McpServerConfig } from "./config-schema"
-import type { McpServer } from "../types/index.js"
+import type { McpServer } from "../types/index"
 
 export type SyncStatus = "in-sync" | "local-only" | "cloud-only" | "conflict"
 

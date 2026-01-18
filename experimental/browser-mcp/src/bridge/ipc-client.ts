@@ -10,8 +10,8 @@ import { Socket, createConnection } from "net"
 import { homedir } from "os"
 import { join } from "path"
 import { randomUUID } from "crypto"
-import { logger } from "../utils/logger.js"
-import { getAiAppName } from "../context/index.js"
+import { logger } from "../utils/logger"
+import { getAiAppName } from "../context/index"
 
 function getSocketPath(): string {
   const baseDir =

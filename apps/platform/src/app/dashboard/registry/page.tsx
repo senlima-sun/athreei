@@ -215,7 +215,6 @@ export default function RegistryPage() {
                   {/* Icon */}
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-gray-100">
                     {server.iconUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={server.iconUrl}
                         alt={server.name}

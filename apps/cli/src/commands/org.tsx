@@ -1,10 +1,10 @@
 // apps/cli/src/commands/org.tsx
-import React, { useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { Box, Text, useApp } from "ink"
 import Spinner from "ink-spinner"
-import { getApiClient, ApiError, AuthError } from "../lib/api.js"
-import { createCredentialStore } from "../auth/credentials.js"
-import { ErrorDisplay } from "../components/error.js"
+import { getApiClient, ApiError, AuthError } from "../lib/api"
+import { createCredentialStore } from "../auth/credentials"
+import { ErrorDisplay } from "../components/error"
 
 // Extended Organization type with role from verify response
 interface OrganizationWithRole {

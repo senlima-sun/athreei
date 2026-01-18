@@ -55,7 +55,7 @@ export function detectConflict(
  */
 export function resolveConflict(
   serverItem: SyncItem,
-  clientData: string,
+  _clientData: string,
   clientVersion: number
 ): "server" | "client" | "manual" {
   // If versions are close, require manual resolution

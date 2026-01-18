@@ -15,9 +15,9 @@ import type {
   EncryptedToolCallTrace,
   ToolCallTrace,
   NamespaceConfig,
-} from "./types.js"
-import { log } from "./logger.js"
-import { encryptTracePayload } from "./trace-collector.js"
+} from "./types"
+import { log } from "./logger"
+import { encryptTracePayload } from "./trace-collector"
 
 /**
  * Trace sync configuration
@@ -67,17 +67,6 @@ export interface TraceUploadResponse {
   uploaded: number
   failed: number
   errors?: string[]
-}
-
-/**
- * Helper to convert Uint8Array to base64 string
- */
-function uint8ArrayToBase64(bytes: Uint8Array): string {
-  let binary = ""
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i])
-  }
-  return btoa(binary)
 }
 
 /**

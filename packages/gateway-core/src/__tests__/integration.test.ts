@@ -5,11 +5,11 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest"
-import { TransportFactory } from "../transports/transport-factory.js"
-import { NamespaceRouter } from "../routing/namespace-router.js"
-import { ProcessPool } from "../transports/process-pool.js"
-import { ConnectionHealthChecker } from "../transports/health-check.js"
-import type { StdioTransportConfig } from "../types/transports.js"
+import { TransportFactory } from "../transports/transport-factory"
+import { NamespaceRouter } from "../routing/namespace-router"
+import { ProcessPool } from "../transports/process-pool"
+import { ConnectionHealthChecker } from "../transports/health-check"
+import type { StdioTransportConfig } from "../types/transports"
 
 function createMockReadableStream(): ReadableStream<Uint8Array> {
   return new ReadableStream({

@@ -1,12 +1,12 @@
-import { getAuthManager } from "../auth/manager.js"
-import { debug } from "./output.js"
-import { ApiError, AuthError, RateLimitError } from "../errors/index.js"
+import { getAuthManager } from "../auth/manager"
+import { debug } from "./output"
+import { ApiError, AuthError, RateLimitError } from "../errors/index"
 import {
   DEFAULT_BASE_URL,
   DEFAULT_TIMEOUT,
   MAX_RETRIES,
   INITIAL_BACKOFF_MS,
-} from "../constants/index.js"
+} from "../constants/index"
 
 export { ApiError, AuthError, RateLimitError }
 

@@ -17,7 +17,7 @@ import type {
   SyncItemResponse,
   ConflictResponse,
 } from "../types"
-import type { SyncItem, ItemType } from "../db/schema"
+import type { ItemType } from "../db/schema"
 
 /**
  * Pull changes from server since last sync
@@ -74,8 +74,8 @@ export async function pullChanges(
 
   // Determine cursor and hasMore
   const hasMore = items.length === limit
-  const newCursor =
-    items.length > 0 ? items[items.length - 1].updated_at.toISOString() : null
+  const lastItem = items[items.length - 1]
+  const newCursor = lastItem ? lastItem.updated_at.toISOString() : null
 
   // Update sync state
   if (newCursor) {

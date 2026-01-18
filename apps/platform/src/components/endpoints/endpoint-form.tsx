@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Globe, Loader2 } from "lucide-react"
@@ -78,7 +78,7 @@ export function EndpointForm({
       }
 
       router.push("/dashboard/endpoints")
-    } catch (err) {
+    } catch (_err) {
       setError("An unexpected error occurred")
     } finally {
       setIsSubmitting(false)

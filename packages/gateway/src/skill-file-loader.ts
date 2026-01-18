@@ -7,8 +7,8 @@
 
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs"
 import { join, basename, extname } from "node:path"
-import type { SkillConfig, RuleConfig } from "./types.js"
-import { log } from "./logger.js"
+import type { SkillConfig, RuleConfig } from "./types"
+import { log } from "./logger"
 
 interface FrontmatterResult {
   frontmatter: Record<string, unknown>
@@ -26,7 +26,7 @@ function parseFrontmatter(fileContent: string): FrontmatterResult {
     return { frontmatter: {}, content: fileContent }
   }
 
-  const [, frontmatterStr, content] = match
+  const [, frontmatterStr = "", content = ""] = match
   const frontmatter: Record<string, unknown> = {}
 
   // Simple YAML parsing for common fields
@@ -63,7 +63,7 @@ function parseFrontmatter(fileContent: string): FrontmatterResult {
     }
   }
 
-  return { frontmatter, content: content.trim() }
+  return { frontmatter, content: content?.trim() ?? "" }
 }
 
 /**

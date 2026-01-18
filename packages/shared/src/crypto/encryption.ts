@@ -5,7 +5,7 @@
 
 import { gcm } from "@noble/ciphers/aes"
 import { randomBytes } from "@noble/ciphers/webcrypto"
-import type { EncryptedData } from "./types.js"
+import type { EncryptedData } from "./types"
 
 /**
  * Generate a random nonce for AES-GCM
@@ -137,7 +137,7 @@ export function decrypt<T = unknown>(
   let plaintextBytes: Uint8Array
   try {
     plaintextBytes = decipher.decrypt(ciphertext)
-  } catch (error) {
+  } catch (_error) {
     throw new Error("Decryption failed: invalid key or corrupted data")
   }
 
@@ -146,7 +146,7 @@ export function decrypt<T = unknown>(
 
   try {
     return JSON.parse(plaintextJson) as T
-  } catch (error) {
+  } catch (_error) {
     throw new Error("Decryption succeeded but data is not valid JSON")
   }
 }

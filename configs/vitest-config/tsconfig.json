@@ -1,0 +1,8 @@
+{
+  "include": ["./"],
+  "extends": "../tsconfig/base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowJs": true
+  }
+}

@@ -16,9 +16,9 @@ import type {
   NamespaceConfig,
   SkillConfig,
   RuleConfig,
-} from "./types.js"
+} from "./types"
 import type { McpServerConfig } from "@athreei/gateway-core"
-import { log } from "./logger.js"
+import { log } from "./logger"
 
 /** Default Platform URL */
 const DEFAULT_PLATFORM_URL = "https://athreei.com"
@@ -60,7 +60,7 @@ export function loadConfig(configPath?: string): GatewayConfig {
 
   try {
     config = JSON.parse(content)
-  } catch (error) {
+  } catch (_error) {
     throw new Error(`Invalid JSON in config file: ${path}`)
   }
 

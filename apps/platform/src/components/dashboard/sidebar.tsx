@@ -44,15 +44,6 @@ const sharedItems: NavItem[] = [
   { label: "Sessions", href: "/dashboard/sessions", icon: Users },
 ]
 
-// Cloud-only items
-const cloudOnlyItems: NavItem[] = [
-  { label: "Endpoints", href: "/dashboard/endpoints", icon: Globe },
-  { label: "My Servers", href: "/dashboard/mcp-servers", icon: HardDrive },
-  { label: "Namespaces", href: "/dashboard/namespaces", icon: Boxes },
-  { label: "Registry", href: "/dashboard/registry", icon: Globe },
-  { label: "Organizations", href: "/dashboard/organizations", icon: Users },
-]
-
 const settingsItem: NavItem = {
   label: "Settings",
   href: "/dashboard/settings",

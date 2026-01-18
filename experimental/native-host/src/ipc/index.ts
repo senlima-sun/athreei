@@ -4,9 +4,5 @@
  * Public exports for the IPC server and protocol utilities.
  */
 
-export { IPCServer } from "./server.js"
-export {
-  getSocketPath,
-  cleanupStaleSocket,
-  ensureSocketDir,
-} from "./protocol.js"
+export { IPCServer } from "./server"
+export { getSocketPath, cleanupStaleSocket, ensureSocketDir } from "./protocol"

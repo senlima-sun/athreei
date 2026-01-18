@@ -5,9 +5,9 @@
  */
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
-import { registerBrowserTools } from "./tools/browser.js"
-import { logger } from "./utils/logger.js"
-import { setMcpContext, clearMcpContext } from "./context/index.js"
+import { registerBrowserTools } from "./tools/browser"
+import { logger } from "./utils/logger"
+import { setMcpContext, clearMcpContext } from "./context/index"
 
 /**
  * Create and configure the MCP server

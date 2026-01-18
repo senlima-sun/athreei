@@ -9,9 +9,9 @@
  */
 
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js"
-import type { GatewayState } from "./server.js"
-import type { ToolCallTrace, McpServerConfig } from "./types.js"
-import { log } from "./logger.js"
+import type { GatewayState } from "./server"
+import type { ToolCallTrace, McpServerConfig } from "./types"
+import { log } from "./logger"
 
 // Re-export core routing functions from gateway-core
 export {

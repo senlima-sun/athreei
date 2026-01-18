@@ -842,8 +842,8 @@ describe("OAuth Routes", () => {
 
       expect(response.status).toBe(200)
       expect(data.connections).toHaveLength(2)
-      expect(data.connections[0].provider).toBe("github")
-      expect(data.connections[1].provider).toBe("linear")
+      expect(data.connections[0]!.provider).toBe("github")
+      expect(data.connections[1]!.provider).toBe("linear")
     })
 
     it("should not include encrypted token data in response", async () => {
@@ -894,7 +894,7 @@ describe("OAuth Routes", () => {
       const data = (await response.json()) as ConnectionsResponse
 
       expect(response.status).toBe(200)
-      const connection = data.connections[0]
+      const connection = data.connections[0]!
       expect(connection.expiresAt).toBe("2025-01-15T10:30:00.000Z")
       expect(connection.createdAt).toBe("2025-01-15T10:30:00.000Z")
       expect(connection.updatedAt).toBe("2025-01-15T10:30:00.000Z")
@@ -920,7 +920,7 @@ describe("OAuth Routes", () => {
       const data = (await response.json()) as ConnectionsResponse
 
       expect(response.status).toBe(200)
-      expect(data.connections[0].expiresAt).toBeNull()
+      expect(data.connections[0]!.expiresAt).toBeNull()
     })
 
     it("should handle null scope", async () => {
@@ -943,7 +943,7 @@ describe("OAuth Routes", () => {
       const data = (await response.json()) as ConnectionsResponse
 
       expect(response.status).toBe(200)
-      expect(data.connections[0].scope).toBeNull()
+      expect(data.connections[0]!.scope).toBeNull()
     })
   })
 

@@ -7,15 +7,15 @@ import {
   formatJson,
   formatPretty,
   getTimestamp,
-} from "./formatters.js"
+} from "./formatters"
 import type {
   ILogger,
   LogContext,
   LogEntry,
   LoggerConfig,
   LogLevel,
-} from "./types.js"
-import { LOG_LEVELS } from "./types.js"
+} from "./types"
+import { LOG_LEVELS } from "./types"
 
 /**
  * Logger class that supports structured logging with levels and context

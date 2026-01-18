@@ -3,6 +3,6 @@ export {
   DEFAULT_TIMEOUT,
   MAX_RETRIES,
   INITIAL_BACKOFF_MS,
-} from "./api.js"
+} from "./api"
 
-export { DEFAULT_MCP_TIMEOUT, CLIENT_INFO } from "./mcp.js"
+export { DEFAULT_MCP_TIMEOUT, CLIENT_INFO } from "./mcp"

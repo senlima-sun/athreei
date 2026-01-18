@@ -201,7 +201,7 @@ describe("Tools Routes", () => {
       }
 
       expect(response.status).toBe(200)
-      expect(data.tools[0].inputSchema).toEqual({
+      expect(data.tools[0]!.inputSchema).toEqual({
         type: "object",
         properties: { query: { type: "string" } },
       })
@@ -226,7 +226,7 @@ describe("Tools Routes", () => {
       const data = (await response.json()) as {
         tools: { inputSchema: null }[]
       }
-      expect(data.tools[0].inputSchema).toBeNull()
+      expect(data.tools[0]!.inputSchema).toBeNull()
     })
   })
 

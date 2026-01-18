@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { Box, Text, useApp } from "ink"
 import Spinner from "ink-spinner"
-import { getAuthManager } from "../auth/manager.js"
+import { getAuthManager } from "../auth/manager"
 
 interface ProviderStatus {
   name: string

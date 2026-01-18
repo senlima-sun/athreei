@@ -21,6 +21,21 @@ import {
 import { clearAllRateLimits } from "../../middleware/rate-limit"
 import type { AuthContext } from "../../middleware/auth"
 
+// Use vi.hoisted to define mocks that are available to hoisted vi.mock() calls
+const { mockLoggerWarn } = vi.hoisted(() => ({
+  mockLoggerWarn: vi.fn(),
+}))
+
+// Mock the logger module
+vi.mock("../../lib/logger", () => ({
+  logger: {
+    warn: mockLoggerWarn,
+    info: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  },
+}))
+
 // Mock auth context
 const mockAuthContext: AuthContext = {
   userId: "user_123",
@@ -296,7 +311,7 @@ describe("OAuth Rate Limiting Middleware", () => {
 
   describe("withRateLimitLogging", () => {
     it("should wrap rate limiter and log on rate limit hit", async () => {
-      const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
+      mockLoggerWarn.mockClear()
 
       const rawRateLimiter = createConnectRateLimiter()
       const loggingRateLimiter = withRateLimitLogging("connect", rawRateLimiter)
@@ -311,15 +326,16 @@ describe("OAuth Rate Limiting Middleware", () => {
       await app.request("/test")
 
       // Check that logging was called
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining("[oauth-rate-limit]")
+      expect(mockLoggerWarn).toHaveBeenCalledWith(
+        "OAuth rate limit hit",
+        expect.objectContaining({
+          endpoint: "connect",
+        })
       )
-
-      consoleSpy.mockRestore()
     })
 
     it("should pass through normal requests without logging", async () => {
-      const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {})
+      mockLoggerWarn.mockClear()
 
       const rawRateLimiter = createConnectRateLimiter()
       const loggingRateLimiter = withRateLimitLogging("connect", rawRateLimiter)
@@ -329,9 +345,7 @@ describe("OAuth Rate Limiting Middleware", () => {
       await app.request("/test")
 
       // Should not log for successful requests
-      expect(consoleSpy).not.toHaveBeenCalled()
-
-      consoleSpy.mockRestore()
+      expect(mockLoggerWarn).not.toHaveBeenCalled()
     })
   })
 

@@ -159,8 +159,10 @@ describe("TraceSyncClient", () => {
         ok: true,
         json: async () => ({ success: true, uploaded: 1, failed: 0 }),
       })
+      ;(mockFetch as unknown as { preconnect: typeof vi.fn }).preconnect =
+        vi.fn()
       const originalFetch = globalThis.fetch
-      globalThis.fetch = mockFetch
+      globalThis.fetch = mockFetch as unknown as typeof fetch
 
       client.setNamespaceConfig(createMockNamespaceConfig())
       client.addTrace(createMockTrace({ serverName: "browser" }))
@@ -168,7 +170,7 @@ describe("TraceSyncClient", () => {
       await client.flush()
 
       expect(mockFetch).toHaveBeenCalledOnce()
-      const [url, options] = mockFetch.mock.calls[0]
+      const [url, options] = mockFetch.mock.calls[0]!
       expect(url).toBe("https://api.test.com/api/traces")
       expect(options.method).toBe("POST")
       expect(options.headers.Authorization).toBe("Bearer test-api-key")
@@ -192,8 +194,10 @@ describe("TraceSyncClient", () => {
         status: 500,
         text: async () => "Internal Server Error",
       })
+      ;(mockFetch as unknown as { preconnect: typeof vi.fn }).preconnect =
+        vi.fn()
       const originalFetch = globalThis.fetch
-      globalThis.fetch = mockFetch
+      globalThis.fetch = mockFetch as unknown as typeof fetch
 
       try {
         // Create a fresh client for this test
@@ -233,8 +237,10 @@ describe("TraceSyncClient", () => {
         ok: true,
         json: async () => ({ success: true, uploaded: 5, failed: 0 }),
       })
+      ;(mockFetch as unknown as { preconnect: typeof vi.fn }).preconnect =
+        vi.fn()
       const originalFetch = globalThis.fetch
-      globalThis.fetch = mockFetch
+      globalThis.fetch = mockFetch as unknown as typeof fetch
 
       try {
         // Create a fresh client with larger batch size to control flushing
@@ -257,7 +263,7 @@ describe("TraceSyncClient", () => {
         // And 2 flush calls already made
         expect(freshClient.getPendingCount()).toBe(2)
 
-        const result = await freshClient.flushAll()
+        await freshClient.flushAll()
 
         // Should have made 3 total requests (5 auto, 5 auto, 2 flushAll)
         expect(mockFetch).toHaveBeenCalledTimes(3)
@@ -268,6 +274,18 @@ describe("TraceSyncClient", () => {
       } finally {
         globalThis.fetch = originalFetch
       }
+    })
+
+    it("handles empty result correctly", async () => {
+      const emptyClient = new TraceSyncClient({
+        platformUrl: "https://api.test.com",
+        apiKey: "test-api-key",
+        encryptionKey: testKey,
+        encryptionKeyVersion: 1,
+      })
+      const result = await emptyClient.flushAll()
+      expect(result.uploaded).toBe(0)
+      expect(result.failed).toBe(0)
     })
   })
 
@@ -294,13 +312,13 @@ describe("TraceSyncClient", () => {
 
 describe("createTraceSyncClient", () => {
   it("creates client with minimal config", () => {
-    const client = createTraceSyncClient({
+    const _result = createTraceSyncClient({
       platformUrl: "https://api.test.com",
       apiKey: "test-key",
     })
 
-    expect(client).toBeInstanceOf(TraceSyncClient)
-    expect(client.isEncryptionEnabled()).toBe(false)
+    expect(_result).toBeInstanceOf(TraceSyncClient)
+    expect(_result.isEncryptionEnabled()).toBe(false)
   })
 
   it("creates client with encryption key", () => {

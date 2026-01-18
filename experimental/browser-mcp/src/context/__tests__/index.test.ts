@@ -10,7 +10,7 @@ import {
   clearMcpContext,
   isClientConnected,
   type McpContext,
-} from "../index.js"
+} from "../index"
 
 describe("MCP Context Module", () => {
   beforeEach(() => {

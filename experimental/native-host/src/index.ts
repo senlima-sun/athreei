@@ -17,14 +17,14 @@ import {
   isResponse,
   createEvent,
   resetStdinReader,
-} from "./protocol.js"
+} from "./protocol"
 import {
   handleRequest,
   initializeHandlers,
   getRegisteredMethods,
   clearHandlers,
-} from "./handlers.js"
-import { IPCServer } from "./ipc/index.js"
+} from "./handlers"
+import { IPCServer } from "./ipc/index"
 
 export const HOST_NAME = "com.athreei.host"
 export const VERSION = "0.1.0"

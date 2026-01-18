@@ -173,9 +173,9 @@ describe("Traces API Routes", () => {
       expect(response.status).toBe(200)
       const data = (await response.json()) as ListTracesResponse
       expect(data.traces).toHaveLength(1)
-      expect(data.traces[0].name).toBe("figma:get_components")
-      expect(data.traces[0].status).toBe("success")
-      expect(data.traces[0].attributes?.toolName).toBe("get_components")
+      expect(data.traces[0]!.name).toBe("figma:get_components")
+      expect(data.traces[0]!.status).toBe("success")
+      expect(data.traces[0]!.attributes?.toolName).toBe("get_components")
     })
 
     it("should filter by status when provided", async () => {
@@ -202,7 +202,7 @@ describe("Traces API Routes", () => {
       expect(response.status).toBe(200)
       const data = (await response.json()) as ListTracesResponse
       expect(data.traces).toHaveLength(1)
-      expect(data.traces[0].name).toBe("figma:get_components")
+      expect(data.traces[0]!.name).toBe("figma:get_components")
       expect(mockDb.query.trace.findMany).toHaveBeenCalled()
     })
 

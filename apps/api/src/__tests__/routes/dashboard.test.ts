@@ -423,8 +423,8 @@ describe("Dashboard Routes", () => {
 
       // Check activities are sorted by timestamp (newest first)
       for (let i = 1; i < data.activities.length; i++) {
-        const prevTime = new Date(data.activities[i - 1].timestamp).getTime()
-        const currTime = new Date(data.activities[i].timestamp).getTime()
+        const prevTime = new Date(data.activities[i - 1]!.timestamp).getTime()
+        const currTime = new Date(data.activities[i]!.timestamp).getTime()
         expect(prevTime).toBeGreaterThanOrEqual(currTime)
       }
     })
@@ -505,7 +505,7 @@ describe("Dashboard Routes", () => {
       const data = (await response.json()) as ActivityResponse
 
       expect(response.status).toBe(200)
-      expect(data.activities[0].description).toContain("Unknown user")
+      expect(data.activities[0]!.description).toContain("Unknown user")
     })
 
     it("should handle limit parameter at maximum value", async () => {

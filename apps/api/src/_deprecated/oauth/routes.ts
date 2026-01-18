@@ -413,6 +413,9 @@ oauth.get("/callback", callbackRateLimiter, async (c) => {
     // Decrypt code verifier
     const decryptedData = decryptEnv(session.encryptedCodeVerifier)
     const codeVerifier = decryptedData.codeVerifier
+    if (!codeVerifier) {
+      throw ApiError.badRequest("Missing code verifier")
+    }
 
     // Get client ID
     const clientId = await getClientId(
@@ -616,6 +619,9 @@ oauth.post(
     // Decrypt and return current token
     const decryptedData = decryptEnv(token.encryptedAccessToken)
     const accessToken = decryptedData.token
+    if (!accessToken) {
+      throw ApiError.badRequest("Failed to decrypt access token")
+    }
 
     // Generate token hash for audit correlation
     const tokenHash = await generateTokenHash(accessToken)
@@ -663,6 +669,9 @@ async function refreshToken(
   // Decrypt refresh token
   const decryptedData = decryptEnv(token.encryptedRefreshToken)
   const refreshTokenValue = decryptedData.token
+  if (!refreshTokenValue) {
+    throw new Error("Failed to decrypt refresh token")
+  }
 
   // Request new tokens
   const response = await fetch(metadata.tokenEndpoint, {

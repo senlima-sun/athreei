@@ -1,0 +1,17 @@
+{
+  "name": "@athreei/vitest-config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "vitest.config.js",
+  "exports": {
+    ".": "./vitest.config.js"
+  },
+  "devDependencies": {
+    "@athreei/tsconfig": "workspace:*",
+    "vite-tsconfig-paths": "^5.0.0"
+  },
+  "peerDependencies": {
+    "vitest": "^3.0.0"
+  }
+}

@@ -150,7 +150,7 @@ export function SearchDialog({
           e.preventDefault()
           if (selectedIndex >= 0 && flatResults[selectedIndex]) {
             handleSelectMemory(flatResults[selectedIndex])
-          } else if (query && hasResults) {
+          } else if (query && hasResults && flatResults[0]) {
             handleSelectMemory(flatResults[0])
           }
           break

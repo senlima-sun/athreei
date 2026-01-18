@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { Box, Text, useApp } from "ink"
-import { getApiClient, ApiError } from "../../lib/api.js"
-import { ErrorDisplay } from "../../components/error.js"
-import { LoadingSpinner } from "../../components/loading-spinner.js"
-import { formatSchemaType } from "../../lib/format.js"
-import type { McpToolsResponse, McpToolItem } from "./types.js"
+import { getApiClient, ApiError } from "../../lib/api"
+import { ErrorDisplay } from "../../components/error"
+import { LoadingSpinner } from "../../components/loading-spinner"
+import { formatSchemaType } from "../../lib/format"
+import type { McpToolsResponse, McpToolItem } from "./types"
 
 export interface McpToolsProps {
   id: string

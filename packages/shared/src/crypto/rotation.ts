@@ -3,8 +3,8 @@
  * Allows for secure key updates without data loss
  */
 
-import type { EncryptedData, KeyRotationOptions } from "./types.js"
-import { decrypt, encrypt } from "./encryption.js"
+import type { EncryptedData, KeyRotationOptions } from "./types"
+import { decrypt, encrypt } from "./encryption"
 
 /**
  * Re-encrypt data with a new key

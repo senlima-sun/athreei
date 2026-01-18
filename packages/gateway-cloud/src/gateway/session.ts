@@ -8,6 +8,7 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js"
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js"
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js"
 import type { Tool } from "@modelcontextprotocol/sdk/types.js"
 import {
   sanitizeName,
@@ -18,7 +19,7 @@ import {
   type Logger,
   noopLogger,
 } from "@athreei/gateway-core"
-import type { GatewaySession, CreateSessionOptions } from "../types.js"
+import type { GatewaySession, CreateSessionOptions } from "../types"
 
 /** In-memory session storage */
 const sessions = new Map<string, GatewaySession>()
@@ -147,15 +148,23 @@ async function connectToMcpServer(
       break
     }
 
-    case "sse":
+    case "sse": {
+      if (!config.url) {
+        throw new Error(
+          `MCP server "${config.name}" is sse transport but has no URL`
+        )
+      }
+      transport = new SSEClientTransport(new URL(config.url))
+      break
+    }
+
     case "streamable-http": {
       if (!config.url) {
         throw new Error(
-          `MCP server "${config.name}" is ${config.transport} transport but has no URL`
+          `MCP server "${config.name}" is streamable-http transport but has no URL`
         )
       }
-
-      transport = new SSEClientTransport(new URL(config.url))
+      transport = new StreamableHTTPClientTransport(new URL(config.url))
       break
     }
 

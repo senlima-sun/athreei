@@ -364,8 +364,8 @@ describe("Organizations Routes", () => {
       expect(response.status).toBe(200)
       expect(Array.isArray(data)).toBe(true)
       expect(data.length).toBe(2)
-      expect(data[0].id).toBe("org_123")
-      expect(data[1].id).toBe("org_456")
+      expect(data[0]!.id).toBe("org_123")
+      expect(data[1]!.id).toBe("org_456")
     })
 
     it("should return empty array when user has no organizations", async () => {

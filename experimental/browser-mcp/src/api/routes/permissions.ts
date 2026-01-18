@@ -10,7 +10,7 @@ import {
   countPermissions,
   upsertPermission,
   deletePermission,
-} from "../../db/repositories/permissions.js"
+} from "../../db/repositories/permissions"
 import type { PermissionLevel } from "@athreei/shared"
 
 export const permissionsRoutes = new Hono()

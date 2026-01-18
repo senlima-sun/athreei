@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { Box, Text, useApp } from "ink"
-import { getApiClient, ApiError } from "../../lib/api.js"
-import { ErrorDisplay } from "../../components/error.js"
-import { LoadingSpinner } from "../../components/loading-spinner.js"
-import { formatDateTime, getStatusColor } from "../../lib/format.js"
-import type { Endpoint } from "../../types/api.js"
+import { getApiClient, ApiError } from "../../lib/api"
+import { ErrorDisplay } from "../../components/error"
+import { LoadingSpinner } from "../../components/loading-spinner"
+import { formatDateTime, getStatusColor } from "../../lib/format"
+import type { Endpoint } from "../../types/api"
 
 interface EndpointResponse {
   data: Endpoint

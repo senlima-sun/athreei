@@ -1,13 +1,13 @@
 #!/usr/bin/env bun
 import { Command } from "commander"
 import { render } from "ink"
-import React from "react"
-import { LoginFlow } from "./components/login-flow.js"
-import { AuthStatus } from "./components/auth-status.js"
-import { getAuthManager } from "./auth/manager.js"
-import { setVerbose, setQuiet, debug } from "./lib/output.js"
-import { detectMode, setMode } from "./lib/mode.js"
-import { OrgList, OrgSwitch, OrgCurrent } from "./commands/org.js"
+
+import { LoginFlow } from "./components/login-flow"
+import { AuthStatus } from "./components/auth-status"
+import { getAuthManager } from "./auth/manager"
+import { setVerbose, setQuiet, debug } from "./lib/output"
+import { detectMode, setMode } from "./lib/mode"
+import { OrgList, OrgSwitch, OrgCurrent } from "./commands/org"
 import {
   McpList,
   McpDetails,
@@ -19,20 +19,20 @@ import {
   McpEnvList,
   McpEnvSet,
   McpEnvDelete,
-} from "./commands/mcp/index.js"
+} from "./commands/mcp"
 import {
   EndpointList,
   EndpointDetails,
   EndpointCreate,
   EndpointDelete,
-} from "./commands/endpoint/index.js"
+} from "./commands/endpoint"
 import {
   ConfigInit,
   ConfigShow,
   ConfigSet,
   ConfigGet,
   ConfigValidate,
-} from "./commands/config/index.js"
+} from "./commands/config"
 import {
   GatewayStatus,
   GatewayStart,
@@ -40,23 +40,14 @@ import {
   GatewayLogs,
   GatewayConfigShow,
   GatewayConfigSet,
-} from "./commands/gateway/index.js"
-import {
-  SyncStatus,
-  SyncPull,
-  SyncPush,
-  SyncDiff,
-} from "./commands/sync/index.js"
-import {
-  ApiKeyList,
-  ApiKeyCreate,
-  ApiKeyRevoke,
-} from "./commands/apikey/index.js"
+} from "./commands/gateway"
+import { SyncStatus, SyncPull, SyncPush, SyncDiff } from "./commands/sync"
+import { ApiKeyList, ApiKeyCreate, ApiKeyRevoke } from "./commands/apikey"
 import {
   outputBashCompletion,
   outputZshCompletion,
   outputFishCompletion,
-} from "./commands/completion.js"
+} from "./commands/completion"
 
 const program = new Command()
 

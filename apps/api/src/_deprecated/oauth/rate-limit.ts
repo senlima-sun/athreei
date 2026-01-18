@@ -52,7 +52,7 @@ function getClientIp(c: Context): string {
   const forwarded = c.req.header("x-forwarded-for")
   if (forwarded) {
     // Take the first IP (original client)
-    return forwarded.split(",")[0].trim()
+    return forwarded.split(",")[0]?.trim() ?? "unknown"
   }
 
   const realIp = c.req.header("x-real-ip")

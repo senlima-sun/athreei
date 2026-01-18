@@ -123,12 +123,11 @@ async function waitForCondition(
 
   while (Date.now() - startTime < timeout) {
     try {
-      // eslint-disable-next-line no-eval
       const result = eval(condition)
       if (result) {
         return
       }
-    } catch (error) {
+    } catch (_error) {
       // Condition evaluation failed, continue waiting
     }
 

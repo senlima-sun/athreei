@@ -4,12 +4,8 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { Hono } from "hono"
-import sseRoutes, { configureSseRoutes } from "../routes/sse.js"
-import {
-  _resetForTesting,
-  createSession,
-  getSession,
-} from "../gateway/session.js"
+import sseRoutes, { configureSseRoutes } from "../routes/sse"
+import { _resetForTesting, createSession } from "../gateway/session"
 
 // Mock fetch for API key validation
 const mockFetch = vi.fn()

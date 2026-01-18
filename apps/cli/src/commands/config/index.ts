@@ -1,13 +1,13 @@
-export { ConfigInit } from "./init.js"
-export type { ConfigInitProps } from "./init.js"
+export { ConfigInit } from "./init"
+export type { ConfigInitProps } from "./init"
 
-export { ConfigShow } from "./show.js"
-export type { ConfigShowProps } from "./show.js"
+export { ConfigShow } from "./show"
+export type { ConfigShowProps } from "./show"
 
-export { ConfigSet } from "./set.js"
-export type { ConfigSetProps } from "./set.js"
+export { ConfigSet } from "./set"
+export type { ConfigSetProps } from "./set"
 
-export { ConfigGet } from "./get.js"
-export type { ConfigGetProps } from "./get.js"
+export { ConfigGet } from "./get"
+export type { ConfigGetProps } from "./get"
 
-export { ConfigValidate } from "./validate.js"
+export { ConfigValidate } from "./validate"

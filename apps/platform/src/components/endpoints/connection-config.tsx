@@ -5,14 +5,10 @@ import { CopyButton } from "./copy-button"
 import { Terminal, FileJson } from "lucide-react"
 
 interface ConnectionConfigProps {
-  endpointName: string
   endpointSlug: string
 }
 
-export function ConnectionConfig({
-  endpointName,
-  endpointSlug,
-}: ConnectionConfigProps) {
+export function ConnectionConfig({ endpointSlug }: ConnectionConfigProps) {
   const connectionUrl = `https://athreei.com/mcp/${endpointSlug}/sse`
 
   const claudeDesktopConfig = JSON.stringify(
