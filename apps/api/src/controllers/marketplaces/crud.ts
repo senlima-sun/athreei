@@ -36,12 +36,13 @@ export async function listMarketplaces(c: Context): Promise<Response> {
 
   if (query.search) {
     const searchTerm = `%${query.search.slice(0, 200)}%`
-    conditions.push(
-      or(
-        like(marketplace.name, searchTerm),
-        like(marketplace.description, searchTerm)
-      )!
+    const searchCondition = or(
+      like(marketplace.name, searchTerm),
+      like(marketplace.description, searchTerm)
     )
+    if (searchCondition) {
+      conditions.push(searchCondition)
+    }
   }
 
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined

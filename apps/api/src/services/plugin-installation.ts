@@ -55,25 +55,33 @@ export async function checkInstallationRestrictions(
     return { allowed: true }
   }
 
-  if (
-    restrictions.restrictMarketplaces &&
-    restrictions.allowedMarketplaceIds.length > 0 &&
-    !restrictions.allowedMarketplaceIds.includes(marketplaceId)
-  ) {
-    return {
-      allowed: false,
-      reason: "This marketplace is not allowed for your organization",
+  if (restrictions.restrictMarketplaces) {
+    if (restrictions.allowedMarketplaceIds.length === 0) {
+      return {
+        allowed: false,
+        reason: "No marketplaces are allowed for your organization",
+      }
+    }
+    if (!restrictions.allowedMarketplaceIds.includes(marketplaceId)) {
+      return {
+        allowed: false,
+        reason: "This marketplace is not allowed for your organization",
+      }
     }
   }
 
-  if (
-    restrictions.restrictPlugins &&
-    restrictions.allowedPluginIds.length > 0 &&
-    !restrictions.allowedPluginIds.includes(pluginId)
-  ) {
-    return {
-      allowed: false,
-      reason: "This plugin is not allowed for your organization",
+  if (restrictions.restrictPlugins) {
+    if (restrictions.allowedPluginIds.length === 0) {
+      return {
+        allowed: false,
+        reason: "No plugins are allowed for your organization",
+      }
+    }
+    if (!restrictions.allowedPluginIds.includes(pluginId)) {
+      return {
+        allowed: false,
+        reason: "This plugin is not allowed for your organization",
+      }
     }
   }
 
@@ -290,6 +298,19 @@ export async function updateInstallation(
     throw new Error("You can only update your own user-scoped installations")
   }
 
+  if (installation.scope === "organization") {
+    const membership = await db().query.member.findFirst({
+      where: and(
+        eq(member.userId, userId),
+        eq(member.organizationId, organizationId)
+      ),
+    })
+
+    if (membership?.role !== "admin") {
+      throw new Error("Only admins can update organization-scoped plugins")
+    }
+  }
+
   const updateData: Partial<typeof pluginInstallation.$inferInsert> = {
     updatedAt: new Date(),
   }
@@ -371,6 +392,27 @@ export async function updateInstallationVersion(
 
   if (!installation) {
     throw new Error("Installation not found")
+  }
+
+  if (installation.scope === "user" && installation.installedBy !== userId) {
+    throw new Error(
+      "You can only update versions for your own user-scoped installations"
+    )
+  }
+
+  if (installation.scope === "organization") {
+    const membership = await db().query.member.findFirst({
+      where: and(
+        eq(member.userId, userId),
+        eq(member.organizationId, organizationId)
+      ),
+    })
+
+    if (membership?.role !== "admin") {
+      throw new Error(
+        "Only admins can update versions for organization-scoped plugins"
+      )
+    }
   }
 
   let newVersion: typeof pluginVersion.$inferSelect | undefined

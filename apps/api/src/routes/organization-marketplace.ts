@@ -129,20 +129,24 @@ organizationMarketplace.patch(
         }
       )
 
+      if (!updated) {
+        throw ApiError.notFound("Failed to retrieve updated settings")
+      }
+
       return c.json({
         settings: {
-          id: updated!.id,
-          organizationId: updated!.organizationId,
-          restrictMarketplaces: updated!.restrictMarketplaces,
+          id: updated.id,
+          organizationId: updated.organizationId,
+          restrictMarketplaces: updated.restrictMarketplaces,
           allowedMarketplaceIds: JSON.parse(
-            updated!.allowedMarketplaceIds || "[]"
+            updated.allowedMarketplaceIds || "[]"
           ),
-          restrictPlugins: updated!.restrictPlugins,
-          allowedPluginIds: JSON.parse(updated!.allowedPluginIds || "[]"),
-          defaultPluginIds: JSON.parse(updated!.defaultPluginIds || "[]"),
-          requireApproval: updated!.requireApproval,
-          createdAt: updated!.createdAt,
-          updatedAt: updated!.updatedAt,
+          restrictPlugins: updated.restrictPlugins,
+          allowedPluginIds: JSON.parse(updated.allowedPluginIds || "[]"),
+          defaultPluginIds: JSON.parse(updated.defaultPluginIds || "[]"),
+          requireApproval: updated.requireApproval,
+          createdAt: updated.createdAt,
+          updatedAt: updated.updatedAt,
         },
       })
     }
@@ -170,21 +174,25 @@ organizationMarketplace.patch(
       where: eq(organizationMarketplaceSetting.id, id),
     })
 
+    if (!created) {
+      throw ApiError.notFound("Failed to retrieve created settings")
+    }
+
     return c.json(
       {
         settings: {
-          id: created!.id,
-          organizationId: created!.organizationId,
-          restrictMarketplaces: created!.restrictMarketplaces,
+          id: created.id,
+          organizationId: created.organizationId,
+          restrictMarketplaces: created.restrictMarketplaces,
           allowedMarketplaceIds: JSON.parse(
-            created!.allowedMarketplaceIds || "[]"
+            created.allowedMarketplaceIds || "[]"
           ),
-          restrictPlugins: created!.restrictPlugins,
-          allowedPluginIds: JSON.parse(created!.allowedPluginIds || "[]"),
-          defaultPluginIds: JSON.parse(created!.defaultPluginIds || "[]"),
-          requireApproval: created!.requireApproval,
-          createdAt: created!.createdAt,
-          updatedAt: created!.updatedAt,
+          restrictPlugins: created.restrictPlugins,
+          allowedPluginIds: JSON.parse(created.allowedPluginIds || "[]"),
+          defaultPluginIds: JSON.parse(created.defaultPluginIds || "[]"),
+          requireApproval: created.requireApproval,
+          createdAt: created.createdAt,
+          updatedAt: created.updatedAt,
         },
       },
       201

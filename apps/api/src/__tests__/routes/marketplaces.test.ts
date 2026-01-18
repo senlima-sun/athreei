@@ -404,7 +404,7 @@ describe("Marketplace Routes", () => {
           }),
         }
       )
-      const data = (await response.json()) as ErrorResponse
+      await response.json()
 
       expect(response.status).toBe(403)
     })
@@ -494,7 +494,7 @@ describe("Marketplace Routes", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: "Updated Name" }),
       })
-      const data = (await response.json()) as ErrorResponse
+      await response.json()
 
       expect(response.status).toBe(404)
     })
@@ -514,7 +514,7 @@ describe("Marketplace Routes", () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: "Updated Name" }),
       })
-      const data = (await response.json()) as ErrorResponse
+      await response.json()
 
       expect(response.status).toBe(403)
     })
@@ -572,7 +572,7 @@ describe("Marketplace Routes", () => {
       const response = await app.request("/api/marketplaces/non-existent", {
         method: "DELETE",
       })
-      const data = (await response.json()) as ErrorResponse
+      await response.json()
 
       expect(response.status).toBe(404)
     })
@@ -590,7 +590,7 @@ describe("Marketplace Routes", () => {
       const response = await app.request("/api/marketplaces/test-marketplace", {
         method: "DELETE",
       })
-      const data = (await response.json()) as ErrorResponse
+      await response.json()
 
       expect(response.status).toBe(403)
     })

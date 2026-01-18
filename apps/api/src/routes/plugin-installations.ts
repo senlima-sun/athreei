@@ -60,7 +60,7 @@ pluginInstallations.post(
     } catch (error) {
       if (error instanceof Error) {
         if (error.message.includes("not found")) {
-          throw ApiError.badRequest(error.message)
+          throw ApiError.notFound(error.message)
         }
         if (error.message.includes("already installed")) {
           throw ApiError.conflict(error.message)
@@ -99,7 +99,7 @@ pluginInstallations.post(
         }
         if (
           error.message.includes("Only admins") ||
-          error.message.includes("only")
+          error.message.includes("only uninstall your own")
         ) {
           throw ApiError.forbidden(error.message)
         }
@@ -136,7 +136,10 @@ pluginInstallations.patch(
         if (error.message.includes("not found")) {
           throw ApiError.notFound(error.message)
         }
-        if (error.message.includes("only")) {
+        if (
+          error.message.includes("Only admins") ||
+          error.message.includes("only update your own")
+        ) {
           throw ApiError.forbidden(error.message)
         }
       }

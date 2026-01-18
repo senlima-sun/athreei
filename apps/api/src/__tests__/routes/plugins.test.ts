@@ -14,7 +14,6 @@ const testErrorHandler: ErrorHandler = (err: Error, c: Context) => {
 const {
   mockDb,
   mockAuthContext,
-  mockMarketplace,
   mockPlugin,
   mockPluginVersion,
   mockSearchPlugins,
@@ -107,7 +106,6 @@ const {
   return {
     mockDb,
     mockAuthContext,
-    mockMarketplace,
     mockPlugin,
     mockPluginVersion,
     mockSearchPlugins,
@@ -232,10 +230,6 @@ interface PluginVersionResponse {
   createdAt: string
 }
 
-interface ErrorResponse {
-  error: string
-  code?: string
-}
 
 describe("Plugin Routes", () => {
   beforeEach(() => {
@@ -446,7 +440,7 @@ describe("Plugin Routes", () => {
     })
 
     it("should return 404 for non-existent plugin", async () => {
-      mockGetPluginDetails.mockRejectedValue(new Error("Plugin not found"))
+      mockGetPluginDetails.mockResolvedValue(null)
 
       const { default: plugins } = await import("../../routes/plugins")
       const app = new Hono()
@@ -455,7 +449,7 @@ describe("Plugin Routes", () => {
 
       const response = await app.request("/api/plugins/official/non-existent")
 
-      expect(response.status).toBe(500)
+      expect(response.status).toBe(404)
     })
   })
 
@@ -525,9 +519,7 @@ describe("Plugin Routes", () => {
     })
 
     it("should return 404 for non-existent version", async () => {
-      mockGetPluginVersionDetails.mockRejectedValue(
-        new Error("Version not found")
-      )
+      mockGetPluginVersionDetails.mockResolvedValue(null)
 
       const { default: plugins } = await import("../../routes/plugins")
       const app = new Hono()
@@ -538,7 +530,7 @@ describe("Plugin Routes", () => {
         "/api/plugins/official/test-plugin/versions/9.9.9"
       )
 
-      expect(response.status).toBe(500)
+      expect(response.status).toBe(404)
     })
   })
 })

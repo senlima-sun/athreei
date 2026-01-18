@@ -14,6 +14,23 @@ import {
 import { pluginManifestSchema } from "@athreei/shared"
 import type { z } from "zod"
 
+const FETCH_TIMEOUT_MS = 30000
+
+async function fetchWithTimeout(
+  url: string,
+  timeoutMs: number = FETCH_TIMEOUT_MS
+): Promise<Response> {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+
+  try {
+    const response = await fetch(url, { signal: controller.signal })
+    return response
+  } finally {
+    clearTimeout(timeoutId)
+  }
+}
+
 export interface SyncResult {
   added: number
   updated: number
@@ -91,7 +108,7 @@ async function syncFromGitHub(
     const ref = mkt.sourceRef || "main"
     const marketplaceUrl = `https://raw.githubusercontent.com/${mkt.sourceRepo}/${ref}/.claude-plugin/marketplace.json`
 
-    const response = await fetch(marketplaceUrl)
+    const response = await fetchWithTimeout(marketplaceUrl)
     if (!response.ok) {
       throw new Error(`Failed to fetch marketplace.json: ${response.status}`)
     }
@@ -163,7 +180,7 @@ async function syncPluginFromGitHub(
     manifestUrl = `https://raw.githubusercontent.com/${mkt.sourceRepo}/${ref}/plugins/${pluginDef.slug}/plugin.json`
   }
 
-  const response = await fetch(manifestUrl)
+  const response = await fetchWithTimeout(manifestUrl)
   if (!response.ok) {
     throw new Error(`Failed to fetch plugin manifest: ${response.status}`)
   }
@@ -371,8 +388,13 @@ async function syncFromUrl(
     errors: [],
   }
 
+  if (!mkt.sourceUrl) {
+    result.errors.push("Marketplace has no sourceUrl configured")
+    return result
+  }
+
   try {
-    const response = await fetch(mkt.sourceUrl!)
+    const response = await fetchWithTimeout(mkt.sourceUrl)
     if (!response.ok) {
       throw new Error(`Failed to fetch marketplace.json: ${response.status}`)
     }

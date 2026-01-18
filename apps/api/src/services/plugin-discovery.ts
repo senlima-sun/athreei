@@ -118,21 +118,25 @@ export async function searchPlugins(
 
   if (params.search) {
     const searchTerm = `%${params.search.slice(0, 200)}%`
-    conditions.push(
-      or(like(plugin.name, searchTerm), like(plugin.description, searchTerm))!
+    const searchCondition = or(
+      like(plugin.name, searchTerm),
+      like(plugin.description, searchTerm)
     )
+    if (searchCondition) {
+      conditions.push(searchCondition)
+    }
   }
 
   if (params.category) {
     conditions.push(eq(plugin.category, params.category))
   }
 
-  if (params.isVerified) {
-    conditions.push(eq(plugin.isVerified, true))
+  if (params.isVerified !== undefined) {
+    conditions.push(eq(plugin.isVerified, params.isVerified))
   }
 
-  if (params.isFeatured) {
-    conditions.push(eq(plugin.isFeatured, true))
+  if (params.isFeatured !== undefined) {
+    conditions.push(eq(plugin.isFeatured, params.isFeatured))
   }
 
   let restrictions: Awaited<ReturnType<typeof getOrgMarketplaceRestrictions>> =
@@ -141,18 +145,22 @@ export async function searchPlugins(
     restrictions = await getOrgMarketplaceRestrictions(organizationId)
   }
 
-  if (
-    restrictions?.restrictMarketplaces &&
-    restrictions.allowedMarketplaceIds.length > 0
-  ) {
-    conditions.push(inArray(marketplace.id, restrictions.allowedMarketplaceIds))
+  if (restrictions?.restrictMarketplaces) {
+    if (restrictions.allowedMarketplaceIds.length > 0) {
+      conditions.push(
+        inArray(marketplace.id, restrictions.allowedMarketplaceIds)
+      )
+    } else {
+      conditions.push(sql`1 = 0`)
+    }
   }
 
-  if (
-    restrictions?.restrictPlugins &&
-    restrictions.allowedPluginIds.length > 0
-  ) {
-    conditions.push(inArray(plugin.id, restrictions.allowedPluginIds))
+  if (restrictions?.restrictPlugins) {
+    if (restrictions.allowedPluginIds.length > 0) {
+      conditions.push(inArray(plugin.id, restrictions.allowedPluginIds))
+    } else {
+      conditions.push(sql`1 = 0`)
+    }
   }
 
   let orderByClause
@@ -302,13 +310,44 @@ export async function getPluginDetails(
   const p = result[0]
   if (!p) return null
 
-  if (!p.marketplaceIsPublic && organizationId) {
-    const restrictions = await getOrgMarketplaceRestrictions(organizationId)
-    if (
-      restrictions?.restrictMarketplaces &&
-      !restrictions.allowedMarketplaceIds.includes(p.marketplaceId)
-    ) {
+  if (!p.marketplaceIsPublic) {
+    if (!organizationId) {
       return null
+    }
+    const restrictions = await getOrgMarketplaceRestrictions(organizationId)
+    if (restrictions?.restrictMarketplaces) {
+      if (restrictions.allowedMarketplaceIds.length === 0) {
+        return null
+      }
+      if (!restrictions.allowedMarketplaceIds.includes(p.marketplaceId)) {
+        return null
+      }
+    }
+    if (restrictions?.restrictPlugins) {
+      if (restrictions.allowedPluginIds.length === 0) {
+        return null
+      }
+      if (!restrictions.allowedPluginIds.includes(p.id)) {
+        return null
+      }
+    }
+  } else if (organizationId) {
+    const restrictions = await getOrgMarketplaceRestrictions(organizationId)
+    if (restrictions?.restrictMarketplaces) {
+      if (restrictions.allowedMarketplaceIds.length === 0) {
+        return null
+      }
+      if (!restrictions.allowedMarketplaceIds.includes(p.marketplaceId)) {
+        return null
+      }
+    }
+    if (restrictions?.restrictPlugins) {
+      if (restrictions.allowedPluginIds.length === 0) {
+        return null
+      }
+      if (!restrictions.allowedPluginIds.includes(p.id)) {
+        return null
+      }
     }
   }
 
