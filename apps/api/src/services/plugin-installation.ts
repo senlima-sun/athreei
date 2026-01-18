@@ -1,4 +1,4 @@
-import { eq, and, sql, desc, inArray } from "drizzle-orm"
+import { eq, and, sql, desc } from "drizzle-orm"
 import { db } from "../lib/db-operations"
 import {
   marketplace,

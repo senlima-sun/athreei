@@ -1,4 +1,4 @@
-import type { Context, Next } from "hono"
+import type { Context } from "hono"
 import { createMiddleware } from "hono/factory"
 import { getAuthContext, type AuthContext } from "./auth"
 import { ApiError } from "./error"

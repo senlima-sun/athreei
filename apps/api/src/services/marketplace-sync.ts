@@ -1,4 +1,4 @@
-import { eq, and, notInArray } from "drizzle-orm"
+import { eq, and } from "drizzle-orm"
 import { db } from "../lib/db-operations"
 import { marketplace, plugin, pluginVersion, pluginComponent } from "@athreei/db"
 import {

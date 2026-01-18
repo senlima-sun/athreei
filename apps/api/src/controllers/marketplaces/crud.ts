@@ -1,8 +1,8 @@
 import type { Context } from "hono"
-import { eq, and, or, like, sql, desc, asc } from "drizzle-orm"
+import { eq, and, or, like, sql, asc } from "drizzle-orm"
 import { getAuthContext, ApiError } from "../../middleware"
 import { db } from "../../lib/db-operations"
-import { marketplace, plugin } from "@athreei/db"
+import { marketplace } from "@athreei/db"
 import {
   verifyOrganizationMembership,
   generateMarketplaceId,

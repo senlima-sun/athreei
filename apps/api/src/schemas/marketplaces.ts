@@ -7,7 +7,6 @@ import {
   semverSchema,
   pluginInstallationScopeSchema,
   pluginInstallationStatusSchema,
-  organizationMarketplaceSettingSchema as baseOrgMarketplaceSettingSchema,
 } from "@athreei/shared"
 
 export const listMarketplacesQuerySchema = z.object({
