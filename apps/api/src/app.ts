@@ -21,6 +21,11 @@ import {
   skillsRoutes,
   rulesRoutes,
   evaluationsRoutes,
+  marketplacesRoutes,
+  pluginsRoutes,
+  pluginInstallationsRoutes,
+  organizationMarketplaceRoutes,
+  adminMarketplacesRoutes,
 } from "./routes"
 import { errorHandler, notFoundHandler } from "./middleware"
 import { getAuth } from "./lib/auth"
@@ -81,6 +86,11 @@ app.route("/api/permissions", permissionsRoutes)
 app.route("/api/skills", skillsRoutes)
 app.route("/api/rules", rulesRoutes)
 app.route("/api/evaluations", evaluationsRoutes)
+app.route("/api/marketplaces", marketplacesRoutes)
+app.route("/api/plugins", pluginsRoutes)
+app.route("/api/organizations", pluginInstallationsRoutes)
+app.route("/api/organizations", organizationMarketplaceRoutes)
+app.route("/api/admin", adminMarketplacesRoutes)
 
 app.notFound(notFoundHandler)
 app.onError(errorHandler)

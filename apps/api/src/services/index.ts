@@ -15,6 +15,12 @@ export {
   generateTraceId,
   generateSpanId,
   generateSlug,
+  generateMarketplaceId,
+  generatePluginId,
+  generatePluginVersionId,
+  generatePluginComponentId,
+  generatePluginInstallationId,
+  generateOrgMarketplaceSettingId,
 } from "./id-generator"
 
 export {
@@ -79,3 +85,32 @@ export {
   clearRegistryCache,
   getRegistryCacheStatus,
 } from "./registry-loader"
+
+export {
+  type PluginSearchResult,
+  type PluginDetails,
+  getOrgMarketplaceRestrictions,
+  searchPlugins,
+  getPluginDetails,
+  getPluginVersions,
+  getPluginVersionDetails,
+} from "./plugin-discovery"
+
+export {
+  type InstallationResult,
+  checkInstallationRestrictions,
+  installPlugin,
+  uninstallPlugin,
+  updateInstallation,
+  updateInstallationVersion,
+  listInstallations,
+  getDecryptedEnv,
+} from "./plugin-installation"
+
+export {
+  type SyncResult,
+  type MarketplaceFile,
+  type PluginDefinition,
+  type PluginManifest,
+  syncMarketplace,
+} from "./marketplace-sync"
