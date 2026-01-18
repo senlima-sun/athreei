@@ -1,0 +1,2 @@
+ALTER TABLE "plugin_installation" ALTER COLUMN "installed_by" DROP NOT NULL;--> statement-breakpoint
+CREATE INDEX "idx_plugin_installation_installer" ON "plugin_installation" USING btree ("installed_by");
