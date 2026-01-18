@@ -5,6 +5,12 @@ export const ID_PREFIXES = {
   trace: "tr_",
   apiKey: "ak_",
   cliAuthSession: "cas_",
+  marketplace: "mkt_",
+  plugin: "plg_",
+  pluginVersion: "pv_",
+  pluginComponent: "pc_",
+  pluginInstallation: "pi_",
+  orgMarketplaceSetting: "oms_",
 } as const
 
 export type IdPrefix = (typeof ID_PREFIXES)[keyof typeof ID_PREFIXES]
@@ -44,4 +50,28 @@ export function generateSlug(name: string, maxLength = 50): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, maxLength)
+}
+
+export function generateMarketplaceId(): string {
+  return generateId(ID_PREFIXES.marketplace)
+}
+
+export function generatePluginId(): string {
+  return generateId(ID_PREFIXES.plugin)
+}
+
+export function generatePluginVersionId(): string {
+  return generateId(ID_PREFIXES.pluginVersion)
+}
+
+export function generatePluginComponentId(): string {
+  return generateId(ID_PREFIXES.pluginComponent)
+}
+
+export function generatePluginInstallationId(): string {
+  return generateId(ID_PREFIXES.pluginInstallation)
+}
+
+export function generateOrgMarketplaceSettingId(): string {
+  return generateId(ID_PREFIXES.orgMarketplaceSetting)
 }
