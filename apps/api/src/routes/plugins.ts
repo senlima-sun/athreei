@@ -38,8 +38,13 @@ plugins.get("/:marketplaceSlug/:pluginSlug", async (c) => {
 
 plugins.get("/:marketplaceSlug/:pluginSlug/versions", async (c) => {
   const { marketplaceSlug, pluginSlug } = c.req.param()
+  const organizationId = c.req.query("organizationId")
 
-  const versions = await getPluginVersions(marketplaceSlug, pluginSlug)
+  const versions = await getPluginVersions(
+    marketplaceSlug,
+    pluginSlug,
+    organizationId
+  )
 
   if (versions.length === 0) {
     throw ApiError.notFound("Plugin not found")
@@ -50,11 +55,13 @@ plugins.get("/:marketplaceSlug/:pluginSlug/versions", async (c) => {
 
 plugins.get("/:marketplaceSlug/:pluginSlug/versions/:version", async (c) => {
   const { marketplaceSlug, pluginSlug, version } = c.req.param()
+  const organizationId = c.req.query("organizationId")
 
   const versionDetails = await getPluginVersionDetails(
     marketplaceSlug,
     pluginSlug,
-    version
+    version,
+    organizationId
   )
 
   if (!versionDetails) {

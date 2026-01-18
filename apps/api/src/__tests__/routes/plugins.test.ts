@@ -473,7 +473,8 @@ describe("Plugin Routes", () => {
       expect(data).toHaveProperty("versions")
       expect(mockGetPluginVersions).toHaveBeenCalledWith(
         "official",
-        "test-plugin"
+        "test-plugin",
+        undefined
       )
     })
 
@@ -514,7 +515,8 @@ describe("Plugin Routes", () => {
       expect(mockGetPluginVersionDetails).toHaveBeenCalledWith(
         "official",
         "test-plugin",
-        "1.0.0"
+        "1.0.0",
+        undefined
       )
     })
 

@@ -441,7 +441,8 @@ export async function getPluginDetails(
 
 export async function getPluginVersions(
   marketplaceSlug: string,
-  pluginSlug: string
+  pluginSlug: string,
+  organizationId?: string
 ): Promise<
   Array<{
     id: string
@@ -452,7 +453,11 @@ export async function getPluginVersions(
   }>
 > {
   const p = await db()
-    .select({ id: plugin.id })
+    .select({
+      id: plugin.id,
+      marketplaceId: marketplace.id,
+      marketplaceIsPublic: marketplace.isPublic,
+    })
     .from(plugin)
     .innerJoin(marketplace, eq(plugin.marketplaceId, marketplace.id))
     .where(
@@ -461,6 +466,29 @@ export async function getPluginVersions(
     .limit(1)
 
   if (!p[0]) return []
+
+  if (!p[0].marketplaceIsPublic) {
+    if (!organizationId) {
+      return []
+    }
+    const restrictions = await getOrgMarketplaceRestrictions(organizationId)
+    if (restrictions?.restrictMarketplaces) {
+      if (
+        restrictions.allowedMarketplaceIds.length === 0 ||
+        !restrictions.allowedMarketplaceIds.includes(p[0].marketplaceId)
+      ) {
+        return []
+      }
+    }
+    if (restrictions?.restrictPlugins) {
+      if (
+        restrictions.allowedPluginIds.length === 0 ||
+        !restrictions.allowedPluginIds.includes(p[0].id)
+      ) {
+        return []
+      }
+    }
+  }
 
   return db()
     .select({
@@ -478,7 +506,8 @@ export async function getPluginVersions(
 export async function getPluginVersionDetails(
   marketplaceSlug: string,
   pluginSlug: string,
-  version: string
+  version: string,
+  organizationId?: string
 ): Promise<{
   id: string
   version: string
@@ -495,7 +524,11 @@ export async function getPluginVersionDetails(
   }>
 } | null> {
   const p = await db()
-    .select({ id: plugin.id })
+    .select({
+      id: plugin.id,
+      marketplaceId: marketplace.id,
+      marketplaceIsPublic: marketplace.isPublic,
+    })
     .from(plugin)
     .innerJoin(marketplace, eq(plugin.marketplaceId, marketplace.id))
     .where(
@@ -504,6 +537,29 @@ export async function getPluginVersionDetails(
     .limit(1)
 
   if (!p[0]) return null
+
+  if (!p[0].marketplaceIsPublic) {
+    if (!organizationId) {
+      return null
+    }
+    const restrictions = await getOrgMarketplaceRestrictions(organizationId)
+    if (restrictions?.restrictMarketplaces) {
+      if (
+        restrictions.allowedMarketplaceIds.length === 0 ||
+        !restrictions.allowedMarketplaceIds.includes(p[0].marketplaceId)
+      ) {
+        return null
+      }
+    }
+    if (restrictions?.restrictPlugins) {
+      if (
+        restrictions.allowedPluginIds.length === 0 ||
+        !restrictions.allowedPluginIds.includes(p[0].id)
+      ) {
+        return null
+      }
+    }
+  }
 
   const v = await db()
     .select({
