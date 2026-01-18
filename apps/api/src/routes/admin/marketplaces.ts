@@ -85,23 +85,25 @@ adminMarketplaces.post(
     const now = new Date()
     const id = generateMarketplaceId()
 
-    await db().insert(marketplace).values({
-      id,
-      slug: body.slug,
-      name: body.name,
-      description: body.description || null,
-      ownerType: body.ownerType || "system",
-      ownerId: body.ownerId || null,
-      sourceType: body.sourceType || "internal",
-      sourceUrl: body.sourceUrl || null,
-      sourceRepo: body.sourceRepo || null,
-      sourceRef: body.sourceRef || null,
-      isPublic: body.isPublic ?? true,
-      isDefault: body.isDefault ?? false,
-      autoUpdate: body.autoUpdate ?? true,
-      createdAt: now,
-      updatedAt: now,
-    })
+    await db()
+      .insert(marketplace)
+      .values({
+        id,
+        slug: body.slug,
+        name: body.name,
+        description: body.description || null,
+        ownerType: body.ownerType || "system",
+        ownerId: body.ownerId || null,
+        sourceType: body.sourceType || "internal",
+        sourceUrl: body.sourceUrl || null,
+        sourceRepo: body.sourceRepo || null,
+        sourceRef: body.sourceRef || null,
+        isPublic: body.isPublic ?? true,
+        isDefault: body.isDefault ?? false,
+        autoUpdate: body.autoUpdate ?? true,
+        createdAt: now,
+        updatedAt: now,
+      })
 
     const created = await db().query.marketplace.findFirst({
       where: eq(marketplace.id, id),
@@ -133,15 +135,22 @@ adminMarketplaces.patch(
     if (updates.name !== undefined) updateData.name = updates.name
     if (updates.description !== undefined)
       updateData.description = updates.description
-    if (updates.ownerType !== undefined) updateData.ownerType = updates.ownerType
+    if (updates.ownerType !== undefined)
+      updateData.ownerType = updates.ownerType
     if (updates.ownerId !== undefined) updateData.ownerId = updates.ownerId
-    if (updates.sourceType !== undefined) updateData.sourceType = updates.sourceType
-    if (updates.sourceUrl !== undefined) updateData.sourceUrl = updates.sourceUrl
-    if (updates.sourceRepo !== undefined) updateData.sourceRepo = updates.sourceRepo
-    if (updates.sourceRef !== undefined) updateData.sourceRef = updates.sourceRef
+    if (updates.sourceType !== undefined)
+      updateData.sourceType = updates.sourceType
+    if (updates.sourceUrl !== undefined)
+      updateData.sourceUrl = updates.sourceUrl
+    if (updates.sourceRepo !== undefined)
+      updateData.sourceRepo = updates.sourceRepo
+    if (updates.sourceRef !== undefined)
+      updateData.sourceRef = updates.sourceRef
     if (updates.isPublic !== undefined) updateData.isPublic = updates.isPublic
-    if (updates.isDefault !== undefined) updateData.isDefault = updates.isDefault
-    if (updates.autoUpdate !== undefined) updateData.autoUpdate = updates.autoUpdate
+    if (updates.isDefault !== undefined)
+      updateData.isDefault = updates.isDefault
+    if (updates.autoUpdate !== undefined)
+      updateData.autoUpdate = updates.autoUpdate
 
     await db()
       .update(marketplace)

@@ -97,7 +97,10 @@ pluginInstallations.post(
         if (error.message.includes("not found")) {
           throw ApiError.notFound(error.message)
         }
-        if (error.message.includes("Only admins") || error.message.includes("only")) {
+        if (
+          error.message.includes("Only admins") ||
+          error.message.includes("only")
+        ) {
           throw ApiError.forbidden(error.message)
         }
       }

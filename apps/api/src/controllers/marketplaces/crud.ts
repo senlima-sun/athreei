@@ -133,7 +133,10 @@ export async function getMarketplace(c: Context): Promise<Response> {
     if (!auth) {
       throw ApiError.forbidden("Access denied")
     }
-    const isMember = await verifyOrganizationMembership(auth.userId, mkt.ownerId)
+    const isMember = await verifyOrganizationMembership(
+      auth.userId,
+      mkt.ownerId
+    )
     if (!isMember) {
       throw ApiError.forbidden("Access denied")
     }
@@ -153,7 +156,10 @@ export async function createMarketplace(c: Context): Promise<Response> {
     throw ApiError.badRequest("organizationId query parameter is required")
   }
 
-  const isMember = await verifyOrganizationMembership(auth.userId, organizationId)
+  const isMember = await verifyOrganizationMembership(
+    auth.userId,
+    organizationId
+  )
   if (!isMember) {
     throw ApiError.forbidden("You do not have access to this organization")
   }
@@ -168,23 +174,25 @@ export async function createMarketplace(c: Context): Promise<Response> {
   const now = new Date()
   const id = generateMarketplaceId()
 
-  await db().insert(marketplace).values({
-    id,
-    slug: body.slug,
-    name: body.name,
-    description: body.description || null,
-    ownerType: "organization",
-    ownerId: organizationId,
-    sourceType: body.sourceType || "internal",
-    sourceUrl: body.sourceUrl || null,
-    sourceRepo: body.sourceRepo || null,
-    sourceRef: body.sourceRef || null,
-    isPublic: body.isPublic ?? false,
-    isDefault: false,
-    autoUpdate: body.autoUpdate ?? true,
-    createdAt: now,
-    updatedAt: now,
-  })
+  await db()
+    .insert(marketplace)
+    .values({
+      id,
+      slug: body.slug,
+      name: body.name,
+      description: body.description || null,
+      ownerType: "organization",
+      ownerId: organizationId,
+      sourceType: body.sourceType || "internal",
+      sourceUrl: body.sourceUrl || null,
+      sourceRepo: body.sourceRepo || null,
+      sourceRef: body.sourceRef || null,
+      isPublic: body.isPublic ?? false,
+      isDefault: false,
+      autoUpdate: body.autoUpdate ?? true,
+      createdAt: now,
+      updatedAt: now,
+    })
 
   const created = await db().query.marketplace.findFirst({
     where: eq(marketplace.id, id),
@@ -209,12 +217,17 @@ export async function updateMarketplace(c: Context): Promise<Response> {
   }
 
   if (mkt.ownerType === "organization" && mkt.ownerId) {
-    const isMember = await verifyOrganizationMembership(auth.userId, mkt.ownerId)
+    const isMember = await verifyOrganizationMembership(
+      auth.userId,
+      mkt.ownerId
+    )
     if (!isMember) {
       throw ApiError.forbidden("You do not have access to this marketplace")
     }
   } else if (mkt.ownerType === "system") {
-    throw ApiError.forbidden("System marketplaces can only be updated by admins")
+    throw ApiError.forbidden(
+      "System marketplaces can only be updated by admins"
+    )
   }
 
   const updateData: Partial<typeof marketplace.$inferInsert> = {
@@ -224,14 +237,20 @@ export async function updateMarketplace(c: Context): Promise<Response> {
   if (updates.name !== undefined) updateData.name = updates.name
   if (updates.description !== undefined)
     updateData.description = updates.description
-  if (updates.sourceType !== undefined) updateData.sourceType = updates.sourceType
+  if (updates.sourceType !== undefined)
+    updateData.sourceType = updates.sourceType
   if (updates.sourceUrl !== undefined) updateData.sourceUrl = updates.sourceUrl
-  if (updates.sourceRepo !== undefined) updateData.sourceRepo = updates.sourceRepo
+  if (updates.sourceRepo !== undefined)
+    updateData.sourceRepo = updates.sourceRepo
   if (updates.sourceRef !== undefined) updateData.sourceRef = updates.sourceRef
   if (updates.isPublic !== undefined) updateData.isPublic = updates.isPublic
-  if (updates.autoUpdate !== undefined) updateData.autoUpdate = updates.autoUpdate
+  if (updates.autoUpdate !== undefined)
+    updateData.autoUpdate = updates.autoUpdate
 
-  await db().update(marketplace).set(updateData).where(eq(marketplace.id, mkt.id))
+  await db()
+    .update(marketplace)
+    .set(updateData)
+    .where(eq(marketplace.id, mkt.id))
 
   const updated = await db().query.marketplace.findFirst({
     where: eq(marketplace.id, mkt.id),
@@ -253,12 +272,17 @@ export async function deleteMarketplace(c: Context): Promise<Response> {
   }
 
   if (mkt.ownerType === "organization" && mkt.ownerId) {
-    const isMember = await verifyOrganizationMembership(auth.userId, mkt.ownerId)
+    const isMember = await verifyOrganizationMembership(
+      auth.userId,
+      mkt.ownerId
+    )
     if (!isMember) {
       throw ApiError.forbidden("You do not have access to this marketplace")
     }
   } else if (mkt.ownerType === "system") {
-    throw ApiError.forbidden("System marketplaces can only be deleted by admins")
+    throw ApiError.forbidden(
+      "System marketplaces can only be deleted by admins"
+    )
   }
 
   await db().delete(marketplace).where(eq(marketplace.id, mkt.id))

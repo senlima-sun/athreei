@@ -1,6 +1,11 @@
 import { eq, and } from "drizzle-orm"
 import { db } from "../lib/db-operations"
-import { marketplace, plugin, pluginVersion, pluginComponent } from "@athreei/db"
+import {
+  marketplace,
+  plugin,
+  pluginVersion,
+  pluginComponent,
+} from "@athreei/db"
 import {
   generatePluginId,
   generatePluginVersionId,
@@ -44,7 +49,9 @@ export interface PluginManifest {
   lspServers?: string | Record<string, unknown>
 }
 
-export async function syncMarketplace(marketplaceId: string): Promise<SyncResult> {
+export async function syncMarketplace(
+  marketplaceId: string
+): Promise<SyncResult> {
   const mkt = await db().query.marketplace.findFirst({
     where: eq(marketplace.id, marketplaceId),
   })
@@ -54,7 +61,9 @@ export async function syncMarketplace(marketplaceId: string): Promise<SyncResult
   }
 
   if (mkt.sourceType === "internal") {
-    throw new Error("Internal marketplaces cannot be synced from external source")
+    throw new Error(
+      "Internal marketplaces cannot be synced from external source"
+    )
   }
 
   if (mkt.sourceType === "github" && mkt.sourceRepo) {
@@ -93,11 +102,7 @@ async function syncFromGitHub(
 
     for (const pluginDef of marketplaceFile.plugins) {
       try {
-        const pluginResult = await syncPluginFromGitHub(
-          mkt,
-          pluginDef,
-          ref
-        )
+        const pluginResult = await syncPluginFromGitHub(mkt, pluginDef, ref)
         syncedPluginSlugs.push(pluginDef.slug)
 
         if (pluginResult.isNew) {
@@ -199,18 +204,20 @@ async function syncPluginFromGitHub(
     pluginId = generatePluginId()
     isNew = true
 
-    await db().insert(plugin).values({
-      id: pluginId,
-      marketplaceId: mkt.id,
-      slug: pluginDef.slug,
-      name: manifest.name,
-      description: manifest.description || null,
-      author: manifest.author?.name || null,
-      tags: "[]",
-      downloadCount: "0",
-      createdAt: now,
-      updatedAt: now,
-    })
+    await db()
+      .insert(plugin)
+      .values({
+        id: pluginId,
+        marketplaceId: mkt.id,
+        slug: pluginDef.slug,
+        name: manifest.name,
+        description: manifest.description || null,
+        author: manifest.author?.name || null,
+        tags: "[]",
+        downloadCount: "0",
+        createdAt: now,
+        updatedAt: now,
+      })
   }
 
   const existingVersion = await db().query.pluginVersion.findFirst({
@@ -228,15 +235,17 @@ async function syncPluginFromGitHub(
 
     const versionId = generatePluginVersionId()
 
-    await db().insert(pluginVersion).values({
-      id: versionId,
-      pluginId,
-      version: manifest.version,
-      manifest: JSON.stringify(manifest),
-      isLatest: true,
-      publishedAt: now,
-      createdAt: now,
-    })
+    await db()
+      .insert(pluginVersion)
+      .values({
+        id: versionId,
+        pluginId,
+        version: manifest.version,
+        manifest: JSON.stringify(manifest),
+        isLatest: true,
+        publishedAt: now,
+        createdAt: now,
+      })
 
     await createComponentsFromManifest(versionId, manifest)
   }

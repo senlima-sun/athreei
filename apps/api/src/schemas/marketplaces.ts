@@ -110,7 +110,9 @@ export type ListPluginsQuery = z.infer<typeof listPluginsQuerySchema>
 export type InstallPluginInput = z.infer<typeof installPluginSchema>
 export type UpdateInstallationInput = z.infer<typeof updateInstallationSchema>
 export type UpdateVersionInput = z.infer<typeof updateVersionSchema>
-export type ListInstallationsQuery = z.infer<typeof listInstallationsQuerySchema>
+export type ListInstallationsQuery = z.infer<
+  typeof listInstallationsQuerySchema
+>
 export type UpdateOrgMarketplaceSettingsInput = z.infer<
   typeof updateOrgMarketplaceSettingsSchema
 >

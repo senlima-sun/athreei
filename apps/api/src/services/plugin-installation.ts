@@ -179,20 +179,22 @@ export async function installPlugin(
     encryptedEnv = JSON.stringify(input.envValues)
   }
 
-  await db().insert(pluginInstallation).values({
-    id,
-    organizationId,
-    pluginId: plg.id,
-    pluginVersionId: version.id,
-    installedBy: userId,
-    scope: input.scope,
-    status: "active",
-    config: input.config ? JSON.stringify(input.config) : null,
-    encryptedEnv,
-    envKeyVersion: encryptedEnv ? 1 : null,
-    installedAt: now,
-    updatedAt: now,
-  })
+  await db()
+    .insert(pluginInstallation)
+    .values({
+      id,
+      organizationId,
+      pluginId: plg.id,
+      pluginVersionId: version.id,
+      installedBy: userId,
+      scope: input.scope,
+      status: "active",
+      config: input.config ? JSON.stringify(input.config) : null,
+      encryptedEnv,
+      envKeyVersion: encryptedEnv ? 1 : null,
+      installedAt: now,
+      updatedAt: now,
+    })
 
   await db()
     .update(plugin)

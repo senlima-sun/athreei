@@ -18,7 +18,10 @@ export async function syncMarketplaceController(c: Context): Promise<Response> {
   }
 
   if (mkt.ownerType === "organization" && mkt.ownerId) {
-    const isMember = await verifyOrganizationMembership(auth.userId, mkt.ownerId)
+    const isMember = await verifyOrganizationMembership(
+      auth.userId,
+      mkt.ownerId
+    )
     if (!isMember) {
       throw ApiError.forbidden("You do not have access to this marketplace")
     }
@@ -35,7 +38,11 @@ export async function syncMarketplaceController(c: Context): Promise<Response> {
   try {
     const result = await syncMarketplace(mkt.id)
 
-    if (result.errors.length > 0 && result.added === 0 && result.updated === 0) {
+    if (
+      result.errors.length > 0 &&
+      result.added === 0 &&
+      result.updated === 0
+    ) {
       throw ApiError.badRequest(
         `Sync failed: ${result.errors.join(", ")}`,
         "SYNC_FAILED"

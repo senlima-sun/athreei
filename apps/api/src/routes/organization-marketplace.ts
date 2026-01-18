@@ -16,7 +16,10 @@ organizationMarketplace.use("*", authMiddleware)
 
 async function requireOrgAdmin(userId: string, organizationId: string) {
   const membership = await db().query.member.findFirst({
-    where: and(eq(member.userId, userId), eq(member.organizationId, organizationId)),
+    where: and(
+      eq(member.userId, userId),
+      eq(member.organizationId, organizationId)
+    ),
   })
 
   if (!membership) {
@@ -120,9 +123,11 @@ organizationMarketplace.patch(
         .set(updateData)
         .where(eq(organizationMarketplaceSetting.id, existing.id))
 
-      const updated = await db().query.organizationMarketplaceSetting.findFirst({
-        where: eq(organizationMarketplaceSetting.id, existing.id),
-      })
+      const updated = await db().query.organizationMarketplaceSetting.findFirst(
+        {
+          where: eq(organizationMarketplaceSetting.id, existing.id),
+        }
+      )
 
       return c.json({
         settings: {
@@ -144,18 +149,22 @@ organizationMarketplace.patch(
 
     const id = generateOrgMarketplaceSettingId()
 
-    await db().insert(organizationMarketplaceSetting).values({
-      id,
-      organizationId: orgId,
-      restrictMarketplaces: updates.restrictMarketplaces ?? false,
-      allowedMarketplaceIds: JSON.stringify(updates.allowedMarketplaceIds ?? []),
-      restrictPlugins: updates.restrictPlugins ?? false,
-      allowedPluginIds: JSON.stringify(updates.allowedPluginIds ?? []),
-      defaultPluginIds: JSON.stringify(updates.defaultPluginIds ?? []),
-      requireApproval: updates.requireApproval ?? false,
-      createdAt: now,
-      updatedAt: now,
-    })
+    await db()
+      .insert(organizationMarketplaceSetting)
+      .values({
+        id,
+        organizationId: orgId,
+        restrictMarketplaces: updates.restrictMarketplaces ?? false,
+        allowedMarketplaceIds: JSON.stringify(
+          updates.allowedMarketplaceIds ?? []
+        ),
+        restrictPlugins: updates.restrictPlugins ?? false,
+        allowedPluginIds: JSON.stringify(updates.allowedPluginIds ?? []),
+        defaultPluginIds: JSON.stringify(updates.defaultPluginIds ?? []),
+        requireApproval: updates.requireApproval ?? false,
+        createdAt: now,
+        updatedAt: now,
+      })
 
     const created = await db().query.organizationMarketplaceSetting.findFirst({
       where: eq(organizationMarketplaceSetting.id, id),

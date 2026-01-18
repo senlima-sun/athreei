@@ -141,11 +141,17 @@ export async function searchPlugins(
     restrictions = await getOrgMarketplaceRestrictions(organizationId)
   }
 
-  if (restrictions?.restrictMarketplaces && restrictions.allowedMarketplaceIds.length > 0) {
+  if (
+    restrictions?.restrictMarketplaces &&
+    restrictions.allowedMarketplaceIds.length > 0
+  ) {
     conditions.push(inArray(marketplace.id, restrictions.allowedMarketplaceIds))
   }
 
-  if (restrictions?.restrictPlugins && restrictions.allowedPluginIds.length > 0) {
+  if (
+    restrictions?.restrictPlugins &&
+    restrictions.allowedPluginIds.length > 0
+  ) {
     conditions.push(inArray(plugin.id, restrictions.allowedPluginIds))
   }
 
@@ -288,7 +294,9 @@ export async function getPluginDetails(
     })
     .from(plugin)
     .innerJoin(marketplace, eq(plugin.marketplaceId, marketplace.id))
-    .where(and(eq(marketplace.slug, marketplaceSlug), eq(plugin.slug, pluginSlug)))
+    .where(
+      and(eq(marketplace.slug, marketplaceSlug), eq(plugin.slug, pluginSlug))
+    )
     .limit(1)
 
   const p = result[0]
@@ -396,7 +404,9 @@ export async function getPluginVersions(
     .select({ id: plugin.id })
     .from(plugin)
     .innerJoin(marketplace, eq(plugin.marketplaceId, marketplace.id))
-    .where(and(eq(marketplace.slug, marketplaceSlug), eq(plugin.slug, pluginSlug)))
+    .where(
+      and(eq(marketplace.slug, marketplaceSlug), eq(plugin.slug, pluginSlug))
+    )
     .limit(1)
 
   if (!p[0]) return []
@@ -437,7 +447,9 @@ export async function getPluginVersionDetails(
     .select({ id: plugin.id })
     .from(plugin)
     .innerJoin(marketplace, eq(plugin.marketplaceId, marketplace.id))
-    .where(and(eq(marketplace.slug, marketplaceSlug), eq(plugin.slug, pluginSlug)))
+    .where(
+      and(eq(marketplace.slug, marketplaceSlug), eq(plugin.slug, pluginSlug))
+    )
     .limit(1)
 
   if (!p[0]) return null
@@ -453,7 +465,10 @@ export async function getPluginVersionDetails(
     })
     .from(pluginVersion)
     .where(
-      and(eq(pluginVersion.pluginId, p[0].id), eq(pluginVersion.version, version))
+      and(
+        eq(pluginVersion.pluginId, p[0].id),
+        eq(pluginVersion.version, version)
+      )
     )
     .limit(1)
 
