@@ -16,8 +16,12 @@ export function ImpersonationBanner() {
   }
 
   const stopImpersonating = async () => {
-    await authClient.admin.stopImpersonating()
-    window.location.href = "/admin/users"
+    try {
+      await authClient.admin.stopImpersonating()
+      window.location.href = "/admin/users"
+    } catch {
+      console.error("Failed to stop impersonating")
+    }
   }
 
   return (

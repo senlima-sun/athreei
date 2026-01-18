@@ -118,7 +118,9 @@ export function createAuthConfig(
         ac,
         roles,
         adminUserIds:
-          process.env.ADMIN_USER_IDS?.split(",").filter(Boolean) || [],
+          process.env.ADMIN_USER_IDS?.split(",")
+            .map((id) => id.trim())
+            .filter(Boolean) || [],
         defaultRole: "user",
       }),
     ],

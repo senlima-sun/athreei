@@ -25,12 +25,20 @@ export default function AdminUsersPage() {
   const [page, setPage] = useState(0)
   const pageSize = 20
 
-  const { data, isLoading } = useAdminUsers({
+  const { data, isLoading, isError } = useAdminUsers({
     searchValue,
     roleFilter,
     page,
     pageSize,
   })
+
+  if (isError) {
+    return (
+      <div className="p-8 text-center text-destructive">
+        Failed to load users. Please try again.
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">

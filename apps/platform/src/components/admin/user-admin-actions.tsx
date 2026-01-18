@@ -139,7 +139,10 @@ export function UserAdminActions({ user }: { user: AdminUser }) {
           </DropdownMenuItem>
         )}
 
-        <DropdownMenuItem onClick={() => revokeSessions.mutate()}>
+        <DropdownMenuItem
+          onClick={() => revokeSessions.mutate()}
+          disabled={isCurrentUser}
+        >
           Revoke All Sessions
         </DropdownMenuItem>
 
