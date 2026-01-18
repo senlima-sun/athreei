@@ -12,7 +12,19 @@ import {
   generatePluginComponentId,
 } from "./id-generator"
 import { pluginManifestSchema } from "@athreei/shared"
-import type { z } from "zod"
+import { z } from "zod"
+
+const pluginDefinitionSchema = z.object({
+  slug: z.string(),
+  source: z.string(),
+  path: z.string().optional(),
+})
+
+const marketplaceFileSchema = z.object({
+  name: z.string(),
+  description: z.string().optional(),
+  plugins: z.array(pluginDefinitionSchema),
+})
 
 const FETCH_TIMEOUT_MS = 30000
 
@@ -38,17 +50,8 @@ export interface SyncResult {
   errors: string[]
 }
 
-export interface MarketplaceFile {
-  name: string
-  description?: string
-  plugins: PluginDefinition[]
-}
-
-export interface PluginDefinition {
-  slug: string
-  source: string
-  path?: string
-}
+export type MarketplaceFile = z.infer<typeof marketplaceFileSchema>
+export type PluginDefinition = z.infer<typeof pluginDefinitionSchema>
 
 export interface PluginManifest {
   name: string
@@ -113,7 +116,12 @@ async function syncFromGitHub(
       throw new Error(`Failed to fetch marketplace.json: ${response.status}`)
     }
 
-    const marketplaceFile = (await response.json()) as MarketplaceFile
+    const rawData = await response.json()
+    const parseResult = marketplaceFileSchema.safeParse(rawData)
+    if (!parseResult.success) {
+      throw new Error(`Invalid marketplace.json: ${parseResult.error.message}`)
+    }
+    const marketplaceFile = parseResult.data
 
     const syncedPluginSlugs: string[] = []
 
@@ -399,21 +407,18 @@ async function syncFromUrl(
       throw new Error(`Failed to fetch marketplace.json: ${response.status}`)
     }
 
-    const marketplaceFile = (await response.json()) as MarketplaceFile
+    const rawData = await response.json()
+    const parseResult = marketplaceFileSchema.safeParse(rawData)
+    if (!parseResult.success) {
+      throw new Error(`Invalid marketplace.json: ${parseResult.error.message}`)
+    }
+    const marketplaceFile = parseResult.data
 
     for (const pluginDef of marketplaceFile.plugins) {
       result.errors.push(
         `URL sync for plugin ${pluginDef.slug} not implemented yet`
       )
     }
-
-    await db()
-      .update(marketplace)
-      .set({
-        lastSyncedAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .where(eq(marketplace.id, mkt.id))
   } catch (error) {
     result.errors.push(
       `Sync failed: ${error instanceof Error ? error.message : "Unknown error"}`
