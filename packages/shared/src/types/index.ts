@@ -11,6 +11,7 @@
 export * from "./server-config"
 export * from "./cli-config"
 export * from "./skills-rules"
+export * from "./marketplace"
 
 export type PermissionLevel = "denied" | "allowed" | "ask"
 
