@@ -488,6 +488,24 @@ export async function getPluginVersions(
         return []
       }
     }
+  } else if (organizationId) {
+    const restrictions = await getOrgMarketplaceRestrictions(organizationId)
+    if (restrictions?.restrictMarketplaces) {
+      if (
+        restrictions.allowedMarketplaceIds.length === 0 ||
+        !restrictions.allowedMarketplaceIds.includes(p[0].marketplaceId)
+      ) {
+        return []
+      }
+    }
+    if (restrictions?.restrictPlugins) {
+      if (
+        restrictions.allowedPluginIds.length === 0 ||
+        !restrictions.allowedPluginIds.includes(p[0].id)
+      ) {
+        return []
+      }
+    }
   }
 
   return db()
@@ -542,6 +560,24 @@ export async function getPluginVersionDetails(
     if (!organizationId) {
       return null
     }
+    const restrictions = await getOrgMarketplaceRestrictions(organizationId)
+    if (restrictions?.restrictMarketplaces) {
+      if (
+        restrictions.allowedMarketplaceIds.length === 0 ||
+        !restrictions.allowedMarketplaceIds.includes(p[0].marketplaceId)
+      ) {
+        return null
+      }
+    }
+    if (restrictions?.restrictPlugins) {
+      if (
+        restrictions.allowedPluginIds.length === 0 ||
+        !restrictions.allowedPluginIds.includes(p[0].id)
+      ) {
+        return null
+      }
+    }
+  } else if (organizationId) {
     const restrictions = await getOrgMarketplaceRestrictions(organizationId)
     if (restrictions?.restrictMarketplaces) {
       if (
