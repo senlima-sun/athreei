@@ -380,6 +380,30 @@ async function createComponentsFromManifest(
     }
   }
 
+  if (manifest.lspServers) {
+    if (typeof manifest.lspServers === "string") {
+      components.push({
+        id: generatePluginComponentId(),
+        pluginVersionId: versionId,
+        type: "lsp_server",
+        name: "LSP Server",
+        config: JSON.stringify({ path: manifest.lspServers }),
+        createdAt: now,
+      })
+    } else {
+      for (const [name, config] of Object.entries(manifest.lspServers)) {
+        components.push({
+          id: generatePluginComponentId(),
+          pluginVersionId: versionId,
+          type: "lsp_server",
+          name,
+          config: JSON.stringify(config),
+          createdAt: now,
+        })
+      }
+    }
+  }
+
   if (components.length > 0) {
     await db().insert(pluginComponent).values(components)
   }
