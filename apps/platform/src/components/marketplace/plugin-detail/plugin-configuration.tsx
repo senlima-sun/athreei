@@ -244,8 +244,8 @@ function EnvVarItem({ envVar, isInstalled, installedValue }: EnvVarItemProps) {
 }
 
 function maskValue(value: string): string {
-  if (value.length <= 8) {
+  if (value.length <= 4) {
     return "*".repeat(value.length)
   }
-  return value.slice(0, 4) + "*".repeat(value.length - 8) + value.slice(-4)
+  return value.slice(0, 2) + "*".repeat(Math.max(value.length - 2, 4))
 }

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useMemo } from "react"
+import { useState, useCallback, useMemo, useEffect, useRef } from "react"
 import { X, Loader2, AlertCircle, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ScopeSelector } from "./scope-selector"
@@ -37,6 +37,14 @@ export function InstallModal({
 }: InstallModalProps) {
   const { data: activeOrg } = useActiveOrganizationSafe()
   const installMutation = useInstallPlugin()
+  const mountedRef = useRef(true)
+
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
 
   const [scope, setScope] = useState<PluginInstallationScope>(
     canInstallForOrg ? "organization" : "user"
@@ -91,8 +99,10 @@ export function InstallModal({
               )
             : undefined,
       })
-      onSuccess?.()
-      handleClose()
+      if (mountedRef.current) {
+        onSuccess?.()
+        handleClose()
+      }
     } catch {
       // Error is handled by mutation state
     }

@@ -75,6 +75,7 @@ export function PluginGrid({
       if (currentRef) {
         observer.unobserve(currentRef)
       }
+      observer.disconnect()
     }
   }, [useIntersectionObserver, hasNextPage, isFetchingNextPage, fetchNextPage])
 

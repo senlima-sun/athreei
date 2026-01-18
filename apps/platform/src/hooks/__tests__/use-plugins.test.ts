@@ -141,7 +141,7 @@ describe("usePlugins", () => {
     expect(mockFetchApi).toHaveBeenCalledWith(
       expect.stringContaining("offset=0")
     )
-    expect(result.current.data?.pages[0].plugins).toHaveLength(1)
+    expect(result.current.data?.pages[0]?.plugins).toHaveLength(1)
   })
 
   it("supports search param", async () => {
@@ -227,7 +227,7 @@ describe("usePlugins", () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
 
-    expect(result.current.data?.pages[0].hasMore).toBe(true)
+    expect(result.current.data?.pages[0]?.hasMore).toBe(true)
   })
 
   it("returns hasMore flag correctly when no more pages exist", async () => {
@@ -242,7 +242,7 @@ describe("usePlugins", () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
 
-    expect(result.current.data?.pages[0].hasMore).toBe(false)
+    expect(result.current.data?.pages[0]?.hasMore).toBe(false)
   })
 
   it("handles empty response", async () => {
@@ -257,9 +257,9 @@ describe("usePlugins", () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
 
-    expect(result.current.data?.pages[0].plugins).toHaveLength(0)
-    expect(result.current.data?.pages[0].total).toBe(0)
-    expect(result.current.data?.pages[0].hasMore).toBe(false)
+    expect(result.current.data?.pages[0]?.plugins).toHaveLength(0)
+    expect(result.current.data?.pages[0]?.total).toBe(0)
+    expect(result.current.data?.pages[0]?.hasMore).toBe(false)
   })
 
   it("handles network error", async () => {

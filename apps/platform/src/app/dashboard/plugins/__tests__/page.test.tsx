@@ -65,7 +65,7 @@ vi.mock("@/components/ui/button", () => ({
     if (render) {
       return React.cloneElement(
         render,
-        { className, "data-variant": variant, "data-size": size },
+        { className, "data-variant": variant, "data-size": size } as Record<string, unknown>,
         children
       )
     }
@@ -681,7 +681,7 @@ describe("InstalledPluginsPage", () => {
           mockUseInstalledPlugins.mock.calls[
             mockUseInstalledPlugins.mock.calls.length - 1
           ]
-        expect(lastCall[0]).not.toHaveProperty("status")
+        expect(lastCall?.[0]).not.toHaveProperty("status")
       })
     })
 
@@ -770,7 +770,7 @@ describe("InstalledPluginsPage", () => {
           mockUseInstalledPlugins.mock.calls[
             mockUseInstalledPlugins.mock.calls.length - 1
           ]
-        expect(lastCall[0]).not.toHaveProperty("componentType")
+        expect(lastCall?.[0]).not.toHaveProperty("componentType")
       })
     })
 
