@@ -10,6 +10,15 @@ import {
 } from "@athreei/db"
 import type { ListPluginsQuery } from "../schemas/marketplaces"
 
+function safeJsonParse<T>(value: string | null | undefined, defaultValue: T): T {
+  if (!value) return defaultValue
+  try {
+    return JSON.parse(value) as T
+  } catch {
+    return defaultValue
+  }
+}
+
 export interface PluginSearchResult {
   id: string
   slug: string
@@ -92,9 +101,12 @@ export async function getOrgMarketplaceRestrictions(
 
   return {
     restrictMarketplaces: settings.restrictMarketplaces,
-    allowedMarketplaceIds: JSON.parse(settings.allowedMarketplaceIds || "[]"),
+    allowedMarketplaceIds: safeJsonParse<string[]>(
+      settings.allowedMarketplaceIds,
+      []
+    ),
     restrictPlugins: settings.restrictPlugins,
-    allowedPluginIds: JSON.parse(settings.allowedPluginIds || "[]"),
+    allowedPluginIds: safeJsonParse<string[]>(settings.allowedPluginIds, []),
   }
 }
 
@@ -240,7 +252,7 @@ export async function searchPlugins(
       name: p.name,
       description: p.description,
       category: p.category,
-      tags: JSON.parse(p.tags || "[]"),
+      tags: safeJsonParse<string[]>(p.tags, []),
       author: p.author,
       iconUrl: p.iconUrl,
       isVerified: p.isVerified,
@@ -405,7 +417,7 @@ export async function getPluginDetails(
     name: p.name,
     description: p.description,
     category: p.category,
-    tags: JSON.parse(p.tags || "[]"),
+    tags: safeJsonParse<string[]>(p.tags, []),
     author: p.author,
     homepage: p.homepage,
     repository: p.repository,
@@ -526,10 +538,10 @@ export async function getPluginVersionDetails(
 
   return {
     ...v[0],
-    manifest: JSON.parse(v[0].manifest || "{}"),
+    manifest: safeJsonParse<unknown>(v[0].manifest, {}),
     components: components.map((c) => ({
       ...c,
-      config: JSON.parse(c.config || "{}"),
+      config: safeJsonParse<unknown>(c.config, {}),
     })),
   }
 }
