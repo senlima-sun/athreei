@@ -123,12 +123,11 @@ async function syncFromGitHub(
     }
     const marketplaceFile = parseResult.data
 
-    const syncedPluginSlugs: string[] = []
+    const remotePluginSlugs = marketplaceFile.plugins.map((p) => p.slug)
 
     for (const pluginDef of marketplaceFile.plugins) {
       try {
         const pluginResult = await syncPluginFromGitHub(mkt, pluginDef, ref)
-        syncedPluginSlugs.push(pluginDef.slug)
 
         if (pluginResult.isNew) {
           result.added++
@@ -147,7 +146,7 @@ async function syncFromGitHub(
     })
 
     const removedPlugins = existingPlugins.filter(
-      (p) => !syncedPluginSlugs.includes(p.slug)
+      (p) => !remotePluginSlugs.includes(p.slug)
     )
 
     for (const removedPlugin of removedPlugins) {
