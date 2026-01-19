@@ -9,6 +9,15 @@ interface PluginOverviewProps {
   readme?: string
 }
 
+function isSafeUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url, window.location.origin)
+    return ["http:", "https:", "mailto:"].includes(parsed.protocol)
+  } catch {
+    return false
+  }
+}
+
 export function PluginOverview({ plugin, readme }: PluginOverviewProps) {
   const hasLinks = plugin.homepage || plugin.repository
   const hasTags = plugin.tags && plugin.tags.length > 0
@@ -206,17 +215,22 @@ function FormattedText({ text }: { text: string }) {
         </code>
       )
     } else if (firstMatch.type === "link") {
-      parts.push(
-        <a
-          key={`link-${keyIndex++}`}
-          href={firstMatch.match[2]}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-blue-600 hover:underline"
-        >
-          {firstMatch.match[1]}
-        </a>
-      )
+      const href = firstMatch.match[2]
+      if (isSafeUrl(href)) {
+        parts.push(
+          <a
+            key={`link-${keyIndex++}`}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:underline"
+          >
+            {firstMatch.match[1]}
+          </a>
+        )
+      } else {
+        parts.push(firstMatch.match[1])
+      }
     }
 
     remaining = remaining.slice(firstMatch.index + firstMatch.match[0].length)
