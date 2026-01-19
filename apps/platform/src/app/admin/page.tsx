@@ -1,18 +1,19 @@
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
+import { z } from "zod"
 import { Loader2 } from "lucide-react"
 import { fetchApi } from "@/lib/api"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 
-interface AdminStats {
-  totalPlugins: number
-  totalMarketplaces: number
-  verifiedPlugins: number
-  featuredPlugins: number
-  pendingApprovals: number
-  totalDownloads: number
-}
+const adminStatsSchema = z.object({
+  totalPlugins: z.number(),
+  totalMarketplaces: z.number(),
+  verifiedPlugins: z.number(),
+  featuredPlugins: z.number(),
+  pendingApprovals: z.number(),
+  totalDownloads: z.number(),
+})
 
 interface StatCardProps {
   title: string
@@ -41,7 +42,10 @@ export default function AdminDashboardPage() {
     error,
   } = useQuery({
     queryKey: ["admin-stats"],
-    queryFn: () => fetchApi<AdminStats>("/api/admin/stats"),
+    queryFn: async () => {
+      const data = await fetchApi("/api/admin/stats")
+      return adminStatsSchema.parse(data)
+    },
   })
 
   if (isLoading) {
