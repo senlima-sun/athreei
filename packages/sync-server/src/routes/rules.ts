@@ -12,27 +12,11 @@ import {
 import { getDb } from "../db/client"
 import * as schema from "../db/schema"
 import { authMiddleware, getAuthContext } from "../middleware/auth"
+import { uint8ArrayToBase64, base64ToUint8Array } from "../utils/base64"
 
 const rules = new Hono()
 
 rules.use("*", authMiddleware)
-
-function uint8ArrayToBase64(bytes: Uint8Array): string {
-  let binary = ""
-  for (let i = 0; i < bytes.length; i++) {
-    binary += String.fromCharCode(bytes[i] ?? 0)
-  }
-  return btoa(binary)
-}
-
-function base64ToUint8Array(base64: string): Uint8Array {
-  const binary = atob(base64)
-  const bytes = new Uint8Array(binary.length)
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i)
-  }
-  return bytes
-}
 
 function ruleToResponse(rule: schema.Rule): RuleResponse {
   return {

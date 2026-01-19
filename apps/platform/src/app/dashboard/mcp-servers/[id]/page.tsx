@@ -74,7 +74,10 @@ export default function EditMcpServerPage() {
       })
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null)
+        const errorData = await response.json().catch((e) => {
+          console.error("Failed to parse error response:", e)
+          return null
+        })
         throw new Error(errorData?.message || "Failed to update MCP server")
       }
 
@@ -98,7 +101,10 @@ export default function EditMcpServerPage() {
       })
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null)
+        const errorData = await response.json().catch((e) => {
+          console.error("Failed to parse error response:", e)
+          return null
+        })
         throw new Error(errorData?.message || "Failed to delete MCP server")
       }
 

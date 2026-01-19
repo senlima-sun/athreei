@@ -28,6 +28,7 @@ import {
   stopSessionCleanup,
   cleanupAllSessions,
 } from "./gateway/session"
+import { flushAllRecorders } from "./services/trace-recorder"
 import { DEFAULT_CONFIG, type GatewayCloudConfig } from "./types"
 import type { Logger } from "@athreei/gateway-core"
 
@@ -128,6 +129,7 @@ async function shutdown(): Promise<void> {
   log.info("Shutting down gateway cloud service...")
 
   stopSessionCleanup()
+  await flushAllRecorders()
   await cleanupAllSessions()
 
   log.info("Gateway cloud service shut down")

@@ -70,7 +70,10 @@ export default function NewMcpServerPage() {
       )
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null)
+        const errorData = await response.json().catch((e) => {
+          console.error("Failed to parse error response:", e)
+          return null
+        })
         throw new Error(errorData?.message || "Failed to create MCP server")
       }
 

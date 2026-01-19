@@ -118,28 +118,24 @@ import {
 const parsed = parseToolName("browser__navigate")
 // { serverName: "browser", toolName: "navigate" }
 
+// Create router state
+const state = { connectedMcps, aggregatedTools }
+
 // Validate a tool call
-const validation = validateToolCall(
-  "browser__navigate",
-  { url: "..." },
-  aggregatedTools
-)
-// { valid: true, tool: {...}, serverName: "browser" }
+const validation = validateToolCall(state, "browser__navigate")
+// { valid: true }
 
 // Route a tool call
 const result = await routeToolCall(
+  state,
   "browser__navigate",
   { url: "..." },
-  {
-    tools: aggregatedTools,
-    connectedMcps,
-    logger: console,
-  }
+  { logger: console }
 )
 
 // Get routing info
-const info = getRoutingInfo("browser__navigate", aggregatedTools)
-// { serverName: "browser", tool: {...}, available: true }
+const info = getRoutingInfo(state, "browser__navigate")
+// { serverName: "browser", toolName: "navigate", serverConfig: {...}, isConnected: true }
 ```
 
 ### Name Sanitization

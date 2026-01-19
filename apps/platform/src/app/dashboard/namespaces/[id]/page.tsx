@@ -319,7 +319,10 @@ export default function NamespaceDetailsPage() {
       )
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null)
+        const errorData = await response.json().catch((e) => {
+          console.error("Failed to parse error response:", e)
+          return null
+        })
         throw new Error(errorData?.message || "Failed to add server")
       }
 
@@ -365,7 +368,10 @@ export default function NamespaceDetailsPage() {
       )
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null)
+        const errorData = await response.json().catch((e) => {
+          console.error("Failed to parse error response:", e)
+          return null
+        })
         throw new Error(errorData?.message || "Failed to update server status")
       }
 
@@ -392,7 +398,10 @@ export default function NamespaceDetailsPage() {
       )
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null)
+        const errorData = await response.json().catch((e) => {
+          console.error("Failed to parse error response:", e)
+          return null
+        })
         throw new Error(errorData?.message || "Failed to add skill")
       }
 
@@ -438,7 +447,10 @@ export default function NamespaceDetailsPage() {
       )
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null)
+        const errorData = await response.json().catch((e) => {
+          console.error("Failed to parse error response:", e)
+          return null
+        })
         throw new Error(errorData?.message || "Failed to update skill status")
       }
 
@@ -465,7 +477,10 @@ export default function NamespaceDetailsPage() {
       )
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null)
+        const errorData = await response.json().catch((e) => {
+          console.error("Failed to parse error response:", e)
+          return null
+        })
         throw new Error(errorData?.message || "Failed to add rule")
       }
 
@@ -512,7 +527,10 @@ export default function NamespaceDetailsPage() {
       )
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null)
+        const errorData = await response.json().catch((e) => {
+          console.error("Failed to parse error response:", e)
+          return null
+        })
         throw new Error(errorData?.message || "Failed to update rule status")
       }
 
@@ -537,7 +555,10 @@ export default function NamespaceDetailsPage() {
       })
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null)
+        const errorData = await response.json().catch((e) => {
+          console.error("Failed to parse error response:", e)
+          return null
+        })
         throw new Error(errorData?.message || "Failed to delete namespace")
       }
 

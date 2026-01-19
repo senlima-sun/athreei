@@ -10,7 +10,13 @@
  *   DATABASE_URL - Required. PostgreSQL or SQLite connection string.
  */
 
-import { createClient, detectDatabaseType, getSchema } from "../client"
+import {
+  createPgClient,
+  createSqliteClient,
+  detectDatabaseType,
+} from "../client"
+import * as pgSchema from "../schema/pg"
+import * as sqliteSchema from "../schema/sqlite"
 import {
   getMcpServerSeedData,
   validateSeedData,
@@ -47,17 +53,22 @@ async function main() {
   console.log(`Seeding MCP servers for organization: ${organizationId}`)
 
   try {
-    const db = createClient(databaseUrl)
-    const schema = getSchema(dbType)
     const seedData = getMcpServerSeedData(organizationId)
 
     console.log(`\nInserting ${seedData.length} MCP servers...`)
 
-    // Insert each server
-    // Note: Type assertion needed due to polymorphic db client (pg/sqlite union)
-    for (const server of seedData) {
-      await (db as any).insert(schema.mcpServer).values(server)
-      console.log(`  + ${server.name}`)
+    if (dbType === "postgresql") {
+      const db = createPgClient(databaseUrl)
+      for (const server of seedData) {
+        await db.insert(pgSchema.mcpServer).values(server)
+        console.log(`  + ${server.name}`)
+      }
+    } else {
+      const db = createSqliteClient(databaseUrl)
+      for (const server of seedData) {
+        await db.insert(sqliteSchema.mcpServer).values(server)
+        console.log(`  + ${server.name}`)
+      }
     }
 
     console.log("\nSeed completed successfully!")

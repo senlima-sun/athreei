@@ -1,5 +1,6 @@
 import type { Context, Next } from "hono"
 import type { JwtPayload, AuthContext } from "../types"
+import { base64urlEncode, base64urlDecode } from "../utils/base64"
 
 function getJwtSecret(): string {
   const secret = process.env.JWT_SECRET
@@ -15,16 +16,6 @@ function getJwtSecret(): string {
 }
 
 const JWT_SECRET = getJwtSecret()
-
-// Simple JWT encode/decode for Bun (without external dependencies)
-function base64urlEncode(str: string): string {
-  return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "")
-}
-
-function base64urlDecode(str: string): string {
-  const base64 = str.replace(/-/g, "+").replace(/_/g, "/")
-  return atob(base64)
-}
 
 export async function signJwt(payload: JwtPayload): Promise<string> {
   const header = {
