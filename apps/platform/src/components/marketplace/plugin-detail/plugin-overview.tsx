@@ -215,8 +215,8 @@ function FormattedText({ text }: { text: string }) {
         </code>
       )
     } else if (firstMatch.type === "link") {
-      const href = firstMatch.match[2]
-      if (isSafeUrl(href)) {
+      const href = firstMatch.match[2] ?? ""
+      if (href && isSafeUrl(href)) {
         parts.push(
           <a
             key={`link-${keyIndex++}`}
