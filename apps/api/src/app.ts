@@ -26,6 +26,7 @@ import {
   pluginInstallationsRoutes,
   organizationMarketplaceRoutes,
   adminMarketplacesRoutes,
+  adminStatsRoutes,
 } from "./routes"
 import { errorHandler, notFoundHandler } from "./middleware"
 import { getAuth } from "./lib/auth"
@@ -91,6 +92,7 @@ app.route("/api/plugins", pluginsRoutes)
 app.route("/api/organizations", pluginInstallationsRoutes)
 app.route("/api/organizations", organizationMarketplaceRoutes)
 app.route("/api/admin", adminMarketplacesRoutes)
+app.route("/api/admin", adminStatsRoutes)
 
 app.notFound(notFoundHandler)
 app.onError(errorHandler)
