@@ -1,8 +1,16 @@
 "use client"
 
 import { useState, useCallback, useMemo, useEffect, useRef } from "react"
-import { X, Loader2, AlertCircle, Download } from "lucide-react"
+import { Loader2, AlertCircle, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog"
 import { ScopeSelector } from "./scope-selector"
 import { EnvVarInput } from "./env-var-input"
 import { useInstallPlugin } from "@/hooks/use-plugin-installation"
@@ -123,36 +131,30 @@ export function InstallModal({
     }
   }
 
-  if (!isOpen) return null
+  const handleOpenChange = (open: boolean) => {
+    if (!open && !installMutation.isPending) {
+      handleClose()
+    }
+  }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="w-full max-w-md rounded-lg bg-white shadow-xl">
-        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-100">
-              <Download className="h-5 w-5 text-gray-600" />
-            </div>
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900">
-                Install {pluginName}
-              </h2>
-              {version && (
-                <p className="text-xs text-gray-500">Version {version}</p>
-              )}
-            </div>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      <DialogContent showCloseButton={!installMutation.isPending}>
+        <DialogHeader className="flex-row items-center gap-3 border-b border-gray-200 pb-4">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gray-100">
+            <Download className="h-5 w-5 text-gray-600" />
           </div>
-          <button
-            type="button"
-            onClick={handleClose}
-            disabled={installMutation.isPending}
-            className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 disabled:opacity-50"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+          <div className="min-w-0">
+            <DialogTitle>Install {pluginName}</DialogTitle>
+            {version && (
+              <DialogDescription className="mt-0.5">
+                Version {version}
+              </DialogDescription>
+            )}
+          </div>
+        </DialogHeader>
 
-        <div className="space-y-5 px-6 py-4">
+        <div className="space-y-5">
           <p className="text-sm text-gray-600">
             Choose where to install this plugin. Organization installs are
             available to all members, while personal installs are only available
@@ -203,7 +205,7 @@ export function InstallModal({
           )}
         </div>
 
-        <div className="flex justify-end gap-3 border-t border-gray-200 px-6 py-4">
+        <DialogFooter className="gap-3 border-t border-gray-200 pt-4">
           <Button
             type="button"
             variant="outline"
@@ -222,8 +224,8 @@ export function InstallModal({
             )}
             Install
           </Button>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
