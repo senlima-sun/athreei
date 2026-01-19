@@ -150,7 +150,6 @@ function processFile(filePath: string, options: Options): RemovalResult | null {
   const removedComments: string[] = []
 
   let inMultilineComment = false
-  let multilineCommentStart = -1
   let multilineBuffer: string[] = []
 
   for (let i = 0; i < lines.length; i++) {
@@ -159,7 +158,6 @@ function processFile(filePath: string, options: Options): RemovalResult | null {
 
     if (trimmed.startsWith("/*") && !trimmed.startsWith("/**")) {
       inMultilineComment = true
-      multilineCommentStart = i
       multilineBuffer = [line]
 
       if (trimmed.endsWith("*/")) {
