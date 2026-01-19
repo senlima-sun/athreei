@@ -99,10 +99,12 @@ function createMockTrace(options: Partial<ToolCallTrace> = {}): ToolCallTrace {
 
 // Helper to create mock gateway state
 function createMockState(overrides: Partial<GatewayState> = {}): GatewayState {
+  const { createHookExecutor } = require("../hook-executor")
   return {
     connectedMcps: overrides.connectedMcps ?? new Map(),
     aggregatedTools: overrides.aggregatedTools ?? [],
     eventHandlers: overrides.eventHandlers ?? [],
+    hookExecutor: overrides.hookExecutor ?? createHookExecutor(),
   }
 }
 

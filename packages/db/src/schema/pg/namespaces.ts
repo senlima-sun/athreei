@@ -17,6 +17,8 @@ import {
   timestamp,
   boolean,
   uniqueIndex,
+  integer,
+  index,
 } from "drizzle-orm/pg-core"
 import { relations } from "drizzle-orm"
 import { organization } from "./auth"
@@ -87,3 +89,32 @@ export const namespaceResourceRelations = relations(
     }),
   })
 )
+
+export const namespaceHook = pgTable(
+  "namespace_hook",
+  {
+    id: text("id").primaryKey(),
+    namespaceId: text("namespaceId")
+      .notNull()
+      .references(() => namespace.id, { onDelete: "cascade" }),
+    event: text("event").notNull(),
+    toolNamePattern: text("toolNamePattern"),
+    handler: text("handler").notNull(),
+    priority: integer("priority").notNull().default(100),
+    isEnabled: boolean("isEnabled").notNull().default(true),
+    sourcePluginId: text("sourcePluginId"),
+    createdAt: timestamp("createdAt").notNull(),
+    updatedAt: timestamp("updatedAt").notNull(),
+  },
+  (table) => [
+    index("namespace_hook_namespace_idx").on(table.namespaceId),
+    index("namespace_hook_event_idx").on(table.event),
+  ]
+)
+
+export const namespaceHookRelations = relations(namespaceHook, ({ one }) => ({
+  namespace: one(namespace, {
+    fields: [namespaceHook.namespaceId],
+    references: [namespace.id],
+  }),
+}))

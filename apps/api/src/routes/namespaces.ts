@@ -10,6 +10,8 @@ import {
   updateSkillMappingSchema,
   addRuleSchema,
   updateRuleMappingSchema,
+  createHookSchema,
+  updateHookSchema,
 } from "../schemas/namespaces"
 import {
   listNamespaces,
@@ -29,6 +31,12 @@ import {
   removeRule,
   listRules,
   updateRuleMapping,
+  createHook,
+  listHooks,
+  getHook,
+  updateHook,
+  deleteHook,
+  toggleHook,
 } from "../controllers/namespaces"
 
 const namespaces = new Hono()
@@ -89,5 +97,21 @@ namespaces.patch(
   zValidator("json", updateRuleMappingSchema),
   updateRuleMapping
 )
+
+namespaces.post("/:id/hooks", zValidator("json", createHookSchema), createHook)
+
+namespaces.get("/:id/hooks", listHooks)
+
+namespaces.get("/:id/hooks/:hookId", getHook)
+
+namespaces.patch(
+  "/:id/hooks/:hookId",
+  zValidator("json", updateHookSchema),
+  updateHook
+)
+
+namespaces.delete("/:id/hooks/:hookId", deleteHook)
+
+namespaces.post("/:id/hooks/:hookId/toggle", toggleHook)
 
 export default namespaces

@@ -16,6 +16,7 @@ export const marketplaceSourceTypeSchema = z.enum([
 export const pluginComponentTypeSchema = z.enum([
   "mcp_server",
   "skill",
+  "rule",
   "hook",
   "command",
   "agent",
@@ -65,6 +66,55 @@ export const mcpServerComponentConfigSchema = z.object({
   envVars: z.array(envVarDefinitionSchema).optional(),
 })
 
+export const skillComponentConfigSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().optional(),
+  content: z.string().min(1),
+  tags: z.array(z.string()).optional(),
+  allowedTools: z.array(z.string()).optional(),
+  triggerPatterns: z.array(z.string()).optional(),
+})
+
+export const ruleComponentConfigSchema = z.object({
+  name: z.string().min(1),
+  description: z.string().optional(),
+  content: z.string().min(1),
+  priority: z.number().int().min(0).max(1000).default(100),
+  scope: z.enum(["global", "namespace", "endpoint"]).default("namespace"),
+})
+
+export const hookEventSchema = z.enum([
+  "PreToolUse",
+  "PostToolUse",
+  "SessionStart",
+  "SessionEnd",
+  "Stop",
+])
+
+export const hookHandlerSchema = z.union([
+  z.object({
+    type: z.literal("skill"),
+    skillRef: z.string(),
+  }),
+  z.object({
+    type: z.literal("script"),
+    command: z.string(),
+    args: z.array(z.string()).optional(),
+  }),
+  z.object({
+    type: z.literal("rule"),
+    action: z.enum(["block", "allow", "ask"]),
+    message: z.string().optional(),
+  }),
+])
+
+export const hookComponentConfigSchema = z.object({
+  event: hookEventSchema,
+  toolNamePattern: z.string().optional(),
+  handler: hookHandlerSchema,
+  priority: z.number().int().min(0).max(1000).default(100),
+})
+
 export const createMarketplaceSchema = z.object({
   slug: marketplaceSlugSchema,
   name: z.string().min(1).max(255),
@@ -110,8 +160,23 @@ export const pluginManifestSchema = z.object({
   author: authorSchema.optional(),
   commands: z.union([z.string(), z.array(z.string())]).optional(),
   agents: z.union([z.string(), z.array(z.string())]).optional(),
-  skills: z.union([z.string(), z.array(z.string())]).optional(),
-  hooks: z.union([z.string(), z.record(z.any())]).optional(),
+  skills: z
+    .union([
+      z.string(),
+      z.array(z.string()),
+      z.record(skillComponentConfigSchema),
+    ])
+    .optional(),
+  rules: z
+    .union([
+      z.string(),
+      z.array(z.string()),
+      z.record(ruleComponentConfigSchema),
+    ])
+    .optional(),
+  hooks: z
+    .union([z.string(), z.record(hookComponentConfigSchema)])
+    .optional(),
   mcpServers: z.union([z.string(), z.record(z.any())]).optional(),
   lspServers: z.union([z.string(), z.record(z.any())]).optional(),
 })
@@ -182,6 +247,11 @@ export type EnvVarDefinition = z.infer<typeof envVarDefinitionSchema>
 export type McpServerComponentConfig = z.infer<
   typeof mcpServerComponentConfigSchema
 >
+export type SkillComponentConfig = z.infer<typeof skillComponentConfigSchema>
+export type RuleComponentConfig = z.infer<typeof ruleComponentConfigSchema>
+export type HookEvent = z.infer<typeof hookEventSchema>
+export type HookHandler = z.infer<typeof hookHandlerSchema>
+export type HookComponentConfig = z.infer<typeof hookComponentConfigSchema>
 export type CreateMarketplaceInput = z.infer<typeof createMarketplaceSchema>
 export type UpdateMarketplaceInput = z.infer<typeof updateMarketplaceSchema>
 export type CreatePluginInput = z.infer<typeof createPluginSchema>

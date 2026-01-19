@@ -1,6 +1,7 @@
 export const ID_PREFIXES = {
   namespace: "ns_",
   namespaceResource: "nsr_",
+  namespaceHook: "nh_",
   endpoint: "ep_",
   trace: "tr_",
   apiKey: "ak_",
@@ -11,6 +12,8 @@ export const ID_PREFIXES = {
   pluginComponent: "pc_",
   pluginInstallation: "pi_",
   orgMarketplaceSetting: "oms_",
+  skill: "sk_",
+  rule: "rl_",
 } as const
 
 export type IdPrefix = (typeof ID_PREFIXES)[keyof typeof ID_PREFIXES]
@@ -74,4 +77,16 @@ export function generatePluginInstallationId(): string {
 
 export function generateOrgMarketplaceSettingId(): string {
   return generateId(ID_PREFIXES.orgMarketplaceSetting)
+}
+
+export function generateSkillId(): string {
+  return generateId(ID_PREFIXES.skill)
+}
+
+export function generateRuleId(): string {
+  return generateId(ID_PREFIXES.rule)
+}
+
+export function generateNamespaceHookId(): string {
+  return generateId(ID_PREFIXES.namespaceHook)
 }

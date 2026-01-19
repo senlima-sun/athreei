@@ -16,3 +16,12 @@ export {
 export { addSkill, removeSkill, listSkills, updateSkillMapping } from "./skills"
 
 export { addRule, removeRule, listRules, updateRuleMapping } from "./rules"
+
+export {
+  createHook,
+  listHooks,
+  getHook,
+  updateHook,
+  deleteHook,
+  toggleHook,
+} from "./hooks"

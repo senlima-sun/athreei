@@ -5,10 +5,19 @@ import {
   plugin,
   pluginVersion,
   pluginInstallation,
+  pluginComponent,
   organizationMarketplaceSetting,
   member,
+  skill,
+  rule,
+  namespaceHook,
 } from "@athreei/db"
-import { generatePluginInstallationId } from "./id-generator"
+import {
+  generatePluginInstallationId,
+  generateSkillId,
+  generateRuleId,
+  generateNamespaceHookId,
+} from "./id-generator"
 import { getOrgMarketplaceRestrictions } from "./plugin-discovery"
 import type {
   InstallPluginInput,
@@ -576,4 +585,219 @@ export async function getDecryptedEnv(
   }
 
   return JSON.parse(installation.encryptedEnv)
+}
+
+interface SkillComponentConfig {
+  name: string
+  description?: string
+  content: string
+  tags?: string[]
+  allowedTools?: string[]
+  triggerPatterns?: string[]
+}
+
+interface RuleComponentConfig {
+  name: string
+  description?: string
+  content: string
+  priority?: number
+  scope?: "global" | "namespace" | "endpoint"
+}
+
+interface HookComponentConfig {
+  event: string
+  toolNamePattern?: string
+  handler: unknown
+  priority?: number
+}
+
+export async function syncPluginComponentsToNamespace(
+  installationId: string,
+  namespaceId: string,
+  organizationId: string
+): Promise<{
+  skillsCreated: number
+  rulesCreated: number
+  hooksCreated: number
+}> {
+  const installation = await db().query.pluginInstallation.findFirst({
+    where: and(
+      eq(pluginInstallation.id, installationId),
+      eq(pluginInstallation.organizationId, organizationId)
+    ),
+  })
+
+  if (!installation) {
+    throw new Error("Installation not found")
+  }
+
+  const components = await db().query.pluginComponent.findMany({
+    where: eq(pluginComponent.pluginVersionId, installation.pluginVersionId),
+  })
+
+  const now = new Date()
+  let skillsCreated = 0
+  let rulesCreated = 0
+  let hooksCreated = 0
+
+  for (const component of components) {
+    const config = component.config ? JSON.parse(component.config) : {}
+
+    switch (component.type) {
+      case "skill": {
+        if (config.content) {
+          const skillConfig = config as SkillComponentConfig
+          const skillId = `${installation.pluginId}_${component.name}`
+
+          const existingSkill = await db().query.skill.findFirst({
+            where: and(
+              eq(skill.id, skillId),
+              eq(skill.organizationId, organizationId)
+            ),
+          })
+
+          if (existingSkill) {
+            await db()
+              .update(skill)
+              .set({
+                name: skillConfig.name,
+                description: skillConfig.description || null,
+                content: skillConfig.content,
+                tags: skillConfig.tags ? JSON.stringify(skillConfig.tags) : null,
+                updatedAt: now,
+              })
+              .where(eq(skill.id, skillId))
+          } else {
+            await db().insert(skill).values({
+              id: skillId,
+              organizationId,
+              name: skillConfig.name,
+              description: skillConfig.description || null,
+              content: skillConfig.content,
+              tags: skillConfig.tags ? JSON.stringify(skillConfig.tags) : null,
+              isEnabled: "true",
+              version: 1,
+              createdAt: now,
+              updatedAt: now,
+            })
+            skillsCreated++
+          }
+        }
+        break
+      }
+
+      case "rule": {
+        if (config.content) {
+          const ruleConfig = config as RuleComponentConfig
+          const ruleId = `${installation.pluginId}_${component.name}`
+
+          const existingRule = await db().query.rule.findFirst({
+            where: and(
+              eq(rule.id, ruleId),
+              eq(rule.organizationId, organizationId)
+            ),
+          })
+
+          if (existingRule) {
+            await db()
+              .update(rule)
+              .set({
+                name: ruleConfig.name,
+                description: ruleConfig.description || null,
+                content: ruleConfig.content,
+                priority: ruleConfig.priority ?? 100,
+                scope: ruleConfig.scope ?? "namespace",
+                updatedAt: now,
+              })
+              .where(eq(rule.id, ruleId))
+          } else {
+            await db().insert(rule).values({
+              id: ruleId,
+              organizationId,
+              name: ruleConfig.name,
+              description: ruleConfig.description || null,
+              content: ruleConfig.content,
+              priority: ruleConfig.priority ?? 100,
+              scope: ruleConfig.scope ?? "namespace",
+              isEnabled: "true",
+              createdAt: now,
+              updatedAt: now,
+            })
+            rulesCreated++
+          }
+        }
+        break
+      }
+
+      case "hook": {
+        const hookConfig = config as HookComponentConfig
+        if (hookConfig.event && hookConfig.handler) {
+          const hookId = `${installation.pluginId}_${component.name}`
+
+          const existingHook = await db().query.namespaceHook.findFirst({
+            where: and(
+              eq(namespaceHook.id, hookId),
+              eq(namespaceHook.namespaceId, namespaceId)
+            ),
+          })
+
+          if (existingHook) {
+            await db()
+              .update(namespaceHook)
+              .set({
+                event: hookConfig.event,
+                toolNamePattern: hookConfig.toolNamePattern || null,
+                handler: JSON.stringify(hookConfig.handler),
+                priority: hookConfig.priority ?? 100,
+                updatedAt: now,
+              })
+              .where(eq(namespaceHook.id, hookId))
+          } else {
+            await db().insert(namespaceHook).values({
+              id: hookId,
+              namespaceId,
+              event: hookConfig.event,
+              toolNamePattern: hookConfig.toolNamePattern || null,
+              handler: JSON.stringify(hookConfig.handler),
+              priority: hookConfig.priority ?? 100,
+              isEnabled: true,
+              sourcePluginId: installation.pluginId,
+              createdAt: now,
+              updatedAt: now,
+            })
+            hooksCreated++
+          }
+        }
+        break
+      }
+    }
+  }
+
+  return { skillsCreated, rulesCreated, hooksCreated }
+}
+
+export async function removePluginComponentsFromNamespace(
+  installationId: string,
+  namespaceId: string,
+  organizationId: string
+): Promise<void> {
+  const installation = await db().query.pluginInstallation.findFirst({
+    where: and(
+      eq(pluginInstallation.id, installationId),
+      eq(pluginInstallation.organizationId, organizationId)
+    ),
+  })
+
+  if (!installation) {
+    return
+  }
+
+  await db()
+    .delete(namespaceHook)
+    .where(
+      and(
+        eq(namespaceHook.namespaceId, namespaceId),
+        eq(namespaceHook.sourcePluginId, installation.pluginId)
+      )
+    )
 }

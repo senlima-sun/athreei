@@ -45,6 +45,8 @@ export interface LocalConfig {
   skills?: SkillConfig[]
   /** Rules to apply to AI interactions */
   rules?: RuleConfig[]
+  /** Hooks for tool call interception */
+  hooks?: HookConfig[]
 }
 
 /**
@@ -88,6 +90,89 @@ export interface RuleConfig {
 }
 
 /**
+ * Hook handler types
+ */
+export type HookHandler =
+  | { type: "skill"; skillRef: string }
+  | { type: "script"; command: string; args?: string[] }
+  | { type: "rule"; action: "block" | "allow" | "ask"; message?: string }
+
+/**
+ * Hook configuration for tool call interception
+ */
+export interface HookConfig {
+  /** Unique hook ID */
+  id: string
+  /** Event that triggers this hook */
+  event: "PreToolUse" | "PostToolUse" | "SessionStart" | "SessionEnd" | "Stop"
+  /** Optional regex pattern to match tool names */
+  toolNamePattern?: string
+  /** Handler configuration */
+  handler: HookHandler
+  /** Priority for ordering (higher = executed first) */
+  priority?: number
+  /** Whether the hook is enabled */
+  isEnabled?: boolean
+  /** Source plugin ID (if from plugin) */
+  sourcePluginId?: string
+}
+
+/**
+ * Context provided to PreToolUse hooks
+ */
+export interface PreToolUseContext {
+  /** Trace ID for correlation */
+  traceId: string
+  /** Prefixed tool name (serverName__toolName) */
+  toolName: string
+  /** Server name parsed from prefixed tool name */
+  serverName: string
+  /** Tool call arguments */
+  arguments: Record<string, unknown> | undefined
+  /** Timestamp when the hook was triggered */
+  timestamp: number
+}
+
+/**
+ * Context provided to PostToolUse hooks
+ */
+export interface PostToolUseContext {
+  /** Trace ID for correlation */
+  traceId: string
+  /** Prefixed tool name (serverName__toolName) */
+  toolName: string
+  /** Server name parsed from prefixed tool name */
+  serverName: string
+  /** Tool call arguments */
+  arguments: Record<string, unknown> | undefined
+  /** Tool call result */
+  result: import("@modelcontextprotocol/sdk/types.js").CallToolResult
+  /** Duration in milliseconds */
+  durationMs: number
+  /** Timestamp when the hook was triggered */
+  timestamp: number
+}
+
+/**
+ * Hook evaluation decision
+ */
+export interface HookDecision {
+  /** Action to take */
+  action: "allow" | "block" | "modify"
+  /** Optional reason for the decision */
+  reason?: string
+  /** Modified arguments (only used with action: "modify") */
+  modifiedArgs?: Record<string, unknown>
+}
+
+/**
+ * Async event handler that can return hook decisions
+ */
+export type AsyncGatewayEventHandler = (
+  event: GatewayEvent
+) => Promise<HookDecision | void> | HookDecision | void
+
+/**
  * Namespace configuration from Platform API
  * Returned by GET /api/gateway/config?endpoint={name}
  */
@@ -110,6 +195,8 @@ export interface NamespaceConfig {
   skills?: SkillConfig[]
   /** Rules assigned to this namespace */
   rules?: RuleConfig[]
+  /** Hooks assigned to this namespace */
+  hooks?: HookConfig[]
   /** Config version for change detection */
   configVersion: string
 }

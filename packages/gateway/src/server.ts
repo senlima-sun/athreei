@@ -15,6 +15,7 @@ import type { AggregatedTool, GatewayEventHandler } from "./types"
 import { aggregateTools } from "@athreei/gateway-core"
 import { routeToolCall } from "./router"
 import { log } from "./logger"
+import { HookExecutor, createHookExecutor } from "./hook-executor"
 
 /**
  * Gateway state managed by the server
@@ -26,6 +27,8 @@ export interface GatewayState {
   aggregatedTools: AggregatedTool[]
   /** Event handlers */
   eventHandlers: GatewayEventHandler[]
+  /** Hook executor for pre/post tool use hooks */
+  hookExecutor: HookExecutor
 }
 
 /**
@@ -36,6 +39,7 @@ export function createGatewayState(): GatewayState {
     connectedMcps: new Map(),
     aggregatedTools: [],
     eventHandlers: [],
+    hookExecutor: createHookExecutor(),
   }
 }
 

@@ -11,6 +11,7 @@ export {
   generateUUID,
   generateNamespaceId,
   generateNamespaceResourceId,
+  generateNamespaceHookId,
   generateEndpointId,
   generateTraceId,
   generateSpanId,
@@ -21,6 +22,8 @@ export {
   generatePluginComponentId,
   generatePluginInstallationId,
   generateOrgMarketplaceSettingId,
+  generateSkillId,
+  generateRuleId,
 } from "./id-generator"
 
 export {
@@ -105,6 +108,8 @@ export {
   updateInstallationVersion,
   listInstallations,
   getDecryptedEnv,
+  syncPluginComponentsToNamespace,
+  removePluginComponentsFromNamespace,
 } from "./plugin-installation"
 
 export {

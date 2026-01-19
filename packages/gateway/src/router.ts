@@ -10,7 +10,12 @@
 
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js"
 import type { GatewayState } from "./server"
-import type { ToolCallTrace, McpServerConfig } from "./types"
+import type {
+  ToolCallTrace,
+  McpServerConfig,
+  PreToolUseContext,
+  PostToolUseContext,
+} from "./types"
 import { log } from "./logger"
 
 // Re-export core routing functions from gateway-core
@@ -30,7 +35,7 @@ import {
 } from "@athreei/gateway-core"
 
 /**
- * Route a tool call to the appropriate MCP server with tracing.
+ * Route a tool call to the appropriate MCP server with tracing and hooks.
  * This wraps the core routing logic with gateway-specific tracing and events.
  */
 export async function routeToolCall(
@@ -59,6 +64,48 @@ export async function routeToolCall(
     )
   }
 
+  const preHookContext: PreToolUseContext = {
+    traceId,
+    toolName: prefixedName,
+    serverName,
+    arguments: args,
+    timestamp: startTime,
+  }
+
+  const hookDecision = await state.hookExecutor.evaluatePreToolUse(preHookContext)
+
+  if (hookDecision.action === "block") {
+    log.warn(`Tool call blocked by hook: ${prefixedName}`, hookDecision.reason)
+
+    const requestId = crypto.randomUUID()
+    const trace: ToolCallTrace = {
+      traceId,
+      requestId,
+      aggregatedToolName: prefixedName,
+      serverName,
+      toolName,
+      arguments: args,
+      startedAt: new Date(),
+      endedAt: new Date(),
+      durationMs: 0,
+      status: "error",
+      error: `Blocked by hook: ${hookDecision.reason || "Policy violation"}`,
+    }
+    emitTraceEvent(state, trace)
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: `Tool call blocked: ${hookDecision.reason || "Policy violation"}`,
+        },
+      ],
+      isError: true,
+    }
+  }
+
+  const effectiveArgs = hookDecision.modifiedArgs ?? args
+
   const requestId = crypto.randomUUID()
   const trace: ToolCallTrace = {
     traceId,
@@ -66,15 +113,15 @@ export async function routeToolCall(
     aggregatedToolName: prefixedName,
     serverName,
     toolName,
-    arguments: args,
+    arguments: effectiveArgs,
     startedAt: new Date(),
-    status: "success", // Will be updated on error
+    status: "success",
   }
 
   try {
     log.debug(`Calling ${toolName} on ${mcp.config.name}`)
 
-    const result = await coreRouteToolCall(state, prefixedName, args, {
+    const result = await coreRouteToolCall(state, prefixedName, effectiveArgs, {
       logger: log,
     })
 
@@ -83,6 +130,20 @@ export async function routeToolCall(
     trace.result = result
 
     log.info(`Tool call completed: ${prefixedName} (${trace.durationMs}ms)`)
+
+    const postHookContext: PostToolUseContext = {
+      traceId,
+      toolName: prefixedName,
+      serverName,
+      arguments: effectiveArgs,
+      result,
+      durationMs: trace.durationMs,
+      timestamp: Date.now(),
+    }
+
+    state.hookExecutor.evaluatePostToolUse(postHookContext).catch((err) => {
+      log.error("PostToolUse hook error:", err)
+    })
 
     emitTraceEvent(state, trace)
 

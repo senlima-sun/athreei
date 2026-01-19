@@ -16,6 +16,7 @@ import {
   text,
   integer,
   uniqueIndex,
+  index,
 } from "drizzle-orm/sqlite-core"
 import { relations } from "drizzle-orm"
 import { organization } from "./auth"
@@ -88,3 +89,32 @@ export const namespaceResourceRelations = relations(
     }),
   })
 )
+
+export const namespaceHook = sqliteTable(
+  "namespace_hook",
+  {
+    id: text("id").primaryKey(),
+    namespaceId: text("namespaceId")
+      .notNull()
+      .references(() => namespace.id, { onDelete: "cascade" }),
+    event: text("event").notNull(),
+    toolNamePattern: text("toolNamePattern"),
+    handler: text("handler").notNull(),
+    priority: integer("priority").notNull().default(100),
+    isEnabled: integer("isEnabled", { mode: "boolean" }).notNull().default(true),
+    sourcePluginId: text("sourcePluginId"),
+    createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
+    updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
+  },
+  (table) => [
+    index("namespace_hook_namespace_idx").on(table.namespaceId),
+    index("namespace_hook_event_idx").on(table.event),
+  ]
+)
+
+export const namespaceHookRelations = relations(namespaceHook, ({ one }) => ({
+  namespace: one(namespace, {
+    fields: [namespaceHook.namespaceId],
+    references: [namespace.id],
+  }),
+}))

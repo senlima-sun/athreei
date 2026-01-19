@@ -6,6 +6,7 @@ import { logger } from "../lib/logger"
 import {
   namespace,
   namespaceResource,
+  namespaceHook,
   mcpServer,
   mcpTool,
   trace,
@@ -172,6 +173,15 @@ gateway.get("/config", zValidator("query", getConfigQuerySchema), async (c) => {
 
   rules.sort((a, b) => b.priority - a.priority)
 
+  const hooks = (await dbQuery.namespaceHook.findMany({
+    where: and(
+      eq(namespaceHook.namespaceId, namespaceRecord.id),
+      eq(namespaceHook.isEnabled, true)
+    ),
+  })) as Array<typeof namespaceHook.$inferSelect>
+
+  hooks.sort((a, b) => b.priority - a.priority)
+
   const configVersion = generateConfigVersion(
     namespaceRecord.updatedAt,
     servers
@@ -239,6 +249,20 @@ gateway.get("/config", zValidator("query", getConfigQuerySchema), async (c) => {
       content: r.content,
       priority: r.priority,
       scope: r.scope,
+    })),
+    hooks: hooks.map((h) => ({
+      id: h.id,
+      event: h.event,
+      toolNamePattern: h.toolNamePattern,
+      handler: (() => {
+        try {
+          return JSON.parse(h.handler)
+        } catch {
+          return null
+        }
+      })(),
+      priority: h.priority,
+      sourcePluginId: h.sourcePluginId,
     })),
   })
 })

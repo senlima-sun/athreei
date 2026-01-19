@@ -63,10 +63,38 @@ export interface PluginManifest {
   }
   commands?: string | string[]
   agents?: string | string[]
-  skills?: string | string[]
-  hooks?: string | Record<string, unknown>
+  skills?: string | string[] | Record<string, SkillInlineConfig>
+  rules?: string | string[] | Record<string, RuleInlineConfig>
+  hooks?: string | Record<string, HookInlineConfig>
   mcpServers?: string | Record<string, unknown>
   lspServers?: string | Record<string, unknown>
+}
+
+interface SkillInlineConfig {
+  name: string
+  description?: string
+  content: string
+  tags?: string[]
+  allowedTools?: string[]
+  triggerPatterns?: string[]
+}
+
+interface RuleInlineConfig {
+  name: string
+  description?: string
+  content: string
+  priority?: number
+  scope?: "global" | "namespace" | "endpoint"
+}
+
+interface HookInlineConfig {
+  event: "PreToolUse" | "PostToolUse" | "SessionStart" | "SessionEnd" | "Stop"
+  toolNamePattern?: string
+  handler:
+    | { type: "skill"; skillRef: string }
+    | { type: "script"; command: string; args?: string[] }
+    | { type: "rule"; action: "block" | "allow" | "ask"; message?: string }
+  priority?: number
 }
 
 export async function syncMarketplace(
@@ -309,18 +337,89 @@ async function createComponentsFromManifest(
   }
 
   if (manifest.skills) {
-    const skills = Array.isArray(manifest.skills)
-      ? manifest.skills
-      : [manifest.skills]
-    for (const skill of skills) {
+    if (typeof manifest.skills === "string") {
       components.push({
         id: generatePluginComponentId(),
         pluginVersionId: versionId,
         type: "skill",
-        name: skill,
-        config: JSON.stringify({ path: skill }),
+        name: manifest.skills,
+        config: JSON.stringify({ path: manifest.skills }),
         createdAt: now,
       })
+    } else if (Array.isArray(manifest.skills)) {
+      for (const skill of manifest.skills) {
+        components.push({
+          id: generatePluginComponentId(),
+          pluginVersionId: versionId,
+          type: "skill",
+          name: skill,
+          config: JSON.stringify({ path: skill }),
+          createdAt: now,
+        })
+      }
+    } else {
+      for (const [name, cfg] of Object.entries(manifest.skills)) {
+        const skillConfig = cfg as SkillInlineConfig
+        components.push({
+          id: generatePluginComponentId(),
+          pluginVersionId: versionId,
+          type: "skill",
+          name,
+          description: skillConfig.description,
+          config: JSON.stringify({
+            name: skillConfig.name,
+            description: skillConfig.description,
+            content: skillConfig.content,
+            tags: skillConfig.tags,
+            allowedTools: skillConfig.allowedTools,
+            triggerPatterns: skillConfig.triggerPatterns,
+          }),
+          createdAt: now,
+        })
+      }
+    }
+  }
+
+  if (manifest.rules) {
+    if (typeof manifest.rules === "string") {
+      components.push({
+        id: generatePluginComponentId(),
+        pluginVersionId: versionId,
+        type: "rule",
+        name: manifest.rules,
+        config: JSON.stringify({ path: manifest.rules }),
+        createdAt: now,
+      })
+    } else if (Array.isArray(manifest.rules)) {
+      for (const rule of manifest.rules) {
+        components.push({
+          id: generatePluginComponentId(),
+          pluginVersionId: versionId,
+          type: "rule",
+          name: rule,
+          config: JSON.stringify({ path: rule }),
+          createdAt: now,
+        })
+      }
+    } else {
+      for (const [name, cfg] of Object.entries(manifest.rules)) {
+        const ruleConfig = cfg as RuleInlineConfig
+        components.push({
+          id: generatePluginComponentId(),
+          pluginVersionId: versionId,
+          type: "rule",
+          name,
+          description: ruleConfig.description,
+          config: JSON.stringify({
+            name: ruleConfig.name,
+            description: ruleConfig.description,
+            content: ruleConfig.content,
+            priority: ruleConfig.priority ?? 100,
+            scope: ruleConfig.scope ?? "namespace",
+          }),
+          createdAt: now,
+        })
+      }
     }
   }
 
