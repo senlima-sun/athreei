@@ -1,5 +1,5 @@
 /**
- * Initialize the default public marketplace and first admin user.
+ * Initialize the default public marketplace and log admin candidates.
  * Run once on first deployment, then manage via admin UI.
  *
  * Usage: bun run apps/api/src/scripts/init-marketplace.ts
@@ -41,7 +41,7 @@ async function initPublicMarketplace(): Promise<void> {
   console.log("Created default marketplace: athreei-marketplace")
 }
 
-async function promoteFirstAdmin(): Promise<void> {
+async function logAdminCandidates(): Promise<void> {
   const adminUserIds =
     process.env.ADMIN_USER_IDS?.split(",").filter(Boolean) ?? []
 
@@ -54,16 +54,13 @@ async function promoteFirstAdmin(): Promise<void> {
   }
 
   console.log(`Found ${adminUserIds.length} admin user(s) to process.`)
-  for (const userId of adminUserIds) {
-    console.log(`Admin user ID: ${userId}`)
-  }
 }
 
 async function main(): Promise<void> {
   console.log("Initializing marketplace...")
   await initPublicMarketplace()
-  console.log("\nProcessing admin users...")
-  await promoteFirstAdmin()
+  console.log("\nChecking admin configuration...")
+  await logAdminCandidates()
   console.log("\nDone!")
 }
 
