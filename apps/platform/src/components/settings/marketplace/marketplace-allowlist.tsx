@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react"
 import { useMarketplaces } from "@/hooks/use-marketplaces"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, X, Search, Store, Plus, Check } from "lucide-react"
+import { Loader2, X, Search, Store, Plus, Check, AlertCircle } from "lucide-react"
 import type { Marketplace } from "@/types/marketplace"
 
 interface MarketplaceAllowlistProps {
@@ -19,13 +19,26 @@ export function MarketplaceAllowlist({
 }: MarketplaceAllowlistProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-  const { data: marketplacesData, isPending } = useMarketplaces({ limit: 100 })
+  const { data: marketplacesData, isPending } = useMarketplaces({ limit: 1000 })
 
   const marketplaces = marketplacesData?.marketplaces ?? []
+  const marketplaceMap = useMemo(() => {
+    const map = new Map<string, Marketplace>()
+    for (const m of marketplaces) {
+      map.set(m.id, m)
+    }
+    return map
+  }, [marketplaces])
 
   const selectedMarketplaces = useMemo(() => {
-    return marketplaces.filter((m) => selectedIds.includes(m.id))
-  }, [marketplaces, selectedIds])
+    return selectedIds
+      .map((id) => marketplaceMap.get(id))
+      .filter((m): m is Marketplace => m !== undefined)
+  }, [marketplaceMap, selectedIds])
+
+  const unresolvedIds = useMemo(() => {
+    return selectedIds.filter((id) => !marketplaceMap.has(id))
+  }, [marketplaceMap, selectedIds])
 
   const filteredMarketplaces = useMemo(() => {
     if (!searchQuery.trim()) {
@@ -133,11 +146,11 @@ export function MarketplaceAllowlist({
         </div>
       )}
 
-      {selectedMarketplaces.length > 0 && (
+      {(selectedMarketplaces.length > 0 || unresolvedIds.length > 0) && (
         <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
           <p className="mb-2 text-xs font-medium uppercase text-gray-500">
-            {selectedMarketplaces.length} Marketplace
-            {selectedMarketplaces.length !== 1 ? "s" : ""} Allowed
+            {selectedIds.length} Marketplace
+            {selectedIds.length !== 1 ? "s" : ""} Allowed
           </p>
           <div className="flex flex-wrap gap-2">
             {selectedMarketplaces.map((marketplace) => (
@@ -159,11 +172,30 @@ export function MarketplaceAllowlist({
                 </button>
               </Badge>
             ))}
+            {unresolvedIds.map((id) => (
+              <Badge
+                key={id}
+                variant="secondary"
+                className="flex items-center gap-1 bg-amber-50 pr-1 text-amber-700"
+              >
+                <AlertCircle className="h-3 w-3" />
+                Unknown ({id.slice(0, 8)}...)
+                <button
+                  type="button"
+                  onClick={() => handleRemove(id)}
+                  disabled={disabled}
+                  className="ml-1 rounded p-0.5 hover:bg-amber-100 disabled:cursor-not-allowed"
+                  aria-label={`Remove unknown marketplace ${id}`}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </Badge>
+            ))}
           </div>
         </div>
       )}
 
-      {selectedMarketplaces.length === 0 && !isPending && (
+      {selectedIds.length === 0 && !isPending && (
         <p className="text-sm text-amber-600">
           No marketplaces selected. Members will not be able to install any
           plugins while restrictions are enabled.
