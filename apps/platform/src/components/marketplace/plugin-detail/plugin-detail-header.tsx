@@ -37,6 +37,17 @@ function formatDate(dateString: string): string {
   })
 }
 
+function openExternalUrl(url: string | undefined | null): void {
+  if (!url) return
+  try {
+    const parsed = new URL(url)
+    if (!["http:", "https:"].includes(parsed.protocol)) return
+    window.open(parsed.toString(), "_blank", "noopener,noreferrer")
+  } catch {
+    // Invalid URL, ignore
+  }
+}
+
 export function PluginDetailHeader({
   plugin,
   latestVersion,
@@ -111,7 +122,7 @@ export function PluginDetailHeader({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => window.open(plugin.homepage!, "_blank")}
+              onClick={() => openExternalUrl(plugin.homepage)}
             >
               <ExternalLink className="mr-2 h-4 w-4" />
               Homepage
@@ -121,7 +132,7 @@ export function PluginDetailHeader({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => window.open(plugin.repository!, "_blank")}
+              onClick={() => openExternalUrl(plugin.repository)}
             >
               <GitBranch className="mr-2 h-4 w-4" />
               Repository
