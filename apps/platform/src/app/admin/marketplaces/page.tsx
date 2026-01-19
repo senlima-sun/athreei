@@ -210,12 +210,8 @@ export default function AdminMarketplacesPage() {
   const ownerTypeFilter: MarketplaceOwnerType | undefined =
     activeTab === "all" || activeTab === "external" ? undefined : activeTab
 
-  const sourceTypeFilter: MarketplaceSourceType | undefined =
-    activeTab === "external" ? "github" : undefined
-
   const { data, isLoading, error, refetch } = useAdminMarketplaces({
     ownerType: ownerTypeFilter,
-    sourceType: sourceTypeFilter,
     search: search || undefined,
     limit: 50,
   })
