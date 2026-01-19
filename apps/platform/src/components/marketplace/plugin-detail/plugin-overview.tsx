@@ -103,7 +103,7 @@ export function PluginOverview({ plugin, readme }: PluginOverviewProps) {
 }
 
 interface ParsedLine {
-  type: "h1" | "h2" | "h3" | "list-item" | "code-fence" | "empty" | "paragraph"
+  type: "h1" | "h2" | "h3" | "list-item" | "code-fence" | "code-line" | "empty" | "paragraph"
   content: string
   index: number
 }
@@ -111,29 +111,38 @@ interface ParsedLine {
 function ReadmeContent({ content }: { content: string }) {
   const lines = content.split("\n")
 
-  const parsedLines: ParsedLine[] = lines.map((line, index) => {
+  const parsedLines: ParsedLine[] = []
+  let inCodeBlock = false
+
+  for (let index = 0; index < lines.length; index++) {
+    const line = lines[index] ?? ""
     const trimmedLine = line.trim()
 
-    if (trimmedLine.startsWith("### ")) {
-      return { type: "h3", content: trimmedLine.slice(4), index }
-    }
-    if (trimmedLine.startsWith("## ")) {
-      return { type: "h2", content: trimmedLine.slice(3), index }
-    }
-    if (trimmedLine.startsWith("# ")) {
-      return { type: "h1", content: trimmedLine.slice(2), index }
-    }
-    if (trimmedLine.startsWith("- ") || trimmedLine.startsWith("* ")) {
-      return { type: "list-item", content: trimmedLine.slice(2), index }
-    }
     if (trimmedLine.startsWith("```")) {
-      return { type: "code-fence", content: "", index }
+      parsedLines.push({ type: "code-fence", content: "", index })
+      inCodeBlock = !inCodeBlock
+      continue
     }
-    if (trimmedLine === "") {
-      return { type: "empty", content: "", index }
+
+    if (inCodeBlock) {
+      parsedLines.push({ type: "code-line", content: line, index })
+      continue
     }
-    return { type: "paragraph", content: trimmedLine, index }
-  })
+
+    if (trimmedLine.startsWith("### ")) {
+      parsedLines.push({ type: "h3", content: trimmedLine.slice(4), index })
+    } else if (trimmedLine.startsWith("## ")) {
+      parsedLines.push({ type: "h2", content: trimmedLine.slice(3), index })
+    } else if (trimmedLine.startsWith("# ")) {
+      parsedLines.push({ type: "h1", content: trimmedLine.slice(2), index })
+    } else if (trimmedLine.startsWith("- ") || trimmedLine.startsWith("* ")) {
+      parsedLines.push({ type: "list-item", content: trimmedLine.slice(2), index })
+    } else if (trimmedLine === "") {
+      parsedLines.push({ type: "empty", content: "", index })
+    } else {
+      parsedLines.push({ type: "paragraph", content: trimmedLine, index })
+    }
+  }
 
   const elements: React.ReactNode[] = []
   const processedIndices = new Set<number>()
@@ -143,6 +152,36 @@ function ReadmeContent({ content }: { content: string }) {
 
     const line = parsedLines[i]
     if (!line) continue
+
+    if (line.type === "code-fence") {
+      processedIndices.add(i)
+      const codeLines: string[] = []
+
+      for (let j = i + 1; j < parsedLines.length; j++) {
+        const nextLine = parsedLines[j]
+        if (!nextLine) break
+        if (nextLine.type === "code-fence") {
+          processedIndices.add(j)
+          break
+        }
+        if (nextLine.type === "code-line") {
+          codeLines.push(nextLine.content)
+          processedIndices.add(j)
+        }
+      }
+
+      if (codeLines.length > 0) {
+        elements.push(
+          <pre
+            key={`code-${line.index}`}
+            className="overflow-x-auto rounded-lg bg-gray-100 p-3"
+          >
+            <code className="text-sm text-gray-800">{codeLines.join("\n")}</code>
+          </pre>
+        )
+      }
+      continue
+    }
 
     if (line.type === "list-item") {
       const listItems: ParsedLine[] = [line]
