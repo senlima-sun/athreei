@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useCallback, useMemo, useEffect } from "react"
-import { useSearchParams, useRouter } from "next/navigation"
+import { useRouter } from "next/navigation"
+import { useQueryState, parseAsString, parseAsBoolean } from "nuqs"
 import {
   MarketplaceHeader,
   MarketplaceSearch,
@@ -28,23 +29,36 @@ const DEFAULT_CATEGORIES: PluginCategory[] = [
   { name: "Utilities", slug: "utilities", count: 0 },
 ]
 
+const VALID_SORT_OPTIONS: PluginSortOption[] = ["popularity", "recent", "name"]
+
+const parseAsSort = parseAsString.withOptions({ shallow: false }).withDefault("popularity")
+
+function isValidSortOption(value: string): value is PluginSortOption {
+  return VALID_SORT_OPTIONS.includes(value as PluginSortOption)
+}
+
 export default function MarketplacePage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
 
-  const initialSearch = searchParams.get("search") || ""
-  const initialCategory = searchParams.get("category") || null
-  const initialVerified = searchParams.get("verified") === "true"
-  const initialSort =
-    (searchParams.get("sort") as PluginSortOption) || "popularity"
-  const initialMarketplace = searchParams.get("marketplace") || ""
+  const [search, setSearch] = useQueryState(
+    "search",
+    parseAsString.withOptions({ shallow: false }).withDefault("")
+  )
+  const [category, setCategory] = useQueryState(
+    "category",
+    parseAsString.withOptions({ shallow: false })
+  )
+  const [verifiedOnly, setVerifiedOnly] = useQueryState(
+    "verified",
+    parseAsBoolean.withOptions({ shallow: false }).withDefault(false)
+  )
+  const [sortRaw, setSortRaw] = useQueryState("sort", parseAsSort)
+  const [selectedMarketplace, setSelectedMarketplace] = useQueryState(
+    "marketplace",
+    parseAsString.withOptions({ shallow: false }).withDefault("")
+  )
 
-  const [search, setSearch] = useState(initialSearch)
-  const [category, setCategory] = useState<string | null>(initialCategory)
-  const [verifiedOnly, setVerifiedOnly] = useState(initialVerified)
-  const [sort, setSort] = useState<PluginSortOption>(initialSort)
-  const [selectedMarketplace, setSelectedMarketplace] =
-    useState(initialMarketplace)
+  const sort: PluginSortOption = isValidSortOption(sortRaw) ? sortRaw : "popularity"
 
   const [installModalOpen, setInstallModalOpen] = useState(false)
   const [selectedPlugin, setSelectedPlugin] =
@@ -74,115 +88,48 @@ export default function MarketplacePage() {
 
   const totalPlugins = pluginsData?.pages[0]?.total ?? 0
 
-  const updateUrlParams = useCallback(
-    (params: {
-      search?: string
-      category?: string | null
-      verified?: boolean
-      sort?: PluginSortOption
-      marketplace?: string
-    }) => {
-      const newParams = new URLSearchParams(searchParams.toString())
-
-      if (params.search !== undefined) {
-        if (params.search) {
-          newParams.set("search", params.search)
-        } else {
-          newParams.delete("search")
-        }
-      }
-
-      if (params.category !== undefined) {
-        if (params.category) {
-          newParams.set("category", params.category)
-        } else {
-          newParams.delete("category")
-        }
-      }
-
-      if (params.verified !== undefined) {
-        if (params.verified) {
-          newParams.set("verified", "true")
-        } else {
-          newParams.delete("verified")
-        }
-      }
-
-      if (params.sort !== undefined) {
-        if (params.sort !== "popularity") {
-          newParams.set("sort", params.sort)
-        } else {
-          newParams.delete("sort")
-        }
-      }
-
-      if (params.marketplace !== undefined) {
-        if (params.marketplace) {
-          newParams.set("marketplace", params.marketplace)
-        } else {
-          newParams.delete("marketplace")
-        }
-      }
-
-      const queryString = newParams.toString()
-      router.replace(
-        queryString ? `?${queryString}` : "/dashboard/marketplace",
-        {
-          scroll: false,
-        }
-      )
-    },
-    [searchParams, router]
-  )
-
   const handleSearchChange = useCallback(
     (value: string) => {
-      setSearch(value)
-      updateUrlParams({ search: value })
+      setSearch(value || null)
     },
-    [updateUrlParams]
+    [setSearch]
   )
 
   const handleCategoryChange = useCallback(
     (value: string | null) => {
       setCategory(value)
-      updateUrlParams({ category: value })
     },
-    [updateUrlParams]
+    [setCategory]
   )
 
   const handleVerifiedChange = useCallback(
     (value: boolean) => {
-      setVerifiedOnly(value)
-      updateUrlParams({ verified: value })
+      setVerifiedOnly(value || null)
     },
-    [updateUrlParams]
+    [setVerifiedOnly]
   )
 
   const handleSortChange = useCallback(
     (value: PluginSortOption) => {
-      setSort(value)
-      updateUrlParams({ sort: value })
+      setSortRaw(value === "popularity" ? null : value)
     },
-    [updateUrlParams]
+    [setSortRaw]
   )
 
   const handleMarketplaceChange = useCallback(
     (value: string) => {
-      setSelectedMarketplace(value)
-      updateUrlParams({ marketplace: value })
+      setSelectedMarketplace(value || null)
     },
-    [updateUrlParams]
+    [setSelectedMarketplace]
   )
 
   const handleClearFilters = useCallback(() => {
-    setSearch("")
+    setSearch(null)
     setCategory(null)
-    setVerifiedOnly(false)
-    setSort("popularity")
-    setSelectedMarketplace("")
-    router.replace("/dashboard/marketplace", { scroll: false })
-  }, [router])
+    setVerifiedOnly(null)
+    setSortRaw(null)
+    setSelectedMarketplace(null)
+  }, [setSearch, setCategory, setVerifiedOnly, setSortRaw, setSelectedMarketplace])
 
   const handleInstall = useCallback((plugin: PluginSearchResult) => {
     setSelectedPlugin(plugin)
