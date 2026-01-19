@@ -19,7 +19,9 @@ function isSafeUrl(url: string): boolean {
 }
 
 export function PluginOverview({ plugin, readme }: PluginOverviewProps) {
-  const hasLinks = plugin.homepage || plugin.repository
+  const hasValidHomepage = plugin.homepage && isSafeUrl(plugin.homepage)
+  const hasValidRepository = plugin.repository && isSafeUrl(plugin.repository)
+  const hasLinks = hasValidHomepage || hasValidRepository
   const hasTags = plugin.tags && plugin.tags.length > 0
 
   return (
@@ -60,7 +62,7 @@ export function PluginOverview({ plugin, readme }: PluginOverviewProps) {
             <h2 className="text-lg font-semibold text-gray-900">Links</h2>
           </div>
           <div className="mt-4 space-y-3">
-            {plugin.homepage && (
+            {plugin.homepage && isSafeUrl(plugin.homepage) && (
               <a
                 href={plugin.homepage}
                 target="_blank"
@@ -71,7 +73,7 @@ export function PluginOverview({ plugin, readme }: PluginOverviewProps) {
                 Homepage
               </a>
             )}
-            {plugin.repository && (
+            {plugin.repository && isSafeUrl(plugin.repository) && (
               <a
                 href={plugin.repository}
                 target="_blank"
@@ -100,63 +102,106 @@ export function PluginOverview({ plugin, readme }: PluginOverviewProps) {
   )
 }
 
+interface ParsedLine {
+  type: "h1" | "h2" | "h3" | "list-item" | "code-fence" | "empty" | "paragraph"
+  content: string
+  index: number
+}
+
 function ReadmeContent({ content }: { content: string }) {
   const lines = content.split("\n")
 
-  return (
-    <div className="prose prose-sm prose-gray max-w-none">
-      {lines.map((line, index) => {
-        const trimmedLine = line.trim()
+  const parsedLines: ParsedLine[] = lines.map((line, index) => {
+    const trimmedLine = line.trim()
 
-        if (trimmedLine.startsWith("### ")) {
-          return (
-            <h3
-              key={index}
-              className="mt-4 text-base font-semibold text-gray-900"
-            >
-              {trimmedLine.slice(4)}
-            </h3>
-          )
+    if (trimmedLine.startsWith("### ")) {
+      return { type: "h3", content: trimmedLine.slice(4), index }
+    }
+    if (trimmedLine.startsWith("## ")) {
+      return { type: "h2", content: trimmedLine.slice(3), index }
+    }
+    if (trimmedLine.startsWith("# ")) {
+      return { type: "h1", content: trimmedLine.slice(2), index }
+    }
+    if (trimmedLine.startsWith("- ") || trimmedLine.startsWith("* ")) {
+      return { type: "list-item", content: trimmedLine.slice(2), index }
+    }
+    if (trimmedLine.startsWith("```")) {
+      return { type: "code-fence", content: "", index }
+    }
+    if (trimmedLine === "") {
+      return { type: "empty", content: "", index }
+    }
+    return { type: "paragraph", content: trimmedLine, index }
+  })
+
+  const elements: React.ReactNode[] = []
+  const processedIndices = new Set<number>()
+
+  for (let i = 0; i < parsedLines.length; i++) {
+    if (processedIndices.has(i)) continue
+
+    const line = parsedLines[i]
+    if (!line) continue
+
+    if (line.type === "list-item") {
+      const listItems: ParsedLine[] = [line]
+      processedIndices.add(i)
+
+      for (let j = i + 1; j < parsedLines.length; j++) {
+        const nextLine = parsedLines[j]
+        if (nextLine?.type === "list-item") {
+          listItems.push(nextLine)
+          processedIndices.add(j)
+        } else {
+          break
         }
-        if (trimmedLine.startsWith("## ")) {
-          return (
-            <h2
-              key={index}
-              className="mt-5 text-lg font-semibold text-gray-900"
-            >
-              {trimmedLine.slice(3)}
-            </h2>
-          )
-        }
-        if (trimmedLine.startsWith("# ")) {
-          return (
-            <h1 key={index} className="mt-6 text-xl font-bold text-gray-900">
-              {trimmedLine.slice(2)}
-            </h1>
-          )
-        }
-        if (trimmedLine.startsWith("- ") || trimmedLine.startsWith("* ")) {
-          return (
-            <li key={index} className="ml-4 text-gray-600">
-              <FormattedText text={trimmedLine.slice(2)} />
+      }
+
+      elements.push(
+        <ul key={`list-${line.index}`} className="ml-4 list-disc space-y-1">
+          {listItems.map((item) => (
+            <li key={item.index} className="text-gray-600">
+              <FormattedText text={item.content} />
             </li>
-          )
-        }
-        if (trimmedLine.startsWith("```")) {
-          return null
-        }
-        if (trimmedLine === "") {
-          return <div key={index} className="h-2" />
-        }
+          ))}
+        </ul>
+      )
+      continue
+    }
 
-        return (
-          <p key={index} className="text-gray-600">
-            <FormattedText text={trimmedLine} />
-          </p>
-        )
-      })}
-    </div>
-  )
+    processedIndices.add(i)
+
+    if (line.type === "h1") {
+      elements.push(
+        <h1 key={line.index} className="mt-6 text-xl font-bold text-gray-900">
+          {line.content}
+        </h1>
+      )
+    } else if (line.type === "h2") {
+      elements.push(
+        <h2 key={line.index} className="mt-5 text-lg font-semibold text-gray-900">
+          {line.content}
+        </h2>
+      )
+    } else if (line.type === "h3") {
+      elements.push(
+        <h3 key={line.index} className="mt-4 text-base font-semibold text-gray-900">
+          {line.content}
+        </h3>
+      )
+    } else if (line.type === "empty") {
+      elements.push(<div key={line.index} className="h-2" />)
+    } else if (line.type === "paragraph") {
+      elements.push(
+        <p key={line.index} className="text-gray-600">
+          <FormattedText text={line.content} />
+        </p>
+      )
+    }
+  }
+
+  return <div className="prose prose-sm prose-gray max-w-none">{elements}</div>
 }
 
 function FormattedText({ text }: { text: string }) {
