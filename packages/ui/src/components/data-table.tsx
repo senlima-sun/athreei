@@ -46,7 +46,6 @@ export function DataTable<T extends object>({
 }: DataTableProps<T>) {
   const [sorting, setSorting] = useState<SortingState>([])
 
-  // Convert legacy columns to TanStack Table column definitions
   const tableColumns = useMemo<ColumnDef<T>[]>(
     () =>
       columns.map((col, idx) => ({

@@ -48,7 +48,6 @@ function logRateLimitHit(
  * Handles X-Forwarded-For for proxied requests
  */
 function getClientIp(c: Context): string {
-  // Check common proxy headers
   const forwarded = c.req.header("x-forwarded-for")
   if (forwarded) {
     // Take the first IP (original client)
@@ -110,7 +109,6 @@ export function createCallbackRateLimiter(config?: RateLimitConfig) {
   return async (c: Context, next: Next) => {
     const result = await rateLimiter(c, next)
 
-    // Check if rate limited (response already sent with 429)
     const rateLimit = c.get("rateLimit")
     if (rateLimit?.limited) {
       const ip = getClientIp(c)

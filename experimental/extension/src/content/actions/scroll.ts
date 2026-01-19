@@ -23,10 +23,8 @@ export async function executeScroll(
     throw new Error(`Element not found: ${args.selector}`)
   }
 
-  // Get previous position
   const previousPosition = getCurrentScrollPosition(target)
 
-  // Calculate new scroll position
   let newX: number
   let newY: number
 
@@ -78,7 +76,6 @@ export async function executeScroll(
     await sleep(300)
   }
 
-  // Get final position (may be clamped by browser)
   const finalPosition = getCurrentScrollPosition(target)
 
   return {

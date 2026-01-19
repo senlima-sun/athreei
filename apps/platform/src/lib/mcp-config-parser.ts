@@ -49,7 +49,6 @@ function isSecretKey(key: string): boolean {
 }
 
 export function parseMcpConfig(jsonString: string): ParsedMcpConfig {
-  // Try to parse JSON
   let parsed: unknown
   try {
     parsed = JSON.parse(jsonString)
@@ -61,7 +60,6 @@ export function parseMcpConfig(jsonString: string): ParsedMcpConfig {
     }
   }
 
-  // Validate structure
   const result = mcpConfigSchema.safeParse(parsed)
   if (!result.success) {
     const issues = result.error.issues
@@ -79,7 +77,6 @@ export function parseMcpConfig(jsonString: string): ParsedMcpConfig {
     }
   }
 
-  // Parse servers
   const servers: ParsedMcpServer[] = []
 
   for (const [name, config] of Object.entries(result.data.mcpServers)) {

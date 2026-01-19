@@ -14,7 +14,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest"
 import { Hono, type Context, type ErrorHandler } from "hono"
 import type { ContentfulStatusCode } from "hono/utils/http-status"
 
-// Error handler to properly handle thrown errors
 const testErrorHandler: ErrorHandler = (err: Error, c: Context) => {
   const statusCode =
     (err as Error & { statusCode?: ContentfulStatusCode }).statusCode || 500

@@ -217,22 +217,18 @@ async function initializeGateway(
   namespaceConfig: NamespaceConfig,
   state: GatewayState
 ): Promise<void> {
-  // Connect to all MCP servers in the namespace
   const { connected, failed } = await connectToAllServers(
     namespaceConfig.servers
   )
 
-  // Add connected servers to state
   for (const mcp of connected) {
     state.connectedMcps.set(mcp.sanitizedName, mcp)
 
-    // Emit server connected event
     for (const handler of state.eventHandlers) {
       handler({ type: "server_connected", server: mcp })
     }
   }
 
-  // Log failures
   for (const { config, error } of failed) {
     log.warn(`Server "${config.name}" connection failed: ${error}`)
   }
@@ -254,12 +250,10 @@ async function handleConfigChange(
 ): Promise<void> {
   log.info("Processing config change...")
 
-  // Disconnect from all current servers
   const currentMcps = Array.from(state.connectedMcps.values())
   await disconnectAllServers(currentMcps)
   state.connectedMcps.clear()
 
-  // Connect to servers from new config
   const { connected, failed } = await connectToAllServers(
     namespaceConfig.servers
   )
@@ -272,7 +266,6 @@ async function handleConfigChange(
     }
   }
 
-  // Log failures
   for (const { config, error } of failed) {
     log.warn(`Server "${config.name}" connection failed: ${error}`)
 
@@ -309,12 +302,10 @@ function setupShutdownHandlers(
     log.info(`Received ${signal}, shutting down gracefully...`)
 
     try {
-      // Stop sync and trace collection
       syncManager?.stopPeriodicSync()
       traceCollector.stopPeriodicFlush()
       traceSyncClient?.stopPeriodicFlush()
 
-      // Stop HTTP API server if running
       httpApiServer?.stop()
 
       // Flush remaining traces
@@ -322,11 +313,9 @@ function setupShutdownHandlers(
       await traceSyncClient?.flushAll().catch(() => {})
 
       if (transport === "stdio") {
-        // Disconnect from all MCP servers (stdio mode)
         const mcps = Array.from(state.connectedMcps.values())
         await disconnectAllServers(mcps)
 
-        // Close the gateway server
         await server.close()
       } else {
         // SSE mode: cleanup sessions and stop server
@@ -411,10 +400,8 @@ async function startSSE(
     })
   })
 
-  // Start session cleanup
   startSessionCleanup(60000)
 
-  // Start server
   const server = Bun.serve({
     port,
     fetch: app.fetch,
@@ -422,8 +409,6 @@ async function startSSE(
 
   log.info(`Gateway running on SSE transport at http://localhost:${port}`)
   log.info(`SSE endpoint: http://localhost:${port}/mcp/sse`)
-
-  // Store server reference for shutdown
   ;(globalThis as Record<string, unknown>).__sseServer = server
 }
 
@@ -486,7 +471,6 @@ async function main(): Promise<void> {
     log.info("Running in MOCK mode (no Platform connection)")
   }
 
-  // Create gateway state
   const state = createGatewayState()
 
   // Create trace collector (in-memory)
@@ -495,7 +479,6 @@ async function main(): Promise<void> {
     sendToPlatform: false,
   })
 
-  // Add trace collector event handler
   addEventHandler(state, traceCollector.createEventHandler())
 
   let gatewayConfig: GatewayConfig | null = null
@@ -538,7 +521,6 @@ async function main(): Promise<void> {
       process.exit(1)
     }
 
-    // Create trace sync client for Platform
     if (gatewayConfig.apiKey) {
       traceSyncClient = createTraceSyncClient({
         platformUrl: gatewayConfig.platformUrl ?? "https://athreei.com",
@@ -554,7 +536,6 @@ async function main(): Promise<void> {
       })
     }
 
-    // Create config sync manager and fetch initial config
     syncManager = new ConfigSyncManager(gatewayConfig)
 
     try {
@@ -572,56 +553,46 @@ async function main(): Promise<void> {
     }
   }
 
-  // Initialize gateway (connect to all MCP servers) - only for stdio mode
   if (cliArgs.transport === "stdio") {
     await initializeGateway(gatewayConfig, namespaceConfig, state)
   }
 
-  // Update trace sync client with namespace config
   if (traceSyncClient) {
     traceSyncClient.setNamespaceConfig(namespaceConfig)
   }
 
-  // Setup config change handler (only in production mode)
   if (syncManager) {
     syncManager.setOnConfigChange((newConfig) => {
       // Update SSE namespace config
       setSseNamespaceConfig(newConfig)
       setHttpApiNamespaceConfig(newConfig)
 
-      // Handle stdio mode config change
       if (cliArgs.transport === "stdio") {
         handleConfigChange(newConfig, state).catch((error) => {
           log.error("Failed to handle config change:", error)
         })
       }
 
-      // Update trace sync client with new namespace config
       if (traceSyncClient) {
         traceSyncClient.setNamespaceConfig(newConfig)
       }
     })
 
-    // Start periodic config sync
     syncManager.startPeriodicSync()
   }
 
-  // Start periodic trace sync to Platform
   if (traceSyncClient) {
     traceSyncClient.startPeriodicFlush()
     log.info("Trace sync to Platform enabled")
   }
 
-  // Create the gateway MCP server
   const server = createServer(state)
 
-  // Start HTTP API server in local/mock mode
   let httpApiServer: { stop: () => void } | null = null
   if (cliArgs.local || cliArgs.mock) {
     httpApiServer = startHttpApiServer(state, traceCollector, cliArgs.apiPort)
   }
 
-  // Setup shutdown handlers
   setupShutdownHandlers(
     state,
     syncManager,
@@ -632,7 +603,6 @@ async function main(): Promise<void> {
     httpApiServer
   )
 
-  // Start the appropriate transport
   if (cliArgs.transport === "stdio") {
     await startStdio(server)
   } else {
@@ -640,7 +610,6 @@ async function main(): Promise<void> {
   }
 }
 
-// Run the gateway
 main().catch((error) => {
   log.error("Fatal error:", error)
   process.exit(1)

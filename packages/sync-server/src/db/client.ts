@@ -306,7 +306,6 @@ export async function updateSyncSettings(
 ): Promise<SyncSettings> {
   const database = getDb()
 
-  // Build the update object with only the fields that were provided
   const updateValues: Partial<Omit<NewSyncSettings, "account_id">> = {}
 
   if (settings.sync_permissions !== undefined) {

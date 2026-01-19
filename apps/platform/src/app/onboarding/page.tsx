@@ -31,7 +31,6 @@ export default function OnboardingPage() {
     }
   }, [session, sessionPending, orgList, orgsPending, router])
 
-  // Show loading while checking auth state
   if (sessionPending || orgsPending) {
     return (
       <div className="flex items-center justify-center py-12">

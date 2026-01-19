@@ -128,7 +128,6 @@ function setupShutdownHandlers(
   process.on("SIGINT", () => shutdown("SIGINT"))
   process.on("SIGTERM", () => shutdown("SIGTERM"))
 
-  // Handle uncaught errors
   process.on("uncaughtException", (error) => {
     logger.error("Uncaught exception:", error)
     process.exit(1)
@@ -152,16 +151,12 @@ async function main() {
     logger.info(`Client name: ${config.clientName}`)
   }
 
-  // Start the HTTP API server for the dashboard
   const apiServer = startApiServer()
 
-  // Create the MCP server
   const server = createServer()
 
-  // Setup graceful shutdown
   setupShutdownHandlers(server, apiServer)
 
-  // Start the appropriate transport
   if (config.transport === "stdio") {
     await startStdio(server)
   } else {
@@ -169,7 +164,6 @@ async function main() {
   }
 }
 
-// Start the server
 main().catch((error) => {
   logger.error("Fatal error:", error)
   process.exit(1)

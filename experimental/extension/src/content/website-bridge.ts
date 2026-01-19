@@ -66,7 +66,6 @@ export class WebsiteBridge {
       window.removeEventListener("aiii:permission", this.permissionListener)
     }
 
-    // Clear all pending requests
     for (const request of this.pendingRequests.values()) {
       clearTimeout(request.timeoutId)
       request.reject(new Error("Bridge destroyed"))
@@ -125,7 +124,6 @@ export class WebsiteBridge {
     clearTimeout(pending.timeoutId)
     this.pendingRequests.delete(detail.requestId)
 
-    // Resolve or reject based on response
     if (detail.success) {
       pending.resolve(detail.result)
     } else {
@@ -149,19 +147,16 @@ export class WebsiteBridge {
       return
     }
 
-    // Check if chrome.runtime is available
     if (!chrome?.runtime) {
       console.error("[athreei] chrome.runtime not available")
       this.dispatchPermissionResponse(detail.scope, "deny", false)
       return
     }
 
-    // Generate requestId if not provided
     const requestId = crypto.randomUUID()
 
     console.log("[athreei] Permission request:", detail)
 
-    // Send message to background script
     chrome.runtime
       .sendMessage({
         type: "permission_request",
@@ -172,7 +167,6 @@ export class WebsiteBridge {
         aiApp: undefined, // Will be filled by background if available
       })
       .then((response: { decision: string; remember: boolean }) => {
-        // Dispatch response back to website
         this.dispatchPermissionResponse(
           requestId,
           response.decision as "allow" | "deny" | "allow_once",
@@ -221,10 +215,8 @@ export class WebsiteBridge {
       throw new Error(`Custom tool not found: ${toolName}`)
     }
 
-    // Validate required parameters
     this.validateArgs(tool, args)
 
-    // Generate request ID
     const requestId = generateRequestId()
     const timeout = options?.timeout ?? this.defaultTimeout
 
@@ -248,7 +240,6 @@ export class WebsiteBridge {
       })
     })
 
-    // Dispatch request to website
     const requestDetail: AiiiRequestEvent = {
       requestId,
       tool: toolName,
@@ -273,7 +264,6 @@ export class WebsiteBridge {
     for (const [paramName, paramSchema] of Object.entries(tool.parameters)) {
       const value = args[paramName]
 
-      // Check required parameters
       if (paramSchema.required && value === undefined) {
         throw new Error(
           `Missing required parameter: ${paramName} for tool ${tool.name}`

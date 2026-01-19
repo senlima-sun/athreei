@@ -9,7 +9,6 @@ import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { logger as apiLogger } from "hono/logger"
 
-// Initialize database (runs migrations)
 import "../db/index.js"
 
 import { statusRoutes } from "./routes/status"
@@ -51,7 +50,6 @@ export function createApiServer() {
     })
   )
 
-  // Mount routes
   app.route("/api/status", statusRoutes)
   app.route("/api/audit", auditRoutes)
   app.route("/api/sessions", sessionsRoutes)

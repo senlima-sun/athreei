@@ -14,7 +14,6 @@ import {
 
 describe("MCP Context Module", () => {
   beforeEach(() => {
-    // Clear context before each test
     clearMcpContext()
   })
 

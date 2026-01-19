@@ -34,16 +34,13 @@ export async function pullChanges(
     throw new Error("Invalid device")
   }
 
-  // Update device last seen
   await updateDeviceLastSeen(deviceId)
 
-  // Get sync settings to filter items
   const settings = await getSyncSettings(accountId)
 
   // Get items since cursor
   let items = await findSyncItemsByAccountId(accountId, cursor, limit)
 
-  // Filter based on sync settings
   if (settings) {
     items = items.filter((item) => {
       switch (item.item_type) {
@@ -61,7 +58,6 @@ export async function pullChanges(
     })
   }
 
-  // Map to response format
   const responseItems: SyncItemResponse[] = items.map((item) => ({
     id: item.id,
     itemType: item.item_type,
@@ -77,7 +73,6 @@ export async function pullChanges(
   const lastItem = items[items.length - 1]
   const newCursor = lastItem ? lastItem.updated_at.toISOString() : null
 
-  // Update sync state
   if (newCursor) {
     await updateSyncState(accountId, deviceId, newCursor)
   }
@@ -109,7 +104,6 @@ export async function pushChanges(
     throw new Error("Invalid device")
   }
 
-  // Update device last seen
   await updateDeviceLastSeen(deviceId)
 
   const conflicts: ConflictResponse[] = []
@@ -118,7 +112,6 @@ export async function pushChanges(
   for (const item of items) {
     try {
       if (item.deleted) {
-        // Handle deletion (soft delete)
         if (!item.id) {
           continue // Can't delete without ID
         }
@@ -140,7 +133,6 @@ export async function pushChanges(
           synced++
         }
       } else if (item.id) {
-        // Update existing item
         const existingItem = await findSyncItemById(item.id, accountId)
         const conflictResult = detectConflict(
           existingItem,
@@ -172,7 +164,6 @@ export async function pushChanges(
           synced++
         }
       } else {
-        // Create new item
         await createSyncItem(
           accountId,
           deviceId,

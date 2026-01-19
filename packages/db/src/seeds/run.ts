@@ -32,7 +32,6 @@ async function main() {
     process.exit(1)
   }
 
-  // Validate seed data before attempting to insert
   const validation = validateSeedData(openSourceMcpServers)
   if (!validation.valid) {
     console.error("Seed data validation failed:")

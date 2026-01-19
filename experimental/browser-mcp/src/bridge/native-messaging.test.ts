@@ -167,7 +167,6 @@ describe("NativeMessagingClient", () => {
       const length = buffer.readUInt32LE(0)
       expect(length).toBe(messageLength)
 
-      // Check if we have complete message (we don't yet)
       expect(buffer.length).toBeLessThan(4 + messageLength)
 
       // Simulate receiving the rest
@@ -176,7 +175,6 @@ describe("NativeMessagingClient", () => {
     })
 
     test("processes multiple messages from buffer", () => {
-      // Create two messages
       const msg1 = JSON.stringify({
         id: "1",
         type: "response",
@@ -206,7 +204,6 @@ describe("NativeMessagingClient", () => {
         msg2Bytes,
       ])
 
-      // Process first message
       let offset = 0
       const length1 = buffer.readUInt32LE(offset)
       offset += 4
@@ -217,7 +214,6 @@ describe("NativeMessagingClient", () => {
 
       expect(JSON.parse(message1).id).toBe("1")
 
-      // Process second message
       const length2 = buffer.readUInt32LE(offset)
       offset += 4
       const message2 = buffer
@@ -307,7 +303,6 @@ describe("NativeMessagingClient", () => {
         try {
           handler(event.payload)
         } catch (error) {
-          // Catch and log, but continue processing other handlers
           console.error("Error in event handler:", error)
         }
       })
@@ -323,7 +318,6 @@ describe("NativeMessagingClient", () => {
 
       handlers.set("test_event", [handler1, handler2])
 
-      // Remove handler1
       const list = handlers.get("test_event") || []
       const index = list.indexOf(handler1)
       if (index !== -1) {
@@ -420,7 +414,6 @@ describe("NativeMessagingClient", () => {
       const pendingRequests = new Map()
       const timers = new Set<NodeJS.Timeout>()
 
-      // Create some requests
       for (let i = 0; i < 3; i++) {
         const id = crypto.randomUUID()
         const timer = setTimeout(() => {}, 1000)

@@ -99,7 +99,6 @@ class StdinReader {
       }
     }
 
-    // Extract requested bytes and keep remainder
     const extracted = this.buffer.slice(0, count)
     this.buffer = this.buffer.slice(count)
     return extracted
@@ -131,7 +130,6 @@ export async function readMessage(): Promise<NativeMessage | null> {
   try {
     const reader = getStdinReader()
 
-    // Read 4-byte length prefix
     const lengthBuffer = await reader.readExact(4)
 
     if (lengthBuffer === null) {
@@ -139,7 +137,6 @@ export async function readMessage(): Promise<NativeMessage | null> {
       return null
     }
 
-    // Parse length as little-endian uint32
     const dataView = new DataView(
       lengthBuffer.buffer,
       lengthBuffer.byteOffset,
@@ -157,14 +154,12 @@ export async function readMessage(): Promise<NativeMessage | null> {
       throw new Error("Message length cannot be 0")
     }
 
-    // Read message body
     const messageBuffer = await reader.readExact(messageLength)
 
     if (messageBuffer === null) {
       throw new Error(`Unexpected EOF while reading message body`)
     }
 
-    // Parse JSON and validate with Zod
     const messageText = new TextDecoder().decode(messageBuffer)
     const parsed = JSON.parse(messageText)
     const result = NativeMessageSchema.safeParse(parsed)
@@ -202,12 +197,10 @@ export function writeMessage(message: NativeMessage): void {
       )
     }
 
-    // Create 4-byte length prefix (little-endian)
     const lengthBuffer = new ArrayBuffer(4)
     const dataView = new DataView(lengthBuffer)
     dataView.setUint32(0, messageLength, true) // true = little-endian
 
-    // Write length prefix + message body using Node.js compatible API
     const lengthBytes = new Uint8Array(lengthBuffer)
     process.stdout.write(Buffer.from(lengthBytes))
     process.stdout.write(Buffer.from(messageBytes))

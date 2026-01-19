@@ -53,7 +53,6 @@ describe("Health Check Routes", () => {
     })
 
     it("should reflect active session count", async () => {
-      // Create a session
       await createSession({
         endpointName: "test-endpoint",
         userId: "user-123",

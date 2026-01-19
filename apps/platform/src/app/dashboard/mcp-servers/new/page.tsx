@@ -13,7 +13,6 @@ import { useActiveOrganization } from "@/lib/auth-client"
 import { Loader2 } from "lucide-react"
 import { API_URL } from "@/constants"
 
-// Transform frontend form data to API format
 function toApiFormat(data: McpServerFormData) {
   return {
     name: data.name,

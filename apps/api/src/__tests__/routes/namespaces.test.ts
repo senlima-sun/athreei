@@ -181,7 +181,6 @@ describe("Namespaces Routes - PATCH /api/namespaces/:id/servers/:serverId", () =
 
   describe("Success cases", () => {
     it("should successfully enable a server (200 response)", async () => {
-      // Setup mocks
       mockDb.query.namespace.findFirst.mockResolvedValue(mockNamespace)
       mockDb.query.member.findFirst.mockResolvedValue(mockMember)
       mockDb.query.namespaceResource.findFirst.mockResolvedValue({
@@ -217,7 +216,6 @@ describe("Namespaces Routes - PATCH /api/namespaces/:id/servers/:serverId", () =
     })
 
     it("should successfully disable a server (200 response)", async () => {
-      // Setup mocks
       mockDb.query.namespace.findFirst.mockResolvedValue(mockNamespace)
       mockDb.query.member.findFirst.mockResolvedValue(mockMember)
       mockDb.query.namespaceResource.findFirst.mockResolvedValue({
@@ -253,7 +251,6 @@ describe("Namespaces Routes - PATCH /api/namespaces/:id/servers/:serverId", () =
 
   describe("Authorization errors", () => {
     it("should return 401 for unauthenticated requests", async () => {
-      // Set auth context to null to simulate unauthenticated request
       mockAuthContext = null
 
       const { default: namespaces } = await import("../../routes/namespaces")
@@ -290,7 +287,6 @@ describe("Namespaces Routes - PATCH /api/namespaces/:id/servers/:serverId", () =
         }
       )
 
-      // Error thrown for forbidden - results in 500 without proper error handler
       expect(response.status).toBe(500)
     })
   })
@@ -312,7 +308,6 @@ describe("Namespaces Routes - PATCH /api/namespaces/:id/servers/:serverId", () =
         }
       )
 
-      // Error thrown for not found - results in 500 without proper error handler
       expect(response.status).toBe(500)
     })
 
@@ -334,7 +329,6 @@ describe("Namespaces Routes - PATCH /api/namespaces/:id/servers/:serverId", () =
         }
       )
 
-      // Error thrown for not found - results in 500 without proper error handler
       expect(response.status).toBe(500)
     })
   })

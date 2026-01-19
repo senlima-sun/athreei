@@ -74,7 +74,6 @@ export async function rotateKeyBatch(
   const batchSize = options.batchSize || 100
   const results: EncryptedData[] = []
 
-  // Process in batches to avoid blocking for too long
   for (let i = 0; i < items.length; i += batchSize) {
     const batch = items.slice(i, i + batchSize)
 

@@ -31,10 +31,8 @@ export async function handlePermissionRequest(
   }
 ): Promise<{ decision: "allow" | "deny" | "allow_once"; remember: boolean }> {
   try {
-    // Get active tab for showing dialog
     const tabId = await deps.getActiveTab()
 
-    // Show permission dialog to user
     const response = await deps.showPermissionDialogToUser(
       message.origin,
       message.scope,
@@ -43,7 +41,6 @@ export async function handlePermissionRequest(
 
     // If user wants to remember and it's not "allow_once", update permission level
     if (response.remember && response.decision !== "allow_once") {
-      // Try to update permission level, but don't fail the whole request if it fails
       try {
         await deps.updatePermissionLevel(
           message.origin,
@@ -59,7 +56,6 @@ export async function handlePermissionRequest(
       }
     }
 
-    // Return the response
     return {
       decision: response.decision,
       remember: response.remember,

@@ -64,7 +64,6 @@ export function honoLogger(options: HonoLoggerOptions = {}): MiddlewareHandler {
   const baseLogger = options.logger ?? createLogger()
 
   return async (c, next) => {
-    // Check if we should skip logging for this request
     if (options.skip?.(c)) {
       await next()
       return
@@ -73,14 +72,11 @@ export function honoLogger(options: HonoLoggerOptions = {}): MiddlewareHandler {
     const requestId = generateRequestId()
     const startTime = Date.now()
 
-    // Create child logger with request context
     const requestLogger = baseLogger.child({ requestId })
 
-    // Attach logger and request ID to context
     c.set("logger", requestLogger)
     c.set("requestId", requestId)
 
-    // Log incoming request
     requestLogger.info("Request started", {
       method: c.req.method,
       path: c.req.path,
@@ -90,7 +86,6 @@ export function honoLogger(options: HonoLoggerOptions = {}): MiddlewareHandler {
     try {
       await next()
     } catch (error) {
-      // Log error and re-throw
       requestLogger.error("Request failed", {
         method: c.req.method,
         path: c.req.path,
@@ -100,7 +95,6 @@ export function honoLogger(options: HonoLoggerOptions = {}): MiddlewareHandler {
       throw error
     }
 
-    // Log completed request
     const duration = Date.now() - startTime
     const status = c.res.status
 

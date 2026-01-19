@@ -97,7 +97,6 @@ export function showPermissionDialog(
       }
     }
 
-    // Build dialog UI
     shadow.innerHTML = `
       <style>
         :host {
@@ -355,7 +354,6 @@ export function showPermissionDialog(
       </div>
     `
 
-    // Get elements
     const rememberCheckbox = shadow.getElementById(
       "remember-checkbox"
     ) as HTMLInputElement
@@ -384,7 +382,6 @@ export function showPermissionDialog(
       .querySelector(".overlay")
       ?.addEventListener("click", (e) => e.stopPropagation())
 
-    // Append to document
     document.body.appendChild(container)
 
     // Focus the deny button by default (safe default)

@@ -30,7 +30,6 @@ vi.mock("better-auth/client/plugins", () => ({
   organizationClient: mockOrganizationClient,
 }))
 
-// Import after mocks are set up
 import { createClient } from "../client.ts"
 
 describe("createClient", () => {

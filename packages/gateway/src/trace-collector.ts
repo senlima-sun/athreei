@@ -237,10 +237,8 @@ export class TraceCollector {
       this.traces.shift() // Remove oldest
     }
 
-    // Update statistics
     this.updateStats(trace)
 
-    // Add to pending for Platform sync
     if (this.config.sendToPlatform) {
       this.pendingTraces.push(trace)
     }
@@ -259,7 +257,6 @@ export class TraceCollector {
       this.stats.successfulCalls++
     }
 
-    // Update average duration
     if (trace.durationMs !== undefined) {
       const totalDuration =
         this.stats.averageDurationMs * (this.stats.totalCalls - 1) +
@@ -267,11 +264,9 @@ export class TraceCollector {
       this.stats.averageDurationMs = totalDuration / this.stats.totalCalls
     }
 
-    // Update calls by server
     const serverCount = this.stats.callsByServer.get(trace.serverName) || 0
     this.stats.callsByServer.set(trace.serverName, serverCount + 1)
 
-    // Update calls by tool
     const toolCount = this.stats.callsByTool.get(trace.aggregatedToolName) || 0
     this.stats.callsByTool.set(trace.aggregatedToolName, toolCount + 1)
   }
@@ -294,12 +289,10 @@ export class TraceCollector {
   }): ToolCallTrace[] {
     let filtered = [...this.traces]
 
-    // Filter by status
     if (options?.status) {
       filtered = filtered.filter((t) => t.status === options.status)
     }
 
-    // Filter by search (matches tool name)
     if (options?.search) {
       const searchLower = options.search.toLowerCase()
       filtered = filtered.filter(
@@ -310,7 +303,6 @@ export class TraceCollector {
       )
     }
 
-    // Sort by startedAt descending (newest first)
     filtered.sort((a, b) => b.startedAt.getTime() - a.startedAt.getTime())
 
     // Apply pagination

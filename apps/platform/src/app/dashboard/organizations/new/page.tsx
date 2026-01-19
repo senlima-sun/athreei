@@ -53,7 +53,6 @@ export default function NewOrganizationPage() {
         return
       }
 
-      // Set as active organization
       if (result.data?.id) {
         await organization.setActive({ organizationId: result.data.id })
       }

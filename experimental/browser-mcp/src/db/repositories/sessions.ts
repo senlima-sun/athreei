@@ -57,7 +57,6 @@ export function createSession(
     session.metadata ? JSON.stringify(session.metadata) : null
   )
 
-  // Return the created session
   const result = findSessionById(id)
   if (!result) {
     throw new Error("Failed to create session")

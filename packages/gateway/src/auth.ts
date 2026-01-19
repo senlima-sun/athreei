@@ -27,7 +27,6 @@ export function validateApiKeyFormat(apiKey: string): {
     return { valid: false, error: "API key must be a string" }
   }
 
-  // Check prefix
   if (!apiKey.startsWith(API_KEY_PREFIX)) {
     return {
       valid: false,
@@ -35,12 +34,10 @@ export function validateApiKeyFormat(apiKey: string): {
     }
   }
 
-  // Check minimum length
   if (apiKey.length < MIN_API_KEY_LENGTH) {
     return { valid: false, error: "API key is too short" }
   }
 
-  // Check for valid base64url characters after prefix
   const keyPart = apiKey.slice(API_KEY_PREFIX.length)
   if (!/^[A-Za-z0-9_-]+$/.test(keyPart)) {
     return {
@@ -56,7 +53,6 @@ export function validateApiKeyFormat(apiKey: string): {
  * Extract the key prefix (for display/logging without exposing the full key)
  */
 export function getKeyPrefix(apiKey: string): string {
-  // Return first 12 characters for identification
   return apiKey.slice(0, 12) + "..."
 }
 
@@ -107,7 +103,6 @@ export async function authenticatedFetch(
 ): Promise<Response> {
   const { apiKey, method = "GET", body, headers = {} } = options
 
-  // Validate API key format before making request
   const validation = validateApiKeyFormat(apiKey)
   if (!validation.valid) {
     throw new Error(`Invalid API key: ${validation.error}`)

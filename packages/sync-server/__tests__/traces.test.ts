@@ -260,7 +260,6 @@ describe("Database Schema Types", () => {
     // Import the type from schema
     const { traceStatusEnum } = await import("../src/db/schema")
 
-    // Check enum values
     expect(traceStatusEnum.enumValues).toContain("success")
     expect(traceStatusEnum.enumValues).toContain("error")
     expect(traceStatusEnum.enumValues).toHaveLength(2)

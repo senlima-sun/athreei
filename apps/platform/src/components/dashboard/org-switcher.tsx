@@ -31,7 +31,6 @@ export function OrgSwitcher() {
   const organizations = (orgList ?? []) as Organization[]
   const isPending = isActiveOrgPending || isOrgListPending
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (

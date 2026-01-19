@@ -52,7 +52,6 @@ traces.post("/", zValidator("json", TraceUploadRequestSchema), async (c) => {
     const errors: string[] = []
     let uploaded = 0
 
-    // Insert traces in batch
     const tracesToInsert = traceItems.map((item) => ({
       account_id: accountId,
       namespace_id: item.namespaceId ?? null,
@@ -105,7 +104,6 @@ traces.get("/", zValidator("query", TraceQuerySchema), async (c) => {
     const query = c.req.valid("query")
     const db = getDb()
 
-    // Build conditions
     const conditions = [eq(schema.traces.account_id, accountId)]
 
     if (query.endpoint) {
@@ -133,7 +131,6 @@ traces.get("/", zValidator("query", TraceQuerySchema), async (c) => {
     const whereClause =
       conditions.length > 1 ? and(...conditions) : conditions[0]
 
-    // Get total count
     const [countResult] = await db
       .select({ count: sql<number>`count(*)::int` })
       .from(schema.traces)
@@ -178,7 +175,6 @@ traces.get(
 
       const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000)
 
-      // Build conditions
       const conditions = [
         eq(schema.traces.account_id, accountId),
         gte(schema.traces.created_at, since),
@@ -207,7 +203,6 @@ traces.get(
         .from(schema.traces)
         .where(whereClause)
 
-      // Get tool usage breakdown
       const toolUsage = await db
         .select({
           toolName: schema.traces.tool_name,
@@ -281,7 +276,6 @@ traces.delete("/", zValidator("json", TraceBulkDeleteSchema), async (c) => {
     const { traceIds, before, namespace, endpoint } = c.req.valid("json")
     const db = getDb()
 
-    // Build conditions
     const conditions = [eq(schema.traces.account_id, accountId)]
 
     if (traceIds && traceIds.length > 0) {
@@ -297,7 +291,6 @@ traces.delete("/", zValidator("json", TraceBulkDeleteSchema), async (c) => {
       conditions.push(eq(schema.traces.endpoint_id, endpoint))
     }
 
-    // Require at least one filter beyond accountId to prevent accidental mass deletion
     if (conditions.length === 1) {
       return c.json<ErrorResponse>(
         {
@@ -310,7 +303,6 @@ traces.delete("/", zValidator("json", TraceBulkDeleteSchema), async (c) => {
 
     const whereClause = and(...conditions)
 
-    // Delete and get count
     const result = await db
       .delete(schema.traces)
       .where(whereClause!)

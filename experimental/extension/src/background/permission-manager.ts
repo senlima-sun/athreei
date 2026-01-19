@@ -120,7 +120,6 @@ class PermissionManagerImpl {
       const data = await response.json()
       const level = data.allowed
 
-      // Validate response before using
       if (!["allowed", "denied", "ask"].includes(level)) {
         console.error(
           "[PermissionManager] Invalid permission level from server:",

@@ -48,7 +48,6 @@ health.get("/live", (c) => {
  * GET /health/ready
  */
 health.get("/ready", (c) => {
-  // Check if the service is ready to accept traffic
   // For now, always ready if server is running
   return c.json({ status: "ready" })
 })

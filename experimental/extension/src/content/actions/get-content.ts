@@ -22,7 +22,6 @@ export async function executeGetContent(
   const format = args.format ?? "text"
   const selector = args.selector
 
-  // Get target element (or document.body if no selector)
   let element: Element | null = null
   if (selector) {
     element = document.querySelector(selector)
@@ -99,7 +98,6 @@ function htmlToMarkdown(element: HTMLElement): string {
       return
     }
 
-    // Handle different elements
     switch (tagName) {
       case "h1":
         result.push("\n# ")
@@ -273,7 +271,6 @@ function htmlToMarkdown(element: HTMLElement): string {
   // Clean up the result
   let markdown = result.join("")
 
-  // Remove excessive whitespace
   markdown = markdown.replace(/\n{3,}/g, "\n\n") // Max 2 newlines
   markdown = markdown.replace(/[ \t]+/g, " ") // Collapse spaces
   markdown = markdown.trim()

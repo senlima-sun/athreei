@@ -82,23 +82,18 @@ export function formatPretty(entry: LogEntry): string {
   const label = LEVEL_LABELS[entry.level]
   const time = entry.timestamp.slice(11, 23) // Extract HH:mm:ss.sss
 
-  // Build the main line
   let line = `${COLORS.dim}${time}${COLORS.reset} ${color}${label}${COLORS.reset}`
 
-  // Add service if present
   if (entry.context?.service) {
     line += ` ${COLORS.dim}[${entry.context.service}]${COLORS.reset}`
   }
 
-  // Add request ID if present
   if (entry.context?.requestId) {
     line += ` ${COLORS.dim}(${entry.context.requestId.slice(0, 8)})${COLORS.reset}`
   }
 
-  // Add message
   line += ` ${entry.message}`
 
-  // Add data if present (excluding service and requestId which are already shown)
   const extraContext = { ...entry.context }
   delete extraContext.service
   delete extraContext.requestId
@@ -111,7 +106,6 @@ export function formatPretty(entry: LogEntry): string {
     line += ` ${COLORS.dim}${JSON.stringify(combined)}${COLORS.reset}`
   }
 
-  // Add error details if present
   if (entry.error) {
     line += `\n  ${color}${entry.error.name ?? "Error"}: ${entry.error.message}${COLORS.reset}`
     if (entry.error.stack) {

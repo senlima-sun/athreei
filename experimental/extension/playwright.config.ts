@@ -54,7 +54,6 @@ export default defineConfig({
     video: "retain-on-failure",
   },
 
-  // Configure projects for major browsers
   projects: [
     {
       name: "chromium",
@@ -68,7 +67,6 @@ export default defineConfig({
     // Firefox and WebKit don't support Chrome extensions
   ],
 
-  // Run your local dev server before starting the tests
   // webServer: {
   //   command: 'bun run dev',
   //   url: 'http://localhost:5173',

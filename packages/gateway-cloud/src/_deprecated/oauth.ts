@@ -82,7 +82,6 @@ export async function getOAuthToken(
     return data
   } catch (error) {
     // Network errors, JSON parsing errors, etc.
-    // Log but don't throw - graceful degradation
     logger?.error?.(
       `Error fetching OAuth token for ${serverUrl}:`,
       error instanceof Error ? error.message : String(error)

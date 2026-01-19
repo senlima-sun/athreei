@@ -30,7 +30,6 @@ export default function EditMcpServerPage() {
   const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Load server data
   const loadServer = useCallback(async () => {
     try {
       const response = await fetch(`${API_URL}/api/mcp-servers/${serverId}`, {

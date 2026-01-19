@@ -99,7 +99,6 @@ export class IPCClient {
     this.connected = false
     this.socket = null
 
-    // Reject all pending requests
     for (const pending of this.pendingRequests.values()) {
       clearTimeout(pending.timeout)
       pending.reject(new Error("Disconnected from native host"))

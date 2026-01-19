@@ -202,7 +202,6 @@ test.describe("Permission Flow E2E Tests", () => {
     // Wait for dialog
     await page.waitForSelector('[role="dialog"]', { timeout: 5000 })
 
-    // Check the "remember" checkbox (it's inside shadow DOM, so we need to handle it differently)
     // For now, we'll just verify the checkbox exists
     const dialogContent = await page.content()
     expect(dialogContent).toContain("Remember my choice")

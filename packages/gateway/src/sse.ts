@@ -175,7 +175,6 @@ async function handleSseConnection(
 ): Promise<void> {
   log.info(`SSE connection established for session: ${sessionId}`)
 
-  // Send initial connection event with session endpoint
   await sendEvent(stream, "endpoint", `/mcp/messages?sessionId=${sessionId}`)
 
   // Keep connection alive with periodic pings
@@ -217,7 +216,6 @@ export function createSseApp(): Hono {
       return c.json({ error: "Gateway not configured" }, 500)
     }
 
-    // Create gateway session
     let session
     try {
       session = await createSession({
@@ -231,7 +229,6 @@ export function createSseApp(): Hono {
 
     const abortController = new AbortController()
 
-    // Set up connection close handler
     c.req.raw.signal.addEventListener(
       "abort",
       async () => {
@@ -270,7 +267,6 @@ export function createSseApp(): Hono {
       return c.json({ error: "Session has expired" }, 410)
     }
 
-    // Parse MCP request
     let request: McpRequest
     try {
       request = await c.req.json()
@@ -278,7 +274,6 @@ export function createSseApp(): Hono {
       return c.json({ error: "Invalid JSON body" }, 400)
     }
 
-    // Validate basic JSON-RPC structure
     if (
       request.jsonrpc !== "2.0" ||
       request.id === undefined ||
@@ -287,7 +282,6 @@ export function createSseApp(): Hono {
       return c.json({ error: "Invalid JSON-RPC request" }, 400)
     }
 
-    // Handle the MCP request
     const response = await handleMcpRequest(request, sessionId)
 
     return c.json(response)

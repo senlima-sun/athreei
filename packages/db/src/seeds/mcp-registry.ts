@@ -186,7 +186,6 @@ export function validateSeedData(data: McpServerInsert[]): {
       }
     }
 
-    // Validate transport type
     if (
       server.transport &&
       !["STDIO", "SSE", "HTTP"].includes(server.transport)
@@ -196,7 +195,6 @@ export function validateSeedData(data: McpServerInsert[]): {
       )
     }
 
-    // Validate status
     if (
       server.status &&
       !["active", "inactive", "error"].includes(server.status)
@@ -206,7 +204,6 @@ export function validateSeedData(data: McpServerInsert[]): {
       )
     }
 
-    // Validate args is valid JSON if present
     if (server.args) {
       try {
         JSON.parse(server.args)
@@ -217,7 +214,6 @@ export function validateSeedData(data: McpServerInsert[]): {
       }
     }
 
-    // Validate capabilities is valid JSON if present
     if (server.capabilities) {
       try {
         const caps = JSON.parse(server.capabilities)

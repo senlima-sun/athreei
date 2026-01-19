@@ -57,7 +57,6 @@ export class ProviderBridge {
     const requestId = generateRequestId()
     const startTime = performance.now()
 
-    // Dispatch before event (cancelable)
     const beforeDetail: AiiiActionBeforeEvent = {
       requestId,
       tool,
@@ -87,7 +86,6 @@ export class ProviderBridge {
       }
     }
 
-    // Execute action with potentially modified args
     let result: TResult | undefined
     let error: string | undefined
     let success = true
@@ -99,7 +97,6 @@ export class ProviderBridge {
       error = e instanceof Error ? e.message : String(e)
     }
 
-    // Dispatch after event
     const afterDetail: AiiiActionAfterEvent = {
       requestId,
       tool,

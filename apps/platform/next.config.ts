@@ -20,7 +20,6 @@ const nextConfig: NextConfig = {
 }
 
 export default withSentryConfig(nextConfig, {
-  // Disable source map upload for now
   sourcemaps: {
     disable: true,
   },

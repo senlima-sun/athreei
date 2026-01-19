@@ -13,7 +13,6 @@ const SIZES = [16, 48, 128]
 // Simple 1x1 teal pixel PNG, we'll scale it conceptually
 // For a proper icon, this should be replaced with actual design
 async function generateIcon(size: number): Promise<Uint8Array> {
-  // Create a simple PNG with a colored square
   // This is a minimal valid PNG structure
 
   const width = size
@@ -63,7 +62,6 @@ function createIHDRChunk(width: number, height: number): Uint8Array {
 }
 
 function createIDATChunk(width: number, height: number): Uint8Array {
-  // Create raw image data (filter byte + RGB for each pixel per row)
   const rowSize = 1 + width * 3 // filter byte + RGB
   const rawData = new Uint8Array(rowSize * height)
 

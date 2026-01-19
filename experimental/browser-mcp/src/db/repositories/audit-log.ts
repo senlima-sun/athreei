@@ -63,7 +63,6 @@ export function createAuditLogEntry(
     entry.status
   )
 
-  // Return the created entry
   const result = findAuditLogEntryById(id)
   if (!result) {
     throw new Error("Failed to create audit log entry")

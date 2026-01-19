@@ -8,7 +8,6 @@ const statusText = document.getElementById("statusText")
 
 async function checkConnection() {
   try {
-    // Check connection status from background script
     const response = await chrome.runtime.sendMessage({
       type: "get_connection_status",
     })
@@ -27,5 +26,4 @@ async function checkConnection() {
   }
 }
 
-// Check connection on popup open
 checkConnection()

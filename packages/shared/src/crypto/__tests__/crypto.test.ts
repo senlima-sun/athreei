@@ -486,7 +486,6 @@ describe("Integration Tests", () => {
       1
     )
 
-    // Create and encrypt data
     const permissions: Permission[] = [
       {
         id: "p1",
@@ -514,7 +513,6 @@ describe("Integration Tests", () => {
     const plan = planKeyRotation(encrypted, 2)
     expect(plan.itemsToRotate).toBe(2)
 
-    // Generate new key
     const newPassword = "new-password"
     const newKey = await deriveKey(
       newPassword,

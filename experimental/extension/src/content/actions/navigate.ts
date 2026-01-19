@@ -20,7 +20,6 @@ export async function executeNavigate(
 ): Promise<NavigateResult> {
   const previousUrl = window.location.href
 
-  // Handle special navigation actions
   if (args.url === "back") {
     window.history.back()
     // Wait for navigation to complete
@@ -55,7 +54,6 @@ export async function executeNavigate(
     }
   }
 
-  // Validate URL
   let targetUrl: URL
   try {
     targetUrl = new URL(args.url, window.location.origin)
@@ -85,7 +83,6 @@ export async function executeNavigate(
     // Use history.pushState for better control
     // Note: This won't work for cross-origin navigation
     try {
-      // Setup listener for page load
       const loadPromise = waitForPageLoad(args.waitUntil)
 
       // Navigate
@@ -191,7 +188,6 @@ function waitForPageLoad(
               )
             }
 
-            // Start the timer
             resetTimer()
           },
           { once: true }

@@ -75,12 +75,10 @@ export default function OrganizationMembersPage() {
   const [resendingId, setResendingId] = useState<string | null>(null)
   const [cancelingId, setCancelingId] = useState<string | null>(null)
 
-  // Get current user's role
   const currentUserMember = members.find((m) => m.userId === session?.user?.id)
   const isAdmin =
     currentUserMember?.role === "owner" || currentUserMember?.role === "admin"
 
-  // Load members and invitations
   const loadMembers = async () => {
     if (!orgId) return
 
@@ -184,7 +182,6 @@ export default function OrganizationMembersPage() {
         `/api/organizations/${orgId}/invitations/${invitationId}/resend`,
         { method: "POST" }
       )
-      // Show success feedback
     } catch (err) {
       console.error("Failed to resend invitation:", err)
     } finally {

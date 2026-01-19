@@ -112,7 +112,6 @@ export function SearchDialog({
     }
   }, [open])
 
-  // Reset selection when results change
   useEffect(() => {
     setSelectedIndex(-1)
   }, [results])
@@ -132,7 +131,6 @@ export function SearchDialog({
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [open, onOpenChange])
 
-  // Handle keyboard navigation
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       const maxIndex = hasResults ? flatResults.length - 1 : -1

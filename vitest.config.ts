@@ -12,16 +12,12 @@ export default defineConfig({
     exclude: [
       "**/node_modules/**",
       "**/dist/**",
-      // Exclude packages with their own vitest configs - they should be run separately
       "packages/dashboard/**/*.test.{ts,tsx}",
-      // Exclude tests that use bun:sqlite - run with 'bun test' instead
       "packages/mcp-server/src/db/**/*.test.ts",
       "packages/mcp-server/src/server.test.ts",
       "packages/gateway/src/__tests__/trace-collector.test.ts",
       "packages/gateway/src/__tests__/trace-sync.test.ts",
-      // Exclude desktop reference folder (requires external daemon)
       "apps/desktop/reference/**/*.test.ts",
-      // Exclude integration tests that require running services
       "**/__tests__/integration.test.ts",
     ],
     environmentMatchGlobs: [

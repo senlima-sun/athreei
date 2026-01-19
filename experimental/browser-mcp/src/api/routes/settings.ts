@@ -96,7 +96,6 @@ settingsRoutes.post("/reset", async (c) => {
  * POST /api/settings/export - Export all data
  */
 settingsRoutes.post("/export", async (c) => {
-  // Import repositories inline to avoid circular dependencies
   const { listAuditLogEntries } =
     await import("../../db/repositories/audit-log.js")
   const { listSessions } = await import("../../db/repositories/sessions.js")
@@ -122,7 +121,6 @@ settingsRoutes.post("/export", async (c) => {
  * DELETE /api/settings/data - Clear all data
  */
 settingsRoutes.delete("/data", async (c) => {
-  // Import repositories inline to avoid circular dependencies
   const { clearAuditLog } = await import("../../db/repositories/audit-log.js")
   const { clearSessions } = await import("../../db/repositories/sessions.js")
 

@@ -30,7 +30,6 @@ export class Logger implements ILogger {
       service: config.service ?? "",
       pretty: config.pretty ?? process.env.NODE_ENV !== "production",
     }
-    // Merge service into context if provided
     this.context = this.config.service
       ? { service: this.config.service, ...context }
       : context
@@ -55,7 +54,6 @@ export class Logger implements ILogger {
       return
     }
 
-    // Extract error from data if present
     let errorInfo: LogEntry["error"]
     let cleanData = data
 

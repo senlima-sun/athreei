@@ -20,7 +20,6 @@ export async function executeClick(args: AiiiClickArgs): Promise<ClickResult> {
   let element: Element | null = null
   let clickCoords: { x: number; y: number } | undefined
 
-  // Find element by different methods
   if (args.x !== undefined && args.y !== undefined) {
     // Click by coordinates
     clickCoords = { x: args.x, y: args.y }
@@ -57,7 +56,6 @@ export async function executeClick(args: AiiiClickArgs): Promise<ClickResult> {
   element.scrollIntoView({ behavior: "smooth", block: "center" })
   await sleep(100) // Brief pause after scroll
 
-  // Get click coordinates
   if (!clickCoords) {
     const rect = element.getBoundingClientRect()
     clickCoords = {
@@ -71,10 +69,8 @@ export async function executeClick(args: AiiiClickArgs): Promise<ClickResult> {
   if (args.button === "right") button = 2
   else if (args.button === "middle") button = 1
 
-  // Check modifiers
   const modifiers = args.modifiers ?? []
 
-  // Create and dispatch mouse events for proper click simulation
   const eventInit: MouseEventInit = {
     bubbles: true,
     cancelable: true,
@@ -117,11 +113,9 @@ export async function executeClick(args: AiiiClickArgs): Promise<ClickResult> {
  * Find element in main document and iframes (same-origin only)
  */
 function findElement(selector: string): Element | null {
-  // Try main document first
   let element = document.querySelector(selector)
   if (element) return element
 
-  // Try same-origin iframes
   const iframes = document.querySelectorAll("iframe")
   for (const iframe of iframes) {
     try {
@@ -146,14 +140,12 @@ function findElementByText(text: string, selector?: string): Element | null {
     ? Array.from(document.querySelectorAll(selector))
     : Array.from(document.querySelectorAll("*"))
 
-  // Try exact match first
   for (const el of elements) {
     if (el.textContent?.trim() === text) {
       return el
     }
   }
 
-  // Try case-insensitive contains
   const lowerText = text.toLowerCase()
   for (const el of elements) {
     if (el.textContent?.toLowerCase().includes(lowerText)) {
@@ -174,7 +166,6 @@ async function waitForClickable(
   const startTime = Date.now()
 
   while (Date.now() - startTime < timeout) {
-    // Check visibility
     const rect = element.getBoundingClientRect()
     const isVisible =
       rect.width > 0 &&
@@ -182,7 +173,6 @@ async function waitForClickable(
       window.getComputedStyle(element).visibility !== "hidden" &&
       window.getComputedStyle(element).display !== "none"
 
-    // Check if disabled
     const isDisabled =
       element instanceof HTMLButtonElement ||
       element instanceof HTMLInputElement ||

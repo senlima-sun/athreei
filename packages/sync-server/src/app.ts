@@ -51,7 +51,6 @@ app.notFound((c) => {
   return c.json({ error: "Not found" }, 404)
 })
 
-// Error handler
 app.onError((err, c) => {
   console.error("Server error:", err)
   return c.json(

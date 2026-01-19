@@ -64,7 +64,6 @@ export default function DashboardPage() {
   const [isLoadingStats, setIsLoadingStats] = useState(false)
   const [statsError, setStatsError] = useState<string | null>(null)
 
-  // Fetch dashboard stats
   useEffect(() => {
     const fetchStats = async () => {
       if (!isLocalMode() && !activeOrg?.id) {

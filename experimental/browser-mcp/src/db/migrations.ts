@@ -13,7 +13,6 @@ interface Migration {
   sql: string
 }
 
-// Define all migrations in order
 const migrations: Migration[] = [
   {
     id: 1,
@@ -77,7 +76,6 @@ const migrations: Migration[] = [
  * Run all pending migrations
  */
 export function runMigrations(db: Database): void {
-  // Create migrations tracking table if it doesn't exist
   db.exec(`
     CREATE TABLE IF NOT EXISTS _migrations (
       id INTEGER PRIMARY KEY,
@@ -86,13 +84,11 @@ export function runMigrations(db: Database): void {
     )
   `)
 
-  // Get already applied migrations
   const appliedMigrations = db
     .query<{ id: number }, []>("SELECT id FROM _migrations ORDER BY id")
     .all()
   const appliedIds = new Set(appliedMigrations.map((m) => m.id))
 
-  // Apply pending migrations
   for (const migration of migrations) {
     if (appliedIds.has(migration.id)) {
       continue // Already applied

@@ -31,7 +31,6 @@ vi.mock("better-auth/plugins", () => ({
   })),
 }))
 
-// Import after mocks are set up
 import { createAuth } from "../server.ts"
 
 describe("createAuth", () => {

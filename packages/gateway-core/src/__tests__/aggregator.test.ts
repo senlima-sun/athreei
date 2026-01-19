@@ -239,7 +239,6 @@ describe("aggregateTools", () => {
       error: vi.fn(),
     }
 
-    // Create two MCPs with the same sanitized name
     const mcp1 = createMockMcp("browser", [createMockTool("screenshot")])
     const mcp2: ConnectedMcp = {
       ...createMockMcp("browser2", [createMockTool("screenshot")]),

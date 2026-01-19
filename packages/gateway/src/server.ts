@@ -85,7 +85,6 @@ export function createServer(state: GatewayState): Server {
       const message = error instanceof Error ? error.message : String(error)
       log.error(`Tool call failed: ${name}`, error)
 
-      // Emit error event
       for (const handler of state.eventHandlers) {
         handler({
           type: "error",
@@ -121,7 +120,6 @@ export function refreshAggregatedTools(state: GatewayState): void {
     `Aggregated ${state.aggregatedTools.length} tools from ${mcps.length} servers`
   )
 
-  // Emit event
   for (const handler of state.eventHandlers) {
     handler({
       type: "tools_aggregated",

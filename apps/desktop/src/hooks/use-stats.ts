@@ -56,7 +56,6 @@ function findMostActiveSpace(
 
   if (spaceCounts.size === 0) return null
 
-  // Find the space with most memories
   let maxSpaceId = ""
   let maxCount = 0
   for (const [spaceId, count] of spaceCounts) {

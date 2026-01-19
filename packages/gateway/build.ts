@@ -18,7 +18,6 @@ import { $ } from "bun"
 import { existsSync, mkdirSync, rmSync } from "node:fs"
 import { join } from "node:path"
 
-// Build targets
 const TARGETS = [
   { name: "darwin-arm64", label: "macOS (Apple Silicon)" },
   { name: "darwin-x64", label: "macOS (Intel)" },
@@ -54,7 +53,6 @@ async function buildForTarget(target: Target): Promise<void> {
   console.log(`  Output: ${outputPath}`)
 
   try {
-    // Remove existing binary if present
     if (existsSync(outputPath)) {
       rmSync(outputPath)
     }

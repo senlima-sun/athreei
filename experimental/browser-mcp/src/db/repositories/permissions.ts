@@ -10,7 +10,6 @@ import { createPermissionsRepository } from "./permissions-factory"
 // Create default repository instance
 const permissionsRepository = createPermissionsRepository(db)
 
-// Export individual functions for backwards compatibility
 export const findPermissionByOriginAndTool =
   permissionsRepository.findByOriginAndTool.bind(permissionsRepository)
 export const findPermissionsByOrigin = permissionsRepository.findByOrigin.bind(

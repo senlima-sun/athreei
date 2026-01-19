@@ -20,7 +20,6 @@ export default function SessionsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Fetch sessions - API returns array directly
   const fetchSessions = async () => {
     if (!isLocalMode() && (!activeOrg || isOrgPending)) {
       setIsLoading(false)
@@ -46,7 +45,6 @@ export default function SessionsPage() {
     fetchSessions()
   }, [activeOrg?.id, isOrgPending])
 
-  // Handle revoke session
   const handleRevokeSession = async (session: Session) => {
     if (session.current) {
       setError("Cannot revoke your current session. Please use sign out.")
@@ -72,7 +70,6 @@ export default function SessionsPage() {
     }
   }
 
-  // Get device icon
   const DeviceIcon = ({ device }: { device?: string }) => {
     if (device === "iPhone" || device === "iPad" || device === "Android") {
       return <Smartphone className="h-4 w-4" />
@@ -113,7 +110,6 @@ export default function SessionsPage() {
     )
   }
 
-  // Error state
   if (error) {
     return (
       <div>

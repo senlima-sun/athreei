@@ -15,7 +15,6 @@ const MANIFEST_PATH = join(import.meta.dir, "manifest.json")
 const ICONS_DIR = join(import.meta.dir, "icons")
 const POPUP_HTML = join(import.meta.dir, "popup.html")
 
-// Check if watch mode is enabled
 const isWatchMode = process.argv.includes("--watch")
 
 /**
@@ -114,11 +113,9 @@ async function copyManifest() {
 async function copyAssets() {
   console.log("📂 Copying static assets...")
 
-  // Copy popup.html
   await copyFile(POPUP_HTML, join(DIST_DIR, "popup.html"))
   console.log("✅ Copied popup.html")
 
-  // Copy icons
   const iconsDistDir = join(DIST_DIR, "icons")
   await mkdir(iconsDistDir, { recursive: true })
 
@@ -158,7 +155,6 @@ async function build() {
     // Bundle popup script
     await bundle(join(SRC_DIR, "popup/index.ts"), join(DIST_DIR, "popup.js"))
 
-    // Copy manifest and static assets
     await copyManifest()
     await copyAssets()
 
@@ -205,7 +201,6 @@ async function watchMode() {
     }
   })
 
-  // Handle graceful shutdown
   process.on("SIGINT", () => {
     console.log("")
     console.log("👋 Stopping watch mode...")
@@ -215,7 +210,6 @@ async function watchMode() {
   })
 }
 
-// Run build or watch
 if (isWatchMode) {
   watchMode()
 } else {

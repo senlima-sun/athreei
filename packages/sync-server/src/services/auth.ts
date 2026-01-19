@@ -7,7 +7,6 @@ export async function registerAccount(
   email: string,
   password: string
 ): Promise<AuthResponse> {
-  // Check if account already exists
   const existing = await findAccountByEmail(email)
   if (existing) {
     throw new Error("Account with this email already exists")
@@ -21,7 +20,6 @@ export async function registerAccount(
     parallelism: 4,
   })
 
-  // Create account
   const account = await createAccount(email, passwordHash)
 
   // Generate JWT
@@ -41,7 +39,6 @@ export async function loginAccount(
   email: string,
   password: string
 ): Promise<AuthResponse> {
-  // Find account
   const account = await findAccountByEmail(email)
   if (!account) {
     throw new Error("Invalid email or password")
@@ -67,6 +64,5 @@ export async function loginAccount(
 }
 
 export async function deleteUserAccount(accountId: string): Promise<void> {
-  // Delete account (cascade will delete devices, sync items, etc.)
   await deleteAccount(accountId)
 }

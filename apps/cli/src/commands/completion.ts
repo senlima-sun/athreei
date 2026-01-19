@@ -714,7 +714,6 @@ complete -c athreei -s p -l profile -d "Use a specific profile"
 `
 }
 
-// Export completion output functions
 export function outputBashCompletion(): void {
   process.stdout.write(generateBashCompletion())
 }

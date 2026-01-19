@@ -67,7 +67,6 @@ devices.post(
   }
 )
 
-// Delete a device
 devices.delete("/:deviceId", async (c) => {
   try {
     const { accountId } = getAuthContext(c)

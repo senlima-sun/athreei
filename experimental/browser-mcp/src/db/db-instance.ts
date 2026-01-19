@@ -18,11 +18,8 @@ if (!existsSync(DATA_DIR)) {
   mkdirSync(DATA_DIR, { recursive: true })
 }
 
-// Initialize database
 export const db = new Database(DB_PATH, { create: true })
 
-// Enable WAL mode for better concurrency
 db.exec("PRAGMA journal_mode = WAL")
 
-// Enable foreign keys
 db.exec("PRAGMA foreign_keys = ON")

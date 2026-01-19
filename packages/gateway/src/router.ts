@@ -41,18 +41,15 @@ export async function routeToolCall(
   const startTime = Date.now()
   const traceId = crypto.randomUUID()
 
-  // Parse the tool name
   const { serverName, toolName } = parseToolName(prefixedName)
 
   log.info(`Routing tool call: ${prefixedName} -> ${serverName}/${toolName}`)
 
-  // Find the aggregated tool to verify it exists
   const aggregatedTool = findAggregatedTool(state.aggregatedTools, prefixedName)
   if (!aggregatedTool) {
     throw new Error(`Unknown tool: "${prefixedName}"`)
   }
 
-  // Find the connected MCP server
   const mcp = state.connectedMcps.get(serverName)
   if (!mcp) {
     throw new Error(
@@ -62,7 +59,6 @@ export async function routeToolCall(
     )
   }
 
-  // Create trace record
   const requestId = crypto.randomUUID()
   const trace: ToolCallTrace = {
     traceId,
@@ -76,26 +72,22 @@ export async function routeToolCall(
   }
 
   try {
-    // Call the tool on the upstream MCP server using core routing
     log.debug(`Calling ${toolName} on ${mcp.config.name}`)
 
     const result = await coreRouteToolCall(state, prefixedName, args, {
       logger: log,
     })
 
-    // Update trace with success
     trace.endedAt = new Date()
     trace.durationMs = Date.now() - startTime
     trace.result = result
 
     log.info(`Tool call completed: ${prefixedName} (${trace.durationMs}ms)`)
 
-    // Emit trace event
     emitTraceEvent(state, trace)
 
     return result
   } catch (error) {
-    // Update trace with error
     trace.endedAt = new Date()
     trace.durationMs = Date.now() - startTime
     trace.error = error instanceof Error ? error.message : String(error)
@@ -103,7 +95,6 @@ export async function routeToolCall(
 
     log.error(`Tool call failed: ${prefixedName}`, error)
 
-    // Emit trace event
     emitTraceEvent(state, trace)
 
     throw error

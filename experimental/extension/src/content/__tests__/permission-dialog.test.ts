@@ -75,7 +75,6 @@ describe("getToolDescription", () => {
 // the jsdom environment configuration is not working correctly in this
 // project's test setup. The function has been manually tested and works
 // correctly in the browser environment.
-//
 // The showPermissionDialog function:
 // - Creates a modal dialog using Shadow DOM for CSS isolation
 // - Provides three action buttons: Deny, Allow Once, Allow

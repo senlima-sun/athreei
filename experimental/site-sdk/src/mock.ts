@@ -65,7 +65,6 @@ let cleanupFunctions: (() => void)[] = []
  * Enable mock mode for testing
  */
 export function enableMockMode(options: MockModeOptions): void {
-  // Require explicit mock: true flag
   if (options.mock !== true) {
     console.error(
       "[athreei mock] Mock mode requires explicit `mock: true` flag. " +

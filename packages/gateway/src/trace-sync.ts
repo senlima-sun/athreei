@@ -239,7 +239,6 @@ export class TraceSyncClient {
       }
     }
 
-    // Filter out traces that are already in-flight to prevent duplicates
     const availableTraces = this.pendingTraces.filter(
       (trace) => !this.inFlightRequestIds.has(trace.requestId)
     )
@@ -258,7 +257,6 @@ export class TraceSyncClient {
       this.inFlightRequestIds.add(id)
     }
 
-    // Remove from pending (they're now in-flight)
     this.pendingTraces = this.pendingTraces.filter(
       (t) => !requestIds.includes(t.requestId)
     )

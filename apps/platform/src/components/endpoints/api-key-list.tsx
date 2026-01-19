@@ -50,7 +50,6 @@ export function ApiKeyList({ apiKeys, endpointId, onRevoke }: ApiKeyListProps) {
 
     setExpandedId(keyId)
 
-    // Fetch stats if not already loaded
     if (!stats[keyId]) {
       setLoadingStatsId(keyId)
       try {

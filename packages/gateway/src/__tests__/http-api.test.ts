@@ -743,7 +743,6 @@ describe("HTTP API", () => {
 
   describe("GET /api/servers/:name/test", () => {
     it("returns 404 for non-existent server", async () => {
-      // Set up a server so we can test for non-existent
       const mcp = createMockMcp("filesystem", [
         createMockTool("read_file"),
         createMockTool("write_file"),
@@ -779,7 +778,6 @@ describe("HTTP API", () => {
     })
 
     it("returns error when server connection test fails", async () => {
-      // Create a state with a failing MCP client
       const failingMcp = createMockMcp("failing-server", [])
       failingMcp.client.listTools = vi
         .fn()

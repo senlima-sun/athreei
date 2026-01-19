@@ -35,7 +35,6 @@ import type {
 
 const VERSION = "0.1.0"
 
-// Initialize bridges on content script load
 initBridge(VERSION)
 initWebsiteBridge(window.location.origin)
 
@@ -50,7 +49,6 @@ export async function executeAction(
   const bridge = getBridge()
   const websiteBridge = getWebsiteBridge()
 
-  // Check if this is a custom tool registered by the website
   if (websiteBridge.isCustomTool(tool)) {
     try {
       const result = await websiteBridge.executeCustomTool(
@@ -66,7 +64,6 @@ export async function executeAction(
     }
   }
 
-  // Handle built-in tools
   switch (tool) {
     case "click":
       return bridge.executeAction(tool, args as AiiiClickArgs, executeClick)
@@ -134,11 +131,9 @@ export async function executeAction(
  * Handle messages from background script
  */
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-  // Handle browser action requests from background script
   if (message.type === "browser_action") {
     const { method, args } = message
 
-    // Execute the action
     executeAction(method as AiiiToolType, args as AiiiToolArgs)
       .then((result) => {
         sendResponse(result)
@@ -154,13 +149,11 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     return true
   }
 
-  // Handle ping requests
   if (message.type === "ping") {
     sendResponse({ pong: true, version: VERSION })
     return false
   }
 
-  // Handle permission dialog request from background script
   if (message.type === "show_permission_dialog") {
     const { tool, origin, aiApp, toolDescription } = message
 
@@ -189,7 +182,6 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   return false
 })
 
-// Export for external use
 export { getBridge, initBridge } from "./provider-bridge"
 export { getWebsiteBridge, initWebsiteBridge } from "./website-bridge"
 export { getRegistry, resetRegistry } from "./registry"

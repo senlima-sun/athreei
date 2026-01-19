@@ -74,7 +74,6 @@ export function listenForAiiiEvent<T extends AiiiEventType>(
 
   document.addEventListener(type, listener)
 
-  // Return unsubscribe function
   return () => {
     document.removeEventListener(type, listener)
   }

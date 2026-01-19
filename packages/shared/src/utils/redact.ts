@@ -120,7 +120,6 @@ export function redact(message: string): string {
   let result = message
 
   for (const { pattern } of SENSITIVE_PATTERNS) {
-    // Reset lastIndex for global patterns
     pattern.lastIndex = 0
     result = result.replace(pattern, (match) => {
       // For patterns like "access_token": "value", preserve the key
@@ -188,7 +187,6 @@ export function redactObject(obj: unknown): unknown {
   for (const key of Object.keys(input)) {
     const value = input[key]
 
-    // Check if this key is a known sensitive field
     if (SENSITIVE_FIELDS.has(key.toLowerCase())) {
       result[key] = REDACTED
       continue

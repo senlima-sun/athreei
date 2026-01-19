@@ -100,7 +100,6 @@ export function createPermissionsRepository(db: Database) {
       const now = Date.now()
       const allowed = permissionToInt(permission.allowed)
 
-      // Try to update first
       const updated = db
         .query(
           `UPDATE permissions
@@ -117,7 +116,6 @@ export function createPermissionsRepository(db: Database) {
         ).run(id, permission.origin, permission.tool, allowed, now, now)
       }
 
-      // Return the permission
       const result = this.findByOriginAndTool(
         permission.origin,
         permission.tool

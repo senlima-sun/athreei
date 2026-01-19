@@ -32,7 +32,6 @@ export default function OrganizationSettingsPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
 
-  // Initialize form with org data
   useEffect(() => {
     if (currentOrg) {
       setName(currentOrg.name)

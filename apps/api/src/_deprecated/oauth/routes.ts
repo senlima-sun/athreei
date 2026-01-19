@@ -104,7 +104,6 @@ async function generateCodeChallenge(verifier: string): Promise<string> {
  * URL-safe base64 encoding
  */
 function base64UrlEncode(bytes: Uint8Array): string {
-  // Convert Uint8Array to base64
   const binString = Array.from(bytes, (x) => String.fromCodePoint(x)).join("")
   const base64 = btoa(binString)
   // Make URL-safe
@@ -265,7 +264,6 @@ async function getClientId(
   // For known providers, use pre-registered client IDs
   const provider = detectProvider(serverUrl)
 
-  // Check environment for provider-specific client IDs
   const envKey = `OAUTH_CLIENT_ID_${provider.toUpperCase()}`
   const clientId = process.env[envKey]
   if (clientId) {
@@ -308,20 +306,16 @@ oauth.post(
     // Discover OAuth endpoints
     const metadata = await discoverOAuthMetadata(serverUrl)
 
-    // Generate PKCE values
     const codeVerifier = generateCodeVerifier()
     const codeChallenge = await generateCodeChallenge(codeVerifier)
 
     // Generate state (CSRF protection)
     const state = generateUUID()
 
-    // Build redirect URI
     const redirectUri = `${PLATFORM_URL}/api/oauth/callback`
 
-    // Get client ID
     const clientId = await getClientId(serverUrl, metadata.registrationEndpoint)
 
-    // Store session in database
     const now = new Date()
     const expiresAt = new Date(now.getTime() + SESSION_TTL_MS)
 
@@ -377,13 +371,11 @@ oauth.get("/callback", callbackRateLimiter, async (c) => {
   const error = c.req.query("error")
   const errorDescription = c.req.query("error_description")
 
-  // Handle provider errors
   if (error) {
     const errorMsg = errorDescription || error
     return c.redirect(`/dashboard?oauth_error=${encodeURIComponent(errorMsg)}`)
   }
 
-  // Validate required parameters
   if (!code || !state) {
     return c.redirect("/dashboard?oauth_error=missing_params")
   }
@@ -398,7 +390,6 @@ oauth.get("/callback", callbackRateLimiter, async (c) => {
     return c.redirect("/dashboard?oauth_error=invalid_state")
   }
 
-  // Check session expiry
   if (new Date() > session.expiresAt) {
     // Clean up expired session
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -417,7 +408,6 @@ oauth.get("/callback", callbackRateLimiter, async (c) => {
       throw ApiError.badRequest("Missing code verifier")
     }
 
-    // Get client ID
     const clientId = await getClientId(
       session.serverUrl,
       metadata.registrationEndpoint
@@ -521,7 +511,6 @@ oauth.get("/callback", callbackRateLimiter, async (c) => {
     // Generate token hash for audit correlation
     const tokenHash = await generateTokenHash(tokens.access_token)
 
-    // Log success
     logOAuthEvent("oauth_auth_complete", {
       provider: session.provider,
       serverUrl: session.serverUrl,
@@ -718,7 +707,6 @@ async function refreshToken(
   // Generate token hash for audit correlation
   const tokenHash = await generateTokenHash(tokens.access_token)
 
-  // Log refresh event
   logOAuthEvent("oauth_token_refresh", {
     provider: token.provider,
     serverUrl: token.serverUrl,
@@ -763,7 +751,6 @@ oauth.delete(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (db as any).delete(oauthToken).where(eq(oauthToken.id, token.id))
 
-    // Log revocation
     logOAuthEvent("oauth_token_revoke", {
       provider: token.provider,
       serverUrl: token.serverUrl,
@@ -798,7 +785,6 @@ oauth.get("/connections", authMiddleware, connectionsRateLimiter, async (c) => {
     },
   })
 
-  // Map to connection response format
   const connections = tokens.map(
     (token: {
       provider: string

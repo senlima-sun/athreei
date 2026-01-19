@@ -125,7 +125,6 @@ export function createAuthConfig(
       }),
     ],
 
-    // Merge any additional options
     ...restOptions,
   }
 }

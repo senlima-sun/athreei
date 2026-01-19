@@ -9,7 +9,6 @@ interface BreadcrumbItem {
   href: string
 }
 
-// Map path segments to human-readable labels
 const segmentLabels: Record<string, string> = {
   dashboard: "Dashboard",
   mcps: "MCPs",
@@ -24,10 +23,8 @@ const segmentLabels: Record<string, string> = {
 export function Breadcrumbs() {
   const pathname = usePathname()
 
-  // Split path and filter empty segments
   const segments = pathname.split("/").filter(Boolean)
 
-  // Build breadcrumb items
   const breadcrumbs: BreadcrumbItem[] = []
   let currentPath = ""
 
@@ -39,7 +36,6 @@ export function Breadcrumbs() {
       continue
     }
 
-    // Check if it's a UUID-like segment (organization ID, etc.)
     const isUuid = /^[0-9a-f-]{36}$/i.test(segment)
 
     breadcrumbs.push({

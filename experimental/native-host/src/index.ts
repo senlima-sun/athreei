@@ -49,7 +49,6 @@ function nextEventId(): string {
 async function cleanup(): Promise<void> {
   console.error("[native-host] Cleaning up resources...")
 
-  // Stop IPC server
   try {
     await ipcServer.stop()
   } catch (error) {
@@ -88,18 +87,15 @@ async function main() {
   console.error(`[native-host] Starting ${HOST_NAME} v${VERSION}`)
   console.error(`[native-host] Process ID: ${process.pid}`)
 
-  // Initialize handlers
   initializeHandlers()
   console.error(
     `[native-host] Registered methods: ${getRegisteredMethods().join(", ")}`
   )
 
-  // Start IPC server
   try {
     await ipcServer.start()
     console.error("[native-host] IPC server started")
 
-    // Set up handler for IPC requests - forward to Chrome extension
     ipcServer.onRequest = (request, clientId) => {
       console.error(
         `[native-host] IPC request from ${clientId}: ${request.type} (id: ${request.id})`
@@ -112,7 +108,6 @@ async function main() {
     console.error("[native-host] Continuing without IPC support")
   }
 
-  // Send ready event to extension
   const readyEvent = createEvent(nextEventId(), "ready", {
     version: VERSION,
     methods: getRegisteredMethods(),
@@ -135,7 +130,6 @@ async function main() {
         `[native-host] Received message: ${message.type} (id: ${message.id})`
       )
 
-      // Check if this is a response to an IPC request
       if (isResponse(message) && pendingIPCRequests.has(message.id)) {
         const clientId = pendingIPCRequests.get(message.id)!
         pendingIPCRequests.delete(message.id)
@@ -144,7 +138,6 @@ async function main() {
         )
         ipcServer.sendResponse(clientId, message)
       } else if (isRequest(message)) {
-        // Handle request and send response
         const response = await handleRequest(message)
         writeMessage(response)
         console.error(
@@ -190,7 +183,6 @@ function setupShutdownHandlers() {
   })
 }
 
-// Start the host
 setupShutdownHandlers()
 main().catch((error) => {
   console.error("[native-host] Fatal error:", error)

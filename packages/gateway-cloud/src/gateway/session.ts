@@ -127,7 +127,6 @@ async function connectToMcpServer(
       }
       const args = config.args ? config.args.split(" ").filter(Boolean) : []
 
-      // Fetch environment variables for the server
       let serverEnv: Record<string, string> = {}
       if (apiKey) {
         serverEnv = await getServerEnv(config.id, apiKey, log)
@@ -271,7 +270,6 @@ export async function createSession(
     `Creating session ${sessionId} for endpoint: ${options.endpointName}`
   )
 
-  // Connect to all MCP servers (passing apiKey for env var fetching)
   const { connected, failed } = await connectToAllServers(
     options.servers,
     log,
@@ -282,7 +280,6 @@ export async function createSession(
     log.warn(`Session ${sessionId}: ${failed.length} servers failed to connect`)
   }
 
-  // Build connected MCPs map
   const connectedMcps = new Map<string, ConnectedMcp>()
   for (const mcp of connected) {
     connectedMcps.set(mcp.sanitizedName, mcp)
@@ -346,7 +343,6 @@ export async function destroySession(sessionId: string): Promise<boolean> {
 
   session.isActive = false
 
-  // Disconnect from all MCP servers
   const mcps = Array.from(session.connectedMcps.values())
   await Promise.all(mcps.map((mcp) => disconnectMcpServer(mcp, logger)))
 

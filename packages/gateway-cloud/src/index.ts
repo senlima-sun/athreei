@@ -34,7 +34,6 @@ import type { Logger } from "@athreei/gateway-core"
 
 const app = new Hono()
 
-// Create logger
 const log: Logger = {
   debug: (...args) => {
     if (process.env.NODE_ENV === "development") {
@@ -89,7 +88,6 @@ app.notFound((c) => {
   return c.json({ error: "Not found" }, 404)
 })
 
-// Error handler
 app.onError((err, c) => {
   log.error("Server error:", err)
   return c.json(
@@ -107,7 +105,6 @@ app.onError((err, c) => {
 function initialize(config: GatewayCloudConfig): void {
   log.info("Initializing gateway cloud service...")
 
-  // Configure session management
   configureSessionManager({
     idleTimeout: config.sessionIdleTimeout,
     logger: log,
@@ -116,7 +113,6 @@ function initialize(config: GatewayCloudConfig): void {
   // Configure SSE routes
   configureSseRoutes({ logger: log })
 
-  // Start session cleanup
   startSessionCleanup(config.sessionCleanupInterval)
 
   log.info("Gateway cloud service initialized")
@@ -142,10 +138,8 @@ const config: GatewayCloudConfig = {
   debug: process.env.NODE_ENV === "development",
 }
 
-// Initialize on startup
 initialize(config)
 
-// Setup shutdown handlers
 process.on("SIGINT", async () => {
   await shutdown()
   process.exit(0)
@@ -156,7 +150,6 @@ process.on("SIGTERM", async () => {
   process.exit(0)
 })
 
-// Start the server
 log.info(`Starting gateway cloud on port ${config.port}...`)
 
 export default {
@@ -164,5 +157,4 @@ export default {
   fetch: app.fetch,
 }
 
-// Export app for testing
 export { app }

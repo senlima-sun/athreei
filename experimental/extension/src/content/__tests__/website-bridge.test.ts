@@ -21,10 +21,8 @@ describe("WebsiteBridge Permission Handling", () => {
   const testOrigin = "https://example.com"
 
   beforeEach(() => {
-    // Clear all mocks
     vi.clearAllMocks()
 
-    // Create and initialize bridge
     bridge = new WebsiteBridge(testOrigin)
     bridge.init()
   })
@@ -79,10 +77,8 @@ describe("WebsiteBridge Permission Handling", () => {
 
   describe("handlePermission with missing chrome.runtime", () => {
     it("should handle gracefully when chrome.runtime is not available", async () => {
-      // Save original chrome
       const originalChrome = globalThis.chrome
 
-      // Remove chrome.runtime
       globalThis.chrome = undefined as unknown as typeof chrome
 
       const consoleErrorSpy = vi
@@ -98,7 +94,6 @@ describe("WebsiteBridge Permission Handling", () => {
         )
       })
 
-      // Dispatch permission request
       const event = new CustomEvent<AiiiPermissionEvent>("aiii:permission", {
         detail: {
           scope: "read",
@@ -132,7 +127,6 @@ describe("WebsiteBridge Permission Handling", () => {
         )
       })
 
-      // Trigger a permission response through the bridge
       // We need to access the private method, so we'll trigger it through handlePermission
       mockSendMessage.mockResolvedValue({
         decision: "allow",
@@ -482,7 +476,6 @@ describe("WebsiteBridge Permission Handling", () => {
       // Destroy bridge
       bridge.destroy()
 
-      // Dispatch event - should not be handled
       window.dispatchEvent(event)
 
       expect(mockSendMessage).not.toHaveBeenCalled()

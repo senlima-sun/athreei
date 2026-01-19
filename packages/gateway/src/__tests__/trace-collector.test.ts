@@ -12,7 +12,6 @@ import {
 } from "../trace-collector"
 import type { ToolCallTrace } from "../types"
 
-// Generate a valid 32-byte test key using Node crypto
 function generateTestKey(): Uint8Array {
   const key = new Uint8Array(32)
   crypto.getRandomValues(key)
@@ -489,7 +488,6 @@ describe("TraceCollector with Encryption", () => {
 
       const encrypted = collector.exportEncryptedTraces()!
 
-      // Clear and import
       collector.clear()
       expect(collector.getTraces()).toHaveLength(0)
 

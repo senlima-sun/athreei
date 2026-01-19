@@ -39,9 +39,7 @@ export function EmbeddingDownloadDialog({
     try {
       await download()
       onDownloadComplete()
-    } catch {
-      // Error handled by mutation
-    }
+    } catch {}
   }
 
   const handleClose = (): void => {

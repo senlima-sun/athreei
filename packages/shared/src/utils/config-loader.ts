@@ -95,13 +95,11 @@ export function loadConfigSync(configPath?: string): AthreeiConfig {
     throw new ConfigError(`Invalid JSON in config file: ${path}`, path, error)
   }
 
-  // Check for legacy a3i format
   if (isLegacyA3iConfig(data)) {
     // Auto-migrate legacy config
     return migrateLegacyConfig(data)
   }
 
-  // Validate with Zod
   const result = athreeiConfigSchema.safeParse(data)
   if (!result.success) {
     const issues = result.error.issues
@@ -132,7 +130,6 @@ export function saveConfigSync(
   // Ensure directory exists
   ensureConfigDir()
 
-  // Validate before saving
   const result = athreeiConfigSchema.safeParse(config)
   if (!result.success) {
     throw new ConfigError("Invalid configuration", path, result.error)
@@ -156,7 +153,6 @@ export function loadLocalConfigSync(configPath?: string): LocalConfig {
   const path = configPath ?? getConfigPath()
 
   if (!existsSync(path)) {
-    // Return empty local config if file doesn't exist
     return createEmptyLocalConfig()
   }
 
@@ -174,12 +170,10 @@ export function loadLocalConfigSync(configPath?: string): LocalConfig {
     throw new ConfigError(`Invalid JSON in config file: ${path}`, path, error)
   }
 
-  // Check for legacy a3i format
   if (isLegacyA3iConfig(data)) {
     return migrateLegacyConfig(data)
   }
 
-  // Validate as local config
   const result = localConfigSchema.safeParse(data)
   if (!result.success) {
     throw new ConfigError(
@@ -225,7 +219,6 @@ export function loadCloudConfigSync(configPath?: string): CloudConfig {
     throw new ConfigError(`Invalid JSON in config file: ${path}`, path, error)
   }
 
-  // Validate as cloud config
   const result = cloudConfigSchema.safeParse(data)
   if (!result.success) {
     throw new ConfigError(

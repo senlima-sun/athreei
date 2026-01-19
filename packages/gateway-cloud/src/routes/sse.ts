@@ -161,7 +161,6 @@ async function handleToolsCall(
     }
   }
 
-  // Parse aggregated tool name (serverName__toolName)
   const parts = params.name.includes("__")
     ? params.name.split("__", 2)
     : ["unknown", params.name]
@@ -303,7 +302,6 @@ async function handleSseConnection(
 ): Promise<void> {
   logger.info(`SSE connection established for session: ${sessionId}`)
 
-  // Send initial connection event with session endpoint
   await sendEvent(stream, "endpoint", `/mcp/messages?sessionId=${sessionId}`)
 
   // Keep connection alive with periodic pings
@@ -348,7 +346,6 @@ sse.get("/:endpointName/sse", async (c) => {
   const apiKey = c.req.header("Authorization")?.replace("Bearer ", "")
   const platformUrl = process.env.PLATFORM_URL ?? "http://localhost:3000"
 
-  // Validate API key and get endpoint config
   const config = await validateAndGetConfig(endpointName, apiKey, platformUrl)
 
   if (!config) {
@@ -358,7 +355,6 @@ sse.get("/:endpointName/sse", async (c) => {
     )
   }
 
-  // Create gateway session
   let session
   try {
     session = await createSession({
@@ -387,7 +383,6 @@ sse.get("/:endpointName/sse", async (c) => {
 
   const abortController = new AbortController()
 
-  // Set up connection close handler
   c.req.raw.signal.addEventListener(
     "abort",
     async () => {
@@ -444,7 +439,6 @@ sse.post("/messages", async (c) => {
     )
   }
 
-  // Parse MCP request
   let request: McpRequest
   try {
     request = await c.req.json()
@@ -455,7 +449,6 @@ sse.post("/messages", async (c) => {
     )
   }
 
-  // Validate basic JSON-RPC structure
   if (
     request.jsonrpc !== "2.0" ||
     request.id === undefined ||
@@ -467,7 +460,6 @@ sse.post("/messages", async (c) => {
     )
   }
 
-  // Handle the MCP request
   const response = await handleMcpRequest(
     request,
     sessionId,

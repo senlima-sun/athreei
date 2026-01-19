@@ -145,12 +145,10 @@ export class AthreeiClient {
       requiresPermission,
     } = definition
 
-    // Store handler if provided
     if (handler) {
       this.handlers.set(name, handler)
     }
 
-    // Convert parameters to match AiiiToolParameter format
     const convertedParams: Record<
       string,
       {
@@ -170,7 +168,6 @@ export class AthreeiClient {
       }
     }
 
-    // Dispatch registration event
     const registerEvent: AiiiRegisterEvent = {
       tool: name,
       description,
@@ -191,7 +188,6 @@ export class AthreeiClient {
     this.handlers.set(toolName, handler)
     this.log("Handler registered for:", toolName)
 
-    // Return unsubscribe function
     return () => {
       this.handlers.delete(toolName)
       this.log("Handler unregistered for:", toolName)
@@ -219,7 +215,6 @@ export class AthreeiClient {
 
     this.log("Requesting permission:", permissionEvent)
 
-    // Dispatch permission request
     dispatchAiiiEvent(AIII_EVENT_NAMES.PERMISSION, permissionEvent)
 
     // For now, we assume permission is granted if no error

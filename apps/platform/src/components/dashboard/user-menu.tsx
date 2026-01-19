@@ -12,7 +12,6 @@ export function UserMenu() {
 
   const { data: session, isPending } = useSession()
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (

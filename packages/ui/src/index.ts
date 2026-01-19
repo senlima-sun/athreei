@@ -2,7 +2,6 @@
  * @athreei/ui - Shared UI components for athreei
  */
 
-// Utils
 export { cn } from "./lib/utils"
 
 // Button

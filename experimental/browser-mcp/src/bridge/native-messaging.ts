@@ -60,7 +60,6 @@ export class NativeMessagingClient {
         stdio: ["pipe", "pipe", "pipe"],
       })
 
-      // Setup event handlers
       this.process.stdin?.setDefaultEncoding("binary")
       this.process.stdout?.on("data", this.handleData.bind(this))
       this.process.stderr?.on("data", (data) => {
@@ -126,7 +125,6 @@ export class NativeMessagingClient {
         reject(new Error(`Request timeout after ${timeout}ms: ${method}`))
       }, timeout)
 
-      // Store pending request
       this.pendingRequests.set(id, {
         resolve,
         reject,
@@ -134,7 +132,6 @@ export class NativeMessagingClient {
         method,
       })
 
-      // Send the request
       try {
         this.writeMessage(request)
       } catch (error) {
@@ -190,11 +187,9 @@ export class NativeMessagingClient {
       )
     }
 
-    // Create 4-byte length prefix (little-endian)
     const lengthBuffer = Buffer.alloc(4)
     lengthBuffer.writeUInt32LE(messageLength, 0)
 
-    // Write length + message
     this.process.stdin.write(lengthBuffer)
     this.process.stdin.write(messageBytes)
   }
@@ -207,7 +202,6 @@ export class NativeMessagingClient {
 
     // Process all complete messages in the buffer
     while (this.buffer.length >= 4) {
-      // Read message length
       const messageLength = this.buffer.readUInt32LE(0)
 
       if (messageLength > MAX_MESSAGE_SIZE) {
@@ -216,17 +210,14 @@ export class NativeMessagingClient {
         return
       }
 
-      // Check if we have the complete message
       if (this.buffer.length < 4 + messageLength) {
         // Wait for more data
         break
       }
 
-      // Extract message
       const messageBytes = this.buffer.subarray(4, 4 + messageLength)
       this.buffer = this.buffer.subarray(4 + messageLength)
 
-      // Parse and handle message
       try {
         const messageText = messageBytes.toString("utf-8")
         const message = JSON.parse(messageText) as NativeMessage
@@ -336,7 +327,6 @@ export class NativeMessagingClient {
     console.log("[bridge] Disconnected from native host")
     this.isConnected = false
 
-    // Reject all pending requests
     for (const [_id, pending] of this.pendingRequests) {
       clearTimeout(pending.timeout)
       pending.reject(new Error("Disconnected from native host"))

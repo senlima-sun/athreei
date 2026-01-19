@@ -129,7 +129,6 @@ const mockDb = {
   }),
 }
 
-// Error handler for tests
 function testErrorHandler(
   err: Error,
   c: { json: (data: unknown, status: number) => Response }
@@ -138,10 +137,8 @@ function testErrorHandler(
   return c.json({ error: err.message }, statusCode)
 }
 
-// Import routes after mocks are set up
 const { default: tracesRoutes } = await import("../../routes/traces")
 
-// Create test app
 const app = new Hono()
 app.onError(testErrorHandler)
 app.route("/api/traces", tracesRoutes)
@@ -191,7 +188,6 @@ describe("Traces API Routes", () => {
     })
 
     it("should filter by search term on name field", async () => {
-      // Search filtering now happens at database level, so mock returns filtered result
       mockDb.query.member.findFirst.mockResolvedValue(mockMember)
       mockDb.query.trace.findMany.mockResolvedValue([mockTrace]) // Only matching trace returned
 

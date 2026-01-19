@@ -32,13 +32,11 @@ export function InviteTeamStep({
   const addInvite = () => {
     const trimmedEmail = email.trim().toLowerCase()
 
-    // Validate email format
     if (!trimmedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
       setError("Please enter a valid email address")
       return
     }
 
-    // Check for duplicates
     if (invites.some((inv) => inv.email === trimmedEmail)) {
       setError("This email is already in the list")
       return
@@ -63,7 +61,6 @@ export function InviteTeamStep({
     setIsSubmitting(true)
 
     try {
-      // Send all invitations
       const results = await Promise.allSettled(
         invites.map((invite) =>
           organization.inviteMember({
@@ -74,7 +71,6 @@ export function InviteTeamStep({
         )
       )
 
-      // Check for any failures
       const failures = results.filter(
         (r) =>
           r.status === "rejected" || (r.status === "fulfilled" && r.value.error)

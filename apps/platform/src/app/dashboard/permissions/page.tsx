@@ -20,7 +20,6 @@ export default function PermissionsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Filter state
   const [originFilter, setOriginFilter] = useState("")
   const [toolFilter, setToolFilter] = useState("")
 
@@ -32,7 +31,6 @@ export default function PermissionsPage() {
   const [editLevel, setEditLevel] = useState<PermissionLevel>("ask")
   const [isSaving, setIsSaving] = useState(false)
 
-  // Fetch permissions
   const fetchPermissions = async () => {
     if (!isLocalMode() && (!activeOrg || isOrgPending)) {
       setIsLoading(false)
@@ -60,14 +58,12 @@ export default function PermissionsPage() {
     fetchPermissions()
   }, [activeOrg?.id, isOrgPending])
 
-  // Handle edit permission
   const handleEdit = (permission: Permission) => {
     setEditingPermission(permission)
     setEditLevel(permission.allowed)
     setIsEditModalOpen(true)
   }
 
-  // Handle save edit
   const handleSaveEdit = async () => {
     if (!editingPermission) return
 
@@ -94,7 +90,6 @@ export default function PermissionsPage() {
     }
   }
 
-  // Handle delete permission
   const handleDelete = async (permission: Permission) => {
     if (
       !confirm(
@@ -118,7 +113,6 @@ export default function PermissionsPage() {
     }
   }
 
-  // Filter permissions
   const filteredPermissions = permissions.filter((p) => {
     const matchesOrigin =
       !originFilter ||
@@ -158,7 +152,6 @@ export default function PermissionsPage() {
     )
   }
 
-  // Error state
   if (error) {
     return (
       <div>

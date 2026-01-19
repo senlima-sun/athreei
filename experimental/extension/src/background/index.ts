@@ -92,10 +92,8 @@ function connectToNativeHost(): void {
 
     console.log("[Background] Connected to native host")
 
-    // Start health check
     startHealthCheck()
 
-    // Notify content scripts of connection status
     broadcastConnectionStatus(true)
   } catch (error) {
     console.error("[Background] Failed to connect to native host:", error)
@@ -117,7 +115,6 @@ function _disconnectFromNativeHost(): void {
   stopHealthCheck()
   connection.state = "disconnected"
 
-  // Reject all pending requests
   for (const [_id, pending] of connection.pendingRequests) {
     pending.reject(new Error("Native host disconnected"))
   }
@@ -140,7 +137,6 @@ function handleNativeDisconnect(): void {
   connection.state = "disconnected"
   stopHealthCheck()
 
-  // Reject all pending requests
   for (const [_id, pending] of connection.pendingRequests) {
     pending.reject(new Error(error?.message || "Native host disconnected"))
   }
@@ -190,7 +186,6 @@ function startHealthCheck(): void {
       return
     }
 
-    // Send ping request
     sendToNativeHost({
       id: generateId(),
       type: "request",
@@ -271,7 +266,6 @@ function handleNativeResponse(response: NativeResponse): void {
 async function handleNativeRequest(request: NativeRequest): Promise<void> {
   console.log("[Background] Handling native request:", request.method)
 
-  // Extract AI app name from payload (injected by MCP server's IPC client)
   const payload = request.payload as Record<string, unknown>
   currentAiApp = (payload._aiApp as string) || DEFAULT_AI_APP
 
@@ -312,7 +306,6 @@ async function handleNativeRequest(request: NativeRequest): Promise<void> {
         throw new Error(`Unknown method: ${request.method}`)
     }
 
-    // Send success response
     await sendResponseToNativeHost({
       id: request.id,
       type: "response",
@@ -320,7 +313,6 @@ async function handleNativeRequest(request: NativeRequest): Promise<void> {
       payload: result,
     })
   } catch (error) {
-    // Send error response
     await sendResponseToNativeHost({
       id: request.id,
       type: "response",
@@ -458,7 +450,6 @@ async function handleNavigate(
     throw new Error("Could not determine target tab")
   }
 
-  // Check permissions before navigation
   const origin = await getTabOrigin(targetTabId)
   await checkAndEnforcePermission(origin, "browser_navigate", targetTabId)
 
@@ -497,11 +488,9 @@ async function handleScreenshot(
     throw new Error("Could not determine target tab")
   }
 
-  // Check permissions before screenshot
   const origin = await getTabOrigin(targetTabId)
   await checkAndEnforcePermission(origin, "browser_screenshot", targetTabId)
 
-  // Get window ID for the tab
   const tab = await chrome.tabs.get(targetTabId)
   const windowId = tab.windowId
 
@@ -511,10 +500,8 @@ async function handleScreenshot(
     quality: format === "jpeg" ? quality : undefined,
   })
 
-  // Extract base64 data (remove data:image/png;base64, prefix)
   const base64Data = dataUrl.split(",")[1]
 
-  // Get image dimensions (this is a basic implementation)
   // For full page screenshots or element screenshots, we'd need to
   // coordinate with the content script
   return {
@@ -552,11 +539,9 @@ async function forwardToContentScript(
     throw new Error("Could not determine target tab")
   }
 
-  // Check permissions before forwarding
   const origin = await getTabOrigin(targetTabId)
   await checkAndEnforcePermission(origin, request.method, targetTabId)
 
-  // Send message to content script
   const response = await chrome.tabs.sendMessage(targetTabId, {
     type: "browser_action",
     method: request.method,
@@ -572,7 +557,6 @@ async function forwardToContentScript(
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   console.log("[Background] Message from content script:", message)
 
-  // Handle different message types
   if (message.type === "get_connection_status") {
     sendResponse({
       connected: connection.state === "connected",
@@ -608,10 +592,8 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   }
 
   if (message.type === "permission_request") {
-    // Extract fields from message
     const { origin, scope, description, aiApp } = message
 
-    // Handle permission request
     ;(async () => {
       const response = await handlePermissionRequest(
         { origin, scope, description, aiApp },
@@ -687,7 +669,6 @@ async function checkAndEnforcePermission(
   }
 
   if (level === "ask") {
-    // Show permission dialog to user
     const response = await showPermissionDialogToUser(origin, tool, tabId)
 
     if (response.decision === "deny") {
@@ -735,7 +716,6 @@ async function showPermissionDialogToUser(
     throw new Error("Could not determine target tab for permission dialog")
   }
 
-  // Send message to content script to show dialog
   const response = await chrome.tabs.sendMessage(targetTabId, {
     type: "show_permission_dialog",
     tool,
@@ -744,7 +724,6 @@ async function showPermissionDialogToUser(
     toolDescription: undefined, // Let content script use default description
   })
 
-  // Validate response
   if (!response || typeof response.decision !== "string") {
     console.error("[Background] Invalid permission dialog response:", response)
     return { decision: "deny", remember: false }
@@ -796,10 +775,8 @@ async function updatePermissionLevel(
 
 console.log("[Background] Service worker starting, version:", VERSION)
 
-// Connect to native host on startup
 connectToNativeHost()
 
-// Handle extension install/update
 chrome.runtime.onInstalled.addListener((details) => {
   console.log("[Background] Extension installed/updated:", details.reason)
 
@@ -813,7 +790,6 @@ chrome.runtime.onInstalled.addListener((details) => {
   }
 })
 
-// Handle extension startup
 chrome.runtime.onStartup.addListener(() => {
   console.log("[Background] Browser started, reconnecting to native host")
   connectToNativeHost()

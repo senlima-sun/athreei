@@ -111,9 +111,7 @@ export function InstallModal({
         onSuccess?.()
         handleClose()
       }
-    } catch {
-      // Error is handled by mutation state
-    }
+    } catch {}
   }
 
   const handleClose = () => {

@@ -38,7 +38,6 @@ export function createServer() {
     }
   }
 
-  // Clear context when server closes
   server.server.onclose = () => {
     clearMcpContext()
     logger.info("Client disconnected")

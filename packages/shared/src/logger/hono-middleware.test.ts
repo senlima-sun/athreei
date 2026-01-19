@@ -11,11 +11,9 @@ describe("honoLogger middleware", () => {
     consoleLogs = []
     consoleErrors = []
     vi.spyOn(console, "log").mockImplementation((...args: unknown[]) => {
-      // Convert all arguments to strings
       consoleLogs.push(args.map((a) => String(a)).join(" "))
     })
     vi.spyOn(console, "error").mockImplementation((...args: unknown[]) => {
-      // Convert all arguments to strings
       consoleErrors.push(args.map((a) => String(a)).join(" "))
     })
   })

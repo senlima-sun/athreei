@@ -19,7 +19,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest"
 import { Hono, type Context, type ErrorHandler } from "hono"
 import type { ContentfulStatusCode } from "hono/utils/http-status"
 
-// Error handler to properly handle thrown errors
 const testErrorHandler: ErrorHandler = (err: Error, c: Context) => {
   const statusCode =
     (err as Error & { statusCode?: ContentfulStatusCode }).statusCode || 500
@@ -902,7 +901,6 @@ describe("MCP Servers Environment Variables API", () => {
       app.onError(testErrorHandler)
       app.route("/api/mcp-servers", mcpServers)
 
-      // Create 50 env vars
       const largeEnv: Record<string, string> = {}
       for (let i = 0; i < 50; i++) {
         largeEnv[`VAR_${i}`] = `value_${i}`
@@ -1017,7 +1015,6 @@ describe("MCP Servers Environment Variables API", () => {
         }
       )
 
-      // Check that the server was created successfully with env vars
       expect(response.status).toBe(201)
       const data = (await response.json()) as McpServerResponse
       expect(data.envKeys).toEqual(["KEY"])
@@ -1051,7 +1048,6 @@ describe("MCP Servers Environment Variables API", () => {
         }),
       })
 
-      // Check that the update was successful
       expect(response.status).toBe(200)
       const data = (await response.json()) as McpServerResponse
       expect(data.envKeys).toEqual(["NEW_KEY"])

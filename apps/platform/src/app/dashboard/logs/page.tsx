@@ -25,7 +25,6 @@ export default function LogsPage() {
   const [error, setError] = useState<string | null>(null)
   const [selectedLog, setSelectedLog] = useState<AuditLogEntry | null>(null)
 
-  // Filter state
   const [statusFilter, setStatusFilter] = useState<string>("")
   const [toolFilter, setToolFilter] = useState<string>("")
   const [originFilter, setOriginFilter] = useState<string>("")
@@ -65,18 +64,15 @@ export default function LogsPage() {
     }
   }, [org?.id, page, statusFilter, toolFilter, originFilter])
 
-  // Fetch logs on mount and when filters/page change
   useEffect(() => {
     if (isOrgPending) return
     fetchLogs()
   }, [fetchLogs, isOrgPending])
 
-  // Reset to page 1 when filters change
   useEffect(() => {
     setPage(1)
   }, [statusFilter, toolFilter, originFilter])
 
-  // Get unique tools for filter dropdown
   const uniqueTools = Array.from(new Set(logs.map((log) => log.tool)))
 
   const getStatusBadge = (status: AuditStatus) => {

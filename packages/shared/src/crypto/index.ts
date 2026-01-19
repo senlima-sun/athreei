@@ -22,7 +22,6 @@
  * ```
  */
 
-// Export types
 export type {
   CryptoConfig,
   EncryptedData,
@@ -32,7 +31,6 @@ export type {
 
 export { DEFAULT_CRYPTO_CONFIG } from "./types"
 
-// Export key derivation functions
 export { deriveKey, reDeriveKey, generateSalt, verifyKeys } from "./argon2"
 
 // Export encryption functions
@@ -48,7 +46,6 @@ export {
   decryptSession,
 } from "./encryption"
 
-// Export key rotation functions
 export {
   rotateKey,
   rotateKeyBatch,

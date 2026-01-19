@@ -6,7 +6,6 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { TraceSyncClient, createTraceSyncClient } from "../trace-sync"
 import type { ToolCallTrace, NamespaceConfig } from "../types"
 
-// Generate a valid 32-byte test key
 function generateTestKey(): Uint8Array {
   const key = new Uint8Array(32)
   crypto.getRandomValues(key)
@@ -200,7 +199,6 @@ describe("TraceSyncClient", () => {
       globalThis.fetch = mockFetch as unknown as typeof fetch
 
       try {
-        // Create a fresh client for this test
         const freshClient = new TraceSyncClient({
           platformUrl: "https://api.test.com",
           apiKey: "test-api-key",
@@ -243,7 +241,6 @@ describe("TraceSyncClient", () => {
       globalThis.fetch = mockFetch as unknown as typeof fetch
 
       try {
-        // Create a fresh client with larger batch size to control flushing
         const freshClient = new TraceSyncClient({
           platformUrl: "https://api.test.com",
           apiKey: "test-api-key",
@@ -253,12 +250,10 @@ describe("TraceSyncClient", () => {
           flushInterval: 1000,
         })
 
-        // Add more traces than batch size (auto-flush will trigger at 5, 10)
         for (let i = 0; i < 12; i++) {
           freshClient.addTrace(createMockTrace())
         }
 
-        // After adding 12 traces with batchSize=5, auto-flush fires at 5 and 10
         // So we should have 2 pending (12 - 5 - 5 = 2)
         // And 2 flush calls already made
         expect(freshClient.getPendingCount()).toBe(2)

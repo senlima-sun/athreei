@@ -119,7 +119,6 @@ export function encryptTrace(
   keyVersion: number = 1,
   nonce?: Uint8Array
 ): EncryptedTrace {
-  // Validate key length
   if (key.length !== 32) {
     throw new Error("Key must be 32 bytes (256 bits) for XChaCha20-Poly1305")
   }
@@ -130,7 +129,6 @@ export function encryptTrace(
     throw new Error(`Nonce must be ${XCHACHA_NONCE_LENGTH} bytes for XChaCha20`)
   }
 
-  // Convert payload to JSON bytes
   const plaintextJson = JSON.stringify(payload)
   const plaintextBytes = new TextEncoder().encode(plaintextJson)
 
@@ -164,7 +162,6 @@ export function decryptTrace(
   encryptedTrace: EncryptedTrace,
   key: Uint8Array
 ): TracePayload {
-  // Validate key length
   if (key.length !== 32) {
     throw new Error("Key must be 32 bytes (256 bits) for XChaCha20-Poly1305")
   }
@@ -197,7 +194,6 @@ export function decryptTrace(
     throw new Error("Decryption failed: invalid key or corrupted data")
   }
 
-  // Parse JSON
   const plaintextJson = new TextDecoder().decode(plaintextBytes)
 
   try {

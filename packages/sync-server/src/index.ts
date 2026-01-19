@@ -3,7 +3,6 @@ import { initDatabase } from "./db/client"
 
 const PORT = process.env.PORT || 3000
 
-// Initialize database connection
 const dbUrl = process.env.DATABASE_URL
 if (!dbUrl) {
   console.error("DATABASE_URL environment variable is required")
@@ -12,7 +11,6 @@ if (!dbUrl) {
 
 initDatabase(dbUrl)
 
-// Start server
 export default {
   port: PORT,
   fetch: app.fetch,

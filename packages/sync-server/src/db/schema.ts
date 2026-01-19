@@ -50,7 +50,6 @@ const bytea = customType<{ data: Uint8Array; dpiName: string }>({
       return new Uint8Array(value)
     }
     if (typeof value === "string") {
-      // Handle hex-encoded bytea strings from PostgreSQL (e.g., "\x...")
       if (value.startsWith("\\x")) {
         const hex = value.slice(2)
         const bytes = new Uint8Array(hex.length / 2)

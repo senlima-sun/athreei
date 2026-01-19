@@ -23,7 +23,6 @@ export async function getConfig(): Promise<AppConfig> {
 
   const response = await fetch(`${API_URL}/api/config`)
   if (!response.ok) {
-    // Return defaults if config endpoint fails
     return {
       features: {
         emailVerification: false,
@@ -55,7 +54,6 @@ export async function fetchApi<T>(
   const base = getApiUrl()
   const url = new URL(path, base)
 
-  // Add organizationId for cloud mode requests
   if (!isLocalMode() && options?.organizationId) {
     url.searchParams.set("organizationId", options.organizationId)
   }

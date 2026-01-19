@@ -26,7 +26,6 @@ const mockCookies = [
   { name: "csrf_token", value: "xyz789" },
 ]
 
-// Store original fetch
 const originalFetch = global.fetch
 
 // Mock cookies function

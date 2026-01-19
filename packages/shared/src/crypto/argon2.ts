@@ -53,7 +53,6 @@ export async function deriveKey(
   // Generate salt if not provided
   const derivationSalt = salt || generateSalt(config.saltLength)
 
-  // Convert password to Uint8Array
   const passwordBytes = new TextEncoder().encode(password)
 
   // Derive key using Argon2id

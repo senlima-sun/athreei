@@ -26,7 +26,6 @@ import {
 } from "../trace-encryption"
 import { randomBytes } from "@noble/ciphers/webcrypto"
 
-// Generate a valid 32-byte test key
 function generateTestKey(): Uint8Array {
   return randomBytes(32)
 }

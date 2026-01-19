@@ -48,13 +48,11 @@ export interface InteractiveElement {
 function getImplicitRole(element: Element): string | null {
   const tagName = element.tagName.toLowerCase()
 
-  // Check explicit role attribute first
   const explicitRole = element.getAttribute("role")
   if (explicitRole) {
     return explicitRole
   }
 
-  // Map HTML elements to implicit ARIA roles
   switch (tagName) {
     case "a":
       return element.hasAttribute("href") ? "link" : null
@@ -242,7 +240,6 @@ function computeAccessibleName(element: Element): string {
   ]
 
   if (role && useTextContent.includes(role)) {
-    // Get direct text content, not deep text (to avoid nested interactive elements)
     let text = ""
     for (const node of element.childNodes) {
       if (node.nodeType === Node.TEXT_NODE) {
@@ -250,7 +247,6 @@ function computeAccessibleName(element: Element): string {
       } else if (node.nodeType === Node.ELEMENT_NODE) {
         const childElement = node as Element
         const childRole = getImplicitRole(childElement)
-        // Include text from non-interactive children
         if (!childRole || !isInteractiveRole(childRole)) {
           text += childElement.textContent || ""
         }
@@ -302,43 +298,35 @@ function isInteractiveRole(role: string): boolean {
  * Check if an element is visible to the user
  */
 export function isVisible(element: Element): boolean {
-  // Check if element exists in DOM
   if (!element.isConnected) {
     return false
   }
 
-  // Get computed style
   const style = window.getComputedStyle(element)
 
-  // Check display
   if (style.display === "none") {
     return false
   }
 
-  // Check visibility
   if (style.visibility === "hidden") {
     return false
   }
 
-  // Check opacity
   if (parseFloat(style.opacity) === 0) {
     return false
   }
 
-  // Check dimensions
   const rect = element.getBoundingClientRect()
   if (rect.width === 0 && rect.height === 0) {
     return false
   }
 
-  // Check if element is clipped out of view by overflow
   // (Note: This is a simplified check - full implementation would check all ancestors)
   const parent = element.parentElement
   if (parent) {
     const parentStyle = window.getComputedStyle(parent)
     if (parentStyle.overflow === "hidden" || parentStyle.overflow === "clip") {
       const parentRect = parent.getBoundingClientRect()
-      // Check if element is completely outside parent bounds
       if (
         rect.right < parentRect.left ||
         rect.left > parentRect.right ||
@@ -350,7 +338,6 @@ export function isVisible(element: Element): boolean {
     }
   }
 
-  // Check aria-hidden
   if (element.getAttribute("aria-hidden") === "true") {
     return false
   }
@@ -404,7 +391,6 @@ function generateSelector(element: Element): string {
       }
     }
 
-    // Add nth-child if needed for uniqueness
     const parent = current.parentElement
     if (parent) {
       const siblings = Array.from(parent.children).filter(
@@ -474,13 +460,11 @@ function buildA11yNode(element: Element, depth: number = 0): A11yNode | null {
     name,
   }
 
-  // Add optional properties
   const description = element.getAttribute("aria-description")
   if (description) {
     node.description = description
   }
 
-  // Get value for inputs
   if (
     element instanceof HTMLInputElement ||
     element instanceof HTMLTextAreaElement
@@ -490,7 +474,6 @@ function buildA11yNode(element: Element, depth: number = 0): A11yNode | null {
     node.value = element.value
   }
 
-  // Get checked state
   if (
     element instanceof HTMLInputElement &&
     (element.type === "checkbox" || element.type === "radio")
@@ -498,31 +481,26 @@ function buildA11yNode(element: Element, depth: number = 0): A11yNode | null {
     node.checked = element.checked
   }
 
-  // Get selected state
   if (element instanceof HTMLOptionElement) {
     node.selected = element.selected
   }
 
-  // Get disabled state
   if ("disabled" in element) {
     node.disabled = (
       element as HTMLInputElement | HTMLButtonElement | HTMLSelectElement
     ).disabled
   }
 
-  // Get expanded state
   const expanded = element.getAttribute("aria-expanded")
   if (expanded !== null) {
     node.expanded = expanded === "true"
   }
 
-  // Get heading level
   const level = getHeadingLevel(element)
   if (level !== undefined) {
     node.level = level
   }
 
-  // Add bounds
   node.bounds = {
     x: bounds.x,
     y: bounds.y,
@@ -530,7 +508,6 @@ function buildA11yNode(element: Element, depth: number = 0): A11yNode | null {
     height: bounds.height,
   }
 
-  // Add selector
   node.selector = generateSelector(element)
 
   // Recursively build children (limit depth to prevent huge trees)
@@ -608,7 +585,6 @@ export function getInteractiveElements(): InteractiveElement[] {
     const visible = isVisible(element)
     const bounds = element.getBoundingClientRect()
 
-    // Check if element is actionable (visible and enabled)
     let actionable = visible
     if ("disabled" in element) {
       actionable =
@@ -661,7 +637,6 @@ export function watchForChanges(
   callback: () => void,
   debounceMs: number = 500
 ): void {
-  // Stop existing observer
   stopWatching()
 
   changeCallback = callback

@@ -91,19 +91,15 @@ export class IPCServer {
 
     // Process all complete messages in buffer
     while (client.buffer.length >= 4) {
-      // Read 4-byte little-endian message length
       const msgLen = client.buffer.readUInt32LE(0)
 
-      // Check if we have the complete message
       if (client.buffer.length < 4 + msgLen) {
         break
       }
 
-      // Extract message
       const jsonStr = client.buffer.slice(4, 4 + msgLen).toString("utf8")
       client.buffer = client.buffer.slice(4 + msgLen)
 
-      // Parse and handle message
       try {
         const message = JSON.parse(jsonStr)
         console.error(
@@ -159,7 +155,6 @@ export class IPCServer {
   async stop(): Promise<void> {
     console.error("[ipc-server] Stopping server...")
 
-    // Close all client connections
     for (const client of this.clients.values()) {
       try {
         client.socket.destroy()
@@ -173,7 +168,6 @@ export class IPCServer {
     }
     this.clients.clear()
 
-    // Close the server
     if (this.server) {
       return new Promise((resolve) => {
         this.server!.close(() => {

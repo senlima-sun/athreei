@@ -98,7 +98,6 @@ export function ChangePassphraseDialog({
         onOpenChange(false)
       }, 3000)
     } catch (error) {
-      // Error is handled by mutation state
       console.error("Failed to change passphrase:", error)
     }
   }

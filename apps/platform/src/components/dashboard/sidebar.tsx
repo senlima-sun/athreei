@@ -52,7 +52,6 @@ const settingsItem: NavItem = {
   icon: Settings,
 }
 
-// Build navigation sections based on mode
 const getNavSections = (): NavSection[] => {
   if (isLocalMode()) {
     return [{ items: sharedItems }, { items: [settingsItem] }]

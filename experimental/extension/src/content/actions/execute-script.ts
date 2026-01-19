@@ -25,7 +25,6 @@ export async function executeScript(
   }
 
   try {
-    // Create a function from the script
     // We wrap it to allow both expressions and statements
     const AsyncFunction = Object.getPrototypeOf(
       async function () {}
@@ -34,10 +33,8 @@ export async function executeScript(
       "return (async () => { " + args.script + " })()"
     )
 
-    // Execute the function
     const result = await fn()
 
-    // Try to serialize the result
     const serialized = serializeValue(result)
 
     return {
@@ -46,7 +43,6 @@ export async function executeScript(
       returnedValue: serialized.hasValue,
     }
   } catch (error) {
-    // Return error information
     const errorMessage = error instanceof Error ? error.message : String(error)
 
     return {
@@ -65,7 +61,6 @@ function serializeValue(value: unknown): {
   value: unknown
   hasValue: boolean
 } {
-  // Handle undefined and null
   if (value === undefined) {
     return { value: undefined, hasValue: false }
   }
@@ -74,7 +69,6 @@ function serializeValue(value: unknown): {
     return { value: null, hasValue: true }
   }
 
-  // Handle primitives
   if (
     typeof value === "string" ||
     typeof value === "number" ||
@@ -83,17 +77,14 @@ function serializeValue(value: unknown): {
     return { value, hasValue: true }
   }
 
-  // Handle Date
   if (value instanceof Date) {
     return { value: value.toISOString(), hasValue: true }
   }
 
-  // Handle RegExp
   if (value instanceof RegExp) {
     return { value: value.toString(), hasValue: true }
   }
 
-  // Handle Error
   if (value instanceof Error) {
     return {
       value: {
@@ -105,7 +96,6 @@ function serializeValue(value: unknown): {
     }
   }
 
-  // Handle Functions
   if (typeof value === "function") {
     return {
       value: {
@@ -117,7 +107,6 @@ function serializeValue(value: unknown): {
     }
   }
 
-  // Handle DOM elements
   if (value instanceof Element) {
     return {
       value: {
@@ -131,7 +120,6 @@ function serializeValue(value: unknown): {
     }
   }
 
-  // Handle NodeList
   if (value instanceof NodeList) {
     return {
       value: {
@@ -145,7 +133,6 @@ function serializeValue(value: unknown): {
     }
   }
 
-  // Handle Arrays
   if (Array.isArray(value)) {
     try {
       const serialized = value.map((item) => serializeValue(item).value)
@@ -158,10 +145,8 @@ function serializeValue(value: unknown): {
     }
   }
 
-  // Handle plain objects
   if (value && typeof value === "object") {
     try {
-      // Try JSON stringify first (fastest for simple objects)
       JSON.stringify(value)
       return { value, hasValue: true }
     } catch {

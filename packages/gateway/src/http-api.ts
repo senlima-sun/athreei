@@ -39,7 +39,6 @@ export function createHttpApi(
     })
   )
 
-  // GET /api/status - Gateway health status
   app.get("/api/status", (c) => {
     const stats = traceCollector.getStats()
 
@@ -70,7 +69,6 @@ export function createHttpApi(
     const statusParam = c.req.query("status")
     const search = c.req.query("search") ?? undefined
 
-    // Validate status filter
     const status =
       statusParam === "success" || statusParam === "error"
         ? statusParam
@@ -87,7 +85,6 @@ export function createHttpApi(
     })
   })
 
-  // GET /api/traces/:id - Get single trace by ID
   app.get("/api/traces/:id", (c) => {
     const traceId = c.req.param("id")
     const trace = traceCollector.getTrace(traceId)
@@ -99,7 +96,6 @@ export function createHttpApi(
     return c.json(trace)
   })
 
-  // GET /api/servers - List connected MCP servers
   app.get("/api/servers", (c) => {
     const servers = Array.from(state.connectedMcps.values()).map((mcp) => ({
       name: mcp.config.name,
@@ -122,7 +118,6 @@ export function createHttpApi(
     })
   })
 
-  // GET /api/tools - List aggregated tools
   app.get("/api/tools", (c) => {
     const tools = state.aggregatedTools.map((tool) => ({
       name: tool.name,
@@ -138,7 +133,6 @@ export function createHttpApi(
     })
   })
 
-  // GET /api/servers/:name/test - Test a server connection by calling tools/list
   app.get("/api/servers/:name/test", async (c) => {
     const serverName = c.req.param("name")
     const mcp = state.connectedMcps.get(serverName)
@@ -187,7 +181,6 @@ export function createHttpApi(
     try {
       const body = await c.req.json()
 
-      // Validate required fields
       if (!body.name || typeof body.name !== "string") {
         return c.json({ success: false, error: "name is required" }, 400)
       }
@@ -217,7 +210,6 @@ export function createHttpApi(
           )
         }
 
-        // Validate URL format
         try {
           new URL(body.url)
         } catch {
@@ -247,7 +239,6 @@ export function createHttpApi(
     }
   })
 
-  // GET /api/skills - List active skills as markdown
   app.get("/api/skills", (c) => {
     const skills = currentNamespaceConfig?.skills ?? []
     const format = c.req.query("format")
@@ -273,7 +264,6 @@ export function createHttpApi(
     })
   })
 
-  // GET /api/skills/:id - Get single skill by ID
   app.get("/api/skills/:id", (c) => {
     const skillId = c.req.param("id")
     const skills = currentNamespaceConfig?.skills ?? []
@@ -293,7 +283,6 @@ export function createHttpApi(
     })
   })
 
-  // GET /api/rules - List active rules as markdown (ordered by priority)
   app.get("/api/rules", (c) => {
     const rules = [...(currentNamespaceConfig?.rules ?? [])].sort(
       (a, b) => (b.priority ?? 0) - (a.priority ?? 0)
@@ -325,7 +314,6 @@ export function createHttpApi(
     })
   })
 
-  // GET /api/rules/:id - Get single rule by ID
   app.get("/api/rules/:id", (c) => {
     const ruleId = c.req.param("id")
     const rules = currentNamespaceConfig?.rules ?? []

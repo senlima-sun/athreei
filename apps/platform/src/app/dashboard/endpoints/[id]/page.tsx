@@ -40,7 +40,6 @@ export default function EndpointDetailPage() {
     name: string
   } | null>(null)
 
-  // Delete states
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 

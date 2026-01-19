@@ -67,7 +67,6 @@ export function aggregateTools(
     for (const tool of mcp.tools) {
       const prefixedName = createPrefixedName(mcp.sanitizedName, tool.name)
 
-      // Handle name collisions (shouldn't happen with unique server names, but be safe)
       if (seenNames.has(prefixedName)) {
         logger.warn(`Duplicate tool name detected: ${prefixedName}, skipping`)
         continue

@@ -49,7 +49,6 @@ export async function executeType(args: AiiiTypeArgs): Promise<TypeResult> {
     throw new Error(`Element is not typeable: ${args.selector}`)
   }
 
-  // Save previous value
   let previousValue: string | undefined
   if (
     element instanceof HTMLInputElement ||
@@ -64,7 +63,6 @@ export async function executeType(args: AiiiTypeArgs): Promise<TypeResult> {
   ;(element as HTMLElement).focus()
   await sleep(50) // Brief pause after focus
 
-  // Clear if requested
   if (args.clear) {
     await clearElement(element)
   }
@@ -72,7 +70,6 @@ export async function executeType(args: AiiiTypeArgs): Promise<TypeResult> {
   // Type with optional delay
   const delay = args.delay ?? 0
 
-  // Parse text for special keys (e.g., "Hello{Enter}World")
   const tokens = parseTextWithSpecialKeys(args.text)
 
   for (const token of tokens) {
@@ -98,7 +95,6 @@ export async function executeType(args: AiiiTypeArgs): Promise<TypeResult> {
     await typeSpecialKey(element, "Enter")
   }
 
-  // Trigger change event
   element.dispatchEvent(new Event("change", { bubbles: true }))
 
   return {
@@ -121,13 +117,11 @@ function parseTextWithSpecialKeys(
 
   while (i < text.length) {
     if (text[i] === "{") {
-      // Save any accumulated text
       if (currentText) {
         tokens.push({ type: "text", value: currentText })
         currentText = ""
       }
 
-      // Find closing brace
       const closeIndex = text.indexOf("}", i)
       if (closeIndex !== -1) {
         const keyName = text.substring(i + 1, closeIndex)
@@ -144,7 +138,6 @@ function parseTextWithSpecialKeys(
     }
   }
 
-  // Save any remaining text
   if (currentText) {
     tokens.push({ type: "text", value: currentText })
   }
@@ -205,7 +198,6 @@ async function typeCharacter(element: Element, char: string): Promise<void> {
   element.dispatchEvent(new KeyboardEvent("keydown", eventInit))
   element.dispatchEvent(new KeyboardEvent("keypress", eventInit))
 
-  // Update value
   if (
     element instanceof HTMLInputElement ||
     element instanceof HTMLTextAreaElement
@@ -246,7 +238,6 @@ async function typeSpecialKey(
 
   element.dispatchEvent(new KeyboardEvent("keydown", eventInit))
 
-  // Handle special key effects
   if (
     element instanceof HTMLInputElement ||
     element instanceof HTMLTextAreaElement

@@ -47,7 +47,6 @@ auth.post("/logout", authMiddleware, async (c) => {
   return c.json({ message: "Logged out successfully" }, 200)
 })
 
-// Delete account
 auth.delete("/account", authMiddleware, async (c) => {
   try {
     const { accountId } = getAuthContext(c)

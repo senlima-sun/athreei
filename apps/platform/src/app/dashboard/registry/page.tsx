@@ -73,12 +73,10 @@ export default function RegistryPage() {
 
   const filteredServers = useMemo(() => {
     return servers.filter((server) => {
-      // Filter by transport type
       if (transportFilter !== "all" && server.transport !== transportFilter) {
         return false
       }
 
-      // Filter by category
       if (
         categoryFilter !== "all" &&
         !server.categories.includes(categoryFilter)

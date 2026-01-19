@@ -11,14 +11,12 @@ async function runMigrations() {
     process.exit(1)
   }
 
-  // Create a separate postgres client for migrations
   const migrationClient = postgres(dbUrl, { max: 1 })
   const db = drizzle(migrationClient, { schema })
 
   console.log("Running database migrations...")
 
   try {
-    // Run migrations from the drizzle folder
     await migrate(db, { migrationsFolder: "./drizzle" })
     console.log("Migrations completed successfully!")
   } catch (error) {

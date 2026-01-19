@@ -55,16 +55,13 @@ function createTestApp(
 ) {
   const app = new Hono<{ Variables: TestVariables }>()
 
-  // Add mock auth middleware
   app.use("*", async (c, next) => {
     c.set("auth", mockAuthContext)
     await next()
   })
 
-  // Add rate limiter
   app.use("*", rateLimiter)
 
-  // Test route
   app.get("/test", (c) => c.json({ success: true }))
   app.post("/test", (c) => c.json({ success: true }))
 
@@ -73,7 +70,6 @@ function createTestApp(
 
 describe("OAuth Rate Limiting Middleware", () => {
   beforeEach(() => {
-    // Clear all rate limits before each test
     clearAllRateLimits()
     vi.clearAllMocks()
   })
@@ -325,7 +321,6 @@ describe("OAuth Rate Limiting Middleware", () => {
       // Rate limited request should trigger logging
       await app.request("/test")
 
-      // Check that logging was called
       expect(mockLoggerWarn).toHaveBeenCalledWith(
         "OAuth rate limit hit",
         expect.objectContaining({

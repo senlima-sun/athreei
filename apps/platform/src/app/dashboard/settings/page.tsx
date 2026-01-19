@@ -64,7 +64,6 @@ function ProfileSettings() {
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Initialize name from session
   useEffect(() => {
     if (session?.user?.name) {
       setName(session.user.name)

@@ -25,7 +25,6 @@ export default function NewEndpointPage() {
   const [isLoadingNamespaces, setIsLoadingNamespaces] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Fetch available namespaces
   useEffect(() => {
     const fetchNamespaces = async () => {
       if (!activeOrg) {

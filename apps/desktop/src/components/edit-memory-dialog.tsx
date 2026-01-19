@@ -74,7 +74,6 @@ export function EditMemoryDialog({
       })
       handleClose()
     } catch (error) {
-      // Error is handled by mutation state
       console.error("Failed to update memory:", error)
     }
   }

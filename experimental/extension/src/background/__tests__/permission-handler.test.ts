@@ -16,7 +16,6 @@ describe("Background Permission Handler", () => {
   }
 
   beforeEach(() => {
-    // Create fresh mocks for each test
     mockShowPermissionDialog = vi.fn()
     mockUpdatePermissionLevel = vi.fn()
     mockGetActiveTab = vi.fn()
@@ -366,7 +365,6 @@ describe("Background Permission Handler", () => {
           123
         )
 
-        // Clear mocks for next iteration
         mockShowPermissionDialog.mockClear()
       }
     })

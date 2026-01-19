@@ -105,10 +105,8 @@ async function logToolExecution<T = unknown>(
   const logId = crypto.randomUUID()
 
   try {
-    // Execute the tool
     const result = await executor()
 
-    // Extract origin from result if available (most tools return a url field)
     const resultObj = result as Record<string, unknown>
     let origin: string | undefined
     if (typeof resultObj.url === "string") {
@@ -119,7 +117,6 @@ async function logToolExecution<T = unknown>(
       }
     }
 
-    // Log successful execution
     createAuditLogEntry({
       id: logId,
       timestamp: startTime,
@@ -137,7 +134,6 @@ async function logToolExecution<T = unknown>(
 
     return result
   } catch (error) {
-    // Extract origin from args if available (e.g., browser_navigate has url in args)
     let origin: string | undefined
     if (typeof args.url === "string") {
       try {
@@ -147,7 +143,6 @@ async function logToolExecution<T = unknown>(
       }
     }
 
-    // Log failed execution
     createAuditLogEntry({
       id: logId,
       timestamp: startTime,

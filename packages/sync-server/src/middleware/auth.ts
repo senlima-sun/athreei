@@ -94,7 +94,6 @@ export async function verifyJwt(token: string): Promise<JwtPayload | null> {
     // Decode payload
     const payload = JSON.parse(base64urlDecode(encodedPayload)) as JwtPayload
 
-    // Check expiration
     if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
       return null
     }
@@ -120,7 +119,6 @@ export async function authMiddleware(c: Context, next: Next) {
     return c.json({ error: "Invalid or expired token" }, 401)
   }
 
-  // Add user info to context
   c.set("auth", {
     accountId: payload.accountId,
     email: payload.email,

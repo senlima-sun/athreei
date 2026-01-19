@@ -17,7 +17,6 @@ const sync = new Hono()
 // All sync routes require authentication
 sync.use("*", authMiddleware)
 
-// Get changes since last sync (pull)
 sync.get("/", async (c) => {
   try {
     const { accountId } = getAuthContext(c)
@@ -42,7 +41,6 @@ sync.get("/", async (c) => {
   }
 })
 
-// Push changes to server
 sync.post("/", zValidator("json", SyncPushRequestSchema), async (c) => {
   try {
     const { accountId } = getAuthContext(c)
@@ -57,7 +55,6 @@ sync.post("/", zValidator("json", SyncPushRequestSchema), async (c) => {
   }
 })
 
-// Get sync state for a device
 sync.get("/state", async (c) => {
   try {
     const { accountId } = getAuthContext(c)
@@ -79,7 +76,6 @@ sync.get("/state", async (c) => {
   }
 })
 
-// Get sync settings
 sync.get("/settings", async (c) => {
   try {
     const { accountId } = getAuthContext(c)
@@ -105,7 +101,6 @@ sync.get("/settings", async (c) => {
   }
 })
 
-// Update sync settings
 sync.put("/settings", zValidator("json", SyncSettingsSchema), async (c) => {
   try {
     const { accountId } = getAuthContext(c)

@@ -136,10 +136,8 @@ describe("Endpoints Routes", () => {
 
   describe("GET /api/endpoints", () => {
     it("should require organizationId query parameter", async () => {
-      // Reset mocks
       mockDb.query.member.findFirst.mockResolvedValue(mockMember)
 
-      // Import the route dynamically to use mocked dependencies
       const { default: endpoints } = await import("../../routes/endpoints")
       const app = new Hono()
       app.route("/api/endpoints", endpoints)

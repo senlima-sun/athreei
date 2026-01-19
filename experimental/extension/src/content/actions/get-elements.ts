@@ -50,7 +50,6 @@ export async function executeGetElements(
   for (const element of allElements) {
     const elementInfo = extractElementInfo(element)
 
-    // Apply filter if specified
     if (filter && !matchesFilter(elementInfo, filter)) {
       continue
     }
@@ -70,7 +69,6 @@ export async function executeGetElements(
  */
 function getSelectorsForFilter(filter?: string): string[] {
   if (!filter) {
-    // Return all interactive elements
     return [
       "a[href]",
       "button",
@@ -123,7 +121,6 @@ function getSelectorsForFilter(filter?: string): string[] {
       return ["form", "input", "textarea", "select", "button"]
 
     default:
-      // Try as a tag name
       return [filter]
   }
 }
@@ -136,29 +133,22 @@ function extractElementInfo(element: Element): ElementInfo {
   const bounds = element.getBoundingClientRect()
   const visible = isVisible(element)
 
-  // Get implicit or explicit role
   const role = element.getAttribute("role") || getImplicitRole(element)
 
   // Get text content (limit to 200 chars)
   const text = element.textContent?.trim().substring(0, 200)
 
-  // Get aria-label
   const ariaLabel = element.getAttribute("aria-label") || undefined
 
-  // Get href for links
   const href = element.getAttribute("href") || undefined
 
-  // Get type for inputs
   const type = element instanceof HTMLInputElement ? element.type : undefined
 
-  // Get id
   const id = element.id || undefined
 
-  // Get classes
   const classes =
     element.classList.length > 0 ? Array.from(element.classList) : undefined
 
-  // Check if disabled
   let disabled: boolean | undefined = undefined
   if (
     element instanceof HTMLButtonElement ||
@@ -231,17 +221,14 @@ function getImplicitRole(element: Element): string | undefined {
 function matchesFilter(element: ElementInfo, filter: string): boolean {
   const lowerFilter = filter.toLowerCase()
 
-  // Check tag name
   if (element.tagName === lowerFilter) {
     return true
   }
 
-  // Check role
   if (element.role === lowerFilter) {
     return true
   }
 
-  // Check type
   if (element.type === lowerFilter) {
     return true
   }
@@ -331,7 +318,6 @@ function generateSelector(element: Element): string {
       }
     }
 
-    // Add nth-child if needed for uniqueness
     const parent = current.parentElement
     if (parent) {
       const siblings = Array.from(parent.children).filter(

@@ -113,7 +113,6 @@ const mockDb = {
   })),
 }
 
-// Error handler for tests
 function testErrorHandler(
   err: Error,
   c: { json: (data: object, status: number) => Response }

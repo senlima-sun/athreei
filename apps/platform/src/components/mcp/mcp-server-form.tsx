@@ -87,7 +87,6 @@ export function McpServerForm({
   })
 
   // Environment variables
-  // Start with empty array when editing - show "Configured variables" info instead
   // This prevents accidentally clearing env vars when user saves without modifications
   const [envVars, setEnvVars] = useState<EnvVarRow[]>([])
 
@@ -150,9 +149,7 @@ export function McpServerForm({
     )
   }
 
-  // Convert env vars to API format
   const getEnvForApi = (): Record<string, string> | undefined => {
-    // Start with any env vars from the form rows
     const env = envVars.reduce(
       (acc, { key, value }) => {
         const trimmedKey = key.trim()

@@ -37,7 +37,6 @@ function parseFrontmatter(fileContent: string): FrontmatterResult {
     const key = line.slice(0, colonIndex).trim()
     let value: unknown = line.slice(colonIndex + 1).trim()
 
-    // Parse arrays (simple format: [item1, item2])
     if (
       typeof value === "string" &&
       value.startsWith("[") &&
@@ -48,13 +47,9 @@ function parseFrontmatter(fileContent: string): FrontmatterResult {
         .split(",")
         .map((v) => v.trim().replace(/^["']|["']$/g, ""))
         .filter(Boolean)
-    }
-    // Parse numbers
-    else if (typeof value === "string" && /^\d+$/.test(value)) {
+    } else if (typeof value === "string" && /^\d+$/.test(value)) {
       value = parseInt(value, 10)
-    }
-    // Remove quotes from strings
-    else if (typeof value === "string") {
+    } else if (typeof value === "string") {
       value = value.replace(/^["']|["']$/g, "")
     }
 
@@ -195,7 +190,6 @@ export function loadRulesFromDirectory(dirPath: string): RuleConfig[] {
     }
   }
 
-  // Sort by priority (higher first)
   rules.sort((a, b) => b.priority - a.priority)
 
   log.info(`Loaded ${rules.length} rules from ${dirPath}`)

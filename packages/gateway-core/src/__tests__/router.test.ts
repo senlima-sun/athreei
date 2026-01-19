@@ -125,13 +125,11 @@ describe("validateToolCall", () => {
   it("returns valid for known tool on connected server", () => {
     const state = createRouterState()
 
-    // Add mock MCP
     const mcp = createMockMcp("browser", [
       { name: "screenshot", inputSchema: {} },
     ])
     state.connectedMcps.set("browser", mcp)
 
-    // Add aggregated tool
     state.aggregatedTools = [createAggregatedTool("browser", "screenshot")]
 
     const result = validateToolCall(state, "browser__screenshot")

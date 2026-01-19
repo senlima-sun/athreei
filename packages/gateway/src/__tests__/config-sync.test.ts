@@ -20,7 +20,6 @@ import {
   ConfigSyncManager,
 } from "../config-sync"
 
-// Create a temp directory for test config files
 const TEST_DIR = join(tmpdir(), "athreei-gateway-tests")
 
 function getTestConfigPath(): string {
@@ -298,7 +297,6 @@ describe("ConfigSyncManager", () => {
       manager.setOnConfigChange(changeHandler)
       await manager.initialSync()
 
-      // Check for changes
       const changed = await manager.checkForChanges()
 
       expect(changed).toBe(true)

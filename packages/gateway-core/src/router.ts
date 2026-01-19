@@ -68,18 +68,15 @@ export async function routeToolCall(
 ): Promise<CallToolResult> {
   const logger = options.logger ?? noopLogger
 
-  // Parse the tool name
   const { serverName, toolName } = parseToolName(prefixedName)
 
   logger.info(`Routing tool call: ${prefixedName} -> ${serverName}/${toolName}`)
 
-  // Find the aggregated tool to verify it exists
   const aggregatedTool = findAggregatedTool(state.aggregatedTools, prefixedName)
   if (!aggregatedTool) {
     throw new Error(`Unknown tool: "${prefixedName}"`)
   }
 
-  // Find the connected MCP server
   const mcp = state.connectedMcps.get(serverName)
   if (!mcp) {
     throw new Error(
@@ -89,7 +86,6 @@ export async function routeToolCall(
     )
   }
 
-  // Call the tool on the upstream MCP server
   logger.debug(`Calling ${toolName} on ${mcp.config.name}`)
 
   const result = await mcp.client.callTool({

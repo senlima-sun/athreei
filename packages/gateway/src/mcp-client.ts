@@ -62,11 +62,9 @@ export async function connectToMcpServer(
       )
   }
 
-  // Connect to the server
   await client.connect(transport)
   log.info(`Connected to MCP server: ${config.name}`)
 
-  // Fetch tools from the server
   const toolsResponse = await client.listTools()
   const tools: Tool[] = toolsResponse.tools || []
 
@@ -96,7 +94,6 @@ function createStdioTransport(config: McpServerConfig): StdioClientTransport {
     )
   }
 
-  // Build environment: filter out undefined values from process.env
   const mergedEnv = env
     ? Object.fromEntries(
         Object.entries({ ...process.env, ...env }).filter(
@@ -173,14 +170,12 @@ export async function connectToAllServers(configs: McpServerConfig[]): Promise<{
   const connected: ConnectedMcp[] = []
   const failed: Array<{ config: McpServerConfig; error: string }> = []
 
-  // Filter to only active servers
   const activeConfigs = configs.filter((c) => c.status === "active")
 
   log.info(
     `Connecting to ${activeConfigs.length} active MCP servers (${configs.length - activeConfigs.length} inactive)`
   )
 
-  // Connect to each server
   for (const config of activeConfigs) {
     try {
       const mcp = await connectToMcpServer(config)

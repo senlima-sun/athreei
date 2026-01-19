@@ -54,7 +54,6 @@ export const log = sqliteTable("log", {
   // Optional associations
   traceId: text("traceId"), // Link to trace if applicable
   userId: text("userId").references(() => user.id, { onDelete: "set null" }),
-  // Log data
   level: text("level").notNull(), // debug, info, warn, error, fatal
   message: text("message").notNull(),
   attributes: text("attributes"), // JSON object of structured data

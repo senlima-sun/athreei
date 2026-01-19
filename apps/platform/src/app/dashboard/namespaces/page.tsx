@@ -37,7 +37,6 @@ export default function NamespacesPage() {
         }
 
         const data = await response.json()
-        // Transform API response to match Namespace type
         const transformedNamespaces: Namespace[] = (data.namespaces || []).map(
           (ns: {
             id: string

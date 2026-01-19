@@ -40,7 +40,6 @@ describe("Logger", () => {
       logger.warn("Warn message")
       logger.error("Error message")
 
-      // debug and info go to stdout, warn and error go to stderr
       expect(consoleLogs).toHaveLength(2)
       expect(consoleErrors).toHaveLength(2)
     })
@@ -139,7 +138,6 @@ describe("Logger", () => {
       expect(parsed.error.message).toBe("Test error")
       expect(parsed.error.name).toBe("Error")
       expect(parsed.error.stack).toBeDefined()
-      // Error should be extracted, not in data
       expect(parsed.data).toBeUndefined()
     })
 

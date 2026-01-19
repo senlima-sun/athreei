@@ -64,7 +64,6 @@ function findForm(selector: string): HTMLFormElement | null {
  * Submit form
  */
 function submitForm(form: HTMLFormElement, selector: string): FormResult {
-  // Dispatch submit event (cancelable)
   const event = new Event("submit", { bubbles: true, cancelable: true })
   const prevented = !form.dispatchEvent(event)
 
@@ -98,7 +97,6 @@ function resetForm(form: HTMLFormElement, selector: string): FormResult {
 function getFormValues(form: HTMLFormElement, selector: string): FormResult {
   const values: Record<string, unknown> = {}
 
-  // Get all form elements
   const elements = form.elements
 
   for (let i = 0; i < elements.length; i++) {

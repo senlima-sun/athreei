@@ -34,7 +34,6 @@ statusRoutes.get("/", async (c) => {
  * GET /api/status/mcp - Detailed MCP server status
  */
 statusRoutes.get("/mcp", async (c) => {
-  // Get list of registered tools from the server
   // For now, we'll return a static list since tools are registered at startup
   const tools = [
     "list_tabs",

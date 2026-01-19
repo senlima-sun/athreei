@@ -251,7 +251,6 @@ describe("Gateway Cloud Integration Tests", () => {
       // Simulate idle time
       session.lastActivity = new Date(Date.now() - 100)
 
-      // Run cleanup
       const cleaned = await cleanupIdleSessions()
 
       expect(cleaned).toBe(1)
@@ -340,7 +339,6 @@ describe("Gateway Cloud Integration Tests", () => {
         logger: mockLogger,
       })
 
-      // Get the actual tool name (will be namespaced)
       const tools = listSessionTools(session.id)
       const toolName = tools[0].name
 
@@ -568,7 +566,6 @@ describe("Gateway Cloud Integration Tests", () => {
     })
 
     it("should return detailed health info", async () => {
-      // Create some sessions for the health check to report
       await createSession({
         endpointName: "health-endpoint",
         userId: "user_health",

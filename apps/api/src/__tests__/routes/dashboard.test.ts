@@ -11,7 +11,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest"
 import { Hono, type Context, type ErrorHandler } from "hono"
 import type { ContentfulStatusCode } from "hono/utils/http-status"
 
-// Error handler to properly handle thrown errors
 const testErrorHandler: ErrorHandler = (err: Error, c: Context) => {
   const statusCode =
     (err as Error & { statusCode?: ContentfulStatusCode }).statusCode || 500
@@ -174,7 +173,6 @@ describe("Dashboard Routes", () => {
   })
   describe("GET /api/dashboard/stats", () => {
     it("should return correct stats counts", async () => {
-      // Import the mocked service
       const { verifyOrganizationMembership } = await import("../../services")
       vi.mocked(verifyOrganizationMembership).mockResolvedValue(true)
 
@@ -320,7 +318,6 @@ describe("Dashboard Routes", () => {
       expect(data.activities).toBeInstanceOf(Array)
       expect(data.total).toBeGreaterThan(0)
 
-      // Check that we have different types of activities
       const types = data.activities.map((a) => a.type)
       expect(types).toContain("trace")
       expect(types).toContain("mcp_server_added")
@@ -421,7 +418,6 @@ describe("Dashboard Routes", () => {
 
       expect(response.status).toBe(200)
 
-      // Check activities are sorted by timestamp (newest first)
       for (let i = 1; i < data.activities.length; i++) {
         const prevTime = new Date(data.activities[i - 1]!.timestamp).getTime()
         const currTime = new Date(data.activities[i]!.timestamp).getTime()

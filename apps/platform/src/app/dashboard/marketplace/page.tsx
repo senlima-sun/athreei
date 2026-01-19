@@ -164,9 +164,7 @@ export default function MarketplacePage() {
 
       try {
         await uninstallMutation.mutateAsync(installation.id)
-      } catch {
-        // Error handled by mutation
-      }
+      } catch {}
     },
     [uninstallMutation]
   )

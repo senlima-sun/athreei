@@ -64,7 +64,6 @@ export function loadConfig(configPath?: string): GatewayConfig {
     throw new Error(`Invalid JSON in config file: ${path}`)
   }
 
-  // Validate required fields
   if (!config || typeof config !== "object") {
     throw new Error(`Config must be a JSON object`)
   }
@@ -139,14 +138,12 @@ export function loadLocalConfig(configPath?: string): LocalConfig {
 
   const cfg = config as Record<string, unknown>
 
-  // Validate servers array
   if (!Array.isArray(cfg.servers)) {
     throw new Error(
       `Config missing required field: servers (must be an array of MCP server configs)`
     )
   }
 
-  // Validate each server config
   const servers: McpServerConfig[] = []
   for (const [index, server] of cfg.servers.entries()) {
     if (!server || typeof server !== "object") {
@@ -165,7 +162,6 @@ export function loadLocalConfig(configPath?: string): LocalConfig {
         ? s.transport
         : "stdio"
 
-    // Validate based on transport type
     if (transport === "stdio") {
       if (typeof s.command !== "string" || !s.command) {
         throw new Error(
@@ -181,7 +177,6 @@ export function loadLocalConfig(configPath?: string): LocalConfig {
       }
     }
 
-    // Convert args array to space-separated string (McpServerConfig uses string, not string[])
     let argsString: string | undefined
     if (Array.isArray(s.args)) {
       argsString = s.args.join(" ")
@@ -216,7 +211,6 @@ export function loadLocalConfig(configPath?: string): LocalConfig {
     })
   }
 
-  // Parse skills if present
   const skills: SkillConfig[] = []
   if (Array.isArray(cfg.skills)) {
     for (const [index, skill] of cfg.skills.entries()) {
@@ -247,7 +241,6 @@ export function loadLocalConfig(configPath?: string): LocalConfig {
     }
   }
 
-  // Parse rules if present
   const rules: RuleConfig[] = []
   if (Array.isArray(cfg.rules)) {
     for (const [index, rule] of cfg.rules.entries()) {
@@ -358,7 +351,6 @@ export async function fetchNamespaceConfig(
 
   const data = await response.json()
 
-  // Validate response structure
   if (!data || typeof data !== "object") {
     throw new Error(`Invalid response from Platform API`)
   }

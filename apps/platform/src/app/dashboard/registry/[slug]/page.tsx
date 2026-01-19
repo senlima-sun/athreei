@@ -64,7 +64,6 @@ export default function RegistryDetailPage({
   const oauthProvider: OAuthProvider | null =
     OAUTH_PROVIDERS[slug.toLowerCase()] || null
 
-  // Load server data from API
   const loadServer = useCallback(async () => {
     try {
       const response = await fetch(`${API_URL}/api/registry/${slug}`)
@@ -108,7 +107,6 @@ export default function RegistryDetailPage({
         }
       }
 
-      // Add custom env vars
       for (const [key, value] of Object.entries(envVarValues)) {
         if (key.trim() && value) {
           env[key.trim()] = value

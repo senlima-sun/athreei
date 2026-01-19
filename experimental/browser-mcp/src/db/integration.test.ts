@@ -23,7 +23,6 @@ beforeEach(() => {
 
 describe("Database Integration", () => {
   it("should create and migrate database successfully", () => {
-    // Check that all tables exist
     const tables = db
       .query<
         { name: string },
@@ -154,7 +153,6 @@ describe("Database Integration", () => {
   it("should handle concurrent database operations", () => {
     const permRepo = createPermissionsRepository(db)
 
-    // Create multiple permissions
     const permissions = [
       {
         origin: "https://site1.com",
@@ -188,7 +186,6 @@ describe("Database Integration", () => {
   })
 
   it("should store and retrieve JSON data correctly", () => {
-    // Test audit log with complex JSON args and result
     const auditLog = db.query(
       `INSERT INTO audit_log (id, timestamp, ai_app, tool, origin, args, result, status)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
@@ -252,7 +249,6 @@ describe("Database Integration", () => {
   })
 
   it("should not run migrations twice", () => {
-    // Run migrations again
     runMigrations(db)
 
     // Check that we only have one migration record

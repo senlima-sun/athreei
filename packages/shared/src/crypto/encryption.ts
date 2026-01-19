@@ -79,7 +79,6 @@ export function encrypt(
     throw new Error("Nonce must be 12 bytes (96 bits) for AES-GCM")
   }
 
-  // Convert plaintext to JSON string, then to bytes
   const plaintextJson = JSON.stringify(plaintext)
   const plaintextBytes = new TextEncoder().encode(plaintextJson)
 
@@ -90,7 +89,6 @@ export function encrypt(
   // GCM mode returns ciphertext with authentication tag appended
   const ciphertext = cipher.encrypt(plaintextBytes)
 
-  // Return encrypted data with metadata
   return {
     ciphertext: toBase64(ciphertext),
     nonce: toBase64(encryptionNonce),
@@ -129,7 +127,6 @@ export function decrypt<T = unknown>(
     throw new Error("Nonce must be 12 bytes (96 bits) for AES-GCM")
   }
 
-  // Create AES-GCM decipher
   const decipher = gcm(key, nonce)
 
   // Decrypt and authenticate
@@ -141,7 +138,6 @@ export function decrypt<T = unknown>(
     throw new Error("Decryption failed: invalid key or corrupted data")
   }
 
-  // Convert bytes to string and parse JSON
   const plaintextJson = new TextDecoder().decode(plaintextBytes)
 
   try {
