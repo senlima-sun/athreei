@@ -1,0 +1,5 @@
+export { PluginDetailHeader } from "./plugin-detail-header"
+export { PluginOverview } from "./plugin-overview"
+export { PluginComponents } from "./plugin-components"
+export { PluginVersions } from "./plugin-versions"
+export { PluginConfiguration } from "./plugin-configuration"

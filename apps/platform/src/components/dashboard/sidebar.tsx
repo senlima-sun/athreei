@@ -18,6 +18,8 @@ import {
   BookOpen,
   Scale,
   BarChart3,
+  Store,
+  Puzzle,
 } from "lucide-react"
 import { useState } from "react"
 import { OrgSwitcher } from "./org-switcher"
@@ -72,6 +74,17 @@ const getNavSections = (): NavSection[] => {
       ],
     },
     {
+      title: "Marketplace",
+      items: [
+        { label: "Marketplace", href: "/dashboard/marketplace", icon: Store },
+        {
+          label: "Installed Plugins",
+          href: "/dashboard/plugins",
+          icon: Puzzle,
+        },
+      ],
+    },
+    {
       title: "AI Config",
       items: [
         { label: "Skills", href: "/dashboard/skills", icon: BookOpen },
@@ -84,6 +97,11 @@ const getNavSections = (): NavSection[] => {
         { label: "Traces", href: "/dashboard/traces", icon: Activity },
         { label: "Team", href: "/dashboard/organizations", icon: Users },
         { label: "Settings", href: "/dashboard/settings", icon: Settings },
+        {
+          label: "Marketplace Settings",
+          href: "/dashboard/settings/marketplace",
+          icon: Store,
+        },
       ],
     },
   ]
