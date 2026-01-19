@@ -31,7 +31,9 @@ const DEFAULT_CATEGORIES: PluginCategory[] = [
 
 const VALID_SORT_OPTIONS: PluginSortOption[] = ["popularity", "recent", "name"]
 
-const parseAsSort = parseAsString.withOptions({ shallow: false }).withDefault("popularity")
+const parseAsSort = parseAsString
+  .withOptions({ shallow: false })
+  .withDefault("popularity")
 
 function isValidSortOption(value: string): value is PluginSortOption {
   return VALID_SORT_OPTIONS.includes(value as PluginSortOption)
@@ -58,7 +60,9 @@ export default function MarketplacePage() {
     parseAsString.withOptions({ shallow: false }).withDefault("")
   )
 
-  const sort: PluginSortOption = isValidSortOption(sortRaw) ? sortRaw : "popularity"
+  const sort: PluginSortOption = isValidSortOption(sortRaw)
+    ? sortRaw
+    : "popularity"
 
   const [installModalOpen, setInstallModalOpen] = useState(false)
   const [selectedPlugin, setSelectedPlugin] =
@@ -129,7 +133,13 @@ export default function MarketplacePage() {
     setVerifiedOnly(null)
     setSortRaw(null)
     setSelectedMarketplace(null)
-  }, [setSearch, setCategory, setVerifiedOnly, setSortRaw, setSelectedMarketplace])
+  }, [
+    setSearch,
+    setCategory,
+    setVerifiedOnly,
+    setSortRaw,
+    setSelectedMarketplace,
+  ])
 
   const handleInstall = useCallback((plugin: PluginSearchResult) => {
     setSelectedPlugin(plugin)

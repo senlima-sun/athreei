@@ -88,7 +88,13 @@ vi.mock("@/components/ui/button", () => ({
   }>) =>
     React.createElement(
       "button",
-      { onClick, disabled, className, "data-variant": variant, "data-size": size },
+      {
+        onClick,
+        disabled,
+        className,
+        "data-variant": variant,
+        "data-size": size,
+      },
       children
     ),
 }))
@@ -131,10 +137,13 @@ vi.mock("@/components/ui/select", () => ({
       { "data-testid": "select", "data-value": value },
       React.Children.map(children, (child) =>
         React.isValidElement(child)
-          ? React.cloneElement(child as React.ReactElement<Record<string, unknown>>, {
-              onValueChange,
-              currentValue: value,
-            })
+          ? React.cloneElement(
+              child as React.ReactElement<Record<string, unknown>>,
+              {
+                onValueChange,
+                currentValue: value,
+              }
+            )
           : child
       )
     ),
@@ -147,7 +156,8 @@ vi.mock("@/components/ui/select", () => ({
       { "data-testid": "select-trigger", className },
       children
     ),
-  SelectValue: () => React.createElement("span", { "data-testid": "select-value" }),
+  SelectValue: () =>
+    React.createElement("span", { "data-testid": "select-value" }),
   SelectContent: ({
     children,
     onValueChange,
@@ -161,10 +171,13 @@ vi.mock("@/components/ui/select", () => ({
       { "data-testid": "select-content" },
       React.Children.map(children, (child) =>
         React.isValidElement(child)
-          ? React.cloneElement(child as React.ReactElement<Record<string, unknown>>, {
-              onValueChange,
-              currentValue,
-            })
+          ? React.cloneElement(
+              child as React.ReactElement<Record<string, unknown>>,
+              {
+                onValueChange,
+                currentValue,
+              }
+            )
           : child
       )
     ),
@@ -259,16 +272,17 @@ vi.mock("lucide-react", async (importOriginal) => {
 })
 
 vi.mock("@/lib/utils", () => ({
-  cn: (...inputs: (string | undefined | null | boolean | Record<string, boolean>)[]) =>
-    inputs
-      .filter((input) => typeof input === "string")
-      .join(" "),
+  cn: (
+    ...inputs: (string | undefined | null | boolean | Record<string, boolean>)[]
+  ) => inputs.filter((input) => typeof input === "string").join(" "),
 }))
 
 import MarketplacePage from "../page"
 import type { PluginSearchResult, Marketplace } from "@/types/marketplace"
 
-function createMockPlugin(overrides: Partial<PluginSearchResult> = {}): PluginSearchResult {
+function createMockPlugin(
+  overrides: Partial<PluginSearchResult> = {}
+): PluginSearchResult {
   return {
     id: `plugin-${Math.random().toString(36).slice(2)}`,
     slug: "test-plugin",
@@ -295,7 +309,9 @@ function createMockPlugin(overrides: Partial<PluginSearchResult> = {}): PluginSe
   }
 }
 
-function createMockMarketplace(overrides: Partial<Marketplace> = {}): Marketplace {
+function createMockMarketplace(
+  overrides: Partial<Marketplace> = {}
+): Marketplace {
   return {
     id: `marketplace-${Math.random().toString(36).slice(2)}`,
     slug: "official",
@@ -317,13 +333,15 @@ function createMockMarketplace(overrides: Partial<Marketplace> = {}): Marketplac
   }
 }
 
-function setupDefaultMocks(options: {
-  plugins?: PluginSearchResult[]
-  marketplaces?: Marketplace[]
-  isLoading?: boolean
-  isError?: boolean
-  error?: Error | null
-} = {}) {
+function setupDefaultMocks(
+  options: {
+    plugins?: PluginSearchResult[]
+    marketplaces?: Marketplace[]
+    isLoading?: boolean
+    isError?: boolean
+    error?: Error | null
+  } = {}
+) {
   const {
     plugins = [createMockPlugin()],
     marketplaces = [createMockMarketplace()],
@@ -333,9 +351,12 @@ function setupDefaultMocks(options: {
   } = options
 
   mockUsePlugins.mockReturnValue({
-    data: isLoading || isError ? undefined : {
-      pages: [{ plugins, total: plugins.length, hasMore: false }],
-    },
+    data:
+      isLoading || isError
+        ? undefined
+        : {
+            pages: [{ plugins, total: plugins.length, hasMore: false }],
+          },
     isLoading,
     isError,
     error,
@@ -400,7 +421,9 @@ describe("MarketplacePage", () => {
 
       expect(screen.getByText("Marketplace")).toBeInTheDocument()
       expect(
-        screen.getByText("Discover and install plugins to extend your AI capabilities")
+        screen.getByText(
+          "Discover and install plugins to extend your AI capabilities"
+        )
       ).toBeInTheDocument()
     })
 
@@ -444,9 +467,13 @@ describe("MarketplacePage", () => {
 
       render(<MarketplacePage />)
 
-      expect(screen.getAllByText("No plugins found").length).toBeGreaterThanOrEqual(1)
       expect(
-        screen.getByText("Try adjusting your search or filters to find plugins.")
+        screen.getAllByText("No plugins found").length
+      ).toBeGreaterThanOrEqual(1)
+      expect(
+        screen.getByText(
+          "Try adjusting your search or filters to find plugins."
+        )
       ).toBeInTheDocument()
     })
 
@@ -533,7 +560,9 @@ describe("MarketplacePage", () => {
 
       render(<MarketplacePage />)
 
-      expect(screen.getAllByText("No plugins found").length).toBeGreaterThanOrEqual(1)
+      expect(
+        screen.getAllByText("No plugins found").length
+      ).toBeGreaterThanOrEqual(1)
     })
 
     it("shows result count when search returns results", () => {
@@ -714,7 +743,8 @@ describe("MarketplacePage", () => {
       await user.click(popularityButtons[0]!)
 
       await waitFor(() => {
-        const lastCall = mockReplace.mock.calls[mockReplace.mock.calls.length - 1]
+        const lastCall =
+          mockReplace.mock.calls[mockReplace.mock.calls.length - 1]
         expect(lastCall?.[0]).not.toContain("sort=")
       })
     })
@@ -724,7 +754,11 @@ describe("MarketplacePage", () => {
     it("shows marketplace selector when multiple marketplaces exist", () => {
       const marketplaces = [
         createMockMarketplace({ id: "1", slug: "official", name: "Official" }),
-        createMockMarketplace({ id: "2", slug: "community", name: "Community" }),
+        createMockMarketplace({
+          id: "2",
+          slug: "community",
+          name: "Community",
+        }),
       ]
       setupDefaultMocks({ marketplaces })
 
@@ -748,7 +782,11 @@ describe("MarketplacePage", () => {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime })
       const marketplaces = [
         createMockMarketplace({ id: "1", slug: "official", name: "Official" }),
-        createMockMarketplace({ id: "2", slug: "community", name: "Community" }),
+        createMockMarketplace({
+          id: "2",
+          slug: "community",
+          name: "Community",
+        }),
       ]
       setupDefaultMocks({ marketplaces })
 
@@ -981,9 +1019,21 @@ describe("MarketplacePage", () => {
 
     it("displays plugin cards for each plugin", () => {
       const plugins = [
-        createMockPlugin({ id: "1", name: "Plugin Alpha", description: "Alpha description" }),
-        createMockPlugin({ id: "2", name: "Plugin Beta", description: "Beta description" }),
-        createMockPlugin({ id: "3", name: "Plugin Gamma", description: "Gamma description" }),
+        createMockPlugin({
+          id: "1",
+          name: "Plugin Alpha",
+          description: "Alpha description",
+        }),
+        createMockPlugin({
+          id: "2",
+          name: "Plugin Beta",
+          description: "Beta description",
+        }),
+        createMockPlugin({
+          id: "3",
+          name: "Plugin Gamma",
+          description: "Gamma description",
+        }),
       ]
       setupDefaultMocks({ plugins })
 
@@ -1018,7 +1068,9 @@ describe("MarketplacePage", () => {
 
       render(<MarketplacePage />)
 
-      expect(screen.getAllByText("No plugins found").length).toBeGreaterThanOrEqual(1)
+      expect(
+        screen.getAllByText("No plugins found").length
+      ).toBeGreaterThanOrEqual(1)
     })
 
     it("handles error without message", () => {

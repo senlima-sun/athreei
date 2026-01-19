@@ -19,7 +19,12 @@ vi.mock("@/lib/auth-client", () => ({
   useActiveOrganizationSafe: mockUseActiveOrganizationSafe,
 }))
 
-import { usePlugins, usePlugin, usePluginVersions, usePluginVersion } from "../use-plugins"
+import {
+  usePlugins,
+  usePlugin,
+  usePluginVersions,
+  usePluginVersion,
+} from "../use-plugins"
 import {
   useInstalledPlugins,
   usePluginInstallation,
@@ -355,10 +360,9 @@ describe("usePlugin", () => {
   it("fetches plugin by marketplace and plugin slug", async () => {
     mockFetchApi.mockResolvedValueOnce({ plugin: mockPlugin })
 
-    const { result } = renderHook(
-      () => usePlugin("default", "test-plugin"),
-      { wrapper: createWrapper() }
-    )
+    const { result } = renderHook(() => usePlugin("default", "test-plugin"), {
+      wrapper: createWrapper(),
+    })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
 
@@ -369,10 +373,9 @@ describe("usePlugin", () => {
   })
 
   it("does not fetch when marketplaceSlug is undefined", () => {
-    const { result } = renderHook(
-      () => usePlugin(undefined, "test-plugin"),
-      { wrapper: createWrapper() }
-    )
+    const { result } = renderHook(() => usePlugin(undefined, "test-plugin"), {
+      wrapper: createWrapper(),
+    })
 
     expect(result.current.isLoading).toBe(false)
     expect(result.current.fetchStatus).toBe("idle")
@@ -380,10 +383,9 @@ describe("usePlugin", () => {
   })
 
   it("does not fetch when pluginSlug is undefined", () => {
-    const { result } = renderHook(
-      () => usePlugin("default", undefined),
-      { wrapper: createWrapper() }
-    )
+    const { result } = renderHook(() => usePlugin("default", undefined), {
+      wrapper: createWrapper(),
+    })
 
     expect(result.current.isLoading).toBe(false)
     expect(result.current.fetchStatus).toBe("idle")
@@ -402,8 +404,20 @@ describe("usePluginVersions", () => {
 
   it("fetches versions for a plugin", async () => {
     const mockVersions = [
-      { id: "v-2", version: "1.1.0", changelog: "Bug fixes", isLatest: true, publishedAt: "2024-02-01" },
-      { id: "v-1", version: "1.0.0", changelog: "Initial release", isLatest: false, publishedAt: "2024-01-01" },
+      {
+        id: "v-2",
+        version: "1.1.0",
+        changelog: "Bug fixes",
+        isLatest: true,
+        publishedAt: "2024-02-01",
+      },
+      {
+        id: "v-1",
+        version: "1.0.0",
+        changelog: "Initial release",
+        isLatest: false,
+        publishedAt: "2024-01-01",
+      },
     ]
     mockFetchApi.mockResolvedValueOnce({ versions: mockVersions })
 
@@ -549,10 +563,9 @@ describe("usePluginInstallation", () => {
       total: 1,
     })
 
-    const { result } = renderHook(
-      () => usePluginInstallation("plugin-1"),
-      { wrapper: createWrapper() }
-    )
+    const { result } = renderHook(() => usePluginInstallation("plugin-1"), {
+      wrapper: createWrapper(),
+    })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
 
@@ -565,10 +578,9 @@ describe("usePluginInstallation", () => {
       total: 1,
     })
 
-    const { result } = renderHook(
-      () => usePluginInstallation("other-plugin"),
-      { wrapper: createWrapper() }
-    )
+    const { result } = renderHook(() => usePluginInstallation("other-plugin"), {
+      wrapper: createWrapper(),
+    })
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true))
 
@@ -759,7 +771,9 @@ describe("useUninstallPlugin", () => {
   })
 
   it("returns success message on successful uninstall", async () => {
-    mockFetchApi.mockResolvedValueOnce({ message: "Plugin uninstalled successfully" })
+    mockFetchApi.mockResolvedValueOnce({
+      message: "Plugin uninstalled successfully",
+    })
 
     const { result } = renderHook(() => useUninstallPlugin(), {
       wrapper: createWrapper(),

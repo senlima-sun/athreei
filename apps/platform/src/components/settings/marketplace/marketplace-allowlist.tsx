@@ -3,7 +3,15 @@
 import { useState, useMemo } from "react"
 import { useMarketplaces } from "@/hooks/use-marketplaces"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, X, Search, Store, Plus, Check, AlertCircle } from "lucide-react"
+import {
+  Loader2,
+  X,
+  Search,
+  Store,
+  Plus,
+  Check,
+  AlertCircle,
+} from "lucide-react"
 import type { Marketplace } from "@/types/marketplace"
 
 interface MarketplaceAllowlistProps {

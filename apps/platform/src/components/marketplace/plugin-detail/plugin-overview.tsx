@@ -103,7 +103,15 @@ export function PluginOverview({ plugin, readme }: PluginOverviewProps) {
 }
 
 interface ParsedLine {
-  type: "h1" | "h2" | "h3" | "list-item" | "code-fence" | "code-line" | "empty" | "paragraph"
+  type:
+    | "h1"
+    | "h2"
+    | "h3"
+    | "list-item"
+    | "code-fence"
+    | "code-line"
+    | "empty"
+    | "paragraph"
   content: string
   index: number
 }
@@ -136,7 +144,11 @@ function ReadmeContent({ content }: { content: string }) {
     } else if (trimmedLine.startsWith("# ")) {
       parsedLines.push({ type: "h1", content: trimmedLine.slice(2), index })
     } else if (trimmedLine.startsWith("- ") || trimmedLine.startsWith("* ")) {
-      parsedLines.push({ type: "list-item", content: trimmedLine.slice(2), index })
+      parsedLines.push({
+        type: "list-item",
+        content: trimmedLine.slice(2),
+        index,
+      })
     } else if (trimmedLine === "") {
       parsedLines.push({ type: "empty", content: "", index })
     } else {
@@ -176,7 +188,9 @@ function ReadmeContent({ content }: { content: string }) {
             key={`code-${line.index}`}
             className="overflow-x-auto rounded-lg bg-gray-100 p-3"
           >
-            <code className="text-sm text-gray-800">{codeLines.join("\n")}</code>
+            <code className="text-sm text-gray-800">
+              {codeLines.join("\n")}
+            </code>
           </pre>
         )
       }
@@ -219,13 +233,19 @@ function ReadmeContent({ content }: { content: string }) {
       )
     } else if (line.type === "h2") {
       elements.push(
-        <h2 key={line.index} className="mt-5 text-lg font-semibold text-gray-900">
+        <h2
+          key={line.index}
+          className="mt-5 text-lg font-semibold text-gray-900"
+        >
           {line.content}
         </h2>
       )
     } else if (line.type === "h3") {
       elements.push(
-        <h3 key={line.index} className="mt-4 text-base font-semibold text-gray-900">
+        <h3
+          key={line.index}
+          className="mt-4 text-base font-semibold text-gray-900"
+        >
           {line.content}
         </h3>
       )

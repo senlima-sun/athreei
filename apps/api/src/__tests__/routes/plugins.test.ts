@@ -230,7 +230,6 @@ interface PluginVersionResponse {
   createdAt: string
 }
 
-
 describe("Plugin Routes", () => {
   beforeEach(() => {
     vi.resetModules()

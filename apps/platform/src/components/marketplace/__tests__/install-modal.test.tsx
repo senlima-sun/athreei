@@ -208,16 +208,18 @@ describe("InstallModal", () => {
         name: /Organization/i,
       })
       expect(orgButton).toBeDisabled()
-      expect(
-        screen.getByText("Admin permission required")
-      ).toBeInTheDocument()
+      expect(screen.getByText("Admin permission required")).toBeInTheDocument()
     })
   })
 
   describe("Env Var Input", () => {
     const envVarsWithRequired: EnvVarDefinition[] = [
       { name: "API_KEY", description: "Your API key", required: true },
-      { name: "OPTIONAL_VAR", description: "Optional variable", required: false },
+      {
+        name: "OPTIONAL_VAR",
+        description: "Optional variable",
+        required: false,
+      },
     ]
 
     it("validates required env vars before submit", async () => {
@@ -293,7 +295,11 @@ describe("InstallModal", () => {
 
     it("shows description for each env var", () => {
       const envVars: EnvVarDefinition[] = [
-        { name: "API_KEY", description: "Your API key for authentication", required: false },
+        {
+          name: "API_KEY",
+          description: "Your API key for authentication",
+          required: false,
+        },
       ]
 
       render(<InstallModal {...defaultProps} envVars={envVars} />)
@@ -539,7 +545,9 @@ describe("InstallModal", () => {
       const cancelButton = screen.getByRole("button", { name: /Cancel/i })
       await user.click(cancelButton)
 
-      rerender(<InstallModal {...defaultProps} envVars={envVars} isOpen={true} />)
+      rerender(
+        <InstallModal {...defaultProps} envVars={envVars} isOpen={true} />
+      )
 
       const newApiKeyInput = screen.getByTestId("input-API_KEY")
       expect(newApiKeyInput).toHaveValue("")

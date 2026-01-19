@@ -1,7 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import React from "react"
 import { render, screen, fireEvent } from "@testing-library/react"
-import type { PluginSearchResult, PluginInstallation } from "@/types/marketplace"
+import type {
+  PluginSearchResult,
+  PluginInstallation,
+} from "@/types/marketplace"
 
 const mockPush = vi.fn()
 
@@ -80,11 +83,7 @@ vi.mock("@/components/ui/dropdown-menu", () => ({
       children
     ),
   DropdownMenuContent: ({ children }: React.PropsWithChildren) =>
-    React.createElement(
-      "div",
-      { "data-testid": "dropdown-content" },
-      children
-    ),
+    React.createElement("div", { "data-testid": "dropdown-content" }, children),
   DropdownMenuItem: ({
     children,
     onClick,
@@ -126,7 +125,11 @@ vi.mock("../plugin-icon", () => ({
 
 vi.mock("../verified-badge", () => ({
   VerifiedBadge: () =>
-    React.createElement("span", { "data-testid": "verified-badge" }, "Verified"),
+    React.createElement(
+      "span",
+      { "data-testid": "verified-badge" },
+      "Verified"
+    ),
 }))
 
 import { PluginCard } from "../plugin-card"
@@ -598,7 +601,9 @@ describe("PluginCard", () => {
 
       render(<PluginCard plugin={plugin} installation={null} />)
 
-      expect(screen.getByRole("button", { name: /install/i })).toBeInTheDocument()
+      expect(
+        screen.getByRole("button", { name: /install/i })
+      ).toBeInTheDocument()
     })
 
     it("renders correctly when installation is undefined", () => {
@@ -606,7 +611,9 @@ describe("PluginCard", () => {
 
       render(<PluginCard plugin={plugin} installation={undefined} />)
 
-      expect(screen.getByRole("button", { name: /install/i })).toBeInTheDocument()
+      expect(
+        screen.getByRole("button", { name: /install/i })
+      ).toBeInTheDocument()
     })
 
     it("handles zero download count", () => {

@@ -65,7 +65,10 @@ vi.mock("@/components/ui/button", () => ({
     if (render) {
       return React.cloneElement(
         render,
-        { className, "data-variant": variant, "data-size": size } as Record<string, unknown>,
+        { className, "data-variant": variant, "data-size": size } as Record<
+          string,
+          unknown
+        >,
         children
       )
     }
@@ -172,16 +175,10 @@ vi.mock("@/components/dashboard", () => ({
     React.createElement("div", { "data-testid": "page-header" }, [
       React.createElement("h1", { key: "title" }, title),
       React.createElement("p", { key: "desc" }, description),
-      actions
-        ? React.createElement("div", { key: "actions" }, actions)
-        : null,
+      actions ? React.createElement("div", { key: "actions" }, actions) : null,
     ]),
   LoadingState: ({ message }: { message: string }) =>
-    React.createElement(
-      "div",
-      { "data-testid": "loading-state" },
-      message
-    ),
+    React.createElement("div", { "data-testid": "loading-state" }, message),
   ErrorState: ({
     message,
     onRetry,
@@ -215,7 +212,11 @@ vi.mock("@/components/plugins/installed-plugins-list", () => ({
     uninstallingIds,
     emptyStateAction,
   }: {
-    installations: Array<{ id: string; plugin: { name: string }; status: string }>
+    installations: Array<{
+      id: string
+      plugin: { name: string }
+      status: string
+    }>
     isLoading?: boolean
     onEnable?: (i: unknown) => void
     onDisable?: (i: unknown) => void
@@ -363,8 +364,9 @@ vi.mock("lucide-react", async (importOriginal) => {
 })
 
 vi.mock("@/lib/utils", () => ({
-  cn: (...inputs: (string | undefined | null | boolean | Record<string, boolean>)[]) =>
-    inputs.filter((input) => typeof input === "string").join(" "),
+  cn: (
+    ...inputs: (string | undefined | null | boolean | Record<string, boolean>)[]
+  ) => inputs.filter((input) => typeof input === "string").join(" "),
 }))
 
 import InstalledPluginsPage from "../page"
@@ -373,7 +375,8 @@ import type { PluginInstallation } from "@/types/marketplace"
 function createMockInstallation(
   overrides: Partial<PluginInstallation> = {}
 ): PluginInstallation {
-  const id = overrides.id || `installation-${Math.random().toString(36).slice(2)}`
+  const id =
+    overrides.id || `installation-${Math.random().toString(36).slice(2)}`
   return {
     id,
     organizationId: "org-1",
@@ -423,7 +426,10 @@ function setupDefaultMocks(
   } = options
 
   mockUseInstalledPlugins.mockReturnValue({
-    data: isLoading || isError ? undefined : { installations, total: installations.length },
+    data:
+      isLoading || isError
+        ? undefined
+        : { installations, total: installations.length },
     isLoading,
     isError,
     error,
@@ -552,7 +558,9 @@ describe("InstalledPluginsPage", () => {
       render(<InstalledPluginsPage />)
 
       expect(screen.getByTestId("loading-state")).toBeInTheDocument()
-      expect(screen.getByText("Loading installed plugins...")).toBeInTheDocument()
+      expect(
+        screen.getByText("Loading installed plugins...")
+      ).toBeInTheDocument()
     })
 
     it("shows loading state while plugins are loading", () => {
@@ -604,7 +612,9 @@ describe("InstalledPluginsPage", () => {
       render(<InstalledPluginsPage />)
 
       expect(
-        screen.getByText("Please select an organization to view installed plugins.")
+        screen.getByText(
+          "Please select an organization to view installed plugins."
+        )
       ).toBeInTheDocument()
     })
 
