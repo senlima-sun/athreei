@@ -255,13 +255,13 @@ function FormattedText({ text }: { text: string }) {
 
     const matches = [
       boldMatch
-        ? { type: "bold", match: boldMatch, index: boldMatch.index! }
+        ? { type: "bold", match: boldMatch, index: boldMatch.index ?? 0 }
         : null,
       codeMatch
-        ? { type: "code", match: codeMatch, index: codeMatch.index! }
+        ? { type: "code", match: codeMatch, index: codeMatch.index ?? 0 }
         : null,
       linkMatch
-        ? { type: "link", match: linkMatch, index: linkMatch.index! }
+        ? { type: "link", match: linkMatch, index: linkMatch.index ?? 0 }
         : null,
     ].filter(Boolean) as {
       type: string
