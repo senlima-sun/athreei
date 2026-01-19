@@ -16,7 +16,7 @@ adminStats.get("/stats", async (c) => {
       marketplaceCountResult,
       verifiedCountResult,
       featuredCountResult,
-      totalInstallsResult,
+      totalDownloadsResult,
     ] = await Promise.all([
       tx.select({ count: count() }).from(plugin),
       tx.select({ count: count() }).from(marketplace),
@@ -39,12 +39,12 @@ adminStats.get("/stats", async (c) => {
     const totalMarketplaces = marketplaceCountResult[0]?.count ?? 0
     const verifiedPlugins = verifiedCountResult[0]?.count ?? 0
     const featuredPlugins = featuredCountResult[0]?.count ?? 0
-    const totalInstalls = Number(totalInstallsResult[0]?.total ?? 0)
+    const totalDownloads = Number(totalDownloadsResult[0]?.total ?? 0)
 
     return {
       totalPlugins,
       pendingApprovals: 0,
-      totalInstalls,
+      totalDownloads,
       totalMarketplaces,
       verifiedPlugins,
       featuredPlugins,

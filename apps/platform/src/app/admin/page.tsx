@@ -11,7 +11,7 @@ interface AdminStats {
   verifiedPlugins: number
   featuredPlugins: number
   pendingApprovals: number
-  totalInstalls: number
+  totalDownloads: number
 }
 
 interface StatCardProps {
@@ -94,7 +94,7 @@ export default function AdminDashboardPage() {
         />
         <StatCard
           title="Total Downloads"
-          value={(stats?.totalInstalls ?? 0).toLocaleString()}
+          value={(stats?.totalDownloads ?? 0).toLocaleString()}
         />
       </div>
     </div>
