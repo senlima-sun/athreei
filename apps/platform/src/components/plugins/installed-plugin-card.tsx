@@ -59,7 +59,7 @@ export function InstalledPluginCard({
   isToggling = false,
   isUninstalling = false,
 }: InstalledPluginCardProps) {
-  const detailHref = `/marketplace/${installation.plugin.marketplace.slug}/${installation.plugin.slug}`
+  const detailHref = `/dashboard/marketplace/${installation.plugin.marketplace.slug}/${installation.plugin.slug}`
 
   return (
     <div className="group relative rounded-xl border border-gray-200 bg-white p-4 transition-all hover:border-gray-300 hover:shadow-sm">

@@ -36,7 +36,7 @@ export function PluginCard({
   isInstalling = false,
 }: PluginCardProps) {
   const isInstalled = !!installation
-  const detailHref = `/marketplace/${plugin.marketplace.slug}/${plugin.slug}`
+  const detailHref = `/dashboard/marketplace/${plugin.marketplace.slug}/${plugin.slug}`
 
   const formatDownloadCount = (count: number): string => {
     if (count >= 1000000) {
