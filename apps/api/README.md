@@ -151,12 +151,12 @@ Endpoints are public connection points for AI apps (URL format: `https://athreei
 
 ### API Keys
 
-| Method | Path                                           | Auth | Description            |
-| ------ | ---------------------------------------------- | ---- | ---------------------- |
-| GET    | `/api/endpoints/:endpointId/keys`              | Yes  | List API keys (masked) |
-| POST   | `/api/endpoints/:endpointId/keys`              | Yes  | Create API key         |
-| DELETE | `/api/endpoints/:endpointId/keys/:keyId`       | Yes  | Revoke API key         |
-| GET    | `/api/endpoints/:endpointId/keys/:keyId/stats` | Yes  | Get key usage stats    |
+| Method | Path                                          | Auth | Description            |
+| ------ | --------------------------------------------- | ---- | ---------------------- |
+| GET    | `/api/api-keys/:endpointId/keys`              | Yes  | List API keys (masked) |
+| POST   | `/api/api-keys/:endpointId/keys`              | Yes  | Create API key         |
+| DELETE | `/api/api-keys/:endpointId/keys/:keyId`       | Yes  | Revoke API key         |
+| GET    | `/api/api-keys/:endpointId/keys/:keyId/stats` | Yes  | Get key usage stats    |
 
 ### Gateway
 

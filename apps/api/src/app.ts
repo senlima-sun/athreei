@@ -73,7 +73,7 @@ app.on(
 
 app.route("/api/organizations", organizationsRoutes)
 app.route("/api/endpoints", endpointsRoutes)
-app.route("/api/endpoints", apiKeysRoutes)
+app.route("/api/api-keys", apiKeysRoutes)
 app.route("/api/mcp-servers", mcpServersRoutes)
 app.route("/api/namespaces", namespacesRoutes)
 app.route("/api/gateway", gatewayRoutes)
@@ -89,10 +89,13 @@ app.route("/api/rules", rulesRoutes)
 app.route("/api/evaluations", evaluationsRoutes)
 app.route("/api/marketplaces", marketplacesRoutes)
 app.route("/api/plugins", pluginsRoutes)
-app.route("/api/organizations", pluginInstallationsRoutes)
-app.route("/api/organizations", organizationMarketplaceRoutes)
-app.route("/api/admin", adminMarketplacesRoutes)
-app.route("/api/admin", adminStatsRoutes)
+app.route("/api/organizations/:orgId/plugins", pluginInstallationsRoutes)
+app.route(
+  "/api/organizations/:orgId/marketplace",
+  organizationMarketplaceRoutes
+)
+app.route("/api/admin/marketplaces", adminMarketplacesRoutes)
+app.route("/api/admin/stats", adminStatsRoutes)
 
 app.notFound(notFoundHandler)
 app.onError(errorHandler)

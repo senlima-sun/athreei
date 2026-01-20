@@ -100,7 +100,7 @@ export function ApiKeyRevoke(props: ApiKeyRevokeProps) {
       try {
         const client = getApiClient()
         const data = await client.get<ApiKeyListResponse>(
-          `/api/endpoints/${selectedEndpoint}/keys`
+          `/api/api-keys/${selectedEndpoint}/keys`
         )
 
         const key = data.data.find((k) => k.id === props.keyId)
@@ -137,7 +137,7 @@ export function ApiKeyRevoke(props: ApiKeyRevokeProps) {
       try {
         const client = getApiClient()
         await client.delete(
-          `/api/endpoints/${selectedEndpoint}/keys/${props.keyId}`
+          `/api/api-keys/${selectedEndpoint}/keys/${props.keyId}`
         )
         setPhase("success")
       } catch (err) {

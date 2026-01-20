@@ -91,7 +91,7 @@ export function ApiKeyList(props: ApiKeyListProps) {
       try {
         const client = getApiClient()
         const data = await client.get<ApiKeyListResponse>(
-          `/api/endpoints/${selectedEndpoint}/keys`
+          `/api/api-keys/${selectedEndpoint}/keys`
         )
         setKeys(data.data)
         setPhase("display")

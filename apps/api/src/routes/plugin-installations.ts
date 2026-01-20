@@ -24,11 +24,11 @@ const pluginInstallations = new Hono()
 pluginInstallations.use("*", authMiddleware)
 
 pluginInstallations.get(
-  "/:orgId/plugins",
+  "/",
   zValidator("query", listInstallationsQuerySchema),
   async (c) => {
     const auth = getAuthContext(c)
-    const orgId = c.req.param("orgId")
+    const orgId = c.req.param("orgId") as string as string
     const query = c.req.valid("query")
 
     const isMember = await verifyOrganizationMembership(auth.userId, orgId)
@@ -42,11 +42,11 @@ pluginInstallations.get(
 )
 
 pluginInstallations.post(
-  "/:orgId/plugins/install",
+  "/install",
   zValidator("json", installPluginSchema),
   async (c) => {
     const auth = getAuthContext(c)
-    const orgId = c.req.param("orgId")
+    const orgId = c.req.param("orgId") as string
     const body = c.req.valid("json")
 
     const isMember = await verifyOrganizationMembership(auth.userId, orgId)
@@ -77,44 +77,41 @@ pluginInstallations.post(
   }
 )
 
-pluginInstallations.post(
-  "/:orgId/plugins/:installationId/uninstall",
-  async (c) => {
-    const auth = getAuthContext(c)
-    const orgId = c.req.param("orgId")
-    const installationId = c.req.param("installationId")
+pluginInstallations.post("/:installationId/uninstall", async (c) => {
+  const auth = getAuthContext(c)
+  const orgId = c.req.param("orgId") as string
+  const installationId = c.req.param("installationId")
 
-    const isMember = await verifyOrganizationMembership(auth.userId, orgId)
-    if (!isMember) {
-      throw ApiError.forbidden("You do not have access to this organization")
-    }
-
-    try {
-      await uninstallPlugin(orgId, installationId, auth.userId)
-      return c.json({ message: "Plugin uninstalled successfully" })
-    } catch (error) {
-      if (error instanceof Error) {
-        if (error.message.includes("not found")) {
-          throw ApiError.notFound(error.message)
-        }
-        if (
-          error.message.includes("Only admins") ||
-          error.message.includes("only uninstall your own")
-        ) {
-          throw ApiError.forbidden(error.message)
-        }
-      }
-      throw error
-    }
+  const isMember = await verifyOrganizationMembership(auth.userId, orgId)
+  if (!isMember) {
+    throw ApiError.forbidden("You do not have access to this organization")
   }
-)
+
+  try {
+    await uninstallPlugin(orgId, installationId, auth.userId)
+    return c.json({ message: "Plugin uninstalled successfully" })
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message.includes("not found")) {
+        throw ApiError.notFound(error.message)
+      }
+      if (
+        error.message.includes("Only admins") ||
+        error.message.includes("only uninstall your own")
+      ) {
+        throw ApiError.forbidden(error.message)
+      }
+    }
+    throw error
+  }
+})
 
 pluginInstallations.patch(
-  "/:orgId/plugins/:installationId",
+  "/:installationId",
   zValidator("json", updateInstallationSchema),
   async (c) => {
     const auth = getAuthContext(c)
-    const orgId = c.req.param("orgId")
+    const orgId = c.req.param("orgId") as string
     const installationId = c.req.param("installationId")
     const updates = c.req.valid("json")
 
@@ -149,11 +146,11 @@ pluginInstallations.patch(
 )
 
 pluginInstallations.post(
-  "/:orgId/plugins/:installationId/update",
+  "/:installationId/update",
   zValidator("json", updateVersionSchema),
   async (c) => {
     const auth = getAuthContext(c)
-    const orgId = c.req.param("orgId")
+    const orgId = c.req.param("orgId") as string
     const installationId = c.req.param("installationId")
     const { version } = c.req.valid("json")
 
@@ -184,9 +181,9 @@ pluginInstallations.post(
   }
 )
 
-pluginInstallations.get("/:orgId/plugins/:installationId/env", async (c) => {
+pluginInstallations.get("/:installationId/env", async (c) => {
   const auth = getAuthContext(c)
-  const orgId = c.req.param("orgId")
+  const orgId = c.req.param("orgId") as string
   const installationId = c.req.param("installationId")
 
   const isMember = await verifyOrganizationMembership(auth.userId, orgId)

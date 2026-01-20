@@ -54,7 +54,7 @@ export function ApiKeyList({ apiKeys, endpointId, onRevoke }: ApiKeyListProps) {
       setLoadingStatsId(keyId)
       try {
         const result = await fetchApi<ApiKeyStats>(
-          `/api/endpoints/${endpointId}/keys/${keyId}/stats`
+          `/api/api-keys/${endpointId}/keys/${keyId}/stats`
         )
         setStats((prev) => ({ ...prev, [keyId]: result }))
       } catch {

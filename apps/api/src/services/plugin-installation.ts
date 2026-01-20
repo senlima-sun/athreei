@@ -117,8 +117,13 @@ export async function installPlugin(
   userId: string,
   input: InstallPluginInput
 ): Promise<InstallationResult> {
+  const marketplaceSlug = input.marketplaceSlug as string
+  const pluginSlug = input.pluginSlug as string
+  const inputVersion = input.version as string | undefined
+  const inputScope = input.scope as string
+
   const mkt = await db().query.marketplace.findFirst({
-    where: eq(marketplace.slug, input.marketplaceSlug),
+    where: eq(marketplace.slug, marketplaceSlug),
   })
 
   if (!mkt) {
@@ -126,10 +131,7 @@ export async function installPlugin(
   }
 
   const plg = await db().query.plugin.findFirst({
-    where: and(
-      eq(plugin.marketplaceId, mkt.id),
-      eq(plugin.slug, input.pluginSlug)
-    ),
+    where: and(eq(plugin.marketplaceId, mkt.id), eq(plugin.slug, pluginSlug)),
   })
 
   if (!plg) {
@@ -149,15 +151,15 @@ export async function installPlugin(
 
   let version: typeof pluginVersion.$inferSelect | undefined
 
-  if (input.version) {
+  if (inputVersion) {
     version = await db().query.pluginVersion.findFirst({
       where: and(
         eq(pluginVersion.pluginId, plg.id),
-        eq(pluginVersion.version, input.version)
+        eq(pluginVersion.version, inputVersion)
       ),
     })
     if (!version) {
-      throw new Error(`Version ${input.version} not found`)
+      throw new Error(`Version ${inputVersion} not found`)
     }
   } else {
     version = await db().query.pluginVersion.findFirst({
@@ -175,7 +177,7 @@ export async function installPlugin(
     where: and(
       eq(pluginInstallation.organizationId, organizationId),
       eq(pluginInstallation.pluginId, plg.id),
-      eq(pluginInstallation.scope, input.scope)
+      eq(pluginInstallation.scope, inputScope)
     ),
   })
 
@@ -199,7 +201,7 @@ export async function installPlugin(
       pluginId: plg.id,
       pluginVersionId: version.id,
       installedBy: userId,
-      scope: input.scope,
+      scope: inputScope,
       status: "active",
       config: input.config ? JSON.stringify(input.config) : null,
       encryptedEnv,
@@ -221,7 +223,7 @@ export async function installPlugin(
     pluginId: plg.id,
     pluginVersionId: version.id,
     installedBy: userId,
-    scope: input.scope,
+    scope: inputScope,
     status: "active",
     config: input.config || null,
     installedAt: now,
@@ -320,7 +322,7 @@ export async function updateInstallation(
   }
 
   if (updates.status !== undefined) {
-    updateData.status = updates.status
+    updateData.status = updates.status as string
   }
 
   if (updates.config !== undefined) {
@@ -465,19 +467,24 @@ export async function listInstallations(
   data: InstallationResult[]
   pagination: { limit: number; offset: number; total: number; hasMore: boolean }
 }> {
-  const limit = Math.min(Math.max(query.limit || 20, 1), 100)
-  const offset = Math.max(query.offset || 0, 0)
+  const queryLimit = (query.limit as number) || 20
+  const queryOffset = (query.offset as number) || 0
+  const queryStatus = query.status as string | undefined
+  const queryScope = query.scope as string | undefined
+
+  const limit = Math.min(Math.max(queryLimit, 1), 100)
+  const offset = Math.max(queryOffset, 0)
 
   const conditions: ReturnType<typeof eq>[] = [
     eq(pluginInstallation.organizationId, organizationId),
   ]
 
-  if (query.status) {
-    conditions.push(eq(pluginInstallation.status, query.status))
+  if (queryStatus) {
+    conditions.push(eq(pluginInstallation.status, queryStatus))
   }
 
-  if (query.scope) {
-    conditions.push(eq(pluginInstallation.scope, query.scope))
+  if (queryScope) {
+    conditions.push(eq(pluginInstallation.scope, queryScope))
   }
 
   const whereClause = and(...conditions)

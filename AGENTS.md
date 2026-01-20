@@ -69,12 +69,12 @@ All four must pass. No exceptions.
 ### Hono Route Testing Pattern
 
 ```typescript
-const { default: routes } = await import("../../routes/endpoint")
+const { default: routes } = await import("../../routes/api-keys")
 const app = new Hono()
 app.onError(testErrorHandler)
-app.route("/api/endpoints", routes)
+app.route("/api/api-keys", routes)
 
-const response = await app.request("/api/endpoints/ep_123/keys")
+const response = await app.request("/api/api-keys/ep_123/keys")
 expect(response.status).toBe(200)
 ```
 

@@ -19,7 +19,7 @@ adminMarketplaces.use("*", authMiddleware)
 adminMarketplaces.use("*", requireAdmin)
 
 adminMarketplaces.get(
-  "/marketplaces",
+  "/",
   zValidator("query", listMarketplacesQuerySchema),
   async (c) => {
     const query = c.req.valid("query")
@@ -70,7 +70,7 @@ adminMarketplaces.get(
 )
 
 adminMarketplaces.post(
-  "/marketplaces",
+  "/",
   zValidator("json", adminCreateMarketplaceSchema),
   async (c) => {
     const body = c.req.valid("json")
@@ -114,7 +114,7 @@ adminMarketplaces.post(
 )
 
 adminMarketplaces.patch(
-  "/marketplaces/:slug",
+  "/:slug",
   zValidator("json", adminUpdateMarketplaceSchema),
   async (c) => {
     const slug = c.req.param("slug")
@@ -165,7 +165,7 @@ adminMarketplaces.patch(
   }
 )
 
-adminMarketplaces.delete("/marketplaces/:slug", async (c) => {
+adminMarketplaces.delete("/:slug", async (c) => {
   const slug = c.req.param("slug")
 
   const mkt = await db().query.marketplace.findFirst({

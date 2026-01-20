@@ -67,7 +67,7 @@ export default function EndpointDetailPage() {
     name: string
   ): Promise<{ key?: string; error?: string }> => {
     try {
-      const response = await fetch(`/api/endpoints/${endpointId}/api-keys`, {
+      const response = await fetch(`/api/api-keys/${endpointId}/keys`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name }),
@@ -94,7 +94,7 @@ export default function EndpointDetailPage() {
   const handleRevokeApiKey = async (keyId: string) => {
     try {
       const response = await fetch(
-        `/api/endpoints/${endpointId}/api-keys/${keyId}`,
+        `/api/api-keys/${endpointId}/keys/${keyId}`,
         {
           method: "DELETE",
         }

@@ -124,7 +124,7 @@ export function ApiKeyCreate(props: ApiKeyCreateProps) {
         }
 
         const response = await client.post<ApiKeyCreateResponse>(
-          `/api/endpoints/${selectedEndpoint}/keys`,
+          `/api/api-keys/${selectedEndpoint}/keys`,
           payload
         )
 

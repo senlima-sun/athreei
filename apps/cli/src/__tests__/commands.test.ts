@@ -428,10 +428,10 @@ describe("CLI Commands - API Client Integration", () => {
       const { getApiClient } = await import("../lib/api.js")
       const client = getApiClient()
 
-      await client.get("/api/endpoints/ep-789/keys")
+      await client.get("/api/api-keys/ep-789/keys")
 
       expect(mockApiClient.get).toHaveBeenCalledWith(
-        "/api/endpoints/ep-789/keys"
+        "/api/api-keys/ep-789/keys"
       )
     })
 
@@ -449,13 +449,13 @@ describe("CLI Commands - API Client Integration", () => {
       const { getApiClient } = await import("../lib/api.js")
       const client = getApiClient()
 
-      await client.post("/api/endpoints/ep-789/keys", {
+      await client.post("/api/api-keys/ep-789/keys", {
         name: "My Key",
         expiresAt: "2025-01-01T00:00:00Z",
       })
 
       expect(mockApiClient.post).toHaveBeenCalledWith(
-        "/api/endpoints/ep-789/keys",
+        "/api/api-keys/ep-789/keys",
         {
           name: "My Key",
           expiresAt: "2025-01-01T00:00:00Z",
@@ -469,10 +469,10 @@ describe("CLI Commands - API Client Integration", () => {
       const { getApiClient } = await import("../lib/api.js")
       const client = getApiClient()
 
-      await client.delete("/api/endpoints/ep-789/keys/key-123")
+      await client.delete("/api/api-keys/ep-789/keys/key-123")
 
       expect(mockApiClient.delete).toHaveBeenCalledWith(
-        "/api/endpoints/ep-789/keys/key-123"
+        "/api/api-keys/ep-789/keys/key-123"
       )
     })
   })

@@ -31,9 +31,9 @@ async function requireOrgAdmin(userId: string, organizationId: string) {
   }
 }
 
-organizationMarketplace.get("/:orgId/marketplace-settings", async (c) => {
+organizationMarketplace.get("/settings", async (c) => {
   const auth = getAuthContext(c)
-  const orgId = c.req.param("orgId")
+  const orgId = c.req.param("orgId") as string
 
   const isMember = await verifyOrganizationMembership(auth.userId, orgId)
   if (!isMember) {
@@ -75,11 +75,11 @@ organizationMarketplace.get("/:orgId/marketplace-settings", async (c) => {
 })
 
 organizationMarketplace.patch(
-  "/:orgId/marketplace-settings",
+  "/settings",
   zValidator("json", updateOrgMarketplaceSettingsSchema),
   async (c) => {
     const auth = getAuthContext(c)
-    const orgId = c.req.param("orgId")
+    const orgId = c.req.param("orgId") as string
     const updates = c.req.valid("json")
 
     await requireOrgAdmin(auth.userId, orgId)

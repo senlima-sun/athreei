@@ -19,7 +19,7 @@ export function useOrgMarketplaceSettings() {
   return useQuery<OrgMarketplaceSettingsResponse>({
     queryKey: ["organization", "marketplace-settings", activeOrg?.id],
     queryFn: async () => {
-      const path = `/api/organizations/${activeOrg!.id}/marketplace-settings`
+      const path = `/api/organizations/${activeOrg!.id}/marketplace/settings`
       return fetchApi<OrgMarketplaceSettingsResponse>(path)
     },
     enabled: !isOrgPending && !!activeOrg?.id,
@@ -36,7 +36,7 @@ export function useUpdateOrgMarketplaceSettings() {
     UpdateOrgMarketplaceSettingsInput
   >({
     mutationFn: async (updates) => {
-      const path = `/api/organizations/${activeOrg!.id}/marketplace-settings`
+      const path = `/api/organizations/${activeOrg!.id}/marketplace/settings`
       return fetchApi<OrgMarketplaceSettingsResponse>(path, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },

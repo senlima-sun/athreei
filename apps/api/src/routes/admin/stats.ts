@@ -9,7 +9,7 @@ const adminStats = new Hono()
 adminStats.use("*", authMiddleware)
 adminStats.use("*", requireAdmin)
 
-adminStats.get("/stats", async (c) => {
+adminStats.get("/", async (c) => {
   const stats = await db().transaction(async (tx) => {
     const [
       pluginCountResult,

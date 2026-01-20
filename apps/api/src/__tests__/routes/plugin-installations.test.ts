@@ -202,7 +202,7 @@ describe("Plugin Installation Routes", () => {
         await import("../../routes/plugin-installations")
       const app = new Hono()
       app.onError(testErrorHandler)
-      app.route("/api/organizations", routes)
+      app.route("/api/organizations/:orgId/plugins", routes)
 
       const response = await app.request("/api/organizations/org_123/plugins")
       const data = (await response.json()) as ListInstallationsResponse
@@ -227,7 +227,7 @@ describe("Plugin Installation Routes", () => {
         await import("../../routes/plugin-installations")
       const app = new Hono()
       app.onError(testErrorHandler)
-      app.route("/api/organizations", routes)
+      app.route("/api/organizations/:orgId/plugins", routes)
 
       const response = await app.request(
         "/api/organizations/org_123/plugins?status=active"
@@ -251,7 +251,7 @@ describe("Plugin Installation Routes", () => {
         await import("../../routes/plugin-installations")
       const app = new Hono()
       app.onError(testErrorHandler)
-      app.route("/api/organizations", routes)
+      app.route("/api/organizations/:orgId/plugins", routes)
 
       const response = await app.request(
         "/api/organizations/org_123/plugins?scope=user"
@@ -271,7 +271,7 @@ describe("Plugin Installation Routes", () => {
         await import("../../routes/plugin-installations")
       const app = new Hono()
       app.onError(testErrorHandler)
-      app.route("/api/organizations", routes)
+      app.route("/api/organizations/:orgId/plugins", routes)
 
       const response = await app.request("/api/organizations/org_456/plugins")
 
@@ -288,7 +288,7 @@ describe("Plugin Installation Routes", () => {
         await import("../../routes/plugin-installations")
       const app = new Hono()
       app.onError(testErrorHandler)
-      app.route("/api/organizations", routes)
+      app.route("/api/organizations/:orgId/plugins", routes)
 
       const response = await app.request(
         "/api/organizations/org_123/plugins/install",
@@ -323,7 +323,7 @@ describe("Plugin Installation Routes", () => {
         await import("../../routes/plugin-installations")
       const app = new Hono()
       app.onError(testErrorHandler)
-      app.route("/api/organizations", routes)
+      app.route("/api/organizations/:orgId/plugins", routes)
 
       const response = await app.request(
         "/api/organizations/org_123/plugins/install",
@@ -355,7 +355,7 @@ describe("Plugin Installation Routes", () => {
         await import("../../routes/plugin-installations")
       const app = new Hono()
       app.onError(testErrorHandler)
-      app.route("/api/organizations", routes)
+      app.route("/api/organizations/:orgId/plugins", routes)
 
       const response = await app.request(
         "/api/organizations/org_123/plugins/install",
@@ -386,7 +386,7 @@ describe("Plugin Installation Routes", () => {
         await import("../../routes/plugin-installations")
       const app = new Hono()
       app.onError(testErrorHandler)
-      app.route("/api/organizations", routes)
+      app.route("/api/organizations/:orgId/plugins", routes)
 
       const response = await app.request(
         "/api/organizations/org_456/plugins/install",
@@ -413,7 +413,7 @@ describe("Plugin Installation Routes", () => {
         await import("../../routes/plugin-installations")
       const app = new Hono()
       app.onError(testErrorHandler)
-      app.route("/api/organizations", routes)
+      app.route("/api/organizations/:orgId/plugins", routes)
 
       const response = await app.request(
         "/api/organizations/org_123/plugins/install",
@@ -442,7 +442,7 @@ describe("Plugin Installation Routes", () => {
         await import("../../routes/plugin-installations")
       const app = new Hono()
       app.onError(testErrorHandler)
-      app.route("/api/organizations", routes)
+      app.route("/api/organizations/:orgId/plugins", routes)
 
       const response = await app.request(
         "/api/organizations/org_123/plugins/pi_123/uninstall",
@@ -464,7 +464,7 @@ describe("Plugin Installation Routes", () => {
         await import("../../routes/plugin-installations")
       const app = new Hono()
       app.onError(testErrorHandler)
-      app.route("/api/organizations", routes)
+      app.route("/api/organizations/:orgId/plugins", routes)
 
       const response = await app.request(
         "/api/organizations/org_456/plugins/pi_123/uninstall",
@@ -482,7 +482,7 @@ describe("Plugin Installation Routes", () => {
         await import("../../routes/plugin-installations")
       const app = new Hono()
       app.onError(testErrorHandler)
-      app.route("/api/organizations", routes)
+      app.route("/api/organizations/:orgId/plugins", routes)
 
       const response = await app.request(
         "/api/organizations/org_123/plugins/pi_nonexistent/uninstall",
@@ -507,7 +507,7 @@ describe("Plugin Installation Routes", () => {
         await import("../../routes/plugin-installations")
       const app = new Hono()
       app.onError(testErrorHandler)
-      app.route("/api/organizations", routes)
+      app.route("/api/organizations/:orgId/plugins", routes)
 
       const response = await app.request(
         "/api/organizations/org_123/plugins/pi_123",
@@ -535,7 +535,7 @@ describe("Plugin Installation Routes", () => {
         await import("../../routes/plugin-installations")
       const app = new Hono()
       app.onError(testErrorHandler)
-      app.route("/api/organizations", routes)
+      app.route("/api/organizations/:orgId/plugins", routes)
 
       const response = await app.request(
         "/api/organizations/org_123/plugins/pi_123",
@@ -562,7 +562,7 @@ describe("Plugin Installation Routes", () => {
         await import("../../routes/plugin-installations")
       const app = new Hono()
       app.onError(testErrorHandler)
-      app.route("/api/organizations", routes)
+      app.route("/api/organizations/:orgId/plugins", routes)
 
       const response = await app.request(
         "/api/organizations/org_456/plugins/pi_123",
@@ -586,7 +586,7 @@ describe("Plugin Installation Routes", () => {
         await import("../../routes/plugin-installations")
       const app = new Hono()
       app.onError(testErrorHandler)
-      app.route("/api/organizations", routes)
+      app.route("/api/organizations/:orgId/plugins", routes)
 
       const response = await app.request(
         "/api/organizations/org_123/plugins/pi_nonexistent",
@@ -615,7 +615,7 @@ describe("Plugin Installation Routes", () => {
         await import("../../routes/plugin-installations")
       const app = new Hono()
       app.onError(testErrorHandler)
-      app.route("/api/organizations", routes)
+      app.route("/api/organizations/:orgId/plugins", routes)
 
       const response = await app.request(
         "/api/organizations/org_123/plugins/pi_123/update",
@@ -646,7 +646,7 @@ describe("Plugin Installation Routes", () => {
         await import("../../routes/plugin-installations")
       const app = new Hono()
       app.onError(testErrorHandler)
-      app.route("/api/organizations", routes)
+      app.route("/api/organizations/:orgId/plugins", routes)
 
       const response = await app.request(
         "/api/organizations/org_123/plugins/pi_123/update",
@@ -676,7 +676,7 @@ describe("Plugin Installation Routes", () => {
         await import("../../routes/plugin-installations")
       const app = new Hono()
       app.onError(testErrorHandler)
-      app.route("/api/organizations", routes)
+      app.route("/api/organizations/:orgId/plugins", routes)
 
       const response = await app.request(
         "/api/organizations/org_123/plugins/pi_123/update",
@@ -699,7 +699,7 @@ describe("Plugin Installation Routes", () => {
         await import("../../routes/plugin-installations")
       const app = new Hono()
       app.onError(testErrorHandler)
-      app.route("/api/organizations", routes)
+      app.route("/api/organizations/:orgId/plugins", routes)
 
       const response = await app.request(
         "/api/organizations/org_456/plugins/pi_123/update",
@@ -723,7 +723,7 @@ describe("Plugin Installation Routes", () => {
         await import("../../routes/plugin-installations")
       const app = new Hono()
       app.onError(testErrorHandler)
-      app.route("/api/organizations", routes)
+      app.route("/api/organizations/:orgId/plugins", routes)
 
       const response = await app.request(
         "/api/organizations/org_123/plugins/pi_123/env"
@@ -745,7 +745,7 @@ describe("Plugin Installation Routes", () => {
         await import("../../routes/plugin-installations")
       const app = new Hono()
       app.onError(testErrorHandler)
-      app.route("/api/organizations", routes)
+      app.route("/api/organizations/:orgId/plugins", routes)
 
       const response = await app.request(
         "/api/organizations/org_123/plugins/pi_123/env"
@@ -765,7 +765,7 @@ describe("Plugin Installation Routes", () => {
         await import("../../routes/plugin-installations")
       const app = new Hono()
       app.onError(testErrorHandler)
-      app.route("/api/organizations", routes)
+      app.route("/api/organizations/:orgId/plugins", routes)
 
       const response = await app.request(
         "/api/organizations/org_456/plugins/pi_123/env"
@@ -786,7 +786,7 @@ describe("Plugin Installation Routes", () => {
         await import("../../routes/plugin-installations")
       const app = new Hono()
       app.onError(testErrorHandler)
-      app.route("/api/organizations", routes)
+      app.route("/api/organizations/:orgId/plugins", routes)
 
       const response = await app.request(
         "/api/organizations/org_123/plugins/pi_123/env"
@@ -810,7 +810,7 @@ describe("Plugin Installation Routes", () => {
         await import("../../routes/plugin-installations")
       const app = new Hono()
       app.onError(testErrorHandler)
-      app.route("/api/organizations", routes)
+      app.route("/api/organizations/:orgId/plugins", routes)
 
       const response = await app.request(
         "/api/organizations/org_123/plugins/pi_nonexistent/env"

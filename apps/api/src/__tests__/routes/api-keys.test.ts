@@ -184,9 +184,9 @@ describe("API Keys Routes", () => {
         const { default: apiKeys } = await import("../../routes/api-keys")
         const app = new Hono()
         app.onError(testErrorHandler)
-        app.route("/api/endpoints", apiKeys)
+        app.route("/api/api-keys", apiKeys)
 
-        const response = await app.request("/api/endpoints/ep_456/keys")
+        const response = await app.request("/api/api-keys/ep_456/keys")
         const data = (await response.json()) as ErrorResponse
 
         expect(response.status).toBe(403)
@@ -201,9 +201,9 @@ describe("API Keys Routes", () => {
         const { default: apiKeys } = await import("../../routes/api-keys")
         const app = new Hono()
         app.onError(testErrorHandler)
-        app.route("/api/endpoints", apiKeys)
+        app.route("/api/api-keys", apiKeys)
 
-        const response = await app.request("/api/endpoints/ep_123/keys")
+        const response = await app.request("/api/api-keys/ep_123/keys")
         const data = (await response.json()) as ListKeysResponse
 
         expect(response.status).toBe(200)
@@ -216,9 +216,9 @@ describe("API Keys Routes", () => {
         const { default: apiKeys } = await import("../../routes/api-keys")
         const app = new Hono()
         app.onError(testErrorHandler)
-        app.route("/api/endpoints", apiKeys)
+        app.route("/api/api-keys", apiKeys)
 
-        const response = await app.request("/api/endpoints/ep_nonexistent/keys")
+        const response = await app.request("/api/api-keys/ep_nonexistent/keys")
         const data = (await response.json()) as ErrorResponse
 
         expect(response.status).toBe(404)
@@ -237,9 +237,9 @@ describe("API Keys Routes", () => {
         const { default: apiKeys } = await import("../../routes/api-keys")
         const app = new Hono()
         app.onError(testErrorHandler)
-        app.route("/api/endpoints", apiKeys)
+        app.route("/api/api-keys", apiKeys)
 
-        const response = await app.request("/api/endpoints/ep_456/keys", {
+        const response = await app.request("/api/api-keys/ep_456/keys", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name: "Test Key" }),
@@ -257,9 +257,9 @@ describe("API Keys Routes", () => {
         const { default: apiKeys } = await import("../../routes/api-keys")
         const app = new Hono()
         app.onError(testErrorHandler)
-        app.route("/api/endpoints", apiKeys)
+        app.route("/api/api-keys", apiKeys)
 
-        const response = await app.request("/api/endpoints/ep_123/keys", {
+        const response = await app.request("/api/api-keys/ep_123/keys", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name: "Production Key" }),
@@ -278,10 +278,10 @@ describe("API Keys Routes", () => {
         const { default: apiKeys } = await import("../../routes/api-keys")
         const app = new Hono()
         app.onError(testErrorHandler)
-        app.route("/api/endpoints", apiKeys)
+        app.route("/api/api-keys", apiKeys)
 
         const response = await app.request(
-          "/api/endpoints/ep_nonexistent/keys",
+          "/api/api-keys/ep_nonexistent/keys",
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -305,10 +305,10 @@ describe("API Keys Routes", () => {
         const { default: apiKeys } = await import("../../routes/api-keys")
         const app = new Hono()
         app.onError(testErrorHandler)
-        app.route("/api/endpoints", apiKeys)
+        app.route("/api/api-keys", apiKeys)
 
         const response = await app.request(
-          "/api/endpoints/ep_456/keys/key_123",
+          "/api/api-keys/ep_456/keys/key_123",
           {
             method: "DELETE",
           }
@@ -327,10 +327,10 @@ describe("API Keys Routes", () => {
         const { default: apiKeys } = await import("../../routes/api-keys")
         const app = new Hono()
         app.onError(testErrorHandler)
-        app.route("/api/endpoints", apiKeys)
+        app.route("/api/api-keys", apiKeys)
 
         const response = await app.request(
-          "/api/endpoints/ep_123/keys/key_123",
+          "/api/api-keys/ep_123/keys/key_123",
           {
             method: "DELETE",
           }
@@ -348,10 +348,10 @@ describe("API Keys Routes", () => {
         const { default: apiKeys } = await import("../../routes/api-keys")
         const app = new Hono()
         app.onError(testErrorHandler)
-        app.route("/api/endpoints", apiKeys)
+        app.route("/api/api-keys", apiKeys)
 
         const response = await app.request(
-          "/api/endpoints/ep_nonexistent/keys/key_123",
+          "/api/api-keys/ep_nonexistent/keys/key_123",
           { method: "DELETE" }
         )
         const data = (await response.json()) as ErrorResponse
@@ -367,9 +367,9 @@ describe("API Keys Routes", () => {
 
       const { default: apiKeys } = await import("../../routes/api-keys")
       const app = new Hono()
-      app.route("/api/endpoints", apiKeys)
+      app.route("/api/api-keys", apiKeys)
 
-      const response = await app.request("/api/endpoints/ep_nonexistent/keys")
+      const response = await app.request("/api/api-keys/ep_nonexistent/keys")
 
       expect(response.status).toBe(500) // Error thrown for not found
     })
@@ -381,9 +381,9 @@ describe("API Keys Routes", () => {
 
       const { default: apiKeys } = await import("../../routes/api-keys")
       const app = new Hono()
-      app.route("/api/endpoints", apiKeys)
+      app.route("/api/api-keys", apiKeys)
 
-      const response = await app.request("/api/endpoints/ep_123/keys")
+      const response = await app.request("/api/api-keys/ep_123/keys")
       const data = (await response.json()) as ListKeysResponse
 
       expect(response.status).toBe(200)
@@ -397,9 +397,9 @@ describe("API Keys Routes", () => {
 
       const { default: apiKeys } = await import("../../routes/api-keys")
       const app = new Hono()
-      app.route("/api/endpoints", apiKeys)
+      app.route("/api/api-keys", apiKeys)
 
-      const response = await app.request("/api/endpoints/ep_123/keys")
+      const response = await app.request("/api/api-keys/ep_123/keys")
       const data = (await response.json()) as ListKeysResponse
 
       expect(response.status).toBe(200)
@@ -427,9 +427,9 @@ describe("API Keys Routes", () => {
 
       const { default: apiKeys } = await import("../../routes/api-keys")
       const app = new Hono()
-      app.route("/api/endpoints", apiKeys)
+      app.route("/api/api-keys", apiKeys)
 
-      const response = await app.request("/api/endpoints/ep_123/keys")
+      const response = await app.request("/api/api-keys/ep_123/keys")
       const data = (await response.json()) as ListKeysResponse
 
       expect(response.status).toBe(200)
@@ -450,9 +450,9 @@ describe("API Keys Routes", () => {
 
       const { default: apiKeys } = await import("../../routes/api-keys")
       const app = new Hono()
-      app.route("/api/endpoints", apiKeys)
+      app.route("/api/api-keys", apiKeys)
 
-      const response = await app.request("/api/endpoints/ep_123/keys")
+      const response = await app.request("/api/api-keys/ep_123/keys")
       const data = (await response.json()) as ListKeysResponse
 
       expect(response.status).toBe(200)
@@ -463,9 +463,9 @@ describe("API Keys Routes", () => {
     it("should validate request body requires name", async () => {
       const { default: apiKeys } = await import("../../routes/api-keys")
       const app = new Hono()
-      app.route("/api/endpoints", apiKeys)
+      app.route("/api/api-keys", apiKeys)
 
-      const response = await app.request("/api/endpoints/ep_123/keys", {
+      const response = await app.request("/api/api-keys/ep_123/keys", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({}), // Missing name
@@ -477,9 +477,9 @@ describe("API Keys Routes", () => {
     it("should validate name max length", async () => {
       const { default: apiKeys } = await import("../../routes/api-keys")
       const app = new Hono()
-      app.route("/api/endpoints", apiKeys)
+      app.route("/api/api-keys", apiKeys)
 
-      const response = await app.request("/api/endpoints/ep_123/keys", {
+      const response = await app.request("/api/api-keys/ep_123/keys", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: "a".repeat(101) }), // Exceeds 100 char limit
@@ -491,9 +491,9 @@ describe("API Keys Routes", () => {
     it("should validate name minimum length", async () => {
       const { default: apiKeys } = await import("../../routes/api-keys")
       const app = new Hono()
-      app.route("/api/endpoints", apiKeys)
+      app.route("/api/api-keys", apiKeys)
 
-      const response = await app.request("/api/endpoints/ep_123/keys", {
+      const response = await app.request("/api/api-keys/ep_123/keys", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: "" }), // Empty name
@@ -507,9 +507,9 @@ describe("API Keys Routes", () => {
 
       const { default: apiKeys } = await import("../../routes/api-keys")
       const app = new Hono()
-      app.route("/api/endpoints", apiKeys)
+      app.route("/api/api-keys", apiKeys)
 
-      const response = await app.request("/api/endpoints/ep_nonexistent/keys", {
+      const response = await app.request("/api/api-keys/ep_nonexistent/keys", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: "Test Key" }),
@@ -524,9 +524,9 @@ describe("API Keys Routes", () => {
 
       const { default: apiKeys } = await import("../../routes/api-keys")
       const app = new Hono()
-      app.route("/api/endpoints", apiKeys)
+      app.route("/api/api-keys", apiKeys)
 
-      const response = await app.request("/api/endpoints/ep_123/keys", {
+      const response = await app.request("/api/api-keys/ep_123/keys", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: "Production Key" }),
@@ -550,9 +550,9 @@ describe("API Keys Routes", () => {
 
       const { default: apiKeys } = await import("../../routes/api-keys")
       const app = new Hono()
-      app.route("/api/endpoints", apiKeys)
+      app.route("/api/api-keys", apiKeys)
 
-      const response = await app.request("/api/endpoints/ep_123/keys", {
+      const response = await app.request("/api/api-keys/ep_123/keys", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -573,10 +573,10 @@ describe("API Keys Routes", () => {
 
       const { default: apiKeys } = await import("../../routes/api-keys")
       const app = new Hono()
-      app.route("/api/endpoints", apiKeys)
+      app.route("/api/api-keys", apiKeys)
 
       const expiresAt = "2025-12-31T23:59:59.000Z"
-      const response = await app.request("/api/endpoints/ep_123/keys", {
+      const response = await app.request("/api/api-keys/ep_123/keys", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -600,9 +600,9 @@ describe("API Keys Routes", () => {
 
       const { default: apiKeys } = await import("../../routes/api-keys")
       const app = new Hono()
-      app.route("/api/endpoints", apiKeys)
+      app.route("/api/api-keys", apiKeys)
 
-      await app.request("/api/endpoints/ep_123/keys", {
+      await app.request("/api/api-keys/ep_123/keys", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: "Test Key" }),
@@ -625,10 +625,10 @@ describe("API Keys Routes", () => {
 
       const { default: apiKeys } = await import("../../routes/api-keys")
       const app = new Hono()
-      app.route("/api/endpoints", apiKeys)
+      app.route("/api/api-keys", apiKeys)
 
       const response = await app.request(
-        "/api/endpoints/ep_nonexistent/keys/key_123",
+        "/api/api-keys/ep_nonexistent/keys/key_123",
         { method: "DELETE" }
       )
 
@@ -642,10 +642,10 @@ describe("API Keys Routes", () => {
 
       const { default: apiKeys } = await import("../../routes/api-keys")
       const app = new Hono()
-      app.route("/api/endpoints", apiKeys)
+      app.route("/api/api-keys", apiKeys)
 
       const response = await app.request(
-        "/api/endpoints/ep_123/keys/key_nonexistent",
+        "/api/api-keys/ep_123/keys/key_nonexistent",
         { method: "DELETE" }
       )
 
@@ -659,9 +659,9 @@ describe("API Keys Routes", () => {
 
       const { default: apiKeys } = await import("../../routes/api-keys")
       const app = new Hono()
-      app.route("/api/endpoints", apiKeys)
+      app.route("/api/api-keys", apiKeys)
 
-      const response = await app.request("/api/endpoints/ep_123/keys/key_123", {
+      const response = await app.request("/api/api-keys/ep_123/keys/key_123", {
         method: "DELETE",
       })
 
@@ -679,9 +679,9 @@ describe("API Keys Routes", () => {
 
       const { default: apiKeys } = await import("../../routes/api-keys")
       const app = new Hono()
-      app.route("/api/endpoints", apiKeys)
+      app.route("/api/api-keys", apiKeys)
 
-      const response = await app.request("/api/endpoints/ep_123/keys/key_123", {
+      const response = await app.request("/api/api-keys/ep_123/keys/key_123", {
         method: "DELETE",
       })
 
@@ -699,9 +699,9 @@ describe("API Keys Routes", () => {
 
       const { default: apiKeys } = await import("../../routes/api-keys")
       const app = new Hono()
-      app.route("/api/endpoints", apiKeys)
+      app.route("/api/api-keys", apiKeys)
 
-      await app.request("/api/endpoints/ep_123/keys/key_123", {
+      await app.request("/api/api-keys/ep_123/keys/key_123", {
         method: "DELETE",
       })
 
@@ -720,9 +720,9 @@ describe("API Keys Routes", () => {
 
       const { default: apiKeys } = await import("../../routes/api-keys")
       const app = new Hono()
-      app.route("/api/endpoints", apiKeys)
+      app.route("/api/api-keys", apiKeys)
 
-      const response = await app.request("/api/endpoints/ep_123/keys", {
+      const response = await app.request("/api/api-keys/ep_123/keys", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: "Test Key" }),
@@ -740,9 +740,9 @@ describe("API Keys Routes", () => {
 
       const { default: apiKeys } = await import("../../routes/api-keys")
       const app = new Hono()
-      app.route("/api/endpoints", apiKeys)
+      app.route("/api/api-keys", apiKeys)
 
-      const response = await app.request("/api/endpoints/ep_123/keys", {
+      const response = await app.request("/api/api-keys/ep_123/keys", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: "Test Key" }),
@@ -759,9 +759,9 @@ describe("API Keys Routes", () => {
     it("should reject invalid expiresAt format", async () => {
       const { default: apiKeys } = await import("../../routes/api-keys")
       const app = new Hono()
-      app.route("/api/endpoints", apiKeys)
+      app.route("/api/api-keys", apiKeys)
 
-      const response = await app.request("/api/endpoints/ep_123/keys", {
+      const response = await app.request("/api/api-keys/ep_123/keys", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -779,9 +779,9 @@ describe("API Keys Routes", () => {
 
       const { default: apiKeys } = await import("../../routes/api-keys")
       const app = new Hono()
-      app.route("/api/endpoints", apiKeys)
+      app.route("/api/api-keys", apiKeys)
 
-      const response = await app.request("/api/endpoints/ep_123/keys", {
+      const response = await app.request("/api/api-keys/ep_123/keys", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -799,9 +799,9 @@ describe("API Keys Routes", () => {
 
       const { default: apiKeys } = await import("../../routes/api-keys")
       const app = new Hono()
-      app.route("/api/endpoints", apiKeys)
+      app.route("/api/api-keys", apiKeys)
 
-      const response = await app.request("/api/endpoints/ep_123/keys", {
+      const response = await app.request("/api/api-keys/ep_123/keys", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -816,9 +816,9 @@ describe("API Keys Routes", () => {
     it("should reject request with invalid JSON body", async () => {
       const { default: apiKeys } = await import("../../routes/api-keys")
       const app = new Hono()
-      app.route("/api/endpoints", apiKeys)
+      app.route("/api/api-keys", apiKeys)
 
-      const response = await app.request("/api/endpoints/ep_123/keys", {
+      const response = await app.request("/api/api-keys/ep_123/keys", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: "invalid json {",
@@ -838,9 +838,9 @@ describe("API Keys Routes", () => {
       const { default: apiKeys } = await import("../../routes/api-keys")
       const app = new Hono()
       app.onError(testErrorHandler)
-      app.route("/api/endpoints", apiKeys)
+      app.route("/api/api-keys", apiKeys)
 
-      const response = await app.request("/api/endpoints/ep_456/keys")
+      const response = await app.request("/api/api-keys/ep_456/keys")
       const data = (await response.json()) as ErrorResponse
 
       expect(response.status).toBe(403)
@@ -854,9 +854,9 @@ describe("API Keys Routes", () => {
 
       const { default: apiKeys } = await import("../../routes/api-keys")
       const app = new Hono()
-      app.route("/api/endpoints", apiKeys)
+      app.route("/api/api-keys", apiKeys)
 
-      await app.request("/api/endpoints/ep_123/keys")
+      await app.request("/api/api-keys/ep_123/keys")
 
       // Verify member.findFirst was called (membership check happened)
       expect(mockDb.query.member.findFirst).toHaveBeenCalled()
@@ -870,9 +870,9 @@ describe("API Keys Routes", () => {
 
       const { default: apiKeys } = await import("../../routes/api-keys")
       const app = new Hono()
-      app.route("/api/endpoints", apiKeys)
+      app.route("/api/api-keys", apiKeys)
 
-      const response = await app.request("/api/endpoints/ep_123/keys")
+      const response = await app.request("/api/api-keys/ep_123/keys")
       const data = (await response.json()) as ListKeysResponse
 
       expect(response.status).toBe(200)
@@ -888,9 +888,9 @@ describe("API Keys Routes", () => {
 
       const { default: apiKeys } = await import("../../routes/api-keys")
       const app = new Hono()
-      app.route("/api/endpoints", apiKeys)
+      app.route("/api/api-keys", apiKeys)
 
-      const response = await app.request("/api/endpoints/ep_123/keys")
+      const response = await app.request("/api/api-keys/ep_123/keys")
       const data = (await response.json()) as ListKeysResponse
 
       expect(response.status).toBe(200)
@@ -904,9 +904,9 @@ describe("API Keys Routes", () => {
 
       const { default: apiKeys } = await import("../../routes/api-keys")
       const app = new Hono()
-      app.route("/api/endpoints", apiKeys)
+      app.route("/api/api-keys", apiKeys)
 
-      const response = await app.request("/api/endpoints/ep_123/keys")
+      const response = await app.request("/api/api-keys/ep_123/keys")
       const data = (await response.json()) as ListKeysResponse
 
       expect(response.status).toBe(200)
@@ -922,9 +922,9 @@ describe("API Keys Routes", () => {
 
       const { default: apiKeys } = await import("../../routes/api-keys")
       const app = new Hono()
-      app.route("/api/endpoints", apiKeys)
+      app.route("/api/api-keys", apiKeys)
 
-      const response = await app.request("/api/endpoints/ep_123/keys")
+      const response = await app.request("/api/api-keys/ep_123/keys")
       const data = (await response.json()) as ListKeysResponse
 
       expect(response.status).toBe(200)
