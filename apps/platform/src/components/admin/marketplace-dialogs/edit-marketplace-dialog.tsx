@@ -117,7 +117,15 @@ export function EditMarketplaceDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-lg p-6">
+      <DialogContent
+        className="max-w-lg p-6"
+        onInteractOutside={(e) => {
+          const target = e.target as HTMLElement
+          if (target.closest("[data-slot='select-content']")) {
+            e.preventDefault()
+          }
+        }}
+      >
         <DialogHeader>
           <DialogTitle>Edit Marketplace</DialogTitle>
           <DialogDescription>
