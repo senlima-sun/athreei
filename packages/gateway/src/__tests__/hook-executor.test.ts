@@ -107,8 +107,6 @@ describe("HookExecutor", () => {
     })
 
     it("sorts hooks by priority (higher first)", async () => {
-      const executionOrder: string[] = []
-
       const hooks: HookConfig[] = [
         {
           id: "low-priority",
@@ -329,7 +327,7 @@ describe("HookExecutor", () => {
       const hooks = [
         createHook({
           event: "PreToolUse",
-          handler: { type: "unknown" } as HookConfig["handler"],
+          handler: { type: "unknown" } as unknown as HookConfig["handler"],
         }),
       ]
       executor.setHooks(hooks)
