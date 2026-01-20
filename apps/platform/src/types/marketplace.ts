@@ -244,6 +244,8 @@ export interface ListPluginsParams {
   marketplaceSlug?: string
   category?: string
   tags?: string
+  componentType?: PluginComponentType
+  transport?: "stdio" | "sse"
   isVerified?: boolean
   isFeatured?: boolean
   sort?: PluginSortOption

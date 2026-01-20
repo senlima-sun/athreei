@@ -1,4 +1,4 @@
-import { eq, and, or, like, sql, desc, asc, inArray } from "drizzle-orm"
+import { eq, and, or, like, sql, desc, asc, inArray, exists } from "drizzle-orm"
 import { db } from "../lib/db-operations"
 import {
   marketplace,
@@ -152,6 +152,47 @@ export async function searchPlugins(
 
   if (params.isFeatured !== undefined) {
     conditions.push(eq(plugin.isFeatured, params.isFeatured))
+  }
+
+  if (params.componentType) {
+    const componentTypeSubquery = db()
+      .select({ one: sql`1` })
+      .from(pluginVersion)
+      .innerJoin(
+        pluginComponent,
+        eq(pluginComponent.pluginVersionId, pluginVersion.id)
+      )
+      .where(
+        and(
+          eq(pluginVersion.pluginId, plugin.id),
+          eq(pluginVersion.isLatest, true),
+          eq(pluginComponent.type, params.componentType)
+        )
+      )
+    conditions.push(exists(componentTypeSubquery))
+  }
+
+  if (params.transport && params.componentType === "mcp_server") {
+    const transportPattern =
+      params.transport === "stdio"
+        ? '%"transport":"stdio"%'
+        : '%"transport":"sse"%'
+    const transportSubquery = db()
+      .select({ one: sql`1` })
+      .from(pluginVersion)
+      .innerJoin(
+        pluginComponent,
+        eq(pluginComponent.pluginVersionId, pluginVersion.id)
+      )
+      .where(
+        and(
+          eq(pluginVersion.pluginId, plugin.id),
+          eq(pluginVersion.isLatest, true),
+          eq(pluginComponent.type, "mcp_server"),
+          like(pluginComponent.config, transportPattern)
+        )
+      )
+    conditions.push(exists(transportSubquery))
   }
 
   let restrictions: Awaited<ReturnType<typeof getOrgMarketplaceRestrictions>> =

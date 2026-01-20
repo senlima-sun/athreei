@@ -35,6 +35,10 @@ export const listPluginsQuerySchema = z.object({
   marketplaceSlug: z.string().optional(),
   category: z.string().max(50).optional(),
   tags: z.string().optional(),
+  componentType: z
+    .enum(["mcp_server", "skill", "rule", "hook", "command", "agent"])
+    .optional(),
+  transport: z.enum(["stdio", "sse"]).optional(),
   isVerified: z
     .string()
     .transform((v) => v === "true")

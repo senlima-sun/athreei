@@ -36,6 +36,8 @@ export function usePlugins(params: ListPluginsParams = {}) {
     marketplaceSlug,
     category,
     tags,
+    componentType,
+    transport,
     isVerified,
     isFeatured,
     sort = "popularity",
@@ -50,6 +52,8 @@ export function usePlugins(params: ListPluginsParams = {}) {
       marketplaceSlug,
       category,
       tags,
+      componentType,
+      transport,
       isVerified,
       isFeatured,
       sort,
@@ -62,6 +66,8 @@ export function usePlugins(params: ListPluginsParams = {}) {
       if (marketplaceSlug) queryParams.set("marketplaceSlug", marketplaceSlug)
       if (category) queryParams.set("category", category)
       if (tags) queryParams.set("tags", tags)
+      if (componentType) queryParams.set("componentType", componentType)
+      if (transport) queryParams.set("transport", transport)
       if (isVerified !== undefined)
         queryParams.set("isVerified", String(isVerified))
       if (isFeatured !== undefined)

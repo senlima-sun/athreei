@@ -19,6 +19,7 @@ import type {
   PluginInstallation,
   PluginSortOption,
   PluginCategory,
+  PluginComponentType,
 } from "@/types/marketplace"
 
 const DEFAULT_CATEGORIES: PluginCategory[] = [
@@ -30,6 +31,13 @@ const DEFAULT_CATEGORIES: PluginCategory[] = [
 ]
 
 const VALID_SORT_OPTIONS: PluginSortOption[] = ["popularity", "recent", "name"]
+const VALID_COMPONENT_TYPES: PluginComponentType[] = [
+  "mcp_server",
+  "skill",
+  "hook",
+  "command",
+  "agent",
+]
 
 const parseAsSort = parseAsString
   .withOptions({ shallow: false })
@@ -37,6 +45,10 @@ const parseAsSort = parseAsString
 
 function isValidSortOption(value: string): value is PluginSortOption {
   return VALID_SORT_OPTIONS.includes(value as PluginSortOption)
+}
+
+function isValidComponentType(value: string): value is PluginComponentType {
+  return VALID_COMPONENT_TYPES.includes(value as PluginComponentType)
 }
 
 export default function MarketplacePage() {
@@ -59,10 +71,19 @@ export default function MarketplacePage() {
     "marketplace",
     parseAsString.withOptions({ shallow: false }).withDefault("")
   )
+  const [componentTypeRaw, setComponentTypeRaw] = useQueryState(
+    "componentType",
+    parseAsString.withOptions({ shallow: false })
+  )
 
   const sort: PluginSortOption = isValidSortOption(sortRaw)
     ? sortRaw
     : "popularity"
+
+  const componentType: PluginComponentType | undefined =
+    componentTypeRaw && isValidComponentType(componentTypeRaw)
+      ? componentTypeRaw
+      : undefined
 
   const [installModalOpen, setInstallModalOpen] = useState(false)
   const [selectedPlugin, setSelectedPlugin] =
@@ -81,10 +102,11 @@ export default function MarketplacePage() {
       search: search || undefined,
       category: category || undefined,
       marketplaceSlug: selectedMarketplace || undefined,
+      componentType,
       isVerified: verifiedOnly || undefined,
       sort,
     }),
-    [search, category, selectedMarketplace, verifiedOnly, sort]
+    [search, category, selectedMarketplace, componentType, verifiedOnly, sort]
   )
 
   const { data: pluginsData, isLoading: isPluginsLoading } =
@@ -133,12 +155,14 @@ export default function MarketplacePage() {
     setVerifiedOnly(null)
     setSortRaw(null)
     setSelectedMarketplace(null)
+    setComponentTypeRaw(null)
   }, [
     setSearch,
     setCategory,
     setVerifiedOnly,
     setSortRaw,
     setSelectedMarketplace,
+    setComponentTypeRaw,
   ])
 
   const handleInstall = useCallback((plugin: PluginSearchResult) => {

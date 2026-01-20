@@ -119,3 +119,11 @@ export {
   type PluginManifest,
   syncMarketplace,
 } from "./marketplace-sync"
+
+export {
+  type RegistryServer,
+  type RegistryResponse,
+  pluginToRegistryServer,
+  pluginDetailsToRegistryServer,
+  extractCategoriesFromPlugins,
+} from "./registry-compat"
