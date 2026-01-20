@@ -16,6 +16,8 @@ export interface AdminMarketplace {
   ownerId: string | null
   sourceType: MarketplaceSourceType
   sourceUrl: string | null
+  sourceRepo: string | null
+  sourceRef: string | null
   isPublic: boolean
   isDefault: boolean
   autoUpdate: boolean
@@ -29,10 +31,12 @@ export interface CreateMarketplaceInput {
   slug: string
   name: string
   description?: string
-  ownerType: MarketplaceOwnerType
+  ownerType?: MarketplaceOwnerType
   ownerId?: string
-  sourceType: MarketplaceSourceType
+  sourceType?: MarketplaceSourceType
   sourceUrl?: string
+  sourceRepo?: string
+  sourceRef?: string
   isPublic?: boolean
   isDefault?: boolean
   autoUpdate?: boolean
@@ -41,7 +45,12 @@ export interface CreateMarketplaceInput {
 export interface UpdateMarketplaceInput {
   name?: string
   description?: string
+  ownerType?: MarketplaceOwnerType
+  ownerId?: string
+  sourceType?: MarketplaceSourceType
   sourceUrl?: string
+  sourceRepo?: string
+  sourceRef?: string
   isPublic?: boolean
   isDefault?: boolean
   autoUpdate?: boolean

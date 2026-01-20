@@ -28,6 +28,11 @@ import {
   type AdminMarketplace,
 } from "@/hooks/use-admin-marketplaces"
 import { useMarketplaceAdminPermissions } from "@/hooks/use-marketplace-admin-permissions"
+import {
+  CreateMarketplaceDialog,
+  EditMarketplaceDialog,
+  DeleteMarketplaceDialog,
+} from "@/components/admin/marketplace-dialogs"
 import type {
   MarketplaceOwnerType,
   MarketplaceSourceType,
@@ -203,6 +208,11 @@ function MarketplaceRow({
 export default function AdminMarketplacesPage() {
   const [activeTab, setActiveTab] = useState<TabValue>("all")
   const [search, setSearch] = useState("")
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [editMarketplace, setEditMarketplace] =
+    useState<AdminMarketplace | null>(null)
+  const [deleteMarketplace, setDeleteMarketplace] =
+    useState<AdminMarketplace | null>(null)
 
   const { canManageMarketplaces, canSyncMarketplaces } =
     useMarketplaceAdminPermissions()
@@ -224,11 +234,11 @@ export default function AdminMarketplacesPage() {
       : marketplaces
 
   function handleEdit(marketplace: AdminMarketplace) {
-    console.warn("Edit marketplace:", marketplace.slug)
+    setEditMarketplace(marketplace)
   }
 
   function handleDelete(marketplace: AdminMarketplace) {
-    console.warn("Delete marketplace:", marketplace.slug)
+    setDeleteMarketplace(marketplace)
   }
 
   function handleSync(marketplace: AdminMarketplace) {
@@ -236,7 +246,7 @@ export default function AdminMarketplacesPage() {
   }
 
   function handleCreate() {
-    console.warn("Create marketplace")
+    setCreateDialogOpen(true)
   }
 
   if (error) {
@@ -349,6 +359,30 @@ export default function AdminMarketplacesPage() {
           Showing {filteredMarketplaces.length} of {data.total} marketplaces
         </div>
       )}
+
+      <CreateMarketplaceDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onSuccess={() => refetch()}
+      />
+
+      <EditMarketplaceDialog
+        marketplace={editMarketplace}
+        open={editMarketplace !== null}
+        onOpenChange={(open) => {
+          if (!open) setEditMarketplace(null)
+        }}
+        onSuccess={() => refetch()}
+      />
+
+      <DeleteMarketplaceDialog
+        marketplace={deleteMarketplace}
+        open={deleteMarketplace !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteMarketplace(null)
+        }}
+        onSuccess={() => refetch()}
+      />
     </div>
   )
 }
