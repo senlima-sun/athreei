@@ -2,7 +2,7 @@ import type { Context } from "hono"
 import { eq, and, desc } from "drizzle-orm"
 import { getAuthContext, ApiError } from "../../middleware"
 import { db } from "../../lib/db-operations"
-import { namespaceHook } from "@athreei/db"
+import { namespaceHook, skill } from "@athreei/db"
 import { getNamespaceWithAccess, generateNamespaceHookId } from "../../services"
 
 interface CreateHookInput {
@@ -28,13 +28,28 @@ interface UpdateHookInput {
 }
 
 export async function createHook(c: Context): Promise<Response> {
+  const dbQuery = db().query
   const auth = getAuthContext(c)
   const namespaceId = c.req.param("id")
   const input = (
     c.req as unknown as { valid: (target: "json") => CreateHookInput }
   ).valid("json")
 
-  await getNamespaceWithAccess(namespaceId, auth.userId)
+  const ns = await getNamespaceWithAccess(namespaceId, auth.userId)
+
+  if (input.handler.type === "skill") {
+    const skillRecord = (await dbQuery.skill.findFirst({
+      where: eq(skill.id, input.handler.skillRef),
+    })) as typeof skill.$inferSelect | null
+
+    if (!skillRecord) {
+      throw ApiError.notFound("Skill not found")
+    }
+
+    if (skillRecord.organizationId !== ns.organizationId) {
+      throw ApiError.forbidden("Skill does not belong to the same organization")
+    }
+  }
 
   const hookId = generateNamespaceHookId()
   const now = new Date()
@@ -151,7 +166,7 @@ export async function updateHook(c: Context): Promise<Response> {
     c.req as unknown as { valid: (target: "json") => UpdateHookInput }
   ).valid("json")
 
-  await getNamespaceWithAccess(namespaceId, auth.userId)
+  const ns = await getNamespaceWithAccess(namespaceId, auth.userId)
 
   const hook = (await dbQuery.namespaceHook.findFirst({
     where: and(
@@ -168,6 +183,20 @@ export async function updateHook(c: Context): Promise<Response> {
     throw ApiError.forbidden(
       "Cannot modify hooks installed by plugins. Disable or uninstall the plugin instead."
     )
+  }
+
+  if (input.handler !== undefined && input.handler.type === "skill") {
+    const skillRecord = (await dbQuery.skill.findFirst({
+      where: eq(skill.id, input.handler.skillRef),
+    })) as typeof skill.$inferSelect | null
+
+    if (!skillRecord) {
+      throw ApiError.notFound("Skill not found")
+    }
+
+    if (skillRecord.organizationId !== ns.organizationId) {
+      throw ApiError.forbidden("Skill does not belong to the same organization")
+    }
   }
 
   const updates: Partial<typeof namespaceHook.$inferInsert> = {
