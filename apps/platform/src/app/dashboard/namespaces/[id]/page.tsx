@@ -615,7 +615,10 @@ export default function NamespaceDetailsPage() {
       )
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null)
+        const errorData = await response.json().catch((error) => {
+          console.error("Failed to parse create hook error response:", error)
+          return null
+        })
         throw new Error(errorData?.message || "Failed to create hook")
       }
 
@@ -664,7 +667,10 @@ export default function NamespaceDetailsPage() {
       )
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null)
+        const errorData = await response.json().catch((error) => {
+          console.error("Failed to parse toggle hook error response:", error)
+          return null
+        })
         throw new Error(errorData?.message || "Failed to toggle hook")
       }
 

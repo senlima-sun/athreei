@@ -233,14 +233,14 @@ const noopLogger: Logger
 
 ### Router Functions
 
-| Function                                | Description                    |
-| --------------------------------------- | ------------------------------ |
-| `parseToolName(name)`                   | Parse prefixed name into parts |
-| `routeToolCall(name, params, options)`  | Route and execute a tool call  |
-| `validateToolCall(name, params, tools)` | Validate a tool call           |
-| `getRoutingInfo(name, tools)`           | Get routing information        |
-| `isServerAvailable(server, tools)`      | Check if server has tools      |
-| `getAvailableServers(tools)`            | Get list of available servers  |
+| Function                                    | Description                    |
+| ------------------------------------------- | ------------------------------ |
+| `parseToolName(name)`                       | Parse prefixed name into parts |
+| `routeToolCall(state, name, args, options)` | Route and execute a tool call  |
+| `validateToolCall(name, params, tools)`     | Validate a tool call           |
+| `getRoutingInfo(name, tools)`               | Get routing information        |
+| `isServerAvailable(server, tools)`          | Check if server has tools      |
+| `getAvailableServers(tools)`                | Get list of available servers  |
 
 ## Directory Structure
 

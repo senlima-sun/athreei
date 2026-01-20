@@ -117,6 +117,16 @@ export function getTraceRecorder(
 }
 
 /**
+ * Flush a specific recorder by API key (for session cleanup)
+ */
+export async function flushRecorder(apiKey: string): Promise<void> {
+  const recorder = recorders.get(apiKey)
+  if (recorder) {
+    await recorder.flush()
+  }
+}
+
+/**
  * Flush all recorders and clear the cache (for shutdown)
  */
 export async function flushAllRecorders(): Promise<void> {

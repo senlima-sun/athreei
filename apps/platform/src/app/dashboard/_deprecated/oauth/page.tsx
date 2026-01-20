@@ -91,7 +91,13 @@ export default function OAuthPage() {
       })
 
       if (!response.ok) {
-        const data = await response.json().catch(() => ({}))
+        const data = await response.json().catch((error) => {
+          console.error(
+            "Failed to parse OAuth initiation error response:",
+            error
+          )
+          return {}
+        })
         throw new Error(data.error || "Failed to initiate OAuth connection")
       }
 

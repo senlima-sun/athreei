@@ -19,6 +19,7 @@ import {
   type Logger,
   noopLogger,
 } from "@athreei/gateway-core"
+import { flushRecorder } from "../services/trace-recorder"
 import type { GatewaySession, CreateSessionOptions } from "../types"
 
 /** In-memory session storage */
@@ -342,6 +343,10 @@ export async function destroySession(sessionId: string): Promise<boolean> {
   logger.info(`Destroying session ${sessionId}`)
 
   session.isActive = false
+
+  if (session.apiKey) {
+    await flushRecorder(session.apiKey)
+  }
 
   const mcps = Array.from(session.connectedMcps.values())
   await Promise.all(mcps.map((mcp) => disconnectMcpServer(mcp, logger)))

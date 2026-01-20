@@ -103,10 +103,11 @@ export function createSqliteClient(databaseUrl?: string): SqliteDatabase {
 }
 
 /**
- * Global database client instance.
+ * Global database client instances.
  * Lazily initialized on first access.
  */
-let _db: DatabaseClient | null = null
+let _pgDb: PgDatabase | null = null
+let _sqliteDb: SqliteDatabase | null = null
 let _dbType: DatabaseType | null = null
 
 /**
@@ -114,11 +115,13 @@ let _dbType: DatabaseType | null = null
  * Creates a new client if one doesn't exist.
  */
 export function getDb(): DatabaseClient {
-  if (!_db) {
-    _db = createClient()
-    _dbType = detectDatabaseType(process.env.DATABASE_URL ?? "")
+  const url = process.env.DATABASE_URL ?? ""
+  const dbType = detectDatabaseType(url)
+
+  if (dbType === "postgresql") {
+    return getPgDb()
   }
-  return _db
+  return getSqliteDb()
 }
 
 /**
@@ -130,7 +133,11 @@ export function getPgDb(): PgDatabase {
   if (detectDatabaseType(url) !== "postgresql") {
     throw new Error("getPgDb() requires a PostgreSQL DATABASE_URL")
   }
-  return getDb() as PgDatabase
+  if (!_pgDb) {
+    _pgDb = createPgClient(url)
+    _dbType = "postgresql"
+  }
+  return _pgDb
 }
 
 /**
@@ -142,7 +149,11 @@ export function getSqliteDb(): SqliteDatabase {
   if (detectDatabaseType(url) !== "sqlite") {
     throw new Error("getSqliteDb() requires a SQLite DATABASE_URL")
   }
-  return getDb() as SqliteDatabase
+  if (!_sqliteDb) {
+    _sqliteDb = createSqliteClient(url)
+    _dbType = "sqlite"
+  }
+  return _sqliteDb
 }
 
 /**
@@ -156,10 +167,11 @@ export function getDbType(): DatabaseType {
 }
 
 /**
- * Resets the global database client.
+ * Resets the global database clients.
  * Useful for testing or when switching databases.
  */
 export function resetDb(): void {
-  _db = null
+  _pgDb = null
+  _sqliteDb = null
   _dbType = null
 }
