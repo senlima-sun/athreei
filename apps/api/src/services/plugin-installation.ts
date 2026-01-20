@@ -12,12 +12,7 @@ import {
   rule,
   namespaceHook,
 } from "@athreei/db"
-import {
-  generatePluginInstallationId,
-  generateSkillId,
-  generateRuleId,
-  generateNamespaceHookId,
-} from "./id-generator"
+import { generatePluginInstallationId } from "./id-generator"
 import { getOrgMarketplaceRestrictions } from "./plugin-discovery"
 import type {
   InstallPluginInput,
@@ -663,23 +658,29 @@ export async function syncPluginComponentsToNamespace(
                 name: skillConfig.name,
                 description: skillConfig.description || null,
                 content: skillConfig.content,
-                tags: skillConfig.tags ? JSON.stringify(skillConfig.tags) : null,
+                tags: skillConfig.tags
+                  ? JSON.stringify(skillConfig.tags)
+                  : null,
                 updatedAt: now,
               })
               .where(eq(skill.id, skillId))
           } else {
-            await db().insert(skill).values({
-              id: skillId,
-              organizationId,
-              name: skillConfig.name,
-              description: skillConfig.description || null,
-              content: skillConfig.content,
-              tags: skillConfig.tags ? JSON.stringify(skillConfig.tags) : null,
-              isEnabled: "true",
-              version: 1,
-              createdAt: now,
-              updatedAt: now,
-            })
+            await db()
+              .insert(skill)
+              .values({
+                id: skillId,
+                organizationId,
+                name: skillConfig.name,
+                description: skillConfig.description || null,
+                content: skillConfig.content,
+                tags: skillConfig.tags
+                  ? JSON.stringify(skillConfig.tags)
+                  : null,
+                isEnabled: "true",
+                version: 1,
+                createdAt: now,
+                updatedAt: now,
+              })
             skillsCreated++
           }
         }
@@ -711,18 +712,20 @@ export async function syncPluginComponentsToNamespace(
               })
               .where(eq(rule.id, ruleId))
           } else {
-            await db().insert(rule).values({
-              id: ruleId,
-              organizationId,
-              name: ruleConfig.name,
-              description: ruleConfig.description || null,
-              content: ruleConfig.content,
-              priority: ruleConfig.priority ?? 100,
-              scope: ruleConfig.scope ?? "namespace",
-              isEnabled: "true",
-              createdAt: now,
-              updatedAt: now,
-            })
+            await db()
+              .insert(rule)
+              .values({
+                id: ruleId,
+                organizationId,
+                name: ruleConfig.name,
+                description: ruleConfig.description || null,
+                content: ruleConfig.content,
+                priority: ruleConfig.priority ?? 100,
+                scope: ruleConfig.scope ?? "namespace",
+                isEnabled: "true",
+                createdAt: now,
+                updatedAt: now,
+              })
             rulesCreated++
           }
         }
@@ -753,18 +756,20 @@ export async function syncPluginComponentsToNamespace(
               })
               .where(eq(namespaceHook.id, hookId))
           } else {
-            await db().insert(namespaceHook).values({
-              id: hookId,
-              namespaceId,
-              event: hookConfig.event,
-              toolNamePattern: hookConfig.toolNamePattern || null,
-              handler: JSON.stringify(hookConfig.handler),
-              priority: hookConfig.priority ?? 100,
-              isEnabled: true,
-              sourcePluginId: installation.pluginId,
-              createdAt: now,
-              updatedAt: now,
-            })
+            await db()
+              .insert(namespaceHook)
+              .values({
+                id: hookId,
+                namespaceId,
+                event: hookConfig.event,
+                toolNamePattern: hookConfig.toolNamePattern || null,
+                handler: JSON.stringify(hookConfig.handler),
+                priority: hookConfig.priority ?? 100,
+                isEnabled: true,
+                sourcePluginId: installation.pluginId,
+                createdAt: now,
+                updatedAt: now,
+              })
             hooksCreated++
           }
         }

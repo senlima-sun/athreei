@@ -132,13 +132,14 @@ export class HookExecutor {
           reason: handler.message,
         }
 
-      case "skill":
+      case "skill": {
         const skill = this.skills.get(handler.skillRef)
         if (!skill) {
           log.warn(`Hook references unknown skill: ${handler.skillRef}`)
           return { action: "allow" }
         }
         return this.evaluateSkillBasedHook(skill, context)
+      }
 
       case "script":
         return this.executeScriptHandler(handler, context)
