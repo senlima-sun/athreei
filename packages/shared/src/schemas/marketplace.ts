@@ -174,9 +174,7 @@ export const pluginManifestSchema = z.object({
       z.record(ruleComponentConfigSchema),
     ])
     .optional(),
-  hooks: z
-    .union([z.string(), z.record(hookComponentConfigSchema)])
-    .optional(),
+  hooks: z.union([z.string(), z.record(hookComponentConfigSchema)]).optional(),
   mcpServers: z.union([z.string(), z.record(z.any())]).optional(),
   lspServers: z.union([z.string(), z.record(z.any())]).optional(),
 })

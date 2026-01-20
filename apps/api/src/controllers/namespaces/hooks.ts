@@ -54,18 +54,20 @@ export async function createHook(c: Context): Promise<Response> {
   const hookId = generateNamespaceHookId()
   const now = new Date()
 
-  await db().insert(namespaceHook).values({
-    id: hookId,
-    namespaceId,
-    event: input.event,
-    toolNamePattern: input.toolNamePattern || null,
-    handler: JSON.stringify(input.handler),
-    priority: input.priority ?? 100,
-    isEnabled: input.isEnabled ?? true,
-    sourcePluginId: null,
-    createdAt: now,
-    updatedAt: now,
-  })
+  await db()
+    .insert(namespaceHook)
+    .values({
+      id: hookId,
+      namespaceId,
+      event: input.event,
+      toolNamePattern: input.toolNamePattern || null,
+      handler: JSON.stringify(input.handler),
+      priority: input.priority ?? 100,
+      isEnabled: input.isEnabled ?? true,
+      sourcePluginId: null,
+      createdAt: now,
+      updatedAt: now,
+    })
 
   return c.json(
     {

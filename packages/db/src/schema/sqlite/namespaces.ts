@@ -101,7 +101,9 @@ export const namespaceHook = sqliteTable(
     toolNamePattern: text("toolNamePattern"),
     handler: text("handler").notNull(),
     priority: integer("priority").notNull().default(100),
-    isEnabled: integer("isEnabled", { mode: "boolean" }).notNull().default(true),
+    isEnabled: integer("isEnabled", { mode: "boolean" })
+      .notNull()
+      .default(true),
     sourcePluginId: text("sourcePluginId"),
     createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
     updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),

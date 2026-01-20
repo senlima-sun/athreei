@@ -139,7 +139,7 @@ describe("saveConfigTemplate", () => {
     expect(existsSync(configPath)).toBe(true)
 
     // Verify it's valid JSON
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
+
     const content = JSON.parse(
       (require("fs") as typeof import("fs")).readFileSync(configPath, "utf-8")
     )
