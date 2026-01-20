@@ -9,14 +9,19 @@ import {
   ServerPickerModal,
   NamespaceSkillList,
   NamespaceRuleList,
+  NamespaceHookList,
   SkillPickerModal,
   RulePickerModal,
+  HookFormModal,
   type NamespaceServer,
   type McpServer,
   type NamespaceSkill,
   type NamespaceRule,
+  type NamespaceHook,
   type PickerSkill,
   type PickerRule,
+  type HookEvent,
+  type HookHandler,
 } from "@/components/namespaces"
 import { useActiveOrganization } from "@/lib/auth-client"
 import {
@@ -26,6 +31,7 @@ import {
   AlertTriangle,
   BookOpen,
   Scale,
+  Zap,
 } from "lucide-react"
 import { API_URL } from "@/constants"
 import type { RuleScope } from "@/types"
@@ -72,6 +78,18 @@ interface ApiRule {
   enabled?: boolean
 }
 
+interface ApiHook {
+  id: string
+  event: HookEvent
+  toolNamePattern?: string | null
+  handler: HookHandler
+  priority: number
+  isEnabled: boolean
+  sourcePluginId?: string | null
+  createdAt: string
+  updatedAt: string
+}
+
 export default function NamespaceDetailsPage() {
   const params = useParams()
   const router = useRouter()
@@ -82,6 +100,7 @@ export default function NamespaceDetailsPage() {
   const [servers, setServers] = useState<NamespaceServer[]>([])
   const [skills, setSkills] = useState<NamespaceSkill[]>([])
   const [rules, setRules] = useState<NamespaceRule[]>([])
+  const [hooks, setHooks] = useState<NamespaceHook[]>([])
   const [availableServers, setAvailableServers] = useState<McpServer[]>([])
   const [availableSkills, setAvailableSkills] = useState<PickerSkill[]>([])
   const [availableRules, setAvailableRules] = useState<PickerRule[]>([])
@@ -89,6 +108,7 @@ export default function NamespaceDetailsPage() {
   const [showServerPickerModal, setShowServerPickerModal] = useState(false)
   const [showSkillPickerModal, setShowSkillPickerModal] = useState(false)
   const [showRulePickerModal, setShowRulePickerModal] = useState(false)
+  const [showHookFormModal, setShowHookFormModal] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -182,6 +202,37 @@ export default function NamespaceDetailsPage() {
         })
       )
       setRules(transformedRules)
+    } catch {
+      // Silently fail
+    }
+  }, [activeOrg?.id, namespaceId])
+
+  const loadNamespaceHooks = useCallback(async () => {
+    if (!activeOrg?.id) return
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/namespaces/${namespaceId}/hooks`,
+        { credentials: "include" }
+      )
+
+      if (!response.ok) return
+
+      const data = await response.json()
+      const transformedHooks: NamespaceHook[] = (data.hooks || []).map(
+        (hook: ApiHook) => ({
+          id: hook.id,
+          event: hook.event,
+          toolNamePattern: hook.toolNamePattern,
+          handler: hook.handler,
+          priority: hook.priority,
+          isEnabled: hook.isEnabled,
+          sourcePluginId: hook.sourcePluginId,
+          createdAt: hook.createdAt,
+          updatedAt: hook.updatedAt,
+        })
+      )
+      setHooks(transformedHooks)
     } catch {
       // Silently fail
     }
@@ -291,6 +342,7 @@ export default function NamespaceDetailsPage() {
       loadNamespace()
       loadNamespaceSkills()
       loadNamespaceRules()
+      loadNamespaceHooks()
       loadAvailableServers()
       loadAvailableSkills()
       loadAvailableRules()
@@ -301,6 +353,7 @@ export default function NamespaceDetailsPage() {
     loadNamespace,
     loadNamespaceSkills,
     loadNamespaceRules,
+    loadNamespaceHooks,
     loadAvailableServers,
     loadAvailableSkills,
     loadAvailableRules,
@@ -544,6 +597,85 @@ export default function NamespaceDetailsPage() {
     }
   }
 
+  const handleCreateHook = async (hookData: {
+    event: HookEvent
+    toolNamePattern?: string
+    handler: HookHandler
+    priority: number
+  }) => {
+    try {
+      const response = await fetch(
+        `${API_URL}/api/namespaces/${namespaceId}/hooks`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(hookData),
+        }
+      )
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null)
+        throw new Error(errorData?.message || "Failed to create hook")
+      }
+
+      const data = await response.json()
+      const newHook: NamespaceHook = {
+        id: data.hook.id,
+        event: data.hook.event,
+        toolNamePattern: data.hook.toolNamePattern,
+        handler: data.hook.handler,
+        priority: data.hook.priority,
+        isEnabled: data.hook.isEnabled,
+        sourcePluginId: data.hook.sourcePluginId,
+        createdAt: data.hook.createdAt,
+        updatedAt: data.hook.updatedAt,
+      }
+      setHooks((prev) => [...prev, newHook])
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to create hook")
+      throw err
+    }
+  }
+
+  const handleRemoveHook = async (hookId: string) => {
+    try {
+      const response = await fetch(
+        `${API_URL}/api/namespaces/${namespaceId}/hooks/${hookId}`,
+        { method: "DELETE", credentials: "include" }
+      )
+
+      if (!response.ok) throw new Error("Failed to remove hook")
+      setHooks((prev) => prev.filter((h) => h.id !== hookId))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to remove hook")
+    }
+  }
+
+  const handleToggleHook = async (hookId: string, enabled: boolean) => {
+    try {
+      const response = await fetch(
+        `${API_URL}/api/namespaces/${namespaceId}/hooks/${hookId}/toggle`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        }
+      )
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null)
+        throw new Error(errorData?.message || "Failed to toggle hook")
+      }
+
+      setHooks((prev) =>
+        prev.map((h) => (h.id === hookId ? { ...h, isEnabled: enabled } : h))
+      )
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to toggle hook")
+    }
+  }
+
   const handleDeleteNamespace = async () => {
     setIsDeleting(true)
     setError(null)
@@ -726,6 +858,31 @@ export default function NamespaceDetailsPage() {
           />
         </div>
 
+        {/* Hooks */}
+        <div>
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Zap className="h-5 w-5 text-orange-600" />
+              <h2 className="text-lg font-medium text-gray-900">
+                Hooks ({hooks.length})
+              </h2>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowHookFormModal(true)}
+              className="inline-flex items-center gap-2 rounded-md bg-gray-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-gray-800"
+            >
+              <Plus className="h-4 w-4" />
+              Add hook
+            </button>
+          </div>
+          <NamespaceHookList
+            hooks={hooks}
+            onRemove={handleRemoveHook}
+            onToggleEnabled={handleToggleHook}
+          />
+        </div>
+
         {/* Settings */}
         <div className="rounded-lg border border-gray-200 bg-white p-6">
           <h2 className="text-lg font-medium text-gray-900">Settings</h2>
@@ -868,6 +1025,16 @@ export default function NamespaceDetailsPage() {
         onSelect={handleAddRule}
         availableRules={rulesToShow}
         excludeRuleIds={existingRuleIds}
+      />
+
+      <HookFormModal
+        isOpen={showHookFormModal}
+        onClose={() => setShowHookFormModal(false)}
+        onSubmit={handleCreateHook}
+        availableSkills={availableSkills.map((s) => ({
+          id: s.id,
+          name: s.name,
+        }))}
       />
     </div>
   )
