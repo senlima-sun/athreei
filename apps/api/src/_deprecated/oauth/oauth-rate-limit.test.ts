@@ -41,6 +41,7 @@ const mockAuthContext: AuthContext = {
   userId: "user_123",
   email: "test@example.com",
   name: "Test User",
+  role: "user",
   session: { id: "sess_123", expiresAt: new Date("2099-01-01") },
 }
 
@@ -179,8 +180,9 @@ describe("OAuth Rate Limiting Middleware", () => {
           userId: currentUserId,
           email: "test@example.com",
           name: "Test User",
+          role: "user",
           session: { id: "sess_123", expiresAt: new Date("2099-01-01") },
-        })
+        } satisfies AuthContext)
         await next()
       })
       app.use("*", rateLimiter)

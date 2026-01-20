@@ -3,6 +3,7 @@ export {
   getAuthContext,
   type AuthContext,
   type AuthVariables,
+  type UserRole,
 } from "./auth"
 export {
   errorHandler,
@@ -29,6 +30,7 @@ export {
 } from "./organization"
 export {
   requireAdmin,
+  requireModerator,
   getAdminContext,
   isSuperAdmin,
   type AdminContext,

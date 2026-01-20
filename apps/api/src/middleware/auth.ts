@@ -2,10 +2,13 @@ import type { Context, Next } from "hono"
 import { getAuth } from "../lib/auth"
 import { logger } from "../lib/logger"
 
+export type UserRole = "admin" | "moderator" | "user"
+
 export interface AuthContext {
   userId: string
   email: string
   name: string
+  role: UserRole
   session: {
     id: string
     expiresAt: Date
@@ -28,10 +31,15 @@ export async function authMiddleware(c: Context, next: Next) {
       return c.json({ error: "Unauthorized" }, 401)
     }
 
+    const userRole = (session.user as { role?: string }).role
+    const role: UserRole =
+      userRole === "admin" || userRole === "moderator" ? userRole : "user"
+
     c.set("auth", {
       userId: session.user.id,
       email: session.user.email,
       name: session.user.name,
+      role,
       session: {
         id: session.session.id,
         expiresAt: session.session.expiresAt,

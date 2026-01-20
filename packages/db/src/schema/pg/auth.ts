@@ -13,6 +13,10 @@ export const user = pgTable("user", {
   image: text("image"),
   createdAt: timestamp("createdAt").notNull(),
   updatedAt: timestamp("updatedAt").notNull(),
+  role: text("role"),
+  banned: boolean("banned"),
+  banReason: text("banReason"),
+  banExpires: timestamp("banExpires"),
 })
 
 export const session = pgTable("session", {
@@ -28,6 +32,7 @@ export const session = pgTable("session", {
     () => organization.id,
     { onDelete: "set null" }
   ),
+  impersonatedBy: text("impersonatedBy"),
   createdAt: timestamp("createdAt").notNull(),
   updatedAt: timestamp("updatedAt").notNull(),
 })

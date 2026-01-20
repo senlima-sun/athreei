@@ -1,11 +1,12 @@
 import type { Context } from "hono"
 import { createMiddleware } from "hono/factory"
-import { getAuthContext, type AuthContext } from "./auth"
+import { getAuthContext, type AuthContext, type UserRole } from "./auth"
 import { ApiError } from "./error"
 
 export interface AdminContext {
   userId: string
   email: string
+  role: UserRole
   permissions: string[]
   isSuperAdmin: boolean
 }
@@ -31,15 +32,41 @@ export const requireAdmin = createMiddleware<{
   const superAdminEmails = getSuperAdminEmails()
   const isSuperAdmin = superAdminEmails.has(auth.email.toLowerCase())
 
-  if (!isSuperAdmin) {
+  const isAdmin = auth.role === "admin" || isSuperAdmin
+  if (!isAdmin) {
     throw ApiError.forbidden("Admin access required")
   }
 
   c.set("admin", {
     userId: auth.userId,
     email: auth.email,
-    permissions: ["*"],
-    isSuperAdmin: true,
+    role: auth.role,
+    permissions: isSuperAdmin ? ["*"] : ["admin"],
+    isSuperAdmin,
+  })
+
+  await next()
+})
+
+export const requireModerator = createMiddleware<{
+  Variables: { auth: AuthContext; admin: AdminContext }
+}>(async (c, next) => {
+  const auth = getAuthContext(c)
+  const superAdminEmails = getSuperAdminEmails()
+  const isSuperAdmin = superAdminEmails.has(auth.email.toLowerCase())
+
+  const hasAccess =
+    auth.role === "admin" || auth.role === "moderator" || isSuperAdmin
+  if (!hasAccess) {
+    throw ApiError.forbidden("Moderator access required")
+  }
+
+  c.set("admin", {
+    userId: auth.userId,
+    email: auth.email,
+    role: auth.role,
+    permissions: isSuperAdmin ? ["*"] : [auth.role],
+    isSuperAdmin,
   })
 
   await next()

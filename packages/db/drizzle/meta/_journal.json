@@ -64,6 +64,13 @@
       "when": 1768762657006,
       "tag": "0008_strange_wallop",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1768941719297,
+      "tag": "0009_jazzy_sumo",
+      "breakpoints": true
     }
   ]
 }
