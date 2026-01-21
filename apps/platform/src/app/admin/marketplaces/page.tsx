@@ -25,6 +25,7 @@ import {
 } from "lucide-react"
 import {
   useAdminMarketplaces,
+  useSyncMarketplace,
   type AdminMarketplace,
 } from "@/hooks/use-admin-marketplaces"
 import { useMarketplaceAdminPermissions } from "@/hooks/use-marketplace-admin-permissions"
@@ -226,6 +227,8 @@ export default function AdminMarketplacesPage() {
     limit: 50,
   })
 
+  const syncMutation = useSyncMarketplace()
+
   const marketplaces = data?.data ?? []
 
   const filteredMarketplaces =
@@ -242,7 +245,15 @@ export default function AdminMarketplacesPage() {
   }
 
   function handleSync(marketplace: AdminMarketplace) {
-    console.warn("Sync marketplace:", marketplace.slug)
+    syncMutation.mutate(marketplace.slug, {
+      onSuccess: (result) => {
+        console.log("Sync completed:", result)
+        refetch()
+      },
+      onError: (error) => {
+        console.error("Sync failed:", error)
+      },
+    })
   }
 
   function handleCreate() {

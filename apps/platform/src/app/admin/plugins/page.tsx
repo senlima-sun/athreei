@@ -31,22 +31,10 @@ import {
   Trash2,
 } from "lucide-react"
 import { useMarketplaceAdminPermissions } from "@/hooks/use-marketplace-admin-permissions"
-
-interface AdminPlugin {
-  id: string
-  slug: string
-  name: string
-  description: string | null
-  iconUrl: string | null
-  isVerified: boolean
-  isFeatured: boolean
-  downloadCount: string
-  marketplace: {
-    id: string
-    slug: string
-    name: string
-  }
-}
+import {
+  useAdminPlugins,
+  type AdminPlugin,
+} from "@/hooks/use-admin-plugins"
 
 interface PluginRowProps {
   plugin: AdminPlugin
@@ -161,38 +149,26 @@ export default function AdminPluginsPage() {
   const { canManagePlugins, canSyncMarketplaces } =
     useMarketplaceAdminPermissions()
 
-  const isLoading = false
-  const plugins: AdminPlugin[] = []
+  const isVerified =
+    statusFilter === "verified"
+      ? true
+      : statusFilter === "pending"
+        ? false
+        : undefined
+  const isFeatured = statusFilter === "featured" ? true : undefined
 
-  const filteredPlugins = plugins.filter((plugin) => {
-    if (search) {
-      const searchLower = search.toLowerCase()
-      if (
-        !plugin.name.toLowerCase().includes(searchLower) &&
-        !plugin.slug.toLowerCase().includes(searchLower)
-      ) {
-        return false
-      }
-    }
-
-    if (
-      marketplaceFilter !== "all" &&
-      plugin.marketplace.slug !== marketplaceFilter
-    ) {
-      return false
-    }
-
-    if (statusFilter === "verified" && !plugin.isVerified) return false
-    if (statusFilter === "featured" && !plugin.isFeatured) return false
-    if (
-      statusFilter === "pending" &&
-      (plugin.isVerified || plugin.isFeatured)
-    ) {
-      return false
-    }
-
-    return true
+  const { data, isLoading, refetch } = useAdminPlugins({
+    search: search || undefined,
+    marketplaceSlug:
+      marketplaceFilter !== "all" ? marketplaceFilter : undefined,
+    isVerified,
+    isFeatured,
+    limit: 100,
   })
+
+  const plugins = data?.data ?? []
+
+  const filteredPlugins = plugins
 
   function handleView(plugin: AdminPlugin) {
     console.warn("View plugin:", plugin.slug)

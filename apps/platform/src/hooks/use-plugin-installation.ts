@@ -21,6 +21,18 @@ interface InstallPluginResponse {
   installation: PluginInstallation
 }
 
+interface InstallationDetailResponse {
+  installation: PluginInstallation & {
+    components: Array<{
+      id: string
+      type: string
+      name: string
+      description: string | null
+      config: Record<string, unknown> | null
+    }>
+  }
+}
+
 export function useInstalledPlugins(
   params: Omit<ListInstallationsParams, "status" | "scope"> & {
     status?: "active" | "disabled" | "pending_update"
@@ -73,6 +85,34 @@ export function usePluginInstallation(pluginId: string | undefined) {
       return { installation }
     },
     enabled: !isOrgPending && !!activeOrg?.id && !!pluginId,
+  })
+}
+
+export function useInstallationById(installationId: string | undefined) {
+  const { data: activeOrg, isPending: isOrgPending } =
+    useActiveOrganizationSafe()
+
+  return useQuery<InstallationDetailResponse>({
+    queryKey: ["plugins", "installation-detail", activeOrg?.id, installationId],
+    queryFn: async () => {
+      const path = `/api/organizations/${activeOrg!.id}/plugins/${installationId}`
+      return fetchApi<InstallationDetailResponse>(path)
+    },
+    enabled: !isOrgPending && !!activeOrg?.id && !!installationId,
+  })
+}
+
+export function useInstallationEnv(installationId: string | undefined) {
+  const { data: activeOrg, isPending: isOrgPending } =
+    useActiveOrganizationSafe()
+
+  return useQuery<{ envValues: Record<string, string> }>({
+    queryKey: ["plugins", "installation-env", activeOrg?.id, installationId],
+    queryFn: async () => {
+      const path = `/api/organizations/${activeOrg!.id}/plugins/${installationId}/env`
+      return fetchApi<{ envValues: Record<string, string> }>(path)
+    },
+    enabled: !isOrgPending && !!activeOrg?.id && !!installationId,
   })
 }
 

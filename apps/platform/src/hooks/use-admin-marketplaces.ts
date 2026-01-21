@@ -188,3 +188,28 @@ export function useDeleteMarketplace() {
     },
   })
 }
+
+export interface SyncResult {
+  added: number
+  updated: number
+  removed: number
+  errors: string[]
+}
+
+export function useSyncMarketplace() {
+  const queryClient = useQueryClient()
+
+  return useMutation<SyncResult, Error, string>({
+    mutationFn: async (slug) => {
+      return fetchApi<SyncResult>(`/api/admin/marketplaces/${slug}/sync`, {
+        method: "POST",
+      })
+    },
+    onSuccess: (_data, slug) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-marketplaces"] })
+      queryClient.invalidateQueries({
+        queryKey: ["admin-marketplace", slug],
+      })
+    },
+  })
+}
