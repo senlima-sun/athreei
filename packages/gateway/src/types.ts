@@ -25,6 +25,7 @@ export {
   RateLimitExceededError,
   RateLimiter,
   TIMEOUT,
+  RATE_LIMIT,
 } from "@athreei/gateway-core"
 
 export type { RateLimiterConfig } from "@athreei/gateway-core"
