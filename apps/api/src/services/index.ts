@@ -101,12 +101,14 @@ export {
 
 export {
   type InstallationResult,
+  type InstallationDetailResult,
   checkInstallationRestrictions,
   installPlugin,
   uninstallPlugin,
   updateInstallation,
   updateInstallationVersion,
   listInstallations,
+  getInstallation,
   getDecryptedEnv,
   syncPluginComponentsToNamespace,
   removePluginComponentsFromNamespace,

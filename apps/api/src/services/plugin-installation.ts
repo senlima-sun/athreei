@@ -101,7 +101,7 @@ export async function checkInstallationRestrictions(
       ),
     })
 
-    if (membership?.role !== "admin") {
+    if (membership?.role !== "admin" && membership?.role !== "owner") {
       return {
         allowed: false,
         reason: "Plugin installation requires admin approval",
@@ -273,7 +273,7 @@ export async function uninstallPlugin(
       ),
     })
 
-    if (membership?.role !== "admin") {
+    if (membership?.role !== "admin" && membership?.role !== "owner") {
       throw new Error("Only admins can uninstall organization-scoped plugins")
     }
   }
@@ -312,7 +312,7 @@ export async function updateInstallation(
       ),
     })
 
-    if (membership?.role !== "admin") {
+    if (membership?.role !== "admin" && membership?.role !== "owner") {
       throw new Error("Only admins can update organization-scoped plugins")
     }
   }
@@ -414,7 +414,7 @@ export async function updateInstallationVersion(
       ),
     })
 
-    if (membership?.role !== "admin") {
+    if (membership?.role !== "admin" && membership?.role !== "owner") {
       throw new Error(
         "Only admins can update versions for organization-scoped plugins"
       )
@@ -471,6 +471,7 @@ export async function listInstallations(
   const queryOffset = (query.offset as number) || 0
   const queryStatus = query.status as string | undefined
   const queryScope = query.scope as string | undefined
+  const queryComponentType = query.componentType as string | undefined
 
   const limit = Math.min(Math.max(queryLimit, 1), 100)
   const offset = Math.max(queryOffset, 0)
@@ -485,6 +486,26 @@ export async function listInstallations(
 
   if (queryScope) {
     conditions.push(eq(pluginInstallation.scope, queryScope))
+  }
+
+  if (queryComponentType) {
+    const installationsWithComponent = db()
+      .selectDistinct({ installationId: pluginInstallation.id })
+      .from(pluginInstallation)
+      .innerJoin(
+        pluginComponent,
+        eq(pluginInstallation.pluginVersionId, pluginComponent.pluginVersionId)
+      )
+      .where(
+        and(
+          eq(pluginInstallation.organizationId, organizationId),
+          eq(pluginComponent.type, queryComponentType)
+        )
+      )
+
+    conditions.push(
+      sql`${pluginInstallation.id} IN (${installationsWithComponent})`
+    )
   }
 
   const whereClause = and(...conditions)
@@ -564,6 +585,99 @@ export async function listInstallations(
       total,
       hasMore: offset + data.length < total,
     },
+  }
+}
+
+export interface InstallationDetailResult extends InstallationResult {
+  components: Array<{
+    id: string
+    type: string
+    name: string
+    description: string | null
+    config: unknown
+  }>
+}
+
+export async function getInstallation(
+  organizationId: string,
+  installationId: string
+): Promise<InstallationDetailResult> {
+  const result = await db()
+    .select({
+      id: pluginInstallation.id,
+      organizationId: pluginInstallation.organizationId,
+      pluginId: pluginInstallation.pluginId,
+      pluginVersionId: pluginInstallation.pluginVersionId,
+      installedBy: pluginInstallation.installedBy,
+      scope: pluginInstallation.scope,
+      status: pluginInstallation.status,
+      config: pluginInstallation.config,
+      installedAt: pluginInstallation.installedAt,
+      updatedAt: pluginInstallation.updatedAt,
+      pluginSlug: plugin.slug,
+      pluginName: plugin.name,
+      marketplaceId: marketplace.id,
+      marketplaceSlug: marketplace.slug,
+      marketplaceName: marketplace.name,
+      versionId: pluginVersion.id,
+      versionNumber: pluginVersion.version,
+    })
+    .from(pluginInstallation)
+    .innerJoin(plugin, eq(pluginInstallation.pluginId, plugin.id))
+    .innerJoin(marketplace, eq(plugin.marketplaceId, marketplace.id))
+    .innerJoin(
+      pluginVersion,
+      eq(pluginInstallation.pluginVersionId, pluginVersion.id)
+    )
+    .where(
+      and(
+        eq(pluginInstallation.id, installationId),
+        eq(pluginInstallation.organizationId, organizationId)
+      )
+    )
+    .limit(1)
+
+  const installation = result[0]
+  if (!installation) {
+    throw new Error("Installation not found")
+  }
+
+  const components = await db().query.pluginComponent.findMany({
+    where: eq(pluginComponent.pluginVersionId, installation.pluginVersionId),
+  })
+
+  return {
+    id: installation.id,
+    organizationId: installation.organizationId,
+    pluginId: installation.pluginId,
+    pluginVersionId: installation.pluginVersionId,
+    installedBy: installation.installedBy,
+    scope: installation.scope,
+    status: installation.status,
+    config: installation.config ? JSON.parse(installation.config) : null,
+    installedAt: installation.installedAt,
+    updatedAt: installation.updatedAt,
+    plugin: {
+      id: installation.pluginId,
+      slug: installation.pluginSlug,
+      name: installation.pluginName,
+      marketplace: {
+        id: installation.marketplaceId,
+        slug: installation.marketplaceSlug,
+        name: installation.marketplaceName,
+      },
+    },
+    version: {
+      id: installation.versionId,
+      version: installation.versionNumber,
+    },
+    components: components.map((c) => ({
+      id: c.id,
+      type: c.type,
+      name: c.name,
+      description: c.description,
+      config: c.config ? JSON.parse(c.config) : null,
+    })),
   }
 }
 

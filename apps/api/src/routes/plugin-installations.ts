@@ -14,6 +14,7 @@ import {
   updateInstallation,
   updateInstallationVersion,
   listInstallations,
+  getInstallation,
   getDecryptedEnv,
   checkEnvRateLimit,
   setEnvRateLimitHeaders,
@@ -37,9 +38,33 @@ pluginInstallations.get(
     }
 
     const result = await listInstallations(orgId, query)
-    return c.json(result)
+    return c.json({
+      installations: result.data,
+      total: result.pagination.total,
+    })
   }
 )
+
+pluginInstallations.get("/:installationId", async (c) => {
+  const auth = getAuthContext(c)
+  const orgId = c.req.param("orgId") as string
+  const installationId = c.req.param("installationId")
+
+  const isMember = await verifyOrganizationMembership(auth.userId, orgId)
+  if (!isMember) {
+    throw ApiError.forbidden("You do not have access to this organization")
+  }
+
+  try {
+    const installation = await getInstallation(orgId, installationId)
+    return c.json({ installation })
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("not found")) {
+      throw ApiError.notFound(error.message)
+    }
+    throw error
+  }
+})
 
 pluginInstallations.post(
   "/install",
