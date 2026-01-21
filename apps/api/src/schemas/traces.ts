@@ -10,6 +10,9 @@ export const listTracesQuerySchema = z.object({
   startDate: z.string().datetime().optional(),
   endDate: z.string().datetime().optional(),
   search: z.string().max(255).optional(),
+  minDuration: z.coerce.number().min(0).optional(),
+  maxDuration: z.coerce.number().min(0).optional(),
+  serverIds: z.string().optional(),
 })
 
 export const traceIdParamSchema = z.object({

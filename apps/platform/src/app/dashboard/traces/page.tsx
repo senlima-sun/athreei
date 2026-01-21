@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
+import { useSearchParams, useRouter, usePathname } from "next/navigation"
 import Link from "next/link"
 import {
   PageHeader,
@@ -8,20 +9,73 @@ import {
   ErrorState,
   EmptyState,
 } from "@/components/dashboard"
-import { TraceFilters } from "@/components/traces/trace-filters"
+import {
+  TraceFilters,
+  type TraceFiltersState,
+} from "@/components/traces/trace-filters"
 import { useActiveOrganization } from "@/lib/auth-client"
 import { Activity, CheckCircle, XCircle, Clock } from "lucide-react"
 import type { Trace } from "@/types"
 import { formatDuration, formatTime } from "@/utils"
 
+function parseFiltersFromUrl(searchParams: URLSearchParams): TraceFiltersState {
+  return {
+    search: searchParams.get("search") || "",
+    status: (searchParams.get("status") as "all" | "success" | "error") || "all",
+    startDate: searchParams.get("startDate") || "",
+    endDate: searchParams.get("endDate") || "",
+    minDuration: searchParams.get("minDuration") || "",
+    maxDuration: searchParams.get("maxDuration") || "",
+    serverIds: searchParams.get("serverIds")?.split(",").filter(Boolean) || [],
+  }
+}
+
+function serializeFiltersToUrl(filters: TraceFiltersState): URLSearchParams {
+  const params = new URLSearchParams()
+
+  if (filters.search) params.set("search", filters.search)
+  if (filters.status !== "all") params.set("status", filters.status)
+  if (filters.startDate) params.set("startDate", filters.startDate)
+  if (filters.endDate) params.set("endDate", filters.endDate)
+  if (filters.minDuration) params.set("minDuration", filters.minDuration)
+  if (filters.maxDuration) params.set("maxDuration", filters.maxDuration)
+  if (filters.serverIds.length > 0)
+    params.set("serverIds", filters.serverIds.join(","))
+
+  return params
+}
+
 export default function TracesPage() {
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+
   const { data: activeOrg, isPending: isOrgPending } = useActiveOrganization()
   const [traces, setTraces] = useState<Trace[]>([])
+  const [total, setTotal] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [search, setSearch] = useState("")
-  const [statusFilter, setStatusFilter] = useState<"all" | "success" | "error">(
-    "all"
+
+  const [filters, setFilters] = useState<TraceFiltersState>(() =>
+    parseFiltersFromUrl(searchParams)
+  )
+
+  const updateUrl = useCallback(
+    (newFilters: TraceFiltersState) => {
+      const params = serializeFiltersToUrl(newFilters)
+      const queryString = params.toString()
+      const newUrl = queryString ? `${pathname}?${queryString}` : pathname
+      router.replace(newUrl, { scroll: false })
+    },
+    [pathname, router]
+  )
+
+  const handleFiltersChange = useCallback(
+    (newFilters: TraceFiltersState) => {
+      setFilters(newFilters)
+      updateUrl(newFilters)
+    },
+    [updateUrl]
   )
 
   useEffect(() => {
@@ -37,18 +91,23 @@ export default function TracesPage() {
         const params = new URLSearchParams({
           organizationId: activeOrg.id,
         })
-        if (search) {
-          params.set("search", search)
-        }
-        if (statusFilter !== "all") {
-          params.set("status", statusFilter)
-        }
+
+        if (filters.search) params.set("search", filters.search)
+        if (filters.status !== "all") params.set("status", filters.status)
+        if (filters.startDate) params.set("startDate", filters.startDate)
+        if (filters.endDate) params.set("endDate", filters.endDate)
+        if (filters.minDuration) params.set("minDuration", filters.minDuration)
+        if (filters.maxDuration) params.set("maxDuration", filters.maxDuration)
+        if (filters.serverIds.length > 0)
+          params.set("serverIds", filters.serverIds.join(","))
+
         const response = await fetch(`/api/traces?${params.toString()}`)
         if (!response.ok) {
           throw new Error("Failed to fetch traces")
         }
         const data = await response.json()
         setTraces(data.traces || [])
+        setTotal(data.total || 0)
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load traces")
       } finally {
@@ -57,7 +116,7 @@ export default function TracesPage() {
     }
 
     fetchTraces()
-  }, [activeOrg?.id, isOrgPending, search, statusFilter])
+  }, [activeOrg?.id, isOrgPending, filters])
 
   if (isOrgPending || isLoading) {
     return (
@@ -107,74 +166,86 @@ export default function TracesPage() {
       />
 
       <TraceFilters
-        search={search}
-        onSearchChange={setSearch}
-        status={statusFilter}
-        onStatusChange={setStatusFilter}
+        filters={filters}
+        onFiltersChange={handleFiltersChange}
+        organizationId={activeOrg.id}
       />
 
       {traces.length === 0 ? (
         <EmptyState
           icon={Activity}
-          title="No traces yet"
-          description="Traces will appear here when your AI apps make tool calls through athreei."
+          title="No traces found"
+          description={
+            filters.search ||
+            filters.status !== "all" ||
+            filters.startDate ||
+            filters.minDuration ||
+            filters.serverIds.length > 0
+              ? "Try adjusting your filters to see more results."
+              : "Traces will appear here when your AI apps make tool calls through athreei."
+          }
         />
       ) : (
-        <div className="overflow-hidden rounded-lg border border-gray-200">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Status
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Tool
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Duration
-                </th>
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
-                  Time
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 bg-white">
-              {traces.map((trace) => (
-                <tr key={trace.id} className="hover:bg-gray-50">
-                  <td className="whitespace-nowrap px-4 py-3">
-                    {trace.status === "success" ? (
-                      <CheckCircle className="h-5 w-5 text-green-500" />
-                    ) : (
-                      <XCircle className="h-5 w-5 text-red-500" />
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/dashboard/traces/${trace.id}`}
-                      className="font-medium text-gray-900 hover:text-blue-600"
-                    >
-                      {trace.name}
-                    </Link>
-                    {trace.attributes?.serverName && (
-                      <p className="text-xs text-gray-500">
-                        {trace.attributes.serverName}
-                      </p>
-                    )}
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-4 w-4" />
-                      {formatDuration(trace.durationMs)}
-                    </div>
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
-                    {formatTime(trace.startTime)}
-                  </td>
+        <>
+          <div className="mb-4 text-sm text-gray-500">
+            Showing {traces.length} of {total} traces
+          </div>
+          <div className="overflow-hidden rounded-lg border border-gray-200">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                    Status
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                    Tool
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                    Duration
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                    Time
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-gray-200 bg-white">
+                {traces.map((trace) => (
+                  <tr key={trace.id} className="hover:bg-gray-50">
+                    <td className="whitespace-nowrap px-4 py-3">
+                      {trace.status === "success" ? (
+                        <CheckCircle className="h-5 w-5 text-green-500" />
+                      ) : (
+                        <XCircle className="h-5 w-5 text-red-500" />
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Link
+                        href={`/dashboard/traces/${trace.id}`}
+                        className="font-medium text-gray-900 hover:text-blue-600"
+                      >
+                        {trace.name}
+                      </Link>
+                      {trace.attributes?.serverName && (
+                        <p className="text-xs text-gray-500">
+                          {trace.attributes.serverName}
+                        </p>
+                      )}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-4 w-4" />
+                        {formatDuration(trace.durationMs)}
+                      </div>
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-sm text-gray-500">
+                      {formatTime(trace.startTime)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </div>
   )

@@ -1,9 +1,9 @@
 import { Hono } from "hono"
 import { zValidator } from "@hono/zod-validator"
-import { eq, and, desc, gte, lte, like, sql } from "drizzle-orm"
+import { eq, and, desc, gte, lte, like, sql, inArray } from "drizzle-orm"
 import { authMiddleware, getAuthContext, ApiError } from "../middleware"
 import { db } from "../lib/db-operations"
-import { trace } from "@athreei/db"
+import { trace, mcpServer } from "@athreei/db"
 import { listTracesQuerySchema, traceIdParamSchema } from "../schemas/traces"
 import { verifyOrganizationMembership } from "../services"
 
@@ -22,8 +22,18 @@ function safeJsonParse(value: string | null): unknown {
 
 traces.get("/", zValidator("query", listTracesQuerySchema), async (c) => {
   const auth = getAuthContext(c)
-  const { organizationId, limit, offset, status, startDate, endDate, search } =
-    c.req.valid("query")
+  const {
+    organizationId,
+    limit,
+    offset,
+    status,
+    startDate,
+    endDate,
+    search,
+    minDuration,
+    maxDuration,
+    serverIds,
+  } = c.req.valid("query")
 
   const isMember = await verifyOrganizationMembership(
     auth.userId,
@@ -52,6 +62,21 @@ traces.get("/", zValidator("query", listTracesQuerySchema), async (c) => {
     conditions.push(like(trace.name, `%${search}%`))
   }
 
+  if (minDuration !== undefined) {
+    conditions.push(gte(trace.durationMs, minDuration))
+  }
+
+  if (maxDuration !== undefined) {
+    conditions.push(lte(trace.durationMs, maxDuration))
+  }
+
+  if (serverIds) {
+    const serverIdList = serverIds.split(",").filter(Boolean)
+    if (serverIdList.length > 0) {
+      conditions.push(inArray(trace.mcpServerId, serverIdList))
+    }
+  }
+
   const dbQuery = db().query
 
   const tracesResult = await dbQuery.trace.findMany({
@@ -78,12 +103,37 @@ traces.get("/", zValidator("query", listTracesQuerySchema), async (c) => {
       durationMs: t.durationMs,
       startTime: t.startTime,
       endTime: t.endTime,
+      mcpServerId: t.mcpServerId,
       attributes: safeJsonParse(t.attributes),
     })),
     total,
     limit,
     offset,
   })
+})
+
+traces.get("/servers", async (c) => {
+  const auth = getAuthContext(c)
+  const organizationId = c.req.query("organizationId")
+
+  if (!organizationId) {
+    throw ApiError.badRequest("organizationId is required")
+  }
+
+  const isMember = await verifyOrganizationMembership(auth.userId, organizationId)
+  if (!isMember) {
+    throw ApiError.forbidden("Access denied")
+  }
+
+  const servers = await db().query.mcpServer.findMany({
+    where: eq(mcpServer.organizationId, organizationId),
+    columns: {
+      id: true,
+      name: true,
+    },
+  })
+
+  return c.json({ servers })
 })
 
 traces.get("/:id", zValidator("param", traceIdParamSchema), async (c) => {
