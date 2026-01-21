@@ -24,6 +24,7 @@ export const user = sqliteTable("user", {
   banned: integer("banned", { mode: "boolean" }),
   banReason: text("banReason"),
   banExpires: integer("banExpires", { mode: "timestamp" }),
+  preferences: text("preferences"),
 })
 
 /**
