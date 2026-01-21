@@ -6,6 +6,7 @@ import {
   organizationsRoutes,
   endpointsRoutes,
   apiKeysRoutes,
+  encryptionKeysRoutes,
   mcpServersRoutes,
   namespacesRoutes,
   gatewayRoutes,
@@ -74,6 +75,7 @@ app.on(
 app.route("/api/organizations", organizationsRoutes)
 app.route("/api/endpoints", endpointsRoutes)
 app.route("/api/api-keys", apiKeysRoutes)
+app.route("/api/encryption-keys", encryptionKeysRoutes)
 app.route("/api/mcp-servers", mcpServersRoutes)
 app.route("/api/namespaces", namespacesRoutes)
 app.route("/api/gateway", gatewayRoutes)
