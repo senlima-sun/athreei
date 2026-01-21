@@ -18,6 +18,161 @@ const apiKeys = new Hono()
 
 apiKeys.use("*", authMiddleware)
 
+apiKeys.get("/", async (c) => {
+  const auth = getAuthContext(c)
+  const organizationId = c.req.query("organizationId")
+
+  if (!organizationId) {
+    throw ApiError.badRequest("organizationId query parameter is required")
+  }
+
+  const isMember = await verifyOrganizationMembership(
+    auth.userId,
+    organizationId
+  )
+  if (!isMember) {
+    throw ApiError.forbidden("You do not have access to this organization")
+  }
+
+  const keys = await db().query.apiKey.findMany({
+    where: and(
+      eq(apiKey.organizationId, organizationId),
+      isNull(apiKey.revokedAt)
+    ),
+    with: {
+      endpoint: true,
+    },
+  })
+
+  return c.json({
+    keys: keys.map((key) => ({
+      id: key.id,
+      name: key.name,
+      prefix: key.keyPrefix,
+      endpointId: key.endpointId,
+      endpointName: key.endpoint?.name || null,
+      lastUsedAt: key.lastUsedAt?.toISOString() || null,
+      usageCount: key.usageCount,
+      createdAt: key.createdAt.toISOString(),
+      expiresAt: key.expiresAt?.toISOString() || null,
+      scopes: key.scopes ? JSON.parse(key.scopes) : null,
+    })),
+  })
+})
+
+apiKeys.post("/", zValidator("json", createApiKeySchema), async (c) => {
+  const auth = getAuthContext(c)
+  const organizationId = c.req.query("organizationId")
+  const body = c.req.valid("json")
+
+  if (!organizationId) {
+    throw ApiError.badRequest("organizationId query parameter is required")
+  }
+
+  const isMember = await verifyOrganizationMembership(
+    auth.userId,
+    organizationId
+  )
+  if (!isMember) {
+    throw ApiError.forbidden("You do not have access to this organization")
+  }
+
+  const endpointId = body.endpointId as string | undefined
+  if (endpointId) {
+    const ep = await db().query.endpoint.findFirst({
+      where: eq(endpoint.id, endpointId),
+    })
+    if (!ep || ep.organizationId !== organizationId) {
+      throw ApiError.badRequest(
+        "Endpoint not found or does not belong to this organization"
+      )
+    }
+  }
+
+  const plainKey = generateApiKey()
+  const keyHash = await hashApiKey(plainKey)
+  const keyPrefix = createKeyPrefix(plainKey)
+  const fullKey = createFullKey(plainKey)
+
+  const now = new Date()
+  const id = generateUUID()
+
+  const expiresAt = body.expiresAt ? new Date(body.expiresAt) : null
+
+  await db()
+    .insert(apiKey)
+    .values({
+      id,
+      organizationId,
+      endpointId: endpointId || null,
+      createdById: auth.userId,
+      name: body.name,
+      keyHash,
+      keyPrefix,
+      scopes: body.scopes ? JSON.stringify(body.scopes) : null,
+      expiresAt,
+      usageCount: 0,
+      createdAt: now,
+      updatedAt: now,
+    })
+
+  return c.json(
+    {
+      id,
+      name: body.name,
+      key: fullKey,
+      prefix: keyPrefix,
+      endpointId: endpointId || null,
+      createdAt: now.toISOString(),
+      expiresAt: expiresAt?.toISOString() || null,
+      scopes: body.scopes || null,
+    },
+    201
+  )
+})
+
+apiKeys.delete("/:keyId", async (c) => {
+  const auth = getAuthContext(c)
+  const organizationId = c.req.query("organizationId")
+  const keyId = c.req.param("keyId")
+
+  if (!organizationId) {
+    throw ApiError.badRequest("organizationId query parameter is required")
+  }
+
+  const isMember = await verifyOrganizationMembership(
+    auth.userId,
+    organizationId
+  )
+  if (!isMember) {
+    throw ApiError.forbidden("You do not have access to this organization")
+  }
+
+  const existingKey = await db().query.apiKey.findFirst({
+    where: and(
+      eq(apiKey.id, keyId),
+      eq(apiKey.organizationId, organizationId),
+      isNull(apiKey.revokedAt)
+    ),
+  })
+
+  if (!existingKey) {
+    throw ApiError.notFound("API key not found or already revoked")
+  }
+
+  const now = new Date()
+  await db()
+    .update(apiKey)
+    .set({
+      revokedAt: now,
+      revokedById: auth.userId,
+      updatedAt: now,
+    })
+    .where(eq(apiKey.id, keyId))
+
+  return c.json({ message: "API key revoked successfully" })
+})
+
 async function verifyEndpointAccess(
   endpointId: string,
   userId: string

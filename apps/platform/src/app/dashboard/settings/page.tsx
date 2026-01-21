@@ -727,11 +727,11 @@ function CreateApiKeyDialog({
               <Select
                 value={formData.endpointId}
                 onValueChange={(value) =>
-                  setFormData((prev) => ({ ...prev, endpointId: value }))
+                  setFormData((prev) => ({ ...prev, endpointId: value ?? "" }))
                 }
               >
                 <SelectTrigger className="mt-1 w-full">
-                  <SelectValue placeholder="Select an endpoint" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">No endpoint (org-wide)</SelectItem>
@@ -751,7 +751,10 @@ function CreateApiKeyDialog({
               <Select
                 value={formData.scopes[0] || "read"}
                 onValueChange={(value) =>
-                  setFormData((prev) => ({ ...prev, scopes: [value] }))
+                  setFormData((prev) => ({
+                    ...prev,
+                    scopes: [value ?? "read"],
+                  }))
                 }
               >
                 <SelectTrigger className="mt-1 w-full">
@@ -772,7 +775,10 @@ function CreateApiKeyDialog({
               <Select
                 value={formData.expiration}
                 onValueChange={(value) =>
-                  setFormData((prev) => ({ ...prev, expiration: value }))
+                  setFormData((prev) => ({
+                    ...prev,
+                    expiration: value ?? "never",
+                  }))
                 }
               >
                 <SelectTrigger className="mt-1 w-full">
