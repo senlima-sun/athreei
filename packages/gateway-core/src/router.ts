@@ -20,6 +20,7 @@ import type {
 import { findAggregatedTool } from "./aggregator"
 import { noopLogger, ToolCallTimeoutError } from "./types"
 import { TIMEOUT } from "./constants"
+import { RateLimiter, RateLimitExceededError } from "./rate-limiter"
 
 /**
  * Parse a prefixed tool name into server and tool components.
@@ -51,6 +52,7 @@ export function parseToolName(prefixedName: string): ParsedToolName {
 export interface RouteToolCallOptions {
   logger?: Logger
   timeoutMs?: number
+  rateLimiter?: RateLimiter
 }
 
 /**
@@ -67,6 +69,13 @@ export async function routeToolCall(
   const logger = options.logger ?? noopLogger
 
   const { serverName, toolName } = parseToolName(prefixedName)
+
+  if (options.rateLimiter) {
+    const result = options.rateLimiter.tryAcquire(serverName)
+    if (!result.allowed) {
+      throw new RateLimitExceededError(serverName, result.retryAfterMs!)
+    }
+  }
 
   logger.info(`Routing tool call: ${prefixedName} -> ${serverName}/${toolName}`)
 

@@ -16,7 +16,7 @@ import type {
   PreToolUseContext,
   PostToolUseContext,
 } from "./types"
-import { ToolCallTimeoutError, TIMEOUT } from "./types"
+import { ToolCallTimeoutError, RateLimitExceededError, TIMEOUT } from "./types"
 import { log } from "./logger"
 
 // Re-export core routing functions from gateway-core
@@ -195,6 +195,27 @@ export async function routeToolCall(
               server: error.serverName,
               tool: error.toolName,
               timeout_ms: error.timeoutMs,
+            }),
+          },
+        ],
+        isError: true,
+      }
+    }
+
+    if (error instanceof RateLimitExceededError) {
+      trace.error = `Rate limited, retry after ${error.retryAfterMs}ms`
+      log.warn(`Rate limit exceeded for server: ${error.serverName}`)
+
+      emitTraceEvent(state, trace)
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              error: "rate_limited",
+              server: error.serverName,
+              retry_after_ms: error.retryAfterMs,
             }),
           },
         ],

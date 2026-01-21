@@ -10,6 +10,7 @@ import { cors } from "hono/cors"
 import type { GatewayState } from "./server"
 import type { TraceCollector } from "./trace-collector"
 import type { NamespaceConfig } from "./types"
+import { RATE_LIMIT } from "@athreei/gateway-core"
 import { log } from "./logger"
 
 const VERSION = "0.1.0"
@@ -174,6 +175,54 @@ export function createHttpApi(
         500
       )
     }
+  })
+
+  app.get("/api/servers/:name/rate-limit", (c) => {
+    const name = c.req.param("name")
+
+    const mcp = state.connectedMcps.get(name)
+    if (!mcp) {
+      return c.json({ error: "Server not found" }, 404)
+    }
+
+    if (!state.rateLimiter) {
+      return c.json({
+        server: name,
+        rateLimitEnabled: false,
+      })
+    }
+
+    const rateState = state.rateLimiter.getState(name)
+    const now = Date.now()
+
+    if (!rateState) {
+      return c.json({
+        server: name,
+        rateLimitEnabled: true,
+        currentWindow: {
+          requests: 0,
+          remaining:
+            RATE_LIMIT.DEFAULT_MAX_REQUESTS + RATE_LIMIT.DEFAULT_BURST_ALLOWANCE,
+          resetMs: 0,
+        },
+      })
+    }
+
+    const windowMs = RATE_LIMIT.DEFAULT_WINDOW_MS
+    const maxRequests =
+      RATE_LIMIT.DEFAULT_MAX_REQUESTS + RATE_LIMIT.DEFAULT_BURST_ALLOWANCE
+    const resetMs = Math.max(0, windowMs - (now - rateState.windowStart))
+
+    return c.json({
+      server: name,
+      rateLimitEnabled: true,
+      currentWindow: {
+        requests: rateState.count,
+        remaining: Math.max(0, maxRequests - rateState.count),
+        resetMs,
+        burstUsed: rateState.burstUsed,
+      },
+    })
   })
 
   // POST /api/test-config - Test a server configuration without connecting

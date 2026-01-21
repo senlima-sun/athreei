@@ -19,7 +19,15 @@ export type {
   TimeoutConfig,
 } from "@athreei/gateway-core"
 
-export { noopLogger, ToolCallTimeoutError, TIMEOUT } from "@athreei/gateway-core"
+export {
+  noopLogger,
+  ToolCallTimeoutError,
+  RateLimitExceededError,
+  RateLimiter,
+  TIMEOUT,
+} from "@athreei/gateway-core"
+
+export type { RateLimiterConfig } from "@athreei/gateway-core"
 
 /**
  * Local gateway configuration file format (~/.athreei/config.json)
