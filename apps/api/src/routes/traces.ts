@@ -4,8 +4,13 @@ import { eq, and, desc, gte, lte, like, sql, inArray } from "drizzle-orm"
 import { authMiddleware, getAuthContext, ApiError } from "../middleware"
 import { db } from "../lib/db-operations"
 import { trace, mcpServer } from "@athreei/db"
-import { listTracesQuerySchema, traceIdParamSchema } from "../schemas/traces"
+import {
+  listTracesQuerySchema,
+  traceIdParamSchema,
+  exportTracesQuerySchema,
+} from "../schemas/traces"
 import { verifyOrganizationMembership } from "../services"
+import { generateTraceCsv } from "../utils/csv"
 
 const traces = new Hono()
 
@@ -135,6 +140,101 @@ traces.get("/servers", async (c) => {
 
   return c.json({ servers })
 })
+
+traces.get(
+  "/export",
+  zValidator("query", exportTracesQuerySchema),
+  async (c) => {
+    const auth = getAuthContext(c)
+    const {
+      organizationId,
+      format,
+      status,
+      startDate,
+      endDate,
+      search,
+      minDuration,
+      maxDuration,
+      serverIds,
+    } = c.req.valid("query")
+
+    const isMember = await verifyOrganizationMembership(
+      auth.userId,
+      organizationId
+    )
+
+    if (!isMember) {
+      throw ApiError.forbidden("Access denied")
+    }
+
+    const conditions = [eq(trace.organizationId, organizationId)]
+
+    if (status) {
+      conditions.push(eq(trace.status, status))
+    }
+
+    if (startDate) {
+      conditions.push(gte(trace.startTime, new Date(startDate)))
+    }
+
+    if (endDate) {
+      conditions.push(lte(trace.startTime, new Date(endDate)))
+    }
+
+    if (search) {
+      conditions.push(like(trace.name, `%${search}%`))
+    }
+
+    if (minDuration !== undefined) {
+      conditions.push(gte(trace.durationMs, minDuration))
+    }
+
+    if (maxDuration !== undefined) {
+      conditions.push(lte(trace.durationMs, maxDuration))
+    }
+
+    if (serverIds) {
+      const serverIdList = serverIds.split(",").filter(Boolean)
+      if (serverIdList.length > 0) {
+        conditions.push(inArray(trace.mcpServerId, serverIdList))
+      }
+    }
+
+    const dbQuery = db().query
+
+    const tracesResult = await dbQuery.trace.findMany({
+      where: and(...conditions),
+      orderBy: [desc(trace.startTime)],
+      limit: 10000,
+    })
+
+    if (format === "csv") {
+      const csv = generateTraceCsv(tracesResult)
+      const today = new Date().toISOString().split("T")[0]
+      return new Response(csv, {
+        headers: {
+          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Disposition": `attachment; filename=traces-${today}.csv`,
+        },
+      })
+    }
+
+    return c.json({
+      traces: tracesResult.map((t: typeof trace.$inferSelect) => ({
+        id: t.id,
+        traceId: t.traceId,
+        name: t.name,
+        status: t.status,
+        statusMessage: t.statusMessage,
+        durationMs: t.durationMs,
+        startTime: t.startTime,
+        endTime: t.endTime,
+        mcpServerId: t.mcpServerId,
+        attributes: safeJsonParse(t.attributes),
+      })),
+    })
+  }
+)
 
 traces.get("/:id", zValidator("param", traceIdParamSchema), async (c) => {
   const auth = getAuthContext(c)

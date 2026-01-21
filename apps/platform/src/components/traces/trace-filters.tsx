@@ -1,7 +1,17 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Search, Filter, Calendar, Clock, Server, ChevronDown, X } from "lucide-react"
+import {
+  Search,
+  Filter,
+  Calendar,
+  Clock,
+  Server,
+  ChevronDown,
+  X,
+  Download,
+  Loader2,
+} from "lucide-react"
 import { fetchApi } from "@/lib/api"
 
 export interface TraceFiltersState {
@@ -87,6 +97,7 @@ export function TraceFilters({
   const [servers, setServers] = useState<McpServer[]>([])
   const [showAdvanced, setShowAdvanced] = useState(false)
   const [datePreset, setDatePreset] = useState<string>("")
+  const [isExporting, setIsExporting] = useState(false)
 
   useEffect(() => {
     if (organizationId) {
@@ -133,6 +144,43 @@ export function TraceFilters({
     filters.minDuration || filters.maxDuration,
     filters.serverIds.length > 0,
   ].filter(Boolean).length
+
+  const handleExport = async (format: "json" | "csv") => {
+    if (!organizationId) return
+
+    setIsExporting(true)
+    try {
+      const params = new URLSearchParams({ organizationId, format })
+
+      if (filters.search) params.set("search", filters.search)
+      if (filters.status !== "all") params.set("status", filters.status)
+      if (filters.startDate) params.set("startDate", filters.startDate)
+      if (filters.endDate) params.set("endDate", filters.endDate)
+      if (filters.minDuration) params.set("minDuration", filters.minDuration)
+      if (filters.maxDuration) params.set("maxDuration", filters.maxDuration)
+      if (filters.serverIds.length > 0)
+        params.set("serverIds", filters.serverIds.join(","))
+
+      const response = await fetch(`/api/traces/export?${params.toString()}`)
+      if (!response.ok) {
+        throw new Error("Export failed")
+      }
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `traces-${new Date().toISOString().split("T")[0]}.${format}`
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (error) {
+      console.error("Export failed:", error)
+    } finally {
+      setIsExporting(false)
+    }
+  }
 
   return (
     <div className="mb-6 space-y-4">
@@ -196,6 +244,35 @@ export function TraceFilters({
             Clear all
           </button>
         )}
+
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => handleExport("csv")}
+            disabled={isExporting}
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isExporting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4" />
+            )}
+            CSV
+          </button>
+          <button
+            type="button"
+            onClick={() => handleExport("json")}
+            disabled={isExporting}
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isExporting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4" />
+            )}
+            JSON
+          </button>
+        </div>
       </div>
 
       {showAdvanced && (
