@@ -60,7 +60,8 @@ export type { ModalProps } from "./components/dialog"
 
 // Tabs
 export {
-  RadixTabs,
+  BaseTabs,
+  BaseTabs as RadixTabs,
   Tabs,
   TabsList,
   TabsTrigger,
