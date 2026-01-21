@@ -16,9 +16,10 @@ export type {
   ToolCallValidation,
   RoutingInfo,
   Logger,
+  TimeoutConfig,
 } from "@athreei/gateway-core"
 
-export { noopLogger } from "@athreei/gateway-core"
+export { noopLogger, ToolCallTimeoutError, TIMEOUT } from "@athreei/gateway-core"
 
 /**
  * Local gateway configuration file format (~/.athreei/config.json)
@@ -47,6 +48,8 @@ export interface LocalConfig {
   rules?: RuleConfig[]
   /** Hooks for tool call interception */
   hooks?: HookConfig[]
+  /** Timeout configuration for tool calls */
+  timeout?: import("@athreei/gateway-core").TimeoutConfig
 }
 
 /**

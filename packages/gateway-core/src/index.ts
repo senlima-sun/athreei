@@ -17,9 +17,13 @@ export type {
   ToolCallValidation,
   RoutingInfo,
   Logger,
+  TimeoutConfig,
 } from "./types"
 
-export { noopLogger } from "./types"
+export { noopLogger, ToolCallTimeoutError } from "./types"
+
+// Re-export constants
+export { TIMEOUT } from "./constants"
 
 // Re-export aggregator functions
 export {

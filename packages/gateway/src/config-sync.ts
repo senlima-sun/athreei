@@ -17,7 +17,7 @@ import type {
   SkillConfig,
   RuleConfig,
 } from "./types"
-import type { McpServerConfig } from "@athreei/gateway-core"
+import type { McpServerConfig, TimeoutConfig } from "@athreei/gateway-core"
 import { log } from "./logger"
 
 /** Default Platform URL */
@@ -275,6 +275,27 @@ export function loadLocalConfig(configPath?: string): LocalConfig {
     }
   }
 
+  let timeout: TimeoutConfig | undefined
+  if (cfg.timeout && typeof cfg.timeout === "object") {
+    const t = cfg.timeout as Record<string, unknown>
+    timeout = {}
+
+    if (typeof t.defaultTimeout === "number") {
+      timeout.defaultTimeout = t.defaultTimeout
+    }
+
+    if (t.perServerTimeout && typeof t.perServerTimeout === "object") {
+      timeout.perServerTimeout = {}
+      for (const [serverName, timeoutValue] of Object.entries(
+        t.perServerTimeout as Record<string, unknown>
+      )) {
+        if (typeof timeoutValue === "number") {
+          timeout.perServerTimeout[serverName] = timeoutValue
+        }
+      }
+    }
+  }
+
   log.info(
     `Local config loaded: ${servers.length} servers, ${skills.length} skills, ${rules.length} rules`
   )
@@ -282,6 +303,7 @@ export function loadLocalConfig(configPath?: string): LocalConfig {
     servers,
     skills: skills.length > 0 ? skills : undefined,
     rules: rules.length > 0 ? rules : undefined,
+    timeout,
   }
 }
 

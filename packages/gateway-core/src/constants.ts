@@ -1,0 +1,5 @@
+export const TIMEOUT = {
+  DEFAULT_TOOL_CALL_MS: 30_000,
+  MIN_TOOL_CALL_MS: 1_000,
+  MAX_TOOL_CALL_MS: 300_000,
+} as const

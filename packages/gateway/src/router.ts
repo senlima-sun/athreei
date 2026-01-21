@@ -16,6 +16,7 @@ import type {
   PreToolUseContext,
   PostToolUseContext,
 } from "./types"
+import { ToolCallTimeoutError, TIMEOUT } from "./types"
 import { log } from "./logger"
 
 // Re-export core routing functions from gateway-core
@@ -144,8 +145,11 @@ export async function routeToolCall(
   try {
     log.debug(`Calling ${toolName} on ${mcp.config.name}`)
 
+    const timeoutMs = TIMEOUT.DEFAULT_TOOL_CALL_MS
+
     const result = await coreRouteToolCall(state, prefixedName, effectiveArgs, {
       logger: log,
+      timeoutMs,
     })
 
     trace.endedAt = new Date()
@@ -174,10 +178,33 @@ export async function routeToolCall(
   } catch (error) {
     trace.endedAt = new Date()
     trace.durationMs = Date.now() - startTime
-    trace.error = error instanceof Error ? error.message : String(error)
     trace.status = "error"
 
-    log.error(`Tool call failed: ${prefixedName}`, error)
+    if (error instanceof ToolCallTimeoutError) {
+      trace.error = `Timeout after ${error.timeoutMs}ms`
+      log.error(`Tool call timed out: ${prefixedName} (${error.timeoutMs}ms)`)
+
+      emitTraceEvent(state, trace)
+
+      return {
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              error: "timeout",
+              server: error.serverName,
+              tool: error.toolName,
+              timeout_ms: error.timeoutMs,
+            }),
+          },
+        ],
+        isError: true,
+      }
+    }
+
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    trace.error = errorMessage
+    log.error(`Tool call failed: ${prefixedName}`, { error: errorMessage })
 
     emitTraceEvent(state, trace)
 
