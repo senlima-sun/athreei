@@ -202,7 +202,8 @@ export function createHttpApi(
         currentWindow: {
           requests: 0,
           remaining:
-            RATE_LIMIT.DEFAULT_MAX_REQUESTS + RATE_LIMIT.DEFAULT_BURST_ALLOWANCE,
+            RATE_LIMIT.DEFAULT_MAX_REQUESTS +
+            RATE_LIMIT.DEFAULT_BURST_ALLOWANCE,
           resetMs: 0,
         },
       })

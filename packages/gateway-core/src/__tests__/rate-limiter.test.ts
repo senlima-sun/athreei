@@ -104,9 +104,7 @@ describe("RateLimiter", () => {
 
       const result = rateLimiter.tryAcquire("server1")
       expect(result.allowed).toBe(false)
-      expect(result.retryAfterMs).toBe(
-        RATE_LIMIT.DEFAULT_WINDOW_MS - 10_000
-      )
+      expect(result.retryAfterMs).toBe(RATE_LIMIT.DEFAULT_WINDOW_MS - 10_000)
     })
 
     it("should track servers independently", () => {

@@ -159,7 +159,9 @@ export class ToolCallTimeoutError extends Error {
     public readonly toolName: string,
     public readonly timeoutMs: number
   ) {
-    super(`Tool call '${toolName}' on server '${serverName}' timed out after ${timeoutMs}ms`)
+    super(
+      `Tool call '${toolName}' on server '${serverName}' timed out after ${timeoutMs}ms`
+    )
     this.name = "ToolCallTimeoutError"
   }
 }

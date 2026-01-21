@@ -73,11 +73,16 @@ export async function resolveEndpoint(
   }
 }
 
-export function createEndpointKey(endpointId: string, sessionId: string): string {
+export function createEndpointKey(
+  endpointId: string,
+  sessionId: string
+): string {
   return `${endpointId}:${sessionId}`
 }
 
-export function parseEndpointKey(key: string): { endpointId: string; sessionId: string } | null {
+export function parseEndpointKey(
+  key: string
+): { endpointId: string; sessionId: string } | null {
   const parts = key.split(":")
   if (parts.length !== 2) return null
   const [endpointId, sessionId] = parts as [string, string]

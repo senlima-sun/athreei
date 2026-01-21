@@ -1,8 +1,4 @@
-import {
-  createLogger,
-  type LogLevel,
-  type LogContext,
-} from "@athreei/shared"
+import { createLogger, type LogLevel, type LogContext } from "@athreei/shared"
 
 export const gatewayLogger = createLogger({
   service: "gateway",

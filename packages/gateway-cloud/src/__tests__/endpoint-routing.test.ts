@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
-import { resolveEndpoint, createEndpointKey, parseEndpointKey } from "../config/endpoint-resolver"
+import {
+  resolveEndpoint,
+  createEndpointKey,
+  parseEndpointKey,
+} from "../config/endpoint-resolver"
 
 describe("endpoint-resolver", () => {
   const mockFetch = vi.fn()

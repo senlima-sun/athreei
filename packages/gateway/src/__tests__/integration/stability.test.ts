@@ -1,5 +1,11 @@
 import { describe, it, expect, beforeEach } from "vitest"
-import { ToolCallTimeoutError, RateLimitExceededError, RateLimiter, TIMEOUT, RATE_LIMIT } from "../../types"
+import {
+  ToolCallTimeoutError,
+  RateLimitExceededError,
+  RateLimiter,
+  TIMEOUT,
+  RATE_LIMIT,
+} from "../../types"
 
 describe("Gateway Stability Features Integration", () => {
   describe("Timeout and Rate Limit Constants", () => {
@@ -87,7 +93,11 @@ describe("Gateway Stability Features Integration", () => {
 
   describe("Combined Stability Scenario", () => {
     it("should handle timeout error followed by rate limit error", () => {
-      const timeoutError = new ToolCallTimeoutError("slow-server", "heavy_operation", 30000)
+      const timeoutError = new ToolCallTimeoutError(
+        "slow-server",
+        "heavy_operation",
+        30000
+      )
       const rateLimitError = new RateLimitExceededError("slow-server", 60000)
 
       expect(timeoutError).toBeInstanceOf(Error)

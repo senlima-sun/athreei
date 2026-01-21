@@ -25,20 +25,24 @@ export class RateLimitExceededError extends Error {
     public readonly serverName: string,
     public readonly retryAfterMs: number
   ) {
-    super(`Rate limit exceeded for server '${serverName}'. Retry after ${retryAfterMs}ms`)
+    super(
+      `Rate limit exceeded for server '${serverName}'. Retry after ${retryAfterMs}ms`
+    )
     this.name = "RateLimitExceededError"
   }
 }
 
 export class RateLimiter {
   private cache: LRUCache<string, ServerRateState>
-  private config: Required<Omit<RateLimiterConfig, "perServer">> & Pick<RateLimiterConfig, "perServer">
+  private config: Required<Omit<RateLimiterConfig, "perServer">> &
+    Pick<RateLimiterConfig, "perServer">
 
   constructor(config: RateLimiterConfig = {}) {
     this.config = {
       windowMs: config.windowMs ?? RATE_LIMIT.DEFAULT_WINDOW_MS,
       maxRequests: config.maxRequests ?? RATE_LIMIT.DEFAULT_MAX_REQUESTS,
-      burstAllowance: config.burstAllowance ?? RATE_LIMIT.DEFAULT_BURST_ALLOWANCE,
+      burstAllowance:
+        config.burstAllowance ?? RATE_LIMIT.DEFAULT_BURST_ALLOWANCE,
       perServer: config.perServer,
     }
     this.cache = new LRUCache<string, ServerRateState>({
