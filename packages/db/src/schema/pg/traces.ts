@@ -2,12 +2,20 @@
  * Traces & Observability Schema (PostgreSQL)
  */
 
-import { pgTable, text, timestamp, doublePrecision } from "drizzle-orm/pg-core"
+import {
+  pgTable,
+  text,
+  timestamp,
+  doublePrecision,
+  index,
+} from "drizzle-orm/pg-core"
 import { relations } from "drizzle-orm"
 import { organization, user } from "./auth"
 import { mcpServer } from "./mcp-servers"
 
-export const trace = pgTable("trace", {
+export const trace = pgTable(
+  "trace",
+  {
   id: text("id").primaryKey(),
   organizationId: text("organizationId")
     .notNull()
@@ -29,7 +37,18 @@ export const trace = pgTable("trace", {
   attributes: text("attributes"),
   events: text("events"),
   createdAt: timestamp("createdAt").notNull(),
-})
+  },
+  (table) => [
+    index("trace_org_time_idx").on(table.organizationId, table.startTime),
+    index("trace_org_status_idx").on(table.organizationId, table.status),
+    index("trace_org_status_time_idx").on(
+      table.organizationId,
+      table.status,
+      table.startTime
+    ),
+    index("trace_mcp_server_idx").on(table.mcpServerId),
+  ]
+)
 
 export const log = pgTable("log", {
   id: text("id").primaryKey(),
