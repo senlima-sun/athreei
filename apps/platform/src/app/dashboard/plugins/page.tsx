@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
   DropdownMenuLabel,
+  DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu"
 import { InstalledPluginsList } from "@/components/plugins/installed-plugins-list"
 import {
@@ -171,7 +172,7 @@ export default function InstalledPluginsPage() {
           title="Installed Plugins"
           description="Manage plugins installed in your organization"
           actions={
-            <Button render={<Link href="/dashboard/marketplace" />}>
+            <Button nativeButton={false} render={<Link href="/dashboard/marketplace" />}>
               <Store className="mr-1.5 h-4 w-4" />
               Browse Marketplace
             </Button>
@@ -205,7 +206,7 @@ export default function InstalledPluginsPage() {
           title="Installed Plugins"
           description="Manage plugins installed in your organization"
           actions={
-            <Button render={<Link href="/dashboard/marketplace" />}>
+            <Button nativeButton={false} render={<Link href="/dashboard/marketplace" />}>
               <Store className="mr-1.5 h-4 w-4" />
               Browse Marketplace
             </Button>
@@ -227,7 +228,7 @@ export default function InstalledPluginsPage() {
         title="Installed Plugins"
         description="Manage plugins installed in your organization"
         actions={
-          <Button render={<Link href="/dashboard/marketplace" />}>
+          <Button nativeButton={false} render={<Link href="/dashboard/marketplace" />}>
             <Store className="mr-1.5 h-4 w-4" />
             Browse Marketplace
           </Button>
@@ -267,32 +268,34 @@ export default function InstalledPluginsPage() {
             )}
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuCheckboxItem
-              checked={statusFilter === "all"}
-              onCheckedChange={() => setStatusFilter("all")}
-            >
-              All Statuses
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={statusFilter === "active"}
-              onCheckedChange={() => setStatusFilter("active")}
-            >
-              Active
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={statusFilter === "disabled"}
-              onCheckedChange={() => setStatusFilter("disabled")}
-            >
-              Disabled
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={statusFilter === "pending_update"}
-              onCheckedChange={() => setStatusFilter("pending_update")}
-            >
-              Update Available
-            </DropdownMenuCheckboxItem>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>Filter by Status</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuCheckboxItem
+                checked={statusFilter === "all"}
+                onCheckedChange={() => setStatusFilter("all")}
+              >
+                All Statuses
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={statusFilter === "active"}
+                onCheckedChange={() => setStatusFilter("active")}
+              >
+                Active
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={statusFilter === "disabled"}
+                onCheckedChange={() => setStatusFilter("disabled")}
+              >
+                Disabled
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={statusFilter === "pending_update"}
+                onCheckedChange={() => setStatusFilter("pending_update")}
+              >
+                Update Available
+              </DropdownMenuCheckboxItem>
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

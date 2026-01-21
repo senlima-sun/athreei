@@ -94,7 +94,7 @@ export default function MarketplacePage() {
 
   const uninstallMutation = useUninstallPlugin()
 
-  const { data: marketplacesData } = useMarketplaces({ isPublic: true })
+  const { data: marketplacesData } = useMarketplaces()
   const marketplaces = marketplacesData?.marketplaces ?? []
 
   const pluginsParams = useMemo(

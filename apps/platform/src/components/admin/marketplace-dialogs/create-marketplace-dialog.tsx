@@ -129,15 +129,7 @@ export function CreateMarketplaceDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent
-        className="max-w-lg p-6"
-        onInteractOutside={(e) => {
-          const target = e.target as HTMLElement
-          if (target.closest("[data-slot='select-content']")) {
-            e.preventDefault()
-          }
-        }}
-      >
+      <DialogContent className="max-w-lg p-6">
         <DialogHeader>
           <DialogTitle>Create Marketplace</DialogTitle>
           <DialogDescription>
