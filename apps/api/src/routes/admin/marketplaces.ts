@@ -1,6 +1,6 @@
 import { Hono } from "hono"
 import { zValidator } from "@hono/zod-validator"
-import { eq, sql, asc } from "drizzle-orm"
+import { eq, sql, asc, like, or } from "drizzle-orm"
 import { authMiddleware, requireAdmin, ApiError } from "../../middleware"
 import {
   adminCreateMarketplaceSchema,
@@ -8,10 +8,12 @@ import {
   listMarketplacesQuerySchema,
   verifyPluginSchema,
   featurePluginSchema,
+  listPluginsQuerySchema,
 } from "../../schemas/marketplaces"
 import { db } from "../../lib/db-operations"
 import { marketplace, plugin } from "@athreei/db"
 import { generateMarketplaceId } from "../../services"
+import { syncMarketplace } from "../../services/marketplace-sync"
 
 const adminMarketplaces = new Hono()
 
@@ -109,9 +111,33 @@ adminMarketplaces.post(
       where: eq(marketplace.id, id),
     })
 
+    const sourceType = body.sourceType || "internal"
+    if (sourceType !== "internal") {
+      syncMarketplace(id).catch(() => {})
+    }
+
     return c.json({ marketplace: created }, 201)
   }
 )
+
+adminMarketplaces.post("/:slug/sync", async (c) => {
+  const slug = c.req.param("slug")
+
+  const mkt = await db().query.marketplace.findFirst({
+    where: eq(marketplace.slug, slug),
+  })
+
+  if (!mkt) {
+    throw ApiError.notFound("Marketplace not found")
+  }
+
+  if (mkt.sourceType === "internal") {
+    throw ApiError.badRequest("Internal marketplaces cannot be synced")
+  }
+
+  const result = await syncMarketplace(mkt.id)
+  return c.json(result)
+})
 
 adminMarketplaces.patch(
   "/:slug",
@@ -180,6 +206,96 @@ adminMarketplaces.delete("/:slug", async (c) => {
 
   return c.json({ message: "Marketplace deleted successfully" })
 })
+
+adminMarketplaces.get(
+  "/plugins",
+  zValidator("query", listPluginsQuerySchema),
+  async (c) => {
+    const query = c.req.valid("query")
+
+    const limit = Math.min(Math.max(query.limit || 20, 1), 100)
+    const offset = Math.max(query.offset || 0, 0)
+
+    const baseQuery = db()
+      .select({
+        id: plugin.id,
+        slug: plugin.slug,
+        name: plugin.name,
+        description: plugin.description,
+        iconUrl: plugin.iconUrl,
+        isVerified: plugin.isVerified,
+        isFeatured: plugin.isFeatured,
+        downloadCount: plugin.downloadCount,
+        marketplaceId: plugin.marketplaceId,
+        marketplaceSlug: marketplace.slug,
+        marketplaceName: marketplace.name,
+      })
+      .from(plugin)
+      .innerJoin(marketplace, eq(plugin.marketplaceId, marketplace.id))
+
+    let filteredQuery = baseQuery.$dynamic()
+
+    if (query.marketplaceSlug) {
+      filteredQuery = filteredQuery.where(
+        eq(marketplace.slug, query.marketplaceSlug)
+      )
+    }
+
+    if (query.search) {
+      const searchTerm = `%${query.search}%`
+      filteredQuery = filteredQuery.where(
+        or(like(plugin.name, searchTerm), like(plugin.slug, searchTerm))
+      )
+    }
+
+    if (query.isVerified !== undefined) {
+      filteredQuery = filteredQuery.where(
+        eq(plugin.isVerified, query.isVerified)
+      )
+    }
+
+    if (query.isFeatured !== undefined) {
+      filteredQuery = filteredQuery.where(
+        eq(plugin.isFeatured, query.isFeatured)
+      )
+    }
+
+    const [plugins, countResult] = await Promise.all([
+      filteredQuery.orderBy(asc(plugin.name)).limit(limit).offset(offset),
+      db()
+        .select({ count: sql<number>`count(*)` })
+        .from(plugin),
+    ])
+
+    const total = Number(countResult[0]?.count ?? 0)
+
+    const formattedPlugins = plugins.map((p) => ({
+      id: p.id,
+      slug: p.slug,
+      name: p.name,
+      description: p.description,
+      iconUrl: p.iconUrl,
+      isVerified: p.isVerified,
+      isFeatured: p.isFeatured,
+      downloadCount: p.downloadCount,
+      marketplace: {
+        id: p.marketplaceId,
+        slug: p.marketplaceSlug,
+        name: p.marketplaceName,
+      },
+    }))
+
+    return c.json({
+      data: formattedPlugins,
+      pagination: {
+        limit,
+        offset,
+        total,
+        hasMore: offset + plugins.length < total,
+      },
+    })
+  }
+)
 
 adminMarketplaces.post(
   "/plugins/:pluginId/verify",

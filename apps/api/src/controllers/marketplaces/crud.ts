@@ -7,6 +7,7 @@ import {
   verifyOrganizationMembership,
   generateMarketplaceId,
 } from "../../services"
+import { syncMarketplace } from "../../services/marketplace-sync"
 import type {
   CreateMarketplaceInput,
   UpdateMarketplaceInput,
@@ -198,6 +199,11 @@ export async function createMarketplace(c: Context): Promise<Response> {
   const created = await db().query.marketplace.findFirst({
     where: eq(marketplace.id, id),
   })
+
+  const sourceType = body.sourceType || "internal"
+  if (sourceType !== "internal") {
+    syncMarketplace(id).catch(() => {})
+  }
 
   return c.json({ marketplace: created }, 201)
 }
