@@ -154,7 +154,7 @@ export default function AdminPluginsPage() {
         : undefined
   const isFeatured = statusFilter === "featured" ? true : undefined
 
-  const { data, isLoading, refetch } = useAdminPlugins({
+  const { data, isLoading } = useAdminPlugins({
     search: search || undefined,
     marketplaceSlug:
       marketplaceFilter !== "all" ? marketplaceFilter : undefined,
