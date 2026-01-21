@@ -93,16 +93,20 @@ export function MarkdownPreview({ content, className }: MarkdownPreviewProps) {
               {children}
             </pre>
           ),
-          a: ({ children, href }) => (
-            <a
-              href={href}
-              className="text-blue-600 hover:text-blue-800 underline"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              {children}
-            </a>
-          ),
+          a: ({ children, href }) => {
+            const isSafeUrl =
+              href && /^(https?:\/\/|mailto:|tel:|#|\/)/i.test(href)
+            return (
+              <a
+                href={isSafeUrl ? href : "#"}
+                className="text-blue-600 hover:text-blue-800 underline"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {children}
+              </a>
+            )
+          },
           hr: () => <hr className="my-4 border-gray-200" />,
           table: ({ children }) => (
             <div className="overflow-x-auto my-3">

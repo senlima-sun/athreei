@@ -338,7 +338,8 @@ apiKeys.get("/:endpointId/keys/:keyId/stats", async (c) => {
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
   sevenDaysAgo.setHours(0, 0, 0, 0)
 
-  const apiKeyJsonPattern = `%"apiKeyId":"${keyId}"%`
+  const escapedKeyId = keyId.replace(/[%_\\]/g, "\\$&")
+  const apiKeyJsonPattern = `%"apiKeyId":"${escapedKeyId}"%`
 
   const totalCountResult = await db()
     .select({ count: sql<number>`count(*)` })
