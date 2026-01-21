@@ -20,6 +20,7 @@ import "./instrument"
 import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { logger as honoLogger } from "hono/logger"
+import { createLogger, type LogLevel } from "@athreei/shared"
 import healthRoutes from "./routes/health"
 import sseRoutes, { configureSseRoutes } from "./routes/sse"
 import {
@@ -34,15 +35,25 @@ import type { Logger } from "@athreei/gateway-core"
 
 const app = new Hono()
 
+const structuredLogger = createLogger({
+  service: "gateway-cloud",
+  level: (process.env.LOG_LEVEL as LogLevel) ?? "info",
+  pretty: process.env.NODE_ENV !== "production",
+})
+
 const log: Logger = {
-  debug: (...args) => {
-    if (process.env.NODE_ENV === "development") {
-      console.error("[DEBUG]", ...args)
-    }
+  debug: (message: string, ...args: unknown[]) => {
+    structuredLogger.debug(message, args.length > 0 ? { args } : undefined)
   },
-  info: (...args) => console.error("[INFO]", ...args),
-  warn: (...args) => console.error("[WARN]", ...args),
-  error: (...args) => console.error("[ERROR]", ...args),
+  info: (message: string, ...args: unknown[]) => {
+    structuredLogger.info(message, args.length > 0 ? { args } : undefined)
+  },
+  warn: (message: string, ...args: unknown[]) => {
+    structuredLogger.warn(message, args.length > 0 ? { args } : undefined)
+  },
+  error: (message: string, ...args: unknown[]) => {
+    structuredLogger.error(message, args.length > 0 ? { args } : undefined)
+  },
 }
 
 app.use("*", honoLogger())

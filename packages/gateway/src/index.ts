@@ -165,7 +165,7 @@ function parseArgs(): CliArgs {
 }
 
 function showHelp(): void {
-  console.error(`
+  log.error(`
 athreei Gateway - MCP Aggregation Proxy
 
 Usage: athreei-gateway [options]
@@ -452,7 +452,7 @@ async function main(): Promise<void> {
   const cliArgs = parseArgs()
 
   if (cliArgs.version) {
-    console.log(`athreei-gateway v${VERSION}`)
+    log.info(`athreei-gateway v${VERSION}`)
     process.exit(0)
   }
 
