@@ -15,14 +15,35 @@ import { pluginManifestSchema } from "@athreei/shared"
 import { z } from "zod"
 
 const pluginDefinitionSchema = z.object({
-  slug: z.string(),
+  slug: z.string().optional(),
+  name: z.string().optional(),
   source: z.string(),
   path: z.string().optional(),
+  description: z.string().optional(),
+  version: z.string().optional(),
+  author: z
+    .union([
+      z.string(),
+      z.object({
+        name: z.string(),
+        email: z.string().optional(),
+      }),
+    ])
+    .optional(),
+  category: z.string().optional(),
 })
 
 const marketplaceFileSchema = z.object({
+  $schema: z.string().optional(),
   name: z.string(),
+  version: z.string().optional(),
   description: z.string().optional(),
+  owner: z
+    .object({
+      name: z.string(),
+      email: z.string().optional(),
+    })
+    .optional(),
   plugins: z.array(pluginDefinitionSchema),
 })
 
@@ -151,11 +172,23 @@ async function syncFromGitHub(
     }
     const marketplaceFile = parseResult.data
 
-    const remotePluginSlugs = marketplaceFile.plugins.map((p) => p.slug)
+    const remotePluginSlugs = marketplaceFile.plugins.map(
+      (p) => p.slug || p.name
+    )
 
     for (const pluginDef of marketplaceFile.plugins) {
+      const pluginSlug = pluginDef.slug || pluginDef.name
+      if (!pluginSlug) {
+        result.errors.push("Plugin missing both slug and name fields")
+        continue
+      }
       try {
-        const pluginResult = await syncPluginFromGitHub(mkt, pluginDef, ref)
+        const pluginResult = await syncPluginFromGitHub(
+          mkt,
+          pluginDef,
+          ref,
+          pluginSlug
+        )
 
         if (pluginResult.isNew) {
           result.added++
@@ -164,7 +197,7 @@ async function syncFromGitHub(
         }
       } catch (error) {
         result.errors.push(
-          `Failed to sync plugin ${pluginDef.slug}: ${error instanceof Error ? error.message : "Unknown error"}`
+          `Failed to sync plugin ${pluginSlug}: ${error instanceof Error ? error.message : "Unknown error"}`
         )
       }
     }
@@ -201,7 +234,8 @@ async function syncFromGitHub(
 async function syncPluginFromGitHub(
   mkt: typeof marketplace.$inferSelect,
   pluginDef: PluginDefinition,
-  ref: string
+  ref: string,
+  pluginSlug: string
 ): Promise<{ isNew: boolean }> {
   let manifestUrl: string
 
@@ -209,10 +243,13 @@ async function syncPluginFromGitHub(
     const [repo, path] = pluginDef.source.replace("github:", "").split("#")
     const manifestPath = path || "plugin.json"
     manifestUrl = `https://raw.githubusercontent.com/${repo}/${ref}/${manifestPath}`
+  } else if (pluginDef.source.startsWith("./")) {
+    const relativePath = pluginDef.source.slice(2)
+    manifestUrl = `https://raw.githubusercontent.com/${mkt.sourceRepo}/${ref}/${relativePath}/.claude-plugin/plugin.json`
   } else if (pluginDef.path) {
-    manifestUrl = `https://raw.githubusercontent.com/${mkt.sourceRepo}/${ref}/${pluginDef.path}/plugin.json`
+    manifestUrl = `https://raw.githubusercontent.com/${mkt.sourceRepo}/${ref}/${pluginDef.path}/.claude-plugin/plugin.json`
   } else {
-    manifestUrl = `https://raw.githubusercontent.com/${mkt.sourceRepo}/${ref}/plugins/${pluginDef.slug}/plugin.json`
+    manifestUrl = `https://raw.githubusercontent.com/${mkt.sourceRepo}/${ref}/plugins/${pluginSlug}/.claude-plugin/plugin.json`
   }
 
   const response = await fetchWithTimeout(manifestUrl)
@@ -230,10 +267,7 @@ async function syncPluginFromGitHub(
   const manifest = manifestResult.data
 
   const existingPlugin = await db().query.plugin.findFirst({
-    where: and(
-      eq(plugin.marketplaceId, mkt.id),
-      eq(plugin.slug, pluginDef.slug)
-    ),
+    where: and(eq(plugin.marketplaceId, mkt.id), eq(plugin.slug, pluginSlug)),
   })
 
   const now = new Date()
@@ -261,7 +295,7 @@ async function syncPluginFromGitHub(
       .values({
         id: pluginId,
         marketplaceId: mkt.id,
-        slug: pluginDef.slug,
+        slug: pluginSlug,
         name: manifest.name,
         description: manifest.description || null,
         author: manifest.author?.name || null,
@@ -299,18 +333,140 @@ async function syncPluginFromGitHub(
         createdAt: now,
       })
 
-    await createComponentsFromManifest(versionId, manifest)
+    const repoInfo = getPluginRepoInfo(mkt, pluginDef, ref, pluginSlug)
+    const pluginBasePath = repoInfo ? getPluginBasePath(repoInfo) : undefined
+    await createComponentsFromManifest(versionId, manifest, pluginBasePath, repoInfo)
   }
 
   return { isNew }
 }
 
+interface RepoInfo {
+  owner: string
+  repo: string
+  ref: string
+  path: string
+}
+
+function getPluginRepoInfo(
+  mkt: typeof marketplace.$inferSelect,
+  pluginDef: PluginDefinition,
+  ref: string,
+  pluginSlug: string
+): RepoInfo | null {
+  if (pluginDef.source.startsWith("github:")) {
+    const [repoFull, path] = pluginDef.source.replace("github:", "").split("#")
+    if (!repoFull) return null
+    const [owner, repo] = repoFull.split("/")
+    if (!owner || !repo) return null
+    const basePath = path ? path.replace(/\/plugin\.json$/, "") : ""
+    return { owner, repo, ref, path: basePath }
+  } else if (mkt.sourceRepo) {
+    const [owner, repo] = mkt.sourceRepo.split("/")
+    if (!owner || !repo) return null
+
+    let pluginPath: string
+    if (pluginDef.source.startsWith("./")) {
+      pluginPath = pluginDef.source.slice(2)
+    } else if (pluginDef.path) {
+      pluginPath = pluginDef.path
+    } else {
+      pluginPath = `plugins/${pluginSlug}`
+    }
+    return { owner, repo, ref, path: pluginPath }
+  }
+  return null
+}
+
+function getPluginBasePath(repoInfo: RepoInfo): string {
+  return `https://api.github.com/repos/${repoInfo.owner}/${repoInfo.repo}/contents/${repoInfo.path}`
+}
+
+async function discoverDirectoryComponents(
+  basePath: string,
+  repoInfo?: { owner: string; repo: string; ref: string; path: string }
+): Promise<{ commands: boolean; agents: boolean; skills: boolean; hooks: boolean }> {
+  const result = { commands: false, agents: false, skills: false, hooks: false }
+
+  if (repoInfo) {
+    try {
+      const treeUrl = `https://api.github.com/repos/${repoInfo.owner}/${repoInfo.repo}/git/trees/${repoInfo.ref}?recursive=1`
+      const response = await fetchWithTimeout(treeUrl, 15000)
+
+      if (!response.ok) {
+        console.error(
+          `[marketplace-sync] Tree API failed for ${repoInfo.owner}/${repoInfo.repo}: ${response.status}`
+        )
+        return result
+      }
+
+      const data = (await response.json()) as {
+        tree: Array<{ path: string; type: string }>
+      }
+
+      const pluginPrefix = repoInfo.path ? `${repoInfo.path}/` : ""
+
+      for (const item of data.tree) {
+        if (item.type !== "tree") continue
+        const relativePath = item.path.startsWith(pluginPrefix)
+          ? item.path.slice(pluginPrefix.length)
+          : null
+
+        if (relativePath === "commands") result.commands = true
+        if (relativePath === "agents") result.agents = true
+        if (relativePath === "skills") result.skills = true
+        if (relativePath === "hooks") result.hooks = true
+      }
+
+      return result
+    } catch (err) {
+      console.error(
+        `[marketplace-sync] Failed to discover directories via Tree API:`,
+        err instanceof Error ? err.message : err
+      )
+    }
+  }
+
+  try {
+    const response = await fetchWithTimeout(basePath, 10000)
+    if (!response.ok) {
+      console.error(
+        `[marketplace-sync] Contents API failed for ${basePath}: ${response.status}`
+      )
+      return result
+    }
+
+    const contents = (await response.json()) as Array<{ name: string; type: string }>
+    for (const item of contents) {
+      if (item.type === "dir") {
+        if (item.name === "commands") result.commands = true
+        if (item.name === "agents") result.agents = true
+        if (item.name === "skills") result.skills = true
+        if (item.name === "hooks") result.hooks = true
+      }
+    }
+  } catch (err) {
+    console.error(
+      `[marketplace-sync] Failed to discover directories:`,
+      err instanceof Error ? err.message : err
+    )
+  }
+
+  return result
+}
+
 async function createComponentsFromManifest(
   versionId: string,
-  manifest: z.infer<typeof pluginManifestSchema>
+  manifest: z.infer<typeof pluginManifestSchema>,
+  pluginBasePath?: string,
+  repoInfo?: RepoInfo | null
 ): Promise<void> {
   const now = new Date()
   const components: Array<typeof pluginComponent.$inferInsert> = []
+
+  const discoveredDirs = pluginBasePath || repoInfo
+    ? await discoverDirectoryComponents(pluginBasePath || "", repoInfo || undefined)
+    : { commands: false, agents: false, skills: false, hooks: false }
 
   if (manifest.mcpServers) {
     if (typeof manifest.mcpServers === "string") {
@@ -378,6 +534,16 @@ async function createComponentsFromManifest(
         })
       }
     }
+  } else if (discoveredDirs.skills) {
+    components.push({
+      id: generatePluginComponentId(),
+      pluginVersionId: versionId,
+      type: "skill",
+      name: "skills",
+      description: "Auto-discovered skills directory",
+      config: JSON.stringify({ path: "skills", autoDiscovered: true }),
+      createdAt: now,
+    })
   }
 
   if (manifest.rules) {
@@ -437,6 +603,16 @@ async function createComponentsFromManifest(
         createdAt: now,
       })
     }
+  } else if (discoveredDirs.commands) {
+    components.push({
+      id: generatePluginComponentId(),
+      pluginVersionId: versionId,
+      type: "command",
+      name: "commands",
+      description: "Auto-discovered commands directory",
+      config: JSON.stringify({ path: "commands", autoDiscovered: true }),
+      createdAt: now,
+    })
   }
 
   if (manifest.agents) {
@@ -453,6 +629,16 @@ async function createComponentsFromManifest(
         createdAt: now,
       })
     }
+  } else if (discoveredDirs.agents) {
+    components.push({
+      id: generatePluginComponentId(),
+      pluginVersionId: versionId,
+      type: "agent",
+      name: "agents",
+      description: "Auto-discovered agents directory",
+      config: JSON.stringify({ path: "agents", autoDiscovered: true }),
+      createdAt: now,
+    })
   }
 
   if (manifest.hooks) {
@@ -477,6 +663,16 @@ async function createComponentsFromManifest(
         })
       }
     }
+  } else if (discoveredDirs.hooks) {
+    components.push({
+      id: generatePluginComponentId(),
+      pluginVersionId: versionId,
+      type: "hook",
+      name: "hooks",
+      description: "Auto-discovered hooks directory",
+      config: JSON.stringify({ path: "hooks", autoDiscovered: true }),
+      createdAt: now,
+    })
   }
 
   if (manifest.lspServers) {
