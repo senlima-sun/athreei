@@ -2,8 +2,10 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { toast } from "sonner"
 import { Loader2, BookOpen, Plus, X, Tag } from "lucide-react"
 import type { Skill, SkillFormData } from "@/types"
+import { MarkdownEditorWithPreview } from "@/components/ui/markdown-editor-with-preview"
 
 interface SkillFormProps {
   skill?: Skill
@@ -19,7 +21,6 @@ export function SkillForm({
   submitLabel = "Create Skill",
 }: SkillFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
   const [name, setName] = useState(skill?.name || "")
   const [description, setDescription] = useState(skill?.description || "")
@@ -51,7 +52,6 @@ export function SkillForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError(null)
     setIsSubmitting(true)
 
     try {
@@ -64,8 +64,11 @@ export function SkillForm({
       }
 
       await onSubmit(formData)
+      toast.success(
+        skill ? "Skill updated successfully" : "Skill created successfully"
+      )
     } catch (err) {
-      setError(
+      toast.error(
         err instanceof Error ? err.message : "An unexpected error occurred"
       )
     } finally {
@@ -127,18 +130,16 @@ export function SkillForm({
         <div>
           <label
             htmlFor="content"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-gray-700 mb-1"
           >
             Content (Markdown)
           </label>
-          <textarea
+          <MarkdownEditorWithPreview
             id="content"
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={setContent}
             placeholder="# Skill Instructions&#10;&#10;Write the AI instructions in markdown format..."
-            rows={12}
-            required
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 font-mono text-sm placeholder-gray-400 focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
+            minHeight="300px"
           />
           <p className="mt-1 text-xs text-gray-500">
             Define the AI&apos;s capabilities and instructions using markdown
@@ -213,12 +214,6 @@ export function SkillForm({
           ))}
         </div>
       </div>
-
-      {error && (
-        <div className="rounded-md bg-red-50 p-3 text-sm text-red-600">
-          {error}
-        </div>
-      )}
 
       <div className="flex items-center justify-end gap-3 border-t border-gray-200 pt-6">
         <Link
