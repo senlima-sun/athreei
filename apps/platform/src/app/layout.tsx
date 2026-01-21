@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
+import { Toaster } from "sonner"
 import "./globals.css"
 import { Providers } from "@/components/providers"
 import { ImpersonationBanner } from "@/components/admin/impersonation-banner"
@@ -33,6 +34,7 @@ export default function RootLayout({
         <Providers>
           <ImpersonationBanner />
           {children}
+          <Toaster position="bottom-right" richColors closeButton />
         </Providers>
       </body>
     </html>
