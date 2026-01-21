@@ -117,7 +117,8 @@ export async function searchPlugins(
   params: ListPluginsQuery,
   organizationId?: string
 ): Promise<{
-  data: PluginSearchResult[]
+  plugins: PluginSearchResult[]
+  total: number
   pagination: { limit: number; offset: number; total: number; hasMore: boolean }
 }> {
   const limit = Math.min(Math.max(params.limit || 20, 1), 100)
@@ -125,7 +126,17 @@ export async function searchPlugins(
 
   const conditions: ReturnType<typeof eq>[] = []
 
-  conditions.push(eq(marketplace.isPublic, true))
+  if (organizationId) {
+    const visibilityCondition = or(
+      eq(marketplace.isPublic, true),
+      eq(marketplace.ownerId, organizationId)
+    )
+    if (visibilityCondition) {
+      conditions.push(visibilityCondition)
+    }
+  } else {
+    conditions.push(eq(marketplace.isPublic, true))
+  }
 
   if (params.marketplaceSlug) {
     conditions.push(eq(marketplace.slug, params.marketplaceSlug))
@@ -318,7 +329,8 @@ export async function searchPlugins(
   })
 
   return {
-    data,
+    plugins: data,
+    total,
     pagination: {
       limit,
       offset,
