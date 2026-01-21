@@ -6,10 +6,16 @@
 # the same database connection and secrets.
 #
 # Usage:
-#   ./scripts/create-worktree.sh <branch-name>
+#   ./scripts/create-worktree.sh <branch-name> [plan-name]
 #   ./scripts/create-worktree.sh feature/plan-a-transport
+#   ./scripts/create-worktree.sh feature/plan-a-transport gateway-stability-fixes
 #
-# The worktree will be created at: ../athreei-<sanitized-branch-name>
+# Arguments:
+#   branch-name  Required. The git branch name for the worktree.
+#   plan-name    Optional. Name prefix for .claude/plans/ and .claude/progress/ files.
+#                Defaults to sanitized branch name (slashes replaced with dashes).
+#
+# The worktree will be created at: ../.athreei-worktrees/<sanitized-branch-name>
 # =============================================================================
 
 set -e
@@ -38,6 +44,9 @@ BRANCH="$1"
 SANITIZED_BRANCH=$(echo "$BRANCH" | sed 's/\//-/g')
 WORKTREE_PATH="${MAIN_REPO}/../.athreei-worktrees/${SANITIZED_BRANCH}"
 
+# Plan/progress name - use second argument or fall back to sanitized branch name
+PLAN_NAME="${2:-$SANITIZED_BRANCH}"
+
 # Check if worktree already exists
 if [ -d "$WORKTREE_PATH" ]; then
     echo -e "${YELLOW}Worktree already exists at: $WORKTREE_PATH${NC}"
@@ -47,11 +56,80 @@ fi
 
 echo -e "${GREEN}Creating worktree for branch: $BRANCH${NC}"
 echo "Location: $WORKTREE_PATH"
+if [ "$PLAN_NAME" != "$SANITIZED_BRANCH" ]; then
+    echo "Plan/Progress: $PLAN_NAME"
+fi
 echo ""
 
 # Create the worktree
 # Use -B to create or reset the branch
 git worktree add "$WORKTREE_PATH" -B "$BRANCH"
+
+echo ""
+echo -e "${GREEN}Copying .claude directory...${NC}"
+
+# Copy .claude directory structure, but selectively handle plans/ and progress/
+copy_claude_dir() {
+    local src_claude="${MAIN_REPO}/.claude"
+    local dest_claude="${WORKTREE_PATH}/.claude"
+    
+    if [ ! -d "$src_claude" ]; then
+        echo "  ⚠ .claude directory not found, skipping"
+        return
+    fi
+    
+    # Create destination .claude directory
+    mkdir -p "$dest_claude"
+    
+    # Copy everything except plans/ and progress/
+    for item in "$src_claude"/*; do
+        local basename=$(basename "$item")
+        
+        # Skip plans and progress directories (handled separately)
+        if [ "$basename" = "plans" ] || [ "$basename" = "progress" ]; then
+            continue
+        fi
+        
+        # Copy files and directories
+        if [ -e "$item" ]; then
+            cp -r "$item" "$dest_claude/"
+            echo "  ✓ Copied $basename"
+        fi
+    done
+    
+    # Handle plans/ - only copy files matching PLAN_NAME
+    if [ -d "$src_claude/plans" ]; then
+        mkdir -p "$dest_claude/plans"
+        for plan_file in "$src_claude/plans/${PLAN_NAME}"*; do
+            if [ -f "$plan_file" ]; then
+                cp "$plan_file" "$dest_claude/plans/"
+                echo "  ✓ Copied plans/$(basename "$plan_file")"
+            fi
+        done
+        # Check if any files were copied
+        if [ -z "$(ls -A "$dest_claude/plans" 2>/dev/null)" ]; then
+            echo "  ⚠ No matching plan files for: $PLAN_NAME"
+        fi
+    fi
+    
+    # Handle progress/ - only copy files matching PLAN_NAME (and template)
+    if [ -d "$src_claude/progress" ]; then
+        mkdir -p "$dest_claude/progress"
+        # Always copy template if exists
+        if [ -f "$src_claude/progress/.template.md" ]; then
+            cp "$src_claude/progress/.template.md" "$dest_claude/progress/"
+            echo "  ✓ Copied progress/.template.md"
+        fi
+        for progress_file in "$src_claude/progress/${PLAN_NAME}"*; do
+            if [ -f "$progress_file" ]; then
+                cp "$progress_file" "$dest_claude/progress/"
+                echo "  ✓ Copied progress/$(basename "$progress_file")"
+            fi
+        done
+    fi
+}
+
+copy_claude_dir
 
 echo ""
 echo -e "${GREEN}Symlinking .env files...${NC}"
