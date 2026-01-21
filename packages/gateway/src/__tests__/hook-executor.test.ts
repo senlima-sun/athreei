@@ -184,7 +184,9 @@ describe("HookExecutor", () => {
       ]
       executor.setHooks(hooks)
 
-      const context = createPreToolUseContext({ toolName: "browser__screenshot" })
+      const context = createPreToolUseContext({
+        toolName: "browser__screenshot",
+      })
       const decision = await executor.evaluatePreToolUse(context)
 
       expect(decision.action).toBe("allow")
@@ -195,12 +197,18 @@ describe("HookExecutor", () => {
         createHook({
           event: "PreToolUse",
           toolNamePattern: "browser__",
-          handler: { type: "rule", action: "block", message: "Tool blocked by rule" },
+          handler: {
+            type: "rule",
+            action: "block",
+            message: "Tool blocked by rule",
+          },
         }),
       ]
       executor.setHooks(hooks)
 
-      const context = createPreToolUseContext({ toolName: "browser__screenshot" })
+      const context = createPreToolUseContext({
+        toolName: "browser__screenshot",
+      })
       const decision = await executor.evaluatePreToolUse(context)
 
       expect(decision.action).toBe("block")
@@ -219,7 +227,11 @@ describe("HookExecutor", () => {
           id: "block-hook",
           event: "PreToolUse",
           priority: 200,
-          handler: { type: "rule", action: "block", message: "High priority block" },
+          handler: {
+            type: "rule",
+            action: "block",
+            message: "High priority block",
+          },
         }),
       ]
       executor.setHooks(hooks)
@@ -357,7 +369,9 @@ describe("HookExecutor", () => {
 
       const context = createPostToolUseContext()
 
-      await expect(executor.evaluatePostToolUse(context)).resolves.toBeUndefined()
+      await expect(
+        executor.evaluatePostToolUse(context)
+      ).resolves.toBeUndefined()
     })
 
     it("should return early when no hooks match", async () => {
@@ -365,7 +379,9 @@ describe("HookExecutor", () => {
 
       const context = createPostToolUseContext()
 
-      await expect(executor.evaluatePostToolUse(context)).resolves.toBeUndefined()
+      await expect(
+        executor.evaluatePostToolUse(context)
+      ).resolves.toBeUndefined()
     })
 
     it("should only run PostToolUse event hooks", async () => {
@@ -385,7 +401,9 @@ describe("HookExecutor", () => {
 
       const context = createPostToolUseContext()
 
-      await expect(executor.evaluatePostToolUse(context)).resolves.toBeUndefined()
+      await expect(
+        executor.evaluatePostToolUse(context)
+      ).resolves.toBeUndefined()
     })
 
     it("should handle hook failures gracefully", async () => {
@@ -407,7 +425,9 @@ describe("HookExecutor", () => {
 
       const context = createPostToolUseContext()
 
-      await expect(executor.evaluatePostToolUse(context)).resolves.toBeUndefined()
+      await expect(
+        executor.evaluatePostToolUse(context)
+      ).resolves.toBeUndefined()
     })
 
     it("should filter PostToolUse hooks by tool name pattern", async () => {
@@ -421,9 +441,13 @@ describe("HookExecutor", () => {
       ]
       executor.setHooks(hooks)
 
-      const context = createPostToolUseContext({ toolName: "browser__screenshot" })
+      const context = createPostToolUseContext({
+        toolName: "browser__screenshot",
+      })
 
-      await expect(executor.evaluatePostToolUse(context)).resolves.toBeUndefined()
+      await expect(
+        executor.evaluatePostToolUse(context)
+      ).resolves.toBeUndefined()
     })
   })
 
@@ -438,7 +462,9 @@ describe("HookExecutor", () => {
       ]
       executor.setHooks(hooks)
 
-      const context = createPreToolUseContext({ toolName: "browser__screenshot" })
+      const context = createPreToolUseContext({
+        toolName: "browser__screenshot",
+      })
       const decision = await executor.evaluatePreToolUse(context)
 
       expect(decision.action).toBe("block")
@@ -464,12 +490,18 @@ describe("HookExecutor", () => {
         createHook({
           event: "PreToolUse",
           toolNamePattern: "^github__",
-          handler: { type: "rule", action: "block", message: "Should not match" },
+          handler: {
+            type: "rule",
+            action: "block",
+            message: "Should not match",
+          },
         }),
       ]
       executor.setHooks(hooks)
 
-      const context = createPreToolUseContext({ toolName: "browser__screenshot" })
+      const context = createPreToolUseContext({
+        toolName: "browser__screenshot",
+      })
       const decision = await executor.evaluatePreToolUse(context)
 
       expect(decision.action).toBe("allow")
@@ -480,7 +512,11 @@ describe("HookExecutor", () => {
         createHook({
           event: "PreToolUse",
           toolNamePattern: "[invalid(regex",
-          handler: { type: "rule", action: "block", message: "Invalid pattern" },
+          handler: {
+            type: "rule",
+            action: "block",
+            message: "Invalid pattern",
+          },
         }),
       ]
       executor.setHooks(hooks)
@@ -550,7 +586,9 @@ describe("HookExecutor", () => {
       ]
       executor.setHooks(hooks)
 
-      const context = createPreToolUseContext({ toolName: "browser__screenshot" })
+      const context = createPreToolUseContext({
+        toolName: "browser__screenshot",
+      })
       const decision = await executor.evaluatePreToolUse(context)
 
       expect(decision.action).toBe("block")
@@ -573,7 +611,9 @@ describe("HookExecutor", () => {
       ]
       executor.setHooks(hooks)
 
-      const context = createPreToolUseContext({ toolName: "browser__screenshot" })
+      const context = createPreToolUseContext({
+        toolName: "browser__screenshot",
+      })
       const decision = await executor.evaluatePreToolUse(context)
 
       expect(decision.action).toBe("block")
@@ -595,7 +635,9 @@ describe("HookExecutor", () => {
       ]
       executor.setHooks(hooks)
 
-      const context = createPreToolUseContext({ toolName: "browser__screenshot" })
+      const context = createPreToolUseContext({
+        toolName: "browser__screenshot",
+      })
       const decision = await executor.evaluatePreToolUse(context)
 
       expect(decision.action).toBe("allow")
@@ -617,7 +659,9 @@ describe("HookExecutor", () => {
       ]
       executor.setHooks(hooks)
 
-      const context = createPreToolUseContext({ toolName: "BROWSER__SCREENSHOT" })
+      const context = createPreToolUseContext({
+        toolName: "BROWSER__SCREENSHOT",
+      })
       const decision = await executor.evaluatePreToolUse(context)
 
       expect(decision.action).toBe("block")
@@ -639,7 +683,9 @@ describe("HookExecutor", () => {
       ]
       executor.setHooks(hooks)
 
-      const context = createPreToolUseContext({ toolName: "filesystem__delete" })
+      const context = createPreToolUseContext({
+        toolName: "filesystem__delete",
+      })
       const decision = await executor.evaluatePreToolUse(context)
 
       expect(decision.action).toBe("block")
