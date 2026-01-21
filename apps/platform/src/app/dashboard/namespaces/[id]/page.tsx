@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
-import { PageHeader } from "@/components/dashboard/page-header"
+import { PageHeader, LoadingState } from "@/components/dashboard"
 import {
   NamespaceServerList,
   ServerPickerModal,
@@ -715,9 +715,7 @@ export default function NamespaceDetailsPage() {
     return (
       <div>
         <PageHeader title="Namespace Details" />
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-        </div>
+        <LoadingState message="Loading namespace..." />
       </div>
     )
   }

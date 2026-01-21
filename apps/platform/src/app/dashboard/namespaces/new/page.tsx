@@ -2,10 +2,9 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { PageHeader } from "@/components/dashboard/page-header"
+import { PageHeader, LoadingState } from "@/components/dashboard"
 import { NamespaceForm } from "@/components/namespaces"
 import { useActiveOrganization } from "@/lib/auth-client"
-import { Loader2 } from "lucide-react"
 import { API_URL } from "@/constants"
 
 export default function NewNamespacePage() {
@@ -62,9 +61,7 @@ export default function NewNamespacePage() {
           title="Create namespace"
           description="Set up a new namespace to organize your MCP servers"
         />
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-        </div>
+        <LoadingState message="Loading organization..." />
       </div>
     )
   }

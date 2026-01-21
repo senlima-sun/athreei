@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { PageHeader } from "@/components/dashboard/page-header"
+import { PageHeader, LoadingState } from "@/components/dashboard"
 import {
   useOrgMarketplaceSettings,
   useUpdateOrgMarketplaceSettings,
@@ -23,7 +23,7 @@ import {
   PluginAllowlist,
   DefaultPluginSelector,
 } from "@/components/settings/marketplace"
-import { Loader2, AlertCircle, Store, Package, Shield } from "lucide-react"
+import { AlertCircle, Store, Package, Shield } from "lucide-react"
 
 interface Member {
   id: string
@@ -107,9 +107,7 @@ export default function MarketplaceSettingsPage() {
           title="Marketplace Settings"
           description="Control which marketplaces and plugins are available to your organization"
         />
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-        </div>
+        <LoadingState message="Loading marketplace settings..." />
       </div>
     )
   }

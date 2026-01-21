@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useParams } from "next/navigation"
-import { PageHeader } from "@/components/dashboard/page-header"
+import { PageHeader, LoadingState, EmptyState } from "@/components/dashboard"
 import {
   useListOrganizations,
   organization,
@@ -22,8 +22,8 @@ import {
   Clock,
   RefreshCw,
   ChevronDown,
+  ArrowLeft,
 } from "lucide-react"
-import Link from "next/link"
 
 interface Member {
   id: string
@@ -243,9 +243,7 @@ export default function OrganizationMembersPage() {
     return (
       <div>
         <PageHeader title="Team Members" />
-        <div className="flex items-center justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-gray-600" />
-        </div>
+        <LoadingState message="Loading team members..." />
       </div>
     )
   }
@@ -254,18 +252,16 @@ export default function OrganizationMembersPage() {
     return (
       <div>
         <PageHeader title="Organization not found" />
-        <div className="rounded-lg border border-gray-200 bg-white p-8 text-center">
-          <p className="text-gray-500">
-            This organization doesn&apos;t exist or you don&apos;t have access
-            to it.
-          </p>
-          <Link
-            href="/dashboard/organizations"
-            className="mt-4 inline-block text-sm font-medium text-gray-900 hover:underline"
-          >
-            Back to organizations
-          </Link>
-        </div>
+        <EmptyState
+          icon={Users}
+          title="Organization not found"
+          description="This organization doesn't exist or you don't have access to it."
+          action={{
+            label: "Back to organizations",
+            href: "/dashboard/organizations",
+            icon: ArrowLeft,
+          }}
+        />
       </div>
     )
   }
@@ -356,9 +352,7 @@ export default function OrganizationMembersPage() {
       {/* Members list */}
       <div className="rounded-lg border border-gray-200 bg-white">
         {isLoadingMembers ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-gray-600" />
-          </div>
+          <LoadingState variant="section" message="Loading members..." />
         ) : members.length === 0 ? (
           <div className="p-8 text-center">
             <Users className="mx-auto h-12 w-12 text-gray-400" />
