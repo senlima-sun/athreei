@@ -36,7 +36,7 @@ BRANCH="$1"
 
 # Sanitize branch name for directory (replace / with -)
 SANITIZED_BRANCH=$(echo "$BRANCH" | sed 's/\//-/g')
-WORKTREE_PATH="${MAIN_REPO}/../athreei-${SANITIZED_BRANCH}"
+WORKTREE_PATH="${MAIN_REPO}/../.athreei-worktrees/${SANITIZED_BRANCH}"
 
 # Check if worktree already exists
 if [ -d "$WORKTREE_PATH" ]; then
