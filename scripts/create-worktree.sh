@@ -10,10 +10,17 @@
 #   ./scripts/create-worktree.sh feature/plan-a-transport
 #   ./scripts/create-worktree.sh feature/plan-a-transport gateway-stability-fixes
 #
+#   # Setup only (run from within an existing worktree)
+#   ./scripts/create-worktree.sh --setup-only
+#
 # Arguments:
-#   branch-name  Required. The git branch name for the worktree.
-#   plan-name    Optional. Name prefix for .claude/plans/ and .claude/progress/ files.
-#                Defaults to sanitized branch name (slashes replaced with dashes).
+#   branch-name   Required (unless --setup-only). The git branch name for the worktree.
+#   plan-name     Optional. Name prefix for .claude/plans/ and .claude/progress/ files.
+#                 Defaults to sanitized branch name (slashes replaced with dashes).
+#
+# Flags:
+#   --setup-only  Skip worktree creation, only setup .claude and .env symlinks.
+#                 Must be run from within an existing worktree directory.
 #
 # The worktree will be created at: ../.athreei-worktrees/<sanitized-branch-name>
 # =============================================================================
@@ -30,48 +37,75 @@ NC='\033[0m' # No Color
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MAIN_REPO="$(dirname "$SCRIPT_DIR")"
 
-# Validate input
-if [ -z "$1" ]; then
-    echo -e "${RED}Error: Branch name required${NC}"
-    echo "Usage: $0 <branch-name>"
-    echo "Example: $0 feature/plan-a-transport"
-    exit 1
+# Check for --setup-only flag
+SETUP_ONLY=false
+if [ "$1" = "--setup-only" ]; then
+    SETUP_ONLY=true
 fi
 
-BRANCH="$1"
+if [ "$SETUP_ONLY" = true ]; then
+    # Setup-only mode: run from current directory (must be a worktree)
+    WORKTREE_PATH="$(pwd)"
+    
+    # Verify we're in a git worktree (not the main repo)
+    if [ "$WORKTREE_PATH" = "$MAIN_REPO" ]; then
+        echo -e "${RED}Error: --setup-only must be run from within a worktree, not the main repo${NC}"
+        exit 1
+    fi
+    
+    if [ ! -d "$WORKTREE_PATH/.git" ] && [ ! -f "$WORKTREE_PATH/.git" ]; then
+        echo -e "${RED}Error: Current directory is not a git repository${NC}"
+        exit 1
+    fi
+    
+    echo -e "${GREEN}Setting up worktree: $WORKTREE_PATH${NC}"
+    echo ""
+else
+    # Normal mode: create new worktree
+    # Validate input
+    if [ -z "$1" ]; then
+        echo -e "${RED}Error: Branch name required${NC}"
+        echo "Usage: $0 <branch-name> [plan-name]"
+        echo "       $0 --setup-only"
+        echo "Example: $0 feature/plan-a-transport"
+        exit 1
+    fi
 
-# Sanitize branch name for directory (replace / with -)
-SANITIZED_BRANCH=$(echo "$BRANCH" | sed 's/\//-/g')
-WORKTREE_PATH="${MAIN_REPO}/../.athreei-worktrees/${SANITIZED_BRANCH}"
+    BRANCH="$1"
 
-# Plan/progress name - use second argument or fall back to sanitized branch name
-PLAN_NAME="${2:-$SANITIZED_BRANCH}"
+    # Sanitize branch name for directory (replace / with -)
+    SANITIZED_BRANCH=$(echo "$BRANCH" | sed 's/\//-/g')
+    WORKTREE_PATH="${MAIN_REPO}/../.athreei-worktrees/${SANITIZED_BRANCH}"
 
-# Check if worktree already exists
-if [ -d "$WORKTREE_PATH" ]; then
-    echo -e "${YELLOW}Worktree already exists at: $WORKTREE_PATH${NC}"
-    echo "To remove it: git worktree remove $WORKTREE_PATH"
-    exit 1
+    # Plan/progress name - use second argument or fall back to sanitized branch name
+    PLAN_NAME="${2:-$SANITIZED_BRANCH}"
+
+    # Check if worktree already exists
+    if [ -d "$WORKTREE_PATH" ]; then
+        echo -e "${YELLOW}Worktree already exists at: $WORKTREE_PATH${NC}"
+        echo "To remove it: git worktree remove $WORKTREE_PATH"
+        exit 1
+    fi
+
+    echo -e "${GREEN}Creating worktree for branch: $BRANCH${NC}"
+    echo "Location: $WORKTREE_PATH"
+    if [ "$PLAN_NAME" != "$SANITIZED_BRANCH" ]; then
+        echo "Plan/Progress: $PLAN_NAME"
+    fi
+    echo ""
+
+    # Create the worktree
+    # Use -B to create or reset the branch
+    git worktree add "$WORKTREE_PATH" -B "$BRANCH"
+    echo ""
 fi
-
-echo -e "${GREEN}Creating worktree for branch: $BRANCH${NC}"
-echo "Location: $WORKTREE_PATH"
-if [ "$PLAN_NAME" != "$SANITIZED_BRANCH" ]; then
-    echo "Plan/Progress: $PLAN_NAME"
-fi
-echo ""
-
-# Create the worktree
-# Use -B to create or reset the branch
-git worktree add "$WORKTREE_PATH" -B "$BRANCH"
-
-echo ""
 echo -e "${GREEN}Copying .claude directory...${NC}"
 
 # Copy .claude directory structure, but selectively handle plans/ and progress/
 copy_claude_dir() {
     local src_claude="${MAIN_REPO}/.claude"
     local dest_claude="${WORKTREE_PATH}/.claude"
+    local skip_plans_progress="$1"  # If "true", skip plans/ and progress/ entirely
     
     if [ ! -d "$src_claude" ]; then
         echo "  ⚠ .claude directory not found, skipping"
@@ -96,6 +130,12 @@ copy_claude_dir() {
             echo "  ✓ Copied $basename"
         fi
     done
+    
+    # Skip plans/progress in setup-only mode
+    if [ "$skip_plans_progress" = "true" ]; then
+        echo "  ⚠ Skipped plans/ and progress/ (setup-only mode)"
+        return
+    fi
     
     # Handle plans/ - only copy files matching PLAN_NAME
     if [ -d "$src_claude/plans" ]; then
@@ -129,7 +169,11 @@ copy_claude_dir() {
     fi
 }
 
-copy_claude_dir
+if [ "$SETUP_ONLY" = true ]; then
+    copy_claude_dir "true"
+else
+    copy_claude_dir "false"
+fi
 
 echo ""
 echo -e "${GREEN}Symlinking .env files...${NC}"
@@ -173,12 +217,19 @@ echo -e "${GREEN}✓ Worktree ready!${NC}"
 echo -e "${GREEN}════════════════════════════════════════════════════════════════${NC}"
 echo ""
 echo "Location: $WORKTREE_PATH"
-echo "Branch:   $BRANCH"
+if [ "$SETUP_ONLY" = false ]; then
+    echo "Branch:   $BRANCH"
+fi
 echo ""
-echo "Next steps:"
-echo "  cd $WORKTREE_PATH"
-echo "  bun run dev"
-echo ""
-echo "To remove this worktree later:"
-echo "  git worktree remove $WORKTREE_PATH"
+if [ "$SETUP_ONLY" = true ]; then
+    echo "Setup complete. You can now run:"
+    echo "  bun run dev"
+else
+    echo "Next steps:"
+    echo "  cd $WORKTREE_PATH"
+    echo "  bun run dev"
+    echo ""
+    echo "To remove this worktree later:"
+    echo "  git worktree remove $WORKTREE_PATH"
+fi
 echo ""
