@@ -96,18 +96,22 @@ export async function routeToolCall(
   logger.debug(`Calling ${toolName} on ${mcp.config.name}`)
 
   const timeoutMs = options.timeoutMs ?? TIMEOUT.DEFAULT_TOOL_CALL_MS
+  let timeoutId: ReturnType<typeof setTimeout>
   const timeoutPromise = new Promise<never>((_, reject) => {
-    setTimeout(() => {
+    timeoutId = setTimeout(() => {
       reject(new ToolCallTimeoutError(serverName, toolName, timeoutMs))
     }, timeoutMs)
   })
 
-  const result = await Promise.race([
-    mcp.client.callTool({ name: toolName, arguments: args }),
-    timeoutPromise,
-  ])
-
-  return result as CallToolResult
+  try {
+    const result = await Promise.race([
+      mcp.client.callTool({ name: toolName, arguments: args }),
+      timeoutPromise,
+    ])
+    return result as CallToolResult
+  } finally {
+    clearTimeout(timeoutId!)
+  }
 }
 
 /**

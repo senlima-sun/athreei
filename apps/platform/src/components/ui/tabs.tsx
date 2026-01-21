@@ -6,10 +6,7 @@ import { cn } from "@/lib/utils"
 
 const BaseTabs = TabsPrimitive.Root
 
-function Tabs({
-  className,
-  ...props
-}: TabsPrimitive.Root.Props) {
+function Tabs({ className, ...props }: TabsPrimitive.Root.Props) {
   return (
     <TabsPrimitive.Root
       data-slot="tabs"
@@ -19,10 +16,7 @@ function Tabs({
   )
 }
 
-function TabsList({
-  className,
-  ...props
-}: TabsPrimitive.List.Props) {
+function TabsList({ className, ...props }: TabsPrimitive.List.Props) {
   return (
     <TabsPrimitive.List
       data-slot="tabs-list"
@@ -35,10 +29,7 @@ function TabsList({
   )
 }
 
-function TabsTrigger({
-  className,
-  ...props
-}: TabsPrimitive.Tab.Props) {
+function TabsTrigger({ className, ...props }: TabsPrimitive.Tab.Props) {
   return (
     <TabsPrimitive.Tab
       data-slot="tabs-trigger"
@@ -51,10 +42,7 @@ function TabsTrigger({
   )
 }
 
-function TabsContent({
-  className,
-  ...props
-}: TabsPrimitive.Panel.Props) {
+function TabsContent({ className, ...props }: TabsPrimitive.Panel.Props) {
   return (
     <TabsPrimitive.Panel
       data-slot="tabs-content"

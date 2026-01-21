@@ -31,10 +31,7 @@ import {
   Trash2,
 } from "lucide-react"
 import { useMarketplaceAdminPermissions } from "@/hooks/use-marketplace-admin-permissions"
-import {
-  useAdminPlugins,
-  type AdminPlugin,
-} from "@/hooks/use-admin-plugins"
+import { useAdminPlugins, type AdminPlugin } from "@/hooks/use-admin-plugins"
 
 interface PluginRowProps {
   plugin: AdminPlugin

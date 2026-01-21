@@ -335,7 +335,12 @@ async function syncPluginFromGitHub(
 
     const repoInfo = getPluginRepoInfo(mkt, pluginDef, ref, pluginSlug)
     const pluginBasePath = repoInfo ? getPluginBasePath(repoInfo) : undefined
-    await createComponentsFromManifest(versionId, manifest, pluginBasePath, repoInfo)
+    await createComponentsFromManifest(
+      versionId,
+      manifest,
+      pluginBasePath,
+      repoInfo
+    )
   }
 
   return { isNew }
@@ -385,7 +390,12 @@ function getPluginBasePath(repoInfo: RepoInfo): string {
 async function discoverDirectoryComponents(
   basePath: string,
   repoInfo?: { owner: string; repo: string; ref: string; path: string }
-): Promise<{ commands: boolean; agents: boolean; skills: boolean; hooks: boolean }> {
+): Promise<{
+  commands: boolean
+  agents: boolean
+  skills: boolean
+  hooks: boolean
+}> {
   const result = { commands: false, agents: false, skills: false, hooks: false }
 
   if (repoInfo) {
@@ -436,7 +446,10 @@ async function discoverDirectoryComponents(
       return result
     }
 
-    const contents = (await response.json()) as Array<{ name: string; type: string }>
+    const contents = (await response.json()) as Array<{
+      name: string
+      type: string
+    }>
     for (const item of contents) {
       if (item.type === "dir") {
         if (item.name === "commands") result.commands = true
@@ -464,9 +477,13 @@ async function createComponentsFromManifest(
   const now = new Date()
   const components: Array<typeof pluginComponent.$inferInsert> = []
 
-  const discoveredDirs = pluginBasePath || repoInfo
-    ? await discoverDirectoryComponents(pluginBasePath || "", repoInfo || undefined)
-    : { commands: false, agents: false, skills: false, hooks: false }
+  const discoveredDirs =
+    pluginBasePath || repoInfo
+      ? await discoverDirectoryComponents(
+          pluginBasePath || "",
+          repoInfo || undefined
+        )
+      : { commands: false, agents: false, skills: false, hooks: false }
 
   if (manifest.mcpServers) {
     if (typeof manifest.mcpServers === "string") {
