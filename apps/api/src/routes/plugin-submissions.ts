@@ -17,7 +17,11 @@ const submitPluginSchema = z.object({
   pluginName: z.string().min(1).max(100),
   description: z.string().max(500).optional(),
   category: z.string().max(50).optional(),
-  sourceRepo: z.string().min(1).max(500),
+  sourceRepo: z
+    .string()
+    .min(1)
+    .max(500)
+    .regex(/^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/, "Must be in format: owner/repo"),
   sourceRef: z.string().max(100).default("main"),
   sourcePath: z.string().max(500).optional(),
 })
