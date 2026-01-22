@@ -176,7 +176,7 @@ export function TraceFilters({
       window.URL.revokeObjectURL(url)
       document.body.removeChild(a)
     } catch (error) {
-      console.error("Export failed:", error)
+      console.error("[trace-filters] Export failed", { error, format })
     } finally {
       setIsExporting(false)
     }
