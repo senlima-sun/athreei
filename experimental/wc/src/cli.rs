@@ -78,6 +78,10 @@ pub enum RootCommands {
         /// Path to the root directory
         path: PathBuf,
 
+        /// Directory where worktrees will be created (defaults to root path)
+        #[arg(short, long)]
+        worktrees: Option<PathBuf>,
+
         /// Setup script to run after creating worktree
         #[arg(short, long)]
         setup: Option<PathBuf>,
@@ -90,5 +94,19 @@ pub enum RootCommands {
     Remove {
         /// Name of the root to remove
         name: String,
+    },
+
+    /// Update a worktree root's configuration
+    Update {
+        /// Name of the root to update
+        name: String,
+
+        /// New worktrees directory (use --worktrees="" to reset to root path)
+        #[arg(short, long)]
+        worktrees: Option<PathBuf>,
+
+        /// New setup script path (use --setup="" to remove)
+        #[arg(short, long)]
+        setup: Option<PathBuf>,
     },
 }

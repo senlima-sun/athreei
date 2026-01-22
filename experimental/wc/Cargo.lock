@@ -89,6 +89,7 @@ dependencies = [
  "crossterm",
  "dirs",
  "git2",
+ "libc",
  "portable-pty",
  "ratatui",
  "serde",

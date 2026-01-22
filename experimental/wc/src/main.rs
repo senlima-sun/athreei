@@ -47,11 +47,14 @@ async fn main() -> Result<()> {
             cmd_root(action, &config)?;
         }
         Some(Commands::Git { session }) => {
-            if let Some(name) = session {
-                if let Some(sess) = store.find_by_target(&name) {
+            if let Some(target) = session {
+                let path = PathBuf::from(&target);
+                if path.exists() {
+                    std::env::set_current_dir(&path)?;
+                } else if let Some(sess) = store.find_by_target(&target) {
                     std::env::set_current_dir(&sess.worktree_path)?;
                 } else {
-                    anyhow::bail!("Session '{}' not found", name);
+                    anyhow::bail!("Path or session '{}' not found", target);
                 }
             }
             tui::run_git_ui()?;
@@ -95,6 +98,7 @@ fn cmd_start(config: &Config, store: &mut SessionStore) -> Result<()> {
             "-c",
             cwd.to_str().unwrap(),
             "claude",
+            "--dangerously-skip-permissions",
         ])
         .output()?;
 
@@ -143,13 +147,24 @@ fn cmd_new(
         );
     };
 
-    let worktree_path = git::create_worktree(name, &root.path)?;
+    let root_path = root.path.canonicalize().unwrap_or_else(|_| root.path.clone());
+    let worktrees_dir = root
+        .worktrees_path
+        .as_ref()
+        .and_then(|p| p.canonicalize().ok())
+        .unwrap_or_else(|| root_path.clone());
+    let worktree_path = git::create_worktree(name, &worktrees_dir)?;
     println!("Worktree created at: {}", worktree_path.display());
 
     if let Some(setup_script) = &root.setup_script {
         println!("Running setup script: {}", setup_script.display());
-        let status = Command::new(setup_script)
+        let status = Command::new("sh")
+            .arg(setup_script)
             .current_dir(&worktree_path)
+            .env("ROOT_WORKTREE_PATH", &root_path)
+            .env("ROOT_NAME", root_name.unwrap_or("default"))
+            .env("WORKTREE_PATH", &worktree_path)
+            .env("WORKTREE_NAME", name)
             .status()?;
 
         if !status.success() {
@@ -174,6 +189,7 @@ fn cmd_new(
             "-c",
             worktree_path.to_str().unwrap(),
             "claude",
+            "--dangerously-skip-permissions",
         ])
         .output()?;
 
@@ -341,12 +357,27 @@ fn cmd_root(action: RootCommands, config: &Config) -> Result<()> {
     let mut roots = config.load_roots()?;
 
     match action {
-        RootCommands::Add { name, path, setup } => {
+        RootCommands::Add {
+            name,
+            path,
+            worktrees,
+            setup,
+        } => {
             let abs_path = if path.is_absolute() {
                 path
             } else {
                 std::env::current_dir()?.join(&path)
             };
+
+            let worktrees_path = worktrees.map(|w| {
+                let p = if w.is_absolute() {
+                    w
+                } else {
+                    std::env::current_dir().unwrap().join(w)
+                };
+                std::fs::create_dir_all(&p).ok();
+                p.canonicalize().unwrap_or(p)
+            });
 
             let setup_script = setup.map(|s| {
                 if s.is_absolute() {
@@ -357,11 +388,13 @@ fn cmd_root(action: RootCommands, config: &Config) -> Result<()> {
             });
 
             std::fs::create_dir_all(&abs_path)?;
+            let abs_path = abs_path.canonicalize()?;
 
             roots.add(
                 name.clone(),
                 WorktreeRoot {
                     path: abs_path.clone(),
+                    worktrees_path: worktrees_path.clone(),
                     setup_script: setup_script.clone(),
                 },
             );
@@ -369,6 +402,9 @@ fn cmd_root(action: RootCommands, config: &Config) -> Result<()> {
 
             println!("Added root '{}':", name);
             println!("  Path: {}", abs_path.display());
+            if let Some(wt) = worktrees_path {
+                println!("  Worktrees: {}", wt.display());
+            }
             if let Some(script) = setup_script {
                 println!("  Setup: {}", script.display());
             }
@@ -377,20 +413,20 @@ fn cmd_root(action: RootCommands, config: &Config) -> Result<()> {
             if roots.roots.is_empty() {
                 println!("No roots configured.");
                 println!("\nUsage:");
-                println!("  awc root add <name> <path> [--setup=<script>]");
+                println!("  awc root add <name> <path> [--worktrees=<dir>] [--setup=<script>]");
                 return Ok(());
             }
 
-            println!("{:<15} {:<40} {}", "NAME", "PATH", "SETUP");
-            println!("{}", "-".repeat(70));
-
             for (name, root) in roots.list() {
-                let setup = root
-                    .setup_script
-                    .as_ref()
-                    .map(|p| p.display().to_string())
-                    .unwrap_or_else(|| "-".to_string());
-                println!("{:<15} {:<40} {}", name, root.path.display(), setup);
+                println!("{}:", name);
+                println!("  Path: {}", root.path.display());
+                if let Some(wt) = &root.worktrees_path {
+                    println!("  Worktrees: {}", wt.display());
+                }
+                if let Some(script) = &root.setup_script {
+                    println!("  Setup: {}", script.display());
+                }
+                println!();
             }
         }
         RootCommands::Remove { name } => {
@@ -400,6 +436,59 @@ fn cmd_root(action: RootCommands, config: &Config) -> Result<()> {
             } else {
                 anyhow::bail!("Root '{}' not found", name);
             }
+        }
+        RootCommands::Update {
+            name,
+            worktrees,
+            setup,
+        } => {
+            if worktrees.is_none() && setup.is_none() {
+                anyhow::bail!(
+                    "Nothing to update. Use --worktrees=<dir> or --setup=<script> to update."
+                );
+            }
+
+            let root = roots
+                .roots
+                .get_mut(&name)
+                .ok_or_else(|| anyhow::anyhow!("Root '{}' not found", name))?;
+
+            println!("Updated root '{}':", name);
+
+            if let Some(wt) = worktrees {
+                if wt.as_os_str().is_empty() {
+                    root.worktrees_path = None;
+                    println!("  Worktrees: (reset to root path)");
+                } else {
+                    let p = if wt.is_absolute() {
+                        wt
+                    } else {
+                        std::env::current_dir().unwrap().join(wt)
+                    };
+                    std::fs::create_dir_all(&p)?;
+                    let p = p.canonicalize()?;
+                    root.worktrees_path = Some(p.clone());
+                    println!("  Worktrees: {}", p.display());
+                }
+            }
+
+            if let Some(s) = setup {
+                if s.as_os_str().is_empty() {
+                    root.setup_script = None;
+                    println!("  Setup: (removed)");
+                } else {
+                    let script = if s.is_absolute() {
+                        s
+                    } else {
+                        std::env::current_dir().unwrap().join(s)
+                    };
+                    let script = script.canonicalize()?;
+                    root.setup_script = Some(script.clone());
+                    println!("  Setup: {}", script.display());
+                }
+            }
+
+            config.save_roots(&roots)?;
         }
     }
 

@@ -30,7 +30,7 @@ pub fn create_worktree(name: &str, base_path: &Path) -> Result<PathBuf> {
     let head = repo.head()?;
     let commit = head.peel_to_commit()?;
 
-    let branch_name = format!("wc/{}", name);
+    let branch_name = name.to_string();
     let branch_ref = match repo.find_branch(&branch_name, git2::BranchType::Local) {
         Ok(branch) => branch.into_reference(),
         Err(_) => {

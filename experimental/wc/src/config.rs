@@ -6,6 +6,7 @@ use std::path::PathBuf;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorktreeRoot {
     pub path: PathBuf,
+    pub worktrees_path: Option<PathBuf>,
     pub setup_script: Option<PathBuf>,
 }
 

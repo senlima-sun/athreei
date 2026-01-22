@@ -33,19 +33,28 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Get the main repo directory (where this script lives)
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-MAIN_REPO="$(dirname "$SCRIPT_DIR")"
+# Get the main repo directory (from awc env var or where this script lives)
+if [ -n "$ROOT_WORKTREE_PATH" ]; then
+    MAIN_REPO="$ROOT_WORKTREE_PATH"
+else
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    MAIN_REPO="$(dirname "$SCRIPT_DIR")"
+fi
 
-# Check for --setup-only flag
+# Check for --setup-only flag or awc environment
 SETUP_ONLY=false
 if [ "$1" = "--setup-only" ]; then
+    SETUP_ONLY=true
+elif [ -n "$WORKTREE_PATH" ] && [ -n "$ROOT_WORKTREE_PATH" ]; then
+    # Called from awc - automatically use setup-only mode
     SETUP_ONLY=true
 fi
 
 if [ "$SETUP_ONLY" = true ]; then
-    # Setup-only mode: run from current directory (must be a worktree)
-    WORKTREE_PATH="$(pwd)"
+    # Setup-only mode: use WORKTREE_PATH env var (from awc) or current directory
+    if [ -z "$WORKTREE_PATH" ]; then
+        WORKTREE_PATH="$(pwd)"
+    fi
     
     # Verify we're in a git worktree (not the main repo)
     if [ "$WORKTREE_PATH" = "$MAIN_REPO" ]; then
