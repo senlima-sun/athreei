@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { useSearchParams, useRouter, usePathname } from "next/navigation"
 import Link from "next/link"
+import { z } from "zod"
 import {
   PageHeader,
   LoadingState,
@@ -18,16 +19,26 @@ import { Activity, CheckCircle, XCircle, Clock } from "lucide-react"
 import type { Trace } from "@/types"
 import { formatDuration, formatTime } from "@/utils"
 
+const traceFiltersSchema = z.object({
+  search: z.string().catch(""),
+  status: z.enum(["all", "success", "error"]).catch("all"),
+  startDate: z.string().catch(""),
+  endDate: z.string().catch(""),
+  minDuration: z.string().catch(""),
+  maxDuration: z.string().catch(""),
+  serverIds: z.array(z.string()).catch([]),
+})
+
 function parseFiltersFromUrl(searchParams: URLSearchParams): TraceFiltersState {
-  return {
-    search: searchParams.get("search") || "",
-    status: (searchParams.get("status") as "all" | "success" | "error") || "all",
-    startDate: searchParams.get("startDate") || "",
-    endDate: searchParams.get("endDate") || "",
-    minDuration: searchParams.get("minDuration") || "",
-    maxDuration: searchParams.get("maxDuration") || "",
-    serverIds: searchParams.get("serverIds")?.split(",").filter(Boolean) || [],
-  }
+  return traceFiltersSchema.parse({
+    search: searchParams.get("search"),
+    status: searchParams.get("status"),
+    startDate: searchParams.get("startDate"),
+    endDate: searchParams.get("endDate"),
+    minDuration: searchParams.get("minDuration"),
+    maxDuration: searchParams.get("maxDuration"),
+    serverIds: searchParams.get("serverIds")?.split(",").filter(Boolean),
+  })
 }
 
 function serializeFiltersToUrl(filters: TraceFiltersState): URLSearchParams {
@@ -59,6 +70,21 @@ export default function TracesPage() {
   const [filters, setFilters] = useState<TraceFiltersState>(() =>
     parseFiltersFromUrl(searchParams)
   )
+
+  useEffect(() => {
+    const nextFilters = parseFiltersFromUrl(searchParams)
+    setFilters((current) => {
+      const areEqual =
+        current.search === nextFilters.search &&
+        current.status === nextFilters.status &&
+        current.startDate === nextFilters.startDate &&
+        current.endDate === nextFilters.endDate &&
+        current.minDuration === nextFilters.minDuration &&
+        current.maxDuration === nextFilters.maxDuration &&
+        current.serverIds.join(",") === nextFilters.serverIds.join(",")
+      return areEqual ? current : nextFilters
+    })
+  }, [searchParams])
 
   const updateUrl = useCallback(
     (newFilters: TraceFiltersState) => {
