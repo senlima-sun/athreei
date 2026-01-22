@@ -214,6 +214,7 @@ export function EncryptionKeyList({
                         onClick={() => setShowConfirmRotateId(key.id)}
                         className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-yellow-600"
                         title="Rotate key"
+                        aria-label="Rotate key"
                       >
                         <RefreshCw className="h-4 w-4" />
                       </button>
@@ -222,6 +223,7 @@ export function EncryptionKeyList({
                         onClick={() => setShowConfirmRevokeId(key.id)}
                         className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-red-600"
                         title="Revoke key"
+                        aria-label="Revoke key"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
