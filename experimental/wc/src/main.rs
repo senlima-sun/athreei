@@ -43,6 +43,9 @@ async fn main() -> Result<()> {
         Some(Commands::Kill { target }) => {
             cmd_kill(&target, &mut store, &config)?;
         }
+        Some(Commands::Rename { target, new_name }) => {
+            cmd_rename(&target, &new_name, &mut store, &config)?;
+        }
         Some(Commands::Root { action }) => {
             cmd_root(action, &config)?;
         }
@@ -350,6 +353,27 @@ fn cmd_kill(target: &str, store: &mut SessionStore, config: &Config) -> Result<(
     }
 
     println!("Done.");
+    Ok(())
+}
+
+fn cmd_rename(target: &str, new_name: &str, store: &mut SessionStore, config: &Config) -> Result<()> {
+    let old_tmux_name = format!("awc-{}", target);
+    let new_tmux_name = format!("awc-{}", new_name);
+
+    if let Some(old_name) = store.rename(target, new_name.to_string()) {
+        store.save(&config.sessions_file())?;
+
+        if tmux_session_exists(&old_tmux_name) {
+            Command::new("tmux")
+                .args(["rename-session", "-t", &old_tmux_name, &new_tmux_name])
+                .status()?;
+        }
+
+        println!("Renamed '{}' → '{}'", old_name, new_name);
+    } else {
+        anyhow::bail!("Session '{}' not found", target);
+    }
+
     Ok(())
 }
 

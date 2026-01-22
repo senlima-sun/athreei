@@ -54,6 +54,15 @@ pub enum Commands {
         target: String,
     },
 
+    /// Rename a session
+    Rename {
+        /// Session name or ID
+        target: String,
+
+        /// New name for the session
+        new_name: String,
+    },
+
     /// Manage worktree roots
     Root {
         #[command(subcommand)]

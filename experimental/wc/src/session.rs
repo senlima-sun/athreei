@@ -86,6 +86,15 @@ impl SessionStore {
         self.sessions.remove(&id)
     }
 
+    pub fn rename(&mut self, target: &str, new_name: String) -> Option<String> {
+        if let Some(session) = self.find_by_target_mut(target) {
+            let old_name = std::mem::replace(&mut session.name, new_name);
+            Some(old_name)
+        } else {
+            None
+        }
+    }
+
     pub fn list(&self) -> Vec<&SessionInfo> {
         let mut sessions: Vec<_> = self.sessions.values().collect();
         sessions.sort_by_key(|s| s.id);
