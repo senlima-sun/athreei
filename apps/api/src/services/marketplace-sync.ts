@@ -27,7 +27,8 @@ const logger = createLogger({
 const pluginDefinitionSchema = z.object({
   slug: z.string().optional(),
   name: z.string().optional(),
-  source: z.string(),
+  source: z.string().optional(),
+  manifestUrl: z.string().url().optional(),
   path: z.string().optional(),
   description: z.string().optional(),
   version: z.string().optional(),
@@ -764,6 +765,73 @@ async function createComponentsFromManifest(
   }
 }
 
+const BLOCKED_HOSTS = new Set([
+  "localhost",
+  "127.0.0.1",
+  "0.0.0.0",
+  "::1",
+  "[::1]",
+  "169.254.169.254",
+  "metadata.google.internal",
+])
+
+const MAX_RESPONSE_SIZE = 5 * 1024 * 1024
+
+function isUrlAllowed(url: string): { allowed: boolean; reason?: string } {
+  try {
+    const parsed = new URL(url)
+
+    if (!["https:", "http:"].includes(parsed.protocol)) {
+      return { allowed: false, reason: "Only HTTP/HTTPS URLs are allowed" }
+    }
+
+    if (parsed.hostname.endsWith(".local") || parsed.hostname.endsWith(".internal")) {
+      return { allowed: false, reason: "Internal/local hostnames are not allowed" }
+    }
+
+    if (BLOCKED_HOSTS.has(parsed.hostname)) {
+      return { allowed: false, reason: "This host is blocked for security reasons" }
+    }
+
+    const ipRegex = /^(?:\d{1,3}\.){3}\d{1,3}$/
+    if (ipRegex.test(parsed.hostname)) {
+      const parts = parsed.hostname.split(".").map(Number)
+      if (parts[0] === 10 || parts[0] === 127) {
+        return { allowed: false, reason: "Private IP addresses are not allowed" }
+      }
+      if (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) {
+        return { allowed: false, reason: "Private IP addresses are not allowed" }
+      }
+      if (parts[0] === 192 && parts[1] === 168) {
+        return { allowed: false, reason: "Private IP addresses are not allowed" }
+      }
+    }
+
+    return { allowed: true }
+  } catch {
+    return { allowed: false, reason: "Invalid URL" }
+  }
+}
+
+async function fetchWithSecurityCheck(
+  url: string,
+  timeoutMs: number = FETCH_TIMEOUT_MS
+): Promise<Response> {
+  const urlCheck = isUrlAllowed(url)
+  if (!urlCheck.allowed) {
+    throw new Error(`URL blocked: ${urlCheck.reason}`)
+  }
+
+  const response = await fetchWithTimeout(url, timeoutMs)
+
+  const contentLength = response.headers.get("content-length")
+  if (contentLength && parseInt(contentLength, 10) > MAX_RESPONSE_SIZE) {
+    throw new Error(`Response too large: ${contentLength} bytes`)
+  }
+
+  return response
+}
+
 async function syncFromUrl(
   mkt: typeof marketplace.$inferSelect
 ): Promise<SyncResult> {
@@ -780,7 +848,12 @@ async function syncFromUrl(
   }
 
   try {
-    const response = await fetchWithTimeout(mkt.sourceUrl)
+    logger.info("Starting URL sync", {
+      marketplaceId: mkt.id,
+      sourceUrl: mkt.sourceUrl,
+    })
+
+    const response = await fetchWithSecurityCheck(mkt.sourceUrl)
     if (!response.ok) {
       throw new Error(`Failed to fetch marketplace.json: ${response.status}`)
     }
@@ -792,16 +865,208 @@ async function syncFromUrl(
     }
     const marketplaceFile = parseResult.data
 
+    const remotePluginSlugs: string[] = []
+
     for (const pluginDef of marketplaceFile.plugins) {
-      result.errors.push(
-        `URL sync for plugin ${pluginDef.slug} not implemented yet`
-      )
+      const pluginSlug = pluginDef.slug || pluginDef.name
+      if (!pluginSlug) {
+        result.errors.push("Plugin missing both slug and name fields")
+        continue
+      }
+      remotePluginSlugs.push(pluginSlug)
+
+      try {
+        const pluginResult = await syncPluginFromUrl(mkt, pluginDef, pluginSlug)
+
+        if (pluginResult.isNew) {
+          result.added++
+        } else {
+          result.updated++
+        }
+
+        logger.info("Plugin synced from URL", {
+          pluginSlug,
+          isNew: pluginResult.isNew,
+        })
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error"
+        result.errors.push(`Failed to sync plugin ${pluginSlug}: ${errorMessage}`)
+        logger.error("Failed to sync plugin from URL", {
+          pluginSlug,
+          error: errorMessage,
+        })
+      }
     }
-  } catch (error) {
-    result.errors.push(
-      `Sync failed: ${error instanceof Error ? error.message : "Unknown error"}`
+
+    const existingPlugins = await db().query.plugin.findMany({
+      where: eq(plugin.marketplaceId, mkt.id),
+    })
+
+    const removedPlugins = existingPlugins.filter(
+      (p) => !remotePluginSlugs.includes(p.slug)
     )
+
+    for (const removedPlugin of removedPlugins) {
+      await db().delete(plugin).where(eq(plugin.id, removedPlugin.id))
+      result.removed++
+      logger.info("Plugin removed", { pluginSlug: removedPlugin.slug })
+    }
+
+    await db()
+      .update(marketplace)
+      .set({
+        lastSyncedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(marketplace.id, mkt.id))
+
+    logger.info("URL sync completed", {
+      marketplaceId: mkt.id,
+      added: result.added,
+      updated: result.updated,
+      removed: result.removed,
+      errors: result.errors.length,
+    })
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error"
+    result.errors.push(`Sync failed: ${errorMessage}`)
+    logger.error("URL sync failed", {
+      marketplaceId: mkt.id,
+      error: errorMessage,
+    })
   }
 
   return result
+}
+
+async function syncPluginFromUrl(
+  mkt: typeof marketplace.$inferSelect,
+  pluginDef: PluginDefinition,
+  pluginSlug: string
+): Promise<{ isNew: boolean }> {
+  let manifestUrl: string | undefined
+
+  if (pluginDef.manifestUrl) {
+    manifestUrl = pluginDef.manifestUrl
+  } else if (pluginDef.source?.startsWith("http://") || pluginDef.source?.startsWith("https://")) {
+    manifestUrl = pluginDef.source
+  } else if (pluginDef.source?.startsWith("github:")) {
+    const [repo, path] = pluginDef.source.replace("github:", "").split("#")
+    const manifestPath = path || ".claude-plugin/plugin.json"
+    manifestUrl = `https://raw.githubusercontent.com/${repo}/main/${manifestPath}`
+  }
+
+  if (!manifestUrl) {
+    throw new Error(
+      "Plugin definition must have manifestUrl or a valid source (http/https URL or github:)"
+    )
+  }
+
+  const response = await fetchWithSecurityCheck(manifestUrl)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch plugin manifest: ${response.status}`)
+  }
+
+  const rawManifest = await response.json()
+  const manifestResult = pluginManifestSchema.safeParse(rawManifest)
+
+  if (!manifestResult.success) {
+    throw new Error(`Invalid manifest: ${manifestResult.error.message}`)
+  }
+
+  const manifest = manifestResult.data
+
+  const existingPlugin = await db().query.plugin.findFirst({
+    where: and(eq(plugin.marketplaceId, mkt.id), eq(plugin.slug, pluginSlug)),
+  })
+
+  const now = new Date()
+  let pluginId: string
+  let isNew = false
+
+  if (existingPlugin) {
+    pluginId = existingPlugin.id
+
+    await db()
+      .update(plugin)
+      .set({
+        name: manifest.name,
+        description: manifest.description || null,
+        author: manifest.author?.name || null,
+        updatedAt: now,
+      })
+      .where(eq(plugin.id, pluginId))
+  } else {
+    pluginId = generatePluginId()
+    isNew = true
+
+    await db()
+      .insert(plugin)
+      .values({
+        id: pluginId,
+        marketplaceId: mkt.id,
+        slug: pluginSlug,
+        name: manifest.name,
+        description: manifest.description || null,
+        author: manifest.author?.name || null,
+        tags: "[]",
+        downloadCount: "0",
+        createdAt: now,
+        updatedAt: now,
+      })
+  }
+
+  const existingVersion = await db().query.pluginVersion.findFirst({
+    where: and(
+      eq(pluginVersion.pluginId, pluginId),
+      eq(pluginVersion.version, manifest.version)
+    ),
+  })
+
+  if (!existingVersion) {
+    await db()
+      .update(pluginVersion)
+      .set({ isLatest: false })
+      .where(eq(pluginVersion.pluginId, pluginId))
+
+    const versionId = generatePluginVersionId()
+
+    const validationResult = validateClaudeCodePlugin(rawManifest)
+    const validationStatus = getValidationStatus(validationResult)
+
+    await db()
+      .insert(pluginVersion)
+      .values({
+        id: versionId,
+        pluginId,
+        version: manifest.version,
+        manifest: JSON.stringify(manifest),
+        isLatest: true,
+        validationStatus,
+        validationErrors:
+          validationResult.errors.length > 0
+            ? JSON.stringify(validationResult.errors)
+            : null,
+        validationWarnings:
+          validationResult.warnings.length > 0
+            ? JSON.stringify(validationResult.warnings)
+            : null,
+        publishedAt: now,
+        createdAt: now,
+      })
+
+    await createComponentsFromManifest(versionId, manifest, undefined, null)
+
+    logger.info("Plugin version validated (URL)", {
+      pluginSlug,
+      version: manifest.version,
+      validationStatus,
+      errorsCount: validationResult.errors.length,
+      warningsCount: validationResult.warnings.length,
+    })
+  }
+
+  return { isNew }
 }
