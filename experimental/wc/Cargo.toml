@@ -1,0 +1,31 @@
+[package]
+name = "awc"
+version = "0.1.0"
+edition = "2024"
+description = "Worktree Claude Manager - Manage multiple git worktrees and Claude Code sessions"
+
+[dependencies]
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# TUI
+ratatui = "0.29"
+crossterm = "0.28"
+
+# PTY
+portable-pty = "0.8"
+
+# Git
+git2 = "0.19"
+
+# CLI
+clap = { version = "4", features = ["derive"] }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Utils
+anyhow = "1"
+dirs = "5"
+chrono = { version = "0.4", features = ["serde"] }
