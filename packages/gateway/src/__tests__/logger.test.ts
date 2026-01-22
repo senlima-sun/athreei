@@ -2,11 +2,6 @@ import { describe, it, expect, vi, afterEach } from "vitest"
 import { gatewayLogger, createRequestLogger, log } from "../logger"
 
 describe("Gateway Logger", () => {
-  const consoleSpy = {
-    log: vi.spyOn(console, "log").mockImplementation(() => {}),
-    error: vi.spyOn(console, "error").mockImplementation(() => {}),
-  }
-
   afterEach(() => {
     vi.clearAllMocks()
   })
