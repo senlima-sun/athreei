@@ -198,10 +198,11 @@ export const pluginSubmission = pgTable(
     index("idx_plugin_submission_submitter").on(table.submitterId),
     index("idx_plugin_submission_status").on(table.status),
     index("idx_plugin_submission_created").on(table.createdAt),
-    uniqueIndex("idx_plugin_submission_unique_pending").on(
+    index("idx_plugin_submission_lookup").on(
       table.marketplaceId,
       table.pluginSlug,
-      table.version
+      table.version,
+      table.status
     ),
   ]
 )
