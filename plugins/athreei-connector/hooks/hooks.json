@@ -1,0 +1,16 @@
+{
+  "description": "athreei connector hooks for automatic plugin sync and gateway management",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Check if athreei CLI is authenticated and gateway is accessible. If issues are detected, inform the user briefly.",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

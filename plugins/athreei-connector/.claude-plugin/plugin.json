@@ -1,0 +1,28 @@
+{
+  "$schema": "https://code.claude.com/schemas/plugin.json",
+  "name": "athreei-connector",
+  "version": "0.1.0",
+  "displayName": "athreei Connector",
+  "description": "Connect Claude Code to athreei platform for plugin management, MCP server discovery, and configuration sync",
+  "author": {
+    "name": "athreei",
+    "email": "support@athreei.io",
+    "url": "https://athreei.io"
+  },
+  "homepage": "https://docs.athreei.io/claude-code-plugin",
+  "repository": "https://github.com/athreei/athreei",
+  "license": "MIT",
+  "keywords": [
+    "athreei",
+    "mcp",
+    "gateway",
+    "plugin-manager",
+    "sync"
+  ],
+  "engines": {
+    "claude-code": ">=1.0.0"
+  },
+  "commands": "./commands/",
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.json"
+}
