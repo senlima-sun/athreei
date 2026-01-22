@@ -147,3 +147,21 @@ export const noopLogger: Logger = {
   warn: () => {},
   error: () => {},
 }
+
+export interface TimeoutConfig {
+  defaultTimeout?: number
+  perServerTimeout?: Record<string, number>
+}
+
+export class ToolCallTimeoutError extends Error {
+  constructor(
+    public readonly serverName: string,
+    public readonly toolName: string,
+    public readonly timeoutMs: number
+  ) {
+    super(
+      `Tool call '${toolName}' on server '${serverName}' timed out after ${timeoutMs}ms`
+    )
+    this.name = "ToolCallTimeoutError"
+  }
+}

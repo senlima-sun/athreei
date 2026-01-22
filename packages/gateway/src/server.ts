@@ -12,7 +12,7 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js"
 import type { AggregatedTool, GatewayEventHandler } from "./types"
-import { aggregateTools } from "@athreei/gateway-core"
+import { aggregateTools, type RateLimiter } from "@athreei/gateway-core"
 import { routeToolCall } from "./router"
 import { log } from "./logger"
 import { HookExecutor, createHookExecutor } from "./hook-executor"
@@ -21,14 +21,11 @@ import { HookExecutor, createHookExecutor } from "./hook-executor"
  * Gateway state managed by the server
  */
 export interface GatewayState {
-  /** All connected MCP servers */
   connectedMcps: Map<string, import("./types.js").ConnectedMcp>
-  /** Aggregated tools from all servers */
   aggregatedTools: AggregatedTool[]
-  /** Event handlers */
   eventHandlers: GatewayEventHandler[]
-  /** Hook executor for pre/post tool use hooks */
   hookExecutor: HookExecutor
+  rateLimiter?: RateLimiter
 }
 
 /**

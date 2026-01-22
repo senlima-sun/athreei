@@ -39,9 +39,7 @@ function CollapsibleNavItem({
   item: NavMainItem
   isActive: (url: string) => boolean
 }) {
-  const [open, setOpen] = useState(
-    () => item.isActive || isActive(item.url)
-  )
+  const [open, setOpen] = useState(() => item.isActive || isActive(item.url))
 
   return (
     <Collapsible

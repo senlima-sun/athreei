@@ -172,7 +172,10 @@ export default function InstalledPluginsPage() {
           title="Installed Plugins"
           description="Manage plugins installed in your organization"
           actions={
-            <Button nativeButton={false} render={<Link href="/dashboard/marketplace" />}>
+            <Button
+              nativeButton={false}
+              render={<Link href="/dashboard/marketplace" />}
+            >
               <Store className="mr-1.5 h-4 w-4" />
               Browse Marketplace
             </Button>
@@ -206,7 +209,10 @@ export default function InstalledPluginsPage() {
           title="Installed Plugins"
           description="Manage plugins installed in your organization"
           actions={
-            <Button nativeButton={false} render={<Link href="/dashboard/marketplace" />}>
+            <Button
+              nativeButton={false}
+              render={<Link href="/dashboard/marketplace" />}
+            >
               <Store className="mr-1.5 h-4 w-4" />
               Browse Marketplace
             </Button>
@@ -228,7 +234,10 @@ export default function InstalledPluginsPage() {
         title="Installed Plugins"
         description="Manage plugins installed in your organization"
         actions={
-          <Button nativeButton={false} render={<Link href="/dashboard/marketplace" />}>
+          <Button
+            nativeButton={false}
+            render={<Link href="/dashboard/marketplace" />}
+          >
             <Store className="mr-1.5 h-4 w-4" />
             Browse Marketplace
           </Button>

@@ -18,7 +18,9 @@ import type {
   Logger,
 } from "./types"
 import { findAggregatedTool } from "./aggregator"
-import { noopLogger } from "./types"
+import { noopLogger, ToolCallTimeoutError } from "./types"
+import { TIMEOUT } from "./constants"
+import { RateLimiter, RateLimitExceededError } from "./rate-limiter"
 
 /**
  * Parse a prefixed tool name into server and tool components.
@@ -47,12 +49,10 @@ export function parseToolName(prefixedName: string): ParsedToolName {
   return { serverName, toolName }
 }
 
-/**
- * Options for routing a tool call
- */
 export interface RouteToolCallOptions {
-  /** Logger for debug output */
   logger?: Logger
+  timeoutMs?: number
+  rateLimiter?: RateLimiter
 }
 
 /**
@@ -69,6 +69,13 @@ export async function routeToolCall(
   const logger = options.logger ?? noopLogger
 
   const { serverName, toolName } = parseToolName(prefixedName)
+
+  if (options.rateLimiter) {
+    const result = options.rateLimiter.tryAcquire(serverName)
+    if (!result.allowed) {
+      throw new RateLimitExceededError(serverName, result.retryAfterMs!)
+    }
+  }
 
   logger.info(`Routing tool call: ${prefixedName} -> ${serverName}/${toolName}`)
 
@@ -88,12 +95,23 @@ export async function routeToolCall(
 
   logger.debug(`Calling ${toolName} on ${mcp.config.name}`)
 
-  const result = await mcp.client.callTool({
-    name: toolName,
-    arguments: args,
+  const timeoutMs = options.timeoutMs ?? TIMEOUT.DEFAULT_TOOL_CALL_MS
+  let timeoutId: ReturnType<typeof setTimeout>
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new ToolCallTimeoutError(serverName, toolName, timeoutMs))
+    }, timeoutMs)
   })
 
-  return result as CallToolResult
+  try {
+    const result = await Promise.race([
+      mcp.client.callTool({ name: toolName, arguments: args }),
+      timeoutPromise,
+    ])
+    return result as CallToolResult
+  } finally {
+    clearTimeout(timeoutId!)
+  }
 }
 
 /**

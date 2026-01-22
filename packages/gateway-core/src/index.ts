@@ -17,9 +17,13 @@ export type {
   ToolCallValidation,
   RoutingInfo,
   Logger,
+  TimeoutConfig,
 } from "./types"
 
-export { noopLogger } from "./types"
+export { noopLogger, ToolCallTimeoutError } from "./types"
+
+// Re-export constants
+export { TIMEOUT, RATE_LIMIT } from "./constants"
 
 // Re-export aggregator functions
 export {
@@ -76,3 +80,11 @@ export {
   type NamespaceRoute,
   type NamespacedTool,
 } from "./routing/namespace-router"
+
+// Rate limiting
+export {
+  RateLimiter,
+  RateLimitExceededError,
+  type RateLimiterConfig,
+  type RateLimitResult,
+} from "./rate-limiter"

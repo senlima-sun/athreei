@@ -64,14 +64,11 @@ export default function PluginConfigurePage() {
     return config?.envVars ?? []
   })
 
-  const handleEnvChange = useCallback(
-    (name: string, value: string) => {
-      setEnvValues((prev) => ({ ...prev, [name]: value }))
-      setHasChanges(true)
-      setSaveSuccess(false)
-    },
-    []
-  )
+  const handleEnvChange = useCallback((name: string, value: string) => {
+    setEnvValues((prev) => ({ ...prev, [name]: value }))
+    setHasChanges(true)
+    setSaveSuccess(false)
+  }, [])
 
   const toggleShowValue = useCallback((name: string) => {
     setShowValues((prev) => {
@@ -210,7 +207,9 @@ export default function PluginConfigurePage() {
                     <EnvVarInput
                       key={envVar.name}
                       envVar={envVar}
-                      value={envValues[envVar.name] ?? currentEnv[envVar.name] ?? ""}
+                      value={
+                        envValues[envVar.name] ?? currentEnv[envVar.name] ?? ""
+                      }
                       showValue={showValues.has(envVar.name)}
                       onChange={(value) => handleEnvChange(envVar.name, value)}
                       onToggleShow={() => toggleShowValue(envVar.name)}
@@ -241,7 +240,9 @@ export default function PluginConfigurePage() {
                     <EnvVarInput
                       key={envVar.name}
                       envVar={envVar}
-                      value={envValues[envVar.name] ?? currentEnv[envVar.name] ?? ""}
+                      value={
+                        envValues[envVar.name] ?? currentEnv[envVar.name] ?? ""
+                      }
                       showValue={showValues.has(envVar.name)}
                       onChange={(value) => handleEnvChange(envVar.name, value)}
                       onToggleShow={() => toggleShowValue(envVar.name)}
@@ -258,10 +259,7 @@ export default function PluginConfigurePage() {
                   Configuration saved
                 </div>
               )}
-              <Button
-                onClick={handleSave}
-                disabled={!hasChanges || isSaving}
-              >
+              <Button onClick={handleSave} disabled={!hasChanges || isSaving}>
                 {isSaving ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
@@ -347,16 +345,9 @@ function EnvVarInput({
           <code className="rounded bg-gray-100 px-2 py-0.5 font-mono text-sm">
             {envVar.name}
           </code>
-          {envVar.required && (
-            <span className="text-xs text-red-500">*</span>
-          )}
+          {envVar.required && <span className="text-xs text-red-500">*</span>}
         </Label>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={onToggleShow}
-        >
+        <Button type="button" variant="ghost" size="sm" onClick={onToggleShow}>
           {showValue ? (
             <EyeOff className="h-4 w-4" />
           ) : (
