@@ -82,8 +82,9 @@ describe("MarkdownPreview", () => {
     })
 
     it("treats newline-only content as empty", () => {
-      const newlineContent = "\n\n\n"
-      expect(newlineContent.trim()).toBe("")
+      render(<MarkdownPreview content="\n\n\n" />)
+
+      expect(screen.getByText("No content to preview")).toBeInTheDocument()
     })
 
     it("does not show empty state when content has text", () => {
