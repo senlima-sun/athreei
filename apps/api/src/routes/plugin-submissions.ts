@@ -21,7 +21,10 @@ const submitPluginSchema = z.object({
     .string()
     .min(1)
     .max(500)
-    .regex(/^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/, "Must be in format: owner/repo"),
+    .regex(
+      /^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/,
+      "Must be in format: owner/repo"
+    ),
   sourceRef: z.string().max(100).default("main"),
   sourcePath: z.string().max(500).optional(),
 })
@@ -42,48 +45,59 @@ const pluginSubmissions = new Hono()
 
 pluginSubmissions.use("*", authMiddleware)
 
-pluginSubmissions.post("/", zValidator("json", submitPluginSchema), async (c) => {
-  const auth = getAuthContext(c)
-  const orgId = c.req.param("orgId") as string
-  const body = c.req.valid("json")
+pluginSubmissions.post(
+  "/",
+  zValidator("json", submitPluginSchema),
+  async (c) => {
+    const auth = getAuthContext(c)
+    const orgId = c.req.param("orgId") as string
+    const body = c.req.valid("json")
 
-  const isMember = await verifyOrganizationMembership(auth.userId, orgId)
-  if (!isMember) {
-    throw ApiError.forbidden("You do not have access to this organization")
-  }
-
-  try {
-    const submission = await submitPlugin(orgId, auth.userId, body)
-    return c.json({ submission }, 201)
-  } catch (error) {
-    if (error instanceof Error) {
-      if (error.message.includes("not found")) {
-        throw ApiError.notFound(error.message)
-      }
-      if (error.message.includes("already exists") || error.message.includes("pending")) {
-        throw ApiError.conflict(error.message)
-      }
-      if (error.message.includes("validation failed")) {
-        throw ApiError.badRequest(error.message)
-      }
+    const isMember = await verifyOrganizationMembership(auth.userId, orgId)
+    if (!isMember) {
+      throw ApiError.forbidden("You do not have access to this organization")
     }
-    throw error
+
+    try {
+      const submission = await submitPlugin(orgId, auth.userId, body)
+      return c.json({ submission }, 201)
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message.includes("not found")) {
+          throw ApiError.notFound(error.message)
+        }
+        if (
+          error.message.includes("already exists") ||
+          error.message.includes("pending")
+        ) {
+          throw ApiError.conflict(error.message)
+        }
+        if (error.message.includes("validation failed")) {
+          throw ApiError.badRequest(error.message)
+        }
+      }
+      throw error
+    }
   }
-})
+)
 
-pluginSubmissions.get("/", zValidator("query", listSubmissionsSchema), async (c) => {
-  const auth = getAuthContext(c)
-  const orgId = c.req.param("orgId") as string
-  const query = c.req.valid("query")
+pluginSubmissions.get(
+  "/",
+  zValidator("query", listSubmissionsSchema),
+  async (c) => {
+    const auth = getAuthContext(c)
+    const orgId = c.req.param("orgId") as string
+    const query = c.req.valid("query")
 
-  const isMember = await verifyOrganizationMembership(auth.userId, orgId)
-  if (!isMember) {
-    throw ApiError.forbidden("You do not have access to this organization")
+    const isMember = await verifyOrganizationMembership(auth.userId, orgId)
+    if (!isMember) {
+      throw ApiError.forbidden("You do not have access to this organization")
+    }
+
+    const result = await listSubmissions(orgId, auth.userId, query)
+    return c.json(result)
   }
-
-  const result = await listSubmissions(orgId, auth.userId, query)
-  return c.json(result)
-})
+)
 
 pluginSubmissions.get("/:submissionId", async (c) => {
   const auth = getAuthContext(c)
@@ -148,7 +162,9 @@ pluginSubmissions.post(
 
     const adminCheck = await isOrgAdmin(auth.userId, orgId)
     if (!adminCheck) {
-      throw ApiError.forbidden("Only organization admins can review submissions")
+      throw ApiError.forbidden(
+        "Only organization admins can review submissions"
+      )
     }
 
     try {

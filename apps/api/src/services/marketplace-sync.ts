@@ -784,25 +784,43 @@ function isUrlAllowed(url: string): { allowed: boolean; reason?: string } {
       return { allowed: false, reason: "Only HTTP/HTTPS URLs are allowed" }
     }
 
-    if (parsed.hostname.endsWith(".local") || parsed.hostname.endsWith(".internal")) {
-      return { allowed: false, reason: "Internal/local hostnames are not allowed" }
+    if (
+      parsed.hostname.endsWith(".local") ||
+      parsed.hostname.endsWith(".internal")
+    ) {
+      return {
+        allowed: false,
+        reason: "Internal/local hostnames are not allowed",
+      }
     }
 
     if (BLOCKED_HOSTS.has(parsed.hostname)) {
-      return { allowed: false, reason: "This host is blocked for security reasons" }
+      return {
+        allowed: false,
+        reason: "This host is blocked for security reasons",
+      }
     }
 
     const ipRegex = /^(?:\d{1,3}\.){3}\d{1,3}$/
     if (ipRegex.test(parsed.hostname)) {
       const parts = parsed.hostname.split(".").map(Number)
       if (parts[0] === 10 || parts[0] === 127) {
-        return { allowed: false, reason: "Private IP addresses are not allowed" }
+        return {
+          allowed: false,
+          reason: "Private IP addresses are not allowed",
+        }
       }
       if (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) {
-        return { allowed: false, reason: "Private IP addresses are not allowed" }
+        return {
+          allowed: false,
+          reason: "Private IP addresses are not allowed",
+        }
       }
       if (parts[0] === 192 && parts[1] === 168) {
-        return { allowed: false, reason: "Private IP addresses are not allowed" }
+        return {
+          allowed: false,
+          reason: "Private IP addresses are not allowed",
+        }
       }
     }
 
@@ -890,7 +908,9 @@ async function syncFromUrl(
       } catch (error) {
         const errorMessage =
           error instanceof Error ? error.message : "Unknown error"
-        result.errors.push(`Failed to sync plugin ${pluginSlug}: ${errorMessage}`)
+        result.errors.push(
+          `Failed to sync plugin ${pluginSlug}: ${errorMessage}`
+        )
         logger.error("Failed to sync plugin from URL", {
           pluginSlug,
           error: errorMessage,
@@ -949,7 +969,10 @@ async function syncPluginFromUrl(
 
   if (pluginDef.manifestUrl) {
     manifestUrl = pluginDef.manifestUrl
-  } else if (pluginDef.source?.startsWith("http://") || pluginDef.source?.startsWith("https://")) {
+  } else if (
+    pluginDef.source?.startsWith("http://") ||
+    pluginDef.source?.startsWith("https://")
+  ) {
     manifestUrl = pluginDef.source
   } else if (pluginDef.source?.startsWith("github:")) {
     const [repo, path] = pluginDef.source.replace("github:", "").split("#")
