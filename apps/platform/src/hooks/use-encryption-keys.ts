@@ -40,7 +40,10 @@ export function useEncryptionKeys(status?: "active" | "rotated" | "revoked") {
   return useQuery<EncryptionKeysResponse>({
     queryKey: ["encryption-keys", activeOrg?.id, status],
     queryFn: async () => {
-      let path = `/api/encryption-keys?organizationId=${activeOrg!.id}`
+      if (!activeOrg?.id) {
+        throw new Error("Organization is required")
+      }
+      let path = `/api/encryption-keys?organizationId=${activeOrg.id}`
       if (status) {
         path += `&status=${status}`
       }
@@ -56,11 +59,14 @@ export function useCreateEncryptionKey() {
 
   return useMutation<CreateEncryptionKeyResponse, Error, { name: string }>({
     mutationFn: async ({ name }) => {
+      if (!activeOrg?.id) {
+        throw new Error("Organization is required")
+      }
       return fetchApi<CreateEncryptionKeyResponse>("/api/encryption-keys", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          organizationId: activeOrg!.id,
+          organizationId: activeOrg.id,
           name,
         }),
       })
