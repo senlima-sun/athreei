@@ -26,6 +26,7 @@ import {
   marketplacesRoutes,
   pluginsRoutes,
   pluginInstallationsRoutes,
+  pluginSubmissionsRoutes,
   organizationMarketplaceRoutes,
   adminMarketplacesRoutes,
   adminStatsRoutes,
@@ -95,6 +96,10 @@ app.route("/api/evaluations", evaluationsRoutes)
 app.route("/api/marketplaces", marketplacesRoutes)
 app.route("/api/plugins", pluginsRoutes)
 app.route("/api/organizations/:orgId/plugins", pluginInstallationsRoutes)
+app.route(
+  "/api/organizations/:orgId/plugin-submissions",
+  pluginSubmissionsRoutes
+)
 app.route(
   "/api/organizations/:orgId/marketplace",
   organizationMarketplaceRoutes

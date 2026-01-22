@@ -46,3 +46,21 @@ export async function requireOrganizationMembership(
     throw ApiError.forbidden(errorMessage)
   }
 }
+
+export async function isOrgAdmin(
+  userId: string,
+  organizationId: string
+): Promise<boolean> {
+  const membership = await db().query.member.findFirst({
+    where: and(
+      eq(member.userId, userId),
+      eq(member.organizationId, organizationId)
+    ),
+  })
+
+  if (!membership) {
+    return false
+  }
+
+  return membership.role === "admin" || membership.role === "owner"
+}

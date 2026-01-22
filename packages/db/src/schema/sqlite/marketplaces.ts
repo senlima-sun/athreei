@@ -171,3 +171,72 @@ export const pluginComponentRelations = relations(
     }),
   })
 )
+
+export const pluginSubmission = sqliteTable(
+  "plugin_submission",
+  {
+    id: text("id").primaryKey(),
+    marketplaceId: text("marketplace_id")
+      .notNull()
+      .references(() => marketplace.id, { onDelete: "cascade" }),
+    submitterId: text("submitter_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    pluginSlug: text("plugin_slug").notNull(),
+    pluginName: text("plugin_name").notNull(),
+    description: text("description"),
+    category: text("category"),
+    sourceType: text("source_type").notNull().default("github"),
+    sourceRepo: text("source_repo").notNull(),
+    sourceRef: text("source_ref").notNull().default("main"),
+    sourcePath: text("source_path"),
+    version: text("version").notNull(),
+    manifestJson: text("manifest_json").notNull(),
+    status: text("status").notNull().default("pending"),
+    validationStatus: text("validation_status"),
+    validationErrors: text("validation_errors"),
+    validationWarnings: text("validation_warnings"),
+    reviewerId: text("reviewer_id").references(() => user.id),
+    reviewedAt: integer("reviewed_at", { mode: "timestamp" }),
+    reviewNotes: text("review_notes"),
+    rejectionReason: text("rejection_reason"),
+    publishedPluginId: text("published_plugin_id").references(() => plugin.id),
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" }).notNull(),
+  },
+  (table) => [
+    index("idx_plugin_submission_marketplace").on(table.marketplaceId),
+    index("idx_plugin_submission_submitter").on(table.submitterId),
+    index("idx_plugin_submission_status").on(table.status),
+    index("idx_plugin_submission_created").on(table.createdAt),
+    uniqueIndex("idx_plugin_submission_unique_pending").on(
+      table.marketplaceId,
+      table.pluginSlug,
+      table.version
+    ),
+  ]
+)
+
+export const pluginSubmissionRelations = relations(
+  pluginSubmission,
+  ({ one }) => ({
+    marketplace: one(marketplace, {
+      fields: [pluginSubmission.marketplaceId],
+      references: [marketplace.id],
+    }),
+    submitter: one(user, {
+      fields: [pluginSubmission.submitterId],
+      references: [user.id],
+      relationName: "submitter",
+    }),
+    reviewer: one(user, {
+      fields: [pluginSubmission.reviewerId],
+      references: [user.id],
+      relationName: "reviewer",
+    }),
+    publishedPlugin: one(plugin, {
+      fields: [pluginSubmission.publishedPluginId],
+      references: [plugin.id],
+    }),
+  })
+)

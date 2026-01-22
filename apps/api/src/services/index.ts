@@ -129,3 +129,19 @@ export {
   pluginDetailsToRegistryServer,
   extractCategoriesFromPlugins,
 } from "./registry-compat"
+
+export {
+  type SubmitPluginInput,
+  type SubmissionResult,
+  type SubmissionDetails,
+  type ListSubmissionsQuery,
+  type ReviewSubmissionInput,
+  type ReviewResult,
+  submitPlugin,
+  getSubmission,
+  listSubmissions,
+  cancelSubmission,
+  reviewSubmission,
+} from "./plugin-submission"
+
+export { isOrgAdmin } from "./organization"
