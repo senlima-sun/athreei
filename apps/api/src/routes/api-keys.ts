@@ -14,6 +14,14 @@ import {
   verifyOrganizationMembership,
 } from "../services"
 
+function safeJsonParse(str: string): unknown {
+  try {
+    return JSON.parse(str)
+  } catch {
+    return null
+  }
+}
+
 const apiKeys = new Hono()
 
 apiKeys.use("*", authMiddleware)
@@ -55,7 +63,7 @@ apiKeys.get("/", async (c) => {
       usageCount: key.usageCount,
       createdAt: key.createdAt.toISOString(),
       expiresAt: key.expiresAt?.toISOString() || null,
-      scopes: key.scopes ? JSON.parse(key.scopes) : null,
+      scopes: key.scopes ? safeJsonParse(key.scopes) : null,
     })),
   })
 })
@@ -212,7 +220,7 @@ apiKeys.get("/:endpointId/keys", async (c) => {
       usageCount: key.usageCount,
       createdAt: key.createdAt.toISOString(),
       expiresAt: key.expiresAt?.toISOString() || null,
-      scopes: key.scopes ? JSON.parse(key.scopes) : null,
+      scopes: key.scopes ? safeJsonParse(key.scopes) : null,
     })),
   })
 })
