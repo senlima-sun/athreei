@@ -150,6 +150,7 @@ export async function routeToolCall(
     const result = await coreRouteToolCall(state, prefixedName, effectiveArgs, {
       logger: log,
       timeoutMs,
+      rateLimiter: state.rateLimiter,
     })
 
     trace.endedAt = new Date()
