@@ -325,19 +325,17 @@ async function syncPluginFromGitHub(
   })
 
   if (!existingVersion) {
-    await db()
-      .update(pluginVersion)
-      .set({ isLatest: false })
-      .where(eq(pluginVersion.pluginId, pluginId))
-
     const versionId = generatePluginVersionId()
-
     const validationResult = validateClaudeCodePlugin(rawManifest)
     const validationStatus = getValidationStatus(validationResult)
 
-    await db()
-      .insert(pluginVersion)
-      .values({
+    await db().transaction(async (tx) => {
+      await tx
+        .update(pluginVersion)
+        .set({ isLatest: false })
+        .where(eq(pluginVersion.pluginId, pluginId))
+
+      await tx.insert(pluginVersion).values({
         id: versionId,
         pluginId,
         version: manifest.version,
@@ -355,6 +353,7 @@ async function syncPluginFromGitHub(
         publishedAt: now,
         createdAt: now,
       })
+    })
 
     const repoInfo = getPluginRepoInfo(mkt, pluginDef, ref, pluginSlug)
     const pluginBasePath = repoInfo ? getPluginBasePath(repoInfo) : undefined
@@ -1026,19 +1025,17 @@ async function syncPluginFromUrl(
   })
 
   if (!existingVersion) {
-    await db()
-      .update(pluginVersion)
-      .set({ isLatest: false })
-      .where(eq(pluginVersion.pluginId, pluginId))
-
     const versionId = generatePluginVersionId()
-
     const validationResult = validateClaudeCodePlugin(rawManifest)
     const validationStatus = getValidationStatus(validationResult)
 
-    await db()
-      .insert(pluginVersion)
-      .values({
+    await db().transaction(async (tx) => {
+      await tx
+        .update(pluginVersion)
+        .set({ isLatest: false })
+        .where(eq(pluginVersion.pluginId, pluginId))
+
+      await tx.insert(pluginVersion).values({
         id: versionId,
         pluginId,
         version: manifest.version,
@@ -1056,6 +1053,7 @@ async function syncPluginFromUrl(
         publishedAt: now,
         createdAt: now,
       })
+    })
 
     await createComponentsFromManifest(versionId, manifest, undefined, null)
 
