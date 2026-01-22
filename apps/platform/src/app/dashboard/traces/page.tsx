@@ -179,7 +179,9 @@ export default function TracesPage() {
             filters.search ||
             filters.status !== "all" ||
             filters.startDate ||
+            filters.endDate ||
             filters.minDuration ||
+            filters.maxDuration ||
             filters.serverIds.length > 0
               ? "Try adjusting your filters to see more results."
               : "Traces will appear here when your AI apps make tool calls through athreei."
