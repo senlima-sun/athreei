@@ -12,6 +12,7 @@ import {
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { ValidationBadge } from "../validation-badge"
 import {
   usePluginInstallation,
   useUpdatePlugin,
@@ -125,6 +126,14 @@ export function PluginVersions({ versions, pluginId }: PluginVersionsProps) {
                           <Check className="mr-1 h-3 w-3" />
                           Installed
                         </Badge>
+                      )}
+
+                      {version.validation && (
+                        <ValidationBadge
+                          status={version.validation.status}
+                          errors={version.validation.errors}
+                          warnings={version.validation.warnings}
+                        />
                       )}
                     </div>
 

@@ -6,6 +6,8 @@ export { PluginCard } from "./plugin-card"
 export { PluginGrid } from "./plugin-grid"
 export { PluginIcon } from "./plugin-icon"
 export { VerifiedBadge } from "./verified-badge"
+export { ValidationBadge, ValidationStatusText } from "./validation-badge"
+export type { ValidationStatus } from "./validation-badge"
 export { PluginCardSkeleton, PluginGridSkeleton } from "./skeletons"
 export {
   MarketplaceFilters,

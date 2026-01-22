@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { PluginIcon } from "../plugin-icon"
 import { VerifiedBadge } from "../verified-badge"
+import { ValidationBadge } from "../validation-badge"
 import { InstallButton } from "../install-button"
 import type {
   Plugin,
@@ -66,6 +67,14 @@ export function PluginDetailHeader({
                 {plugin.name}
               </h1>
               {plugin.isVerified && <VerifiedBadge className="h-5 w-5" />}
+              {latestVersion?.validation && (
+                <ValidationBadge
+                  status={latestVersion.validation.status}
+                  errors={latestVersion.validation.errors}
+                  warnings={latestVersion.validation.warnings}
+                  showLabel
+                />
+              )}
               {plugin.isFeatured && (
                 <Badge
                   variant="secondary"

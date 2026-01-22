@@ -146,6 +146,29 @@ export interface PluginSearchResult {
 }
 
 /**
+ * Claude Code validation status
+ */
+export type PluginValidationStatus = "valid" | "warning" | "invalid" | "pending"
+
+/**
+ * Validation error/warning detail
+ */
+export interface ValidationIssue {
+  path: string
+  message: string
+  code: string
+}
+
+/**
+ * Plugin validation information for Claude Code compatibility
+ */
+export interface PluginValidationInfo {
+  status: PluginValidationStatus
+  errors?: ValidationIssue[]
+  warnings?: ValidationIssue[]
+}
+
+/**
  * Plugin version summary - used in version lists
  */
 export interface PluginVersionSummary {
@@ -154,6 +177,7 @@ export interface PluginVersionSummary {
   changelog: string | null
   isLatest: boolean
   publishedAt: string
+  validation?: PluginValidationInfo
 }
 
 /**
@@ -183,6 +207,7 @@ export interface PluginVersion {
   isLatest: boolean
   publishedAt: string
   components: PluginComponentSummary[]
+  validation?: PluginValidationInfo
 }
 
 /**
@@ -276,6 +301,7 @@ export interface PluginInstallation {
   version: {
     id: string
     version: string
+    validation?: PluginValidationInfo
   }
 }
 
