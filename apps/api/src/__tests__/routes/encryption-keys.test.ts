@@ -98,14 +98,6 @@ const mockAuthContext = {
   },
 }
 
-const mockMember = {
-  id: "member_123",
-  userId: "user_123",
-  organizationId: "org_123",
-  role: "admin",
-  createdAt: new Date(),
-}
-
 const mockEncryptionKey = {
   id: "ek_abc123def456789",
   organizationId: "org_123",
