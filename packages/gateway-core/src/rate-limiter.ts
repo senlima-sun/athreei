@@ -58,6 +58,15 @@ export class RateLimiter {
     }
   }
 
+  getEffectiveConfig(serverName: string) {
+    const { windowMs, maxRequests } = this.getServerConfig(serverName)
+    return {
+      windowMs,
+      maxRequests,
+      burstAllowance: this.config.burstAllowance,
+    }
+  }
+
   tryAcquire(serverName: string): RateLimitResult {
     const now = Date.now()
     const { windowMs, maxRequests } = this.getServerConfig(serverName)

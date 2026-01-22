@@ -194,6 +194,9 @@ export function createHttpApi(
 
     const rateState = state.rateLimiter.getState(name)
     const now = Date.now()
+    const { windowMs, maxRequests, burstAllowance } =
+      state.rateLimiter.getEffectiveConfig(name)
+    const effectiveLimit = maxRequests + burstAllowance
 
     if (!rateState) {
       return c.json({
@@ -201,17 +204,12 @@ export function createHttpApi(
         rateLimitEnabled: true,
         currentWindow: {
           requests: 0,
-          remaining:
-            RATE_LIMIT.DEFAULT_MAX_REQUESTS +
-            RATE_LIMIT.DEFAULT_BURST_ALLOWANCE,
-          resetMs: 0,
+          remaining: effectiveLimit,
+          resetMs: windowMs,
         },
       })
     }
 
-    const windowMs = RATE_LIMIT.DEFAULT_WINDOW_MS
-    const maxRequests =
-      RATE_LIMIT.DEFAULT_MAX_REQUESTS + RATE_LIMIT.DEFAULT_BURST_ALLOWANCE
     const resetMs = Math.max(0, windowMs - (now - rateState.windowStart))
 
     return c.json({
@@ -219,7 +217,7 @@ export function createHttpApi(
       rateLimitEnabled: true,
       currentWindow: {
         requests: rateState.count,
-        remaining: Math.max(0, maxRequests - rateState.count),
+        remaining: Math.max(0, effectiveLimit - rateState.count),
         resetMs,
         burstUsed: rateState.burstUsed,
       },
