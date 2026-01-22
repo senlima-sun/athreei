@@ -250,11 +250,11 @@ async function syncPluginFromGitHub(
 ): Promise<{ isNew: boolean }> {
   let manifestUrl: string
 
-  if (pluginDef.source.startsWith("github:")) {
+  if (pluginDef.source?.startsWith("github:")) {
     const [repo, path] = pluginDef.source.replace("github:", "").split("#")
     const manifestPath = path || "plugin.json"
     manifestUrl = `https://raw.githubusercontent.com/${repo}/${ref}/${manifestPath}`
-  } else if (pluginDef.source.startsWith("./")) {
+  } else if (pluginDef.source?.startsWith("./")) {
     const relativePath = pluginDef.source.slice(2)
     manifestUrl = `https://raw.githubusercontent.com/${mkt.sourceRepo}/${ref}/${relativePath}/.claude-plugin/plugin.json`
   } else if (pluginDef.path) {
@@ -402,7 +402,7 @@ function getPluginRepoInfo(
   ref: string,
   pluginSlug: string
 ): RepoInfo | null {
-  if (pluginDef.source.startsWith("github:")) {
+  if (pluginDef.source?.startsWith("github:")) {
     const [repoFull, path] = pluginDef.source.replace("github:", "").split("#")
     if (!repoFull) return null
     const [owner, repo] = repoFull.split("/")
@@ -414,7 +414,7 @@ function getPluginRepoInfo(
     if (!owner || !repo) return null
 
     let pluginPath: string
-    if (pluginDef.source.startsWith("./")) {
+    if (pluginDef.source?.startsWith("./")) {
       pluginPath = pluginDef.source.slice(2)
     } else if (pluginDef.path) {
       pluginPath = pluginDef.path
