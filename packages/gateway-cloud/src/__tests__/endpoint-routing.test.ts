@@ -86,6 +86,21 @@ describe("endpoint-resolver", () => {
       expect(result.statusCode).toBe(401)
     })
 
+    it("should return 401 on forbidden access (403)", async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 403,
+      })
+
+      const result = await resolveEndpoint("test-endpoint", {
+        platformUrl: "http://localhost:3000",
+        apiKey: "invalid-key",
+      })
+
+      expect(result.success).toBe(false)
+      expect(result.statusCode).toBe(401)
+    })
+
     it("should handle fetch errors", async () => {
       mockFetch.mockRejectedValueOnce(new Error("Network error"))
 
