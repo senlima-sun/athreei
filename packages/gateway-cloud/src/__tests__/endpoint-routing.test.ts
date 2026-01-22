@@ -14,6 +14,7 @@ describe("endpoint-resolver", () => {
 
   afterEach(() => {
     vi.restoreAllMocks()
+    vi.unstubAllGlobals()
   })
 
   describe("resolveEndpoint", () => {
