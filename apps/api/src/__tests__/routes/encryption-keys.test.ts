@@ -114,6 +114,11 @@ const mockEncryptionKey = {
   updatedAt: new Date("2025-01-01T00:00:00.000Z"),
 }
 
+const mockSet = vi.fn(() => ({
+  where: vi.fn(() => Promise.resolve()),
+}))
+const mockInsertValues = vi.fn(() => Promise.resolve())
+
 const mockDb = {
   query: {
     encryptionKey: {
@@ -125,13 +130,19 @@ const mockDb = {
     },
   },
   insert: vi.fn(() => ({
-    values: vi.fn(() => Promise.resolve()),
+    values: mockInsertValues,
   })),
   update: vi.fn(() => ({
-    set: vi.fn(() => ({
-      where: vi.fn(() => Promise.resolve()),
-    })),
+    set: mockSet,
   })),
+  transaction: vi.fn(async (callback) => {
+    const tx = {
+      query: mockDb.query,
+      insert: mockDb.insert,
+      update: mockDb.update,
+    }
+    return callback(tx)
+  }),
 }
 
 describe("Encryption Keys Routes", () => {

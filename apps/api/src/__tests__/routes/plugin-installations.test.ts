@@ -208,8 +208,8 @@ describe("Plugin Installation Routes", () => {
       const data = (await response.json()) as ListInstallationsResponse
 
       expect(response.status).toBe(200)
-      expect(data).toHaveProperty("data")
-      expect(data).toHaveProperty("pagination")
+      expect(data).toHaveProperty("installations")
+      expect(data).toHaveProperty("total")
       expect(mockListInstallations).toHaveBeenCalledWith(
         "org_123",
         expect.any(Object)

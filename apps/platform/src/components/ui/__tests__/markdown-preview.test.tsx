@@ -82,7 +82,8 @@ describe("MarkdownPreview", () => {
     })
 
     it("treats newline-only content as empty", () => {
-      render(<MarkdownPreview content="\n\n\n" />)
+      const newlineContent = String.fromCharCode(10, 10, 10)
+      render(<MarkdownPreview content={newlineContent} />)
 
       expect(screen.getByText("No content to preview")).toBeInTheDocument()
     })

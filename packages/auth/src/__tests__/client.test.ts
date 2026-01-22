@@ -20,15 +20,30 @@ const mockOrganizationClient = vi.hoisted(() =>
   }))
 )
 
+const mockAdminClient = vi.hoisted(() =>
+  vi.fn(() => ({
+    id: "admin-client",
+  }))
+)
+
 // Mock better-auth/react
-vi.mock("better-auth/react", () => ({
-  createAuthClient: mockCreateAuthClient,
-}))
+vi.mock("better-auth/react", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("better-auth/react")>()
+  return {
+    ...actual,
+    createAuthClient: mockCreateAuthClient,
+  }
+})
 
 // Mock better-auth/client/plugins
-vi.mock("better-auth/client/plugins", () => ({
-  organizationClient: mockOrganizationClient,
-}))
+vi.mock("better-auth/client/plugins", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("better-auth/client/plugins")>()
+  return {
+    ...actual,
+    organizationClient: mockOrganizationClient,
+    adminClient: mockAdminClient,
+  }
+})
 
 import { createClient } from "../client.ts"
 
@@ -48,14 +63,16 @@ describe("createClient", () => {
     )
   })
 
-  it("includes organizationClient plugin", () => {
+  it("includes organizationClient and adminClient plugins", () => {
     createClient("http://localhost:3000")
 
     expect(mockOrganizationClient).toHaveBeenCalled()
+    expect(mockAdminClient).toHaveBeenCalled()
     expect(mockCreateAuthClient).toHaveBeenCalledWith(
       expect.objectContaining({
         plugins: expect.arrayContaining([
           expect.objectContaining({ id: "organization-client" }),
+          expect.objectContaining({ id: "admin-client" }),
         ]),
       })
     )
@@ -99,13 +116,13 @@ describe("createClient", () => {
     })
   })
 
-  it("passes plugins array with organization client", () => {
+  it("passes plugins array with organization and admin clients", () => {
     createClient("http://localhost:3000")
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const calledConfig = (mockCreateAuthClient.mock.calls as any)[0]?.[0]
     expect(calledConfig?.plugins).toBeDefined()
     expect(Array.isArray(calledConfig?.plugins)).toBe(true)
-    expect(calledConfig?.plugins).toHaveLength(1)
+    expect(calledConfig?.plugins).toHaveLength(2)
   })
 })

@@ -2,21 +2,33 @@ import { describe, it, expect, vi, beforeEach } from "vitest"
 import { createAuthConfig, type AuthConfigOptions } from "../config.ts"
 
 // Mock better-auth/adapters/drizzle
-vi.mock("better-auth/adapters/drizzle", () => ({
-  drizzleAdapter: vi.fn((db, options) => ({
-    type: "drizzle",
-    db,
-    options,
-  })),
-}))
+vi.mock("better-auth/adapters/drizzle", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("better-auth/adapters/drizzle")>()
+  return {
+    ...actual,
+    drizzleAdapter: vi.fn((db, options) => ({
+      type: "drizzle",
+      db,
+      options,
+    })),
+  }
+})
 
 // Mock better-auth/plugins
-vi.mock("better-auth/plugins", () => ({
-  organization: vi.fn((options) => ({
-    id: "organization",
-    ...options,
-  })),
-}))
+vi.mock("better-auth/plugins", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("better-auth/plugins")>()
+  return {
+    ...actual,
+    organization: vi.fn((options) => ({
+      id: "organization",
+      ...options,
+    })),
+    admin: vi.fn((options) => ({
+      id: "admin",
+      ...options,
+    })),
+  }
+})
 
 describe("createAuthConfig", () => {
   const mockDb = { query: vi.fn() } as unknown as Parameters<
@@ -71,17 +83,19 @@ describe("createAuthConfig", () => {
     })
   })
 
-  it("includes organization plugin", async () => {
-    const { organization } = await import("better-auth/plugins")
+  it("includes organization and admin plugins", async () => {
+    const { organization, admin } = await import("better-auth/plugins")
     const config = createAuthConfig(mockDb)
 
     expect(organization).toHaveBeenCalledWith({
       creatorRole: "owner",
       allowUserToCreateOrganization: true,
     })
+    expect(admin).toHaveBeenCalled()
     expect(config.plugins).toBeDefined()
-    expect(config.plugins).toHaveLength(1)
+    expect(config.plugins).toHaveLength(2)
     expect(config.plugins![0]).toHaveProperty("id", "organization")
+    expect(config.plugins![1]).toHaveProperty("id", "admin")
   })
 
   it("merges additional options correctly", () => {

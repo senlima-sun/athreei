@@ -9,6 +9,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest"
 import { createHttpApi } from "../http-api"
 import type { GatewayState } from "../server"
 import { TraceCollector } from "../trace-collector"
+import { createHookExecutor } from "../hook-executor"
 import type { ConnectedMcp, AggregatedTool, ToolCallTrace } from "../types"
 import type { Tool } from "@modelcontextprotocol/sdk/types.js"
 
@@ -99,7 +100,6 @@ function createMockTrace(options: Partial<ToolCallTrace> = {}): ToolCallTrace {
 
 // Helper to create mock gateway state
 function createMockState(overrides: Partial<GatewayState> = {}): GatewayState {
-  const { createHookExecutor } = require("../hook-executor")
   return {
     connectedMcps: overrides.connectedMcps ?? new Map(),
     aggregatedTools: overrides.aggregatedTools ?? [],

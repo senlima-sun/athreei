@@ -143,6 +143,8 @@ vi.mock("@/components/ui/dropdown-menu", () => ({
     React.createElement("hr", { "data-testid": "dropdown-separator" }),
   DropdownMenuLabel: ({ children }: React.PropsWithChildren) =>
     React.createElement("div", { "data-testid": "dropdown-label" }, children),
+  DropdownMenuGroup: ({ children }: React.PropsWithChildren) =>
+    React.createElement("div", { "data-testid": "dropdown-group" }, children),
   DropdownMenuItem: ({
     children,
     onClick,

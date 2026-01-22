@@ -34,6 +34,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@athreei/shared": resolve(__dirname, "./packages/shared/src"),
+      "@athreei/gateway-core": resolve(__dirname, "./packages/gateway-core/src"),
       // Platform app uses @/* path alias (Next.js convention)
       "@/constants": resolve(__dirname, "./apps/platform/src/constants"),
       "@/lib": resolve(__dirname, "./apps/platform/src/lib"),

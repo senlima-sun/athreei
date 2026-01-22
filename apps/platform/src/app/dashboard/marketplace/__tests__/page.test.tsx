@@ -277,6 +277,60 @@ vi.mock("@/lib/utils", () => ({
   ) => inputs.filter((input) => typeof input === "string").join(" "),
 }))
 
+vi.mock("nuqs", async () => {
+  const { useState, useCallback } = await import("react")
+
+  const createParser = (defaultValue?: unknown) => ({
+    withOptions: () => ({
+      withDefault: (def: unknown) => createParser(def),
+    }),
+    defaultValue,
+  })
+
+  return {
+    useQueryState: (key: string, parser?: { defaultValue?: unknown }) => {
+      const initialValue = mockSearchParams(key)
+      const defaultVal = parser?.defaultValue ?? null
+
+      let initialState: unknown
+      if (initialValue !== null) {
+        if (defaultVal === false || defaultVal === true) {
+          initialState = initialValue === "true"
+        } else {
+          initialState = initialValue
+        }
+      } else {
+        initialState = defaultVal
+      }
+
+      const [value, setValueState] = useState(initialState)
+
+      const setValue = useCallback(
+        (newValue: unknown) => {
+          setValueState(newValue ?? defaultVal)
+
+          const params = new URLSearchParams()
+          if (newValue !== null && newValue !== "" && newValue !== false) {
+            params.set(key, String(newValue))
+          }
+          const queryString = params.toString()
+          mockReplace(
+            queryString
+              ? `/dashboard/marketplace?${queryString}`
+              : "/dashboard/marketplace",
+            { scroll: false }
+          )
+        },
+        [key, defaultVal]
+      )
+
+      return [value, setValue]
+    },
+    parseAsString: createParser(""),
+    parseAsBoolean: createParser(false),
+  }
+})
+
 import MarketplacePage from "../page"
 import type { PluginSearchResult, Marketplace } from "@/types/marketplace"
 

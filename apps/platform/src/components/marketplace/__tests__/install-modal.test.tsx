@@ -507,7 +507,7 @@ describe("InstallModal", () => {
 
       render(<InstallModal {...defaultProps} onClose={onClose} />)
 
-      const closeButton = screen.getByRole("button", { name: "" })
+      const closeButton = screen.getByRole("button", { name: /^Close$/i })
       await user.click(closeButton)
 
       expect(onClose).toHaveBeenCalled()

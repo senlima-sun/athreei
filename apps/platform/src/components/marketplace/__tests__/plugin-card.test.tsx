@@ -489,7 +489,10 @@ describe("PluginCard", () => {
       render(<PluginCard plugin={plugin} />)
 
       const link = screen.getByTestId("plugin-link")
-      expect(link).toHaveAttribute("href", "/marketplace/community/my-plugin")
+      expect(link).toHaveAttribute(
+        "href",
+        "/dashboard/marketplace/community/my-plugin"
+      )
     })
 
     it("prevents navigation when clicking install button", () => {

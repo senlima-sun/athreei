@@ -99,6 +99,7 @@ vi.mock("@lexical/code", () => ({
 
 vi.mock("@lexical/link", () => ({
   LinkNode: class {},
+  AutoLinkNode: class {},
 }))
 
 vi.mock("@lexical/react/LexicalHorizontalRuleNode", () => ({

@@ -10,26 +10,42 @@ const mockBetterAuth = vi.hoisted(() =>
 )
 
 // Mock better-auth
-vi.mock("better-auth", () => ({
-  betterAuth: mockBetterAuth,
-}))
+vi.mock("better-auth", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("better-auth")>()
+  return {
+    ...actual,
+    betterAuth: mockBetterAuth,
+  }
+})
 
 // Mock better-auth/adapters/drizzle
-vi.mock("better-auth/adapters/drizzle", () => ({
-  drizzleAdapter: vi.fn((db, options) => ({
-    type: "drizzle",
-    db,
-    options,
-  })),
-}))
+vi.mock("better-auth/adapters/drizzle", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("better-auth/adapters/drizzle")>()
+  return {
+    ...actual,
+    drizzleAdapter: vi.fn((db, options) => ({
+      type: "drizzle",
+      db,
+      options,
+    })),
+  }
+})
 
 // Mock better-auth/plugins
-vi.mock("better-auth/plugins", () => ({
-  organization: vi.fn((options) => ({
-    id: "organization",
-    ...options,
-  })),
-}))
+vi.mock("better-auth/plugins", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("better-auth/plugins")>()
+  return {
+    ...actual,
+    organization: vi.fn((options) => ({
+      id: "organization",
+      ...options,
+    })),
+    admin: vi.fn((options) => ({
+      id: "admin",
+      ...options,
+    })),
+  }
+})
 
 import { createAuth } from "../server.ts"
 
@@ -101,13 +117,14 @@ describe("createAuth", () => {
     )
   })
 
-  it("includes organization plugin in config", () => {
+  it("includes organization and admin plugins in config", () => {
     createAuth(mockDb)
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const calledConfig = (mockBetterAuth.mock.calls as any)[0]?.[0]
-    expect(calledConfig?.plugins).toHaveLength(1)
+    expect(calledConfig?.plugins).toHaveLength(2)
     expect(calledConfig?.plugins[0]).toHaveProperty("id", "organization")
+    expect(calledConfig?.plugins[1]).toHaveProperty("id", "admin")
   })
 
   it("can override emailAndPassword setting", () => {
