@@ -12,7 +12,7 @@ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext
 import { HeadingNode, QuoteNode } from "@lexical/rich-text"
 import { ListNode, ListItemNode } from "@lexical/list"
 import { CodeNode, CodeHighlightNode } from "@lexical/code"
-import { LinkNode } from "@lexical/link"
+import { LinkNode, AutoLinkNode } from "@lexical/link"
 import { HorizontalRuleNode } from "@lexical/react/LexicalHorizontalRuleNode"
 import {
   $convertToMarkdownString,
@@ -31,6 +31,7 @@ const EDITOR_NODES = [
   CodeNode,
   CodeHighlightNode,
   LinkNode,
+  AutoLinkNode,
   HorizontalRuleNode,
 ]
 
@@ -55,14 +56,17 @@ function InitializePlugin({
   const [initialized, setInitialized] = useState(false)
 
   useEffect(() => {
-    if (!initialized && value) {
+    if (initialized) return
+
+    if (value) {
       editor.update(() => {
         $convertFromMarkdownString(value, TRANSFORMERS)
       })
     }
     setInitialized(true)
     onReady()
-  }, [editor, value, initialized, onReady])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return null
 }
