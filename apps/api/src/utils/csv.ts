@@ -45,5 +45,5 @@ export function generateTraceCsv(traces: TraceRecord[]): string {
     ...rows.map((row) => row.map(escapeCsvValue).join(",")),
   ]
 
-  return csvLines.join("\n")
+  return "\ufeff" + csvLines.join("\n")
 }
