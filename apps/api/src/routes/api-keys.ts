@@ -352,7 +352,7 @@ apiKeys.get("/:endpointId/keys/:keyId/stats", async (c) => {
   const totalCountResult = await db()
     .select({ count: sql<number>`count(*)` })
     .from(trace)
-    .where(sql`${trace.attributes} LIKE ${apiKeyJsonPattern}`)
+    .where(sql`${trace.attributes} LIKE ${apiKeyJsonPattern} ESCAPE '\\'`)
 
   const totalUsage = Number(totalCountResult[0]?.count ?? 0)
 
@@ -361,7 +361,7 @@ apiKeys.get("/:endpointId/keys/:keyId/stats", async (c) => {
     .from(trace)
     .where(
       and(
-        sql`${trace.attributes} LIKE ${apiKeyJsonPattern}`,
+        sql`${trace.attributes} LIKE ${apiKeyJsonPattern} ESCAPE '\\'`,
         eq(trace.status, "error")
       )
     )
@@ -383,7 +383,7 @@ apiKeys.get("/:endpointId/keys/:keyId/stats", async (c) => {
       .from(trace)
       .where(
         and(
-          sql`${trace.attributes} LIKE ${apiKeyJsonPattern}`,
+          sql`${trace.attributes} LIKE ${apiKeyJsonPattern} ESCAPE '\\'`,
           gte(trace.startTime, dayStart),
           sql`${trace.startTime} <= ${dayEnd}`
         )
@@ -394,7 +394,7 @@ apiKeys.get("/:endpointId/keys/:keyId/stats", async (c) => {
       .from(trace)
       .where(
         and(
-          sql`${trace.attributes} LIKE ${apiKeyJsonPattern}`,
+          sql`${trace.attributes} LIKE ${apiKeyJsonPattern} ESCAPE '\\'`,
           eq(trace.status, "error"),
           gte(trace.startTime, dayStart),
           sql`${trace.startTime} <= ${dayEnd}`
@@ -411,7 +411,7 @@ apiKeys.get("/:endpointId/keys/:keyId/stats", async (c) => {
   const lastTraceResult = await db()
     .select({ startTime: trace.startTime })
     .from(trace)
-    .where(sql`${trace.attributes} LIKE ${apiKeyJsonPattern}`)
+    .where(sql`${trace.attributes} LIKE ${apiKeyJsonPattern} ESCAPE '\\'`)
     .orderBy(sql`${trace.startTime} DESC`)
     .limit(1)
 
