@@ -161,11 +161,13 @@ describe("RateLimiter", () => {
       const initialState = rateLimiter.getState("server1")
       const initialWindowStart = initialState?.windowStart
 
+      expect(initialWindowStart).toBeDefined()
+
       vi.advanceTimersByTime(RATE_LIMIT.DEFAULT_WINDOW_MS)
 
       rateLimiter.tryAcquire("server1")
       const newState = rateLimiter.getState("server1")
-      expect(newState?.windowStart).toBeGreaterThan(initialWindowStart!)
+      expect(newState?.windowStart).toBeGreaterThan(initialWindowStart as number)
       expect(newState?.count).toBe(1)
       expect(newState?.burstUsed).toBe(0)
     })
