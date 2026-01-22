@@ -44,6 +44,12 @@ import {
 import { SyncStatus, SyncPull, SyncPush, SyncDiff } from "./commands/sync"
 import { ApiKeyList, ApiKeyCreate, ApiKeyRevoke } from "./commands/apikey"
 import {
+  PluginList,
+  PluginInstall,
+  PluginUninstall,
+  PluginSync,
+} from "./commands/plugin"
+import {
   outputBashCompletion,
   outputZshCompletion,
   outputFishCompletion,
@@ -677,6 +683,89 @@ apikey
       await waitUntilExit()
     }
   )
+
+// Plugin commands
+const pluginCmd = program
+  .command("plugin")
+  .description("Manage Claude Code plugins")
+
+pluginCmd
+  .command("list")
+  .description("List available or installed plugins")
+  .option("-s, --search <query>", "Search by name or description")
+  .option("-m, --marketplace <slug>", "Filter by marketplace")
+  .option("-i, --installed", "Show only installed plugins")
+  .option("--json", "Output in JSON format")
+  .action(
+    async (options: {
+      search?: string
+      marketplace?: string
+      installed?: boolean
+      json?: boolean
+    }) => {
+      const { waitUntilExit } = render(
+        <PluginList
+          search={options.search}
+          marketplace={options.marketplace}
+          installed={options.installed}
+          json={options.json}
+        />
+      )
+      await waitUntilExit()
+    }
+  )
+
+pluginCmd
+  .command("install")
+  .description("Install a plugin")
+  .argument("<plugin>", "Plugin ID (marketplace/plugin or just plugin for official)")
+  .option("-v, --version <version>", "Specific version to install")
+  .option(
+    "--scope <scope>",
+    "Installation scope (organization, user)",
+    "organization"
+  )
+  .option("--json", "Output in JSON format")
+  .action(
+    async (
+      pluginId: string,
+      options: { version?: string; scope?: string; json?: boolean }
+    ) => {
+      const { waitUntilExit } = render(
+        <PluginInstall
+          pluginId={pluginId}
+          version={options.version}
+          scope={options.scope as "organization" | "user"}
+          json={options.json}
+        />
+      )
+      await waitUntilExit()
+    }
+  )
+
+pluginCmd
+  .command("uninstall")
+  .description("Uninstall a plugin")
+  .argument("<id>", "Installation ID to uninstall")
+  .option("--json", "Output in JSON format")
+  .action(async (id: string, options: { json?: boolean }) => {
+    const { waitUntilExit } = render(
+      <PluginUninstall installationId={id} json={options.json} />
+    )
+    await waitUntilExit()
+  })
+
+pluginCmd
+  .command("sync")
+  .description("Sync installed plugins to local Claude Code installation")
+  .option("--dry-run", "Show what would be done without making changes")
+  .option("--json", "Output in JSON format")
+  .action(async (options: { dryRun?: boolean; json?: boolean }) => {
+    const { waitUntilExit } = render(
+      <PluginSync dryRun={options.dryRun} json={options.json} />
+    )
+    await waitUntilExit()
+  })
 
 // Completion commands
 const completion = program
