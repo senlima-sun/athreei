@@ -4,7 +4,7 @@
  * Stores request traces and logs for debugging and monitoring.
  */
 
-import { sqliteTable, text, integer, real } from "drizzle-orm/sqlite-core"
+import { sqliteTable, text, integer, real, index } from "drizzle-orm/sqlite-core"
 import { relations } from "drizzle-orm"
 import { organization, user } from "./auth"
 import { mcpServer } from "./mcp-servers"
@@ -12,7 +12,9 @@ import { mcpServer } from "./mcp-servers"
 /**
  * Trace - a single request/response trace
  */
-export const trace = sqliteTable("trace", {
+export const trace = sqliteTable(
+  "trace",
+  {
   id: text("id").primaryKey(),
   organizationId: text("organizationId")
     .notNull()
@@ -41,7 +43,20 @@ export const trace = sqliteTable("trace", {
   events: text("events"), // JSON array of trace events
   // Timestamps
   createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
-})
+  },
+  (table) => [
+    index("trace_org_time_idx").on(table.organizationId, table.startTime),
+    index("trace_org_status_idx").on(table.organizationId, table.status),
+    index("trace_org_status_time_idx").on(
+      table.organizationId,
+      table.status,
+      table.startTime
+    ),
+    index("trace_mcp_server_idx").on(table.mcpServerId),
+    index("trace_org_duration_idx").on(table.organizationId, table.durationMs),
+    index("trace_org_name_idx").on(table.organizationId, table.name),
+  ]
+)
 
 /**
  * Log - structured log entries

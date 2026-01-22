@@ -1,11 +1,16 @@
 import { Hono } from "hono"
 import { zValidator } from "@hono/zod-validator"
-import { eq, and, desc, gte, lte, like, sql } from "drizzle-orm"
+import { eq, and, desc, gte, lte, like, sql, inArray } from "drizzle-orm"
 import { authMiddleware, getAuthContext, ApiError } from "../middleware"
 import { db } from "../lib/db-operations"
-import { trace } from "@athreei/db"
-import { listTracesQuerySchema, traceIdParamSchema } from "../schemas/traces"
+import { trace, mcpServer } from "@athreei/db"
+import {
+  listTracesQuerySchema,
+  traceIdParamSchema,
+  exportTracesQuerySchema,
+} from "../schemas/traces"
 import { verifyOrganizationMembership } from "../services"
+import { generateTraceCsv } from "../utils/csv"
 
 const traces = new Hono()
 
@@ -22,8 +27,18 @@ function safeJsonParse(value: string | null): unknown {
 
 traces.get("/", zValidator("query", listTracesQuerySchema), async (c) => {
   const auth = getAuthContext(c)
-  const { organizationId, limit, offset, status, startDate, endDate, search } =
-    c.req.valid("query")
+  const {
+    organizationId,
+    limit,
+    offset,
+    status,
+    startDate,
+    endDate,
+    search,
+    minDuration,
+    maxDuration,
+    serverIds,
+  } = c.req.valid("query")
 
   const isMember = await verifyOrganizationMembership(
     auth.userId,
@@ -52,6 +67,21 @@ traces.get("/", zValidator("query", listTracesQuerySchema), async (c) => {
     conditions.push(like(trace.name, `%${search}%`))
   }
 
+  if (minDuration !== undefined) {
+    conditions.push(gte(trace.durationMs, minDuration))
+  }
+
+  if (maxDuration !== undefined) {
+    conditions.push(lte(trace.durationMs, maxDuration))
+  }
+
+  if (serverIds) {
+    const serverIdList = serverIds.split(",").filter(Boolean)
+    if (serverIdList.length > 0) {
+      conditions.push(inArray(trace.mcpServerId, serverIdList))
+    }
+  }
+
   const dbQuery = db().query
 
   const tracesResult = await dbQuery.trace.findMany({
@@ -78,6 +108,7 @@ traces.get("/", zValidator("query", listTracesQuerySchema), async (c) => {
       durationMs: t.durationMs,
       startTime: t.startTime,
       endTime: t.endTime,
+      mcpServerId: t.mcpServerId,
       attributes: safeJsonParse(t.attributes),
     })),
     total,
@@ -85,6 +116,125 @@ traces.get("/", zValidator("query", listTracesQuerySchema), async (c) => {
     offset,
   })
 })
+
+traces.get("/servers", async (c) => {
+  const auth = getAuthContext(c)
+  const organizationId = c.req.query("organizationId")
+
+  if (!organizationId) {
+    throw ApiError.badRequest("organizationId is required")
+  }
+
+  const isMember = await verifyOrganizationMembership(auth.userId, organizationId)
+  if (!isMember) {
+    throw ApiError.forbidden("Access denied")
+  }
+
+  const servers = await db().query.mcpServer.findMany({
+    where: eq(mcpServer.organizationId, organizationId),
+    columns: {
+      id: true,
+      name: true,
+    },
+  })
+
+  return c.json({ servers })
+})
+
+traces.get(
+  "/export",
+  zValidator("query", exportTracesQuerySchema),
+  async (c) => {
+    const auth = getAuthContext(c)
+    const {
+      organizationId,
+      format,
+      status,
+      startDate,
+      endDate,
+      search,
+      minDuration,
+      maxDuration,
+      serverIds,
+    } = c.req.valid("query")
+
+    const isMember = await verifyOrganizationMembership(
+      auth.userId,
+      organizationId
+    )
+
+    if (!isMember) {
+      throw ApiError.forbidden("Access denied")
+    }
+
+    const conditions = [eq(trace.organizationId, organizationId)]
+
+    if (status) {
+      conditions.push(eq(trace.status, status))
+    }
+
+    if (startDate) {
+      conditions.push(gte(trace.startTime, new Date(startDate)))
+    }
+
+    if (endDate) {
+      conditions.push(lte(trace.startTime, new Date(endDate)))
+    }
+
+    if (search) {
+      conditions.push(like(trace.name, `%${search}%`))
+    }
+
+    if (minDuration !== undefined) {
+      conditions.push(gte(trace.durationMs, minDuration))
+    }
+
+    if (maxDuration !== undefined) {
+      conditions.push(lte(trace.durationMs, maxDuration))
+    }
+
+    if (serverIds) {
+      const serverIdList = serverIds.split(",").filter(Boolean)
+      if (serverIdList.length > 0) {
+        conditions.push(inArray(trace.mcpServerId, serverIdList))
+      }
+    }
+
+    const dbQuery = db().query
+
+    const tracesResult = await dbQuery.trace.findMany({
+      where: and(...conditions),
+      orderBy: [desc(trace.startTime)],
+      limit: 10000,
+    })
+
+    if (format === "csv") {
+      const csv = generateTraceCsv(tracesResult)
+      const today = new Date().toISOString().split("T")[0]
+      return new Response(csv, {
+        headers: {
+          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Disposition": `attachment; filename=traces-${today}.csv`,
+        },
+      })
+    }
+
+    return c.json({
+      traces: tracesResult.map((t: typeof trace.$inferSelect) => ({
+        id: t.id,
+        traceId: t.traceId,
+        name: t.name,
+        status: t.status,
+        statusMessage: t.statusMessage,
+        durationMs: t.durationMs,
+        startTime: t.startTime,
+        endTime: t.endTime,
+        mcpServerId: t.mcpServerId,
+        attributes: safeJsonParse(t.attributes),
+      })),
+    })
+  }
+)
 
 traces.get("/:id", zValidator("param", traceIdParamSchema), async (c) => {
   const auth = getAuthContext(c)

@@ -6,6 +6,7 @@ import {
   organizationsRoutes,
   endpointsRoutes,
   apiKeysRoutes,
+  encryptionKeysRoutes,
   mcpServersRoutes,
   namespacesRoutes,
   gatewayRoutes,
@@ -27,6 +28,7 @@ import {
   organizationMarketplaceRoutes,
   adminMarketplacesRoutes,
   adminStatsRoutes,
+  analyticsRoutes,
 } from "./routes"
 import { errorHandler, notFoundHandler } from "./middleware"
 import { getAuth } from "./lib/auth"
@@ -74,6 +76,7 @@ app.on(
 app.route("/api/organizations", organizationsRoutes)
 app.route("/api/endpoints", endpointsRoutes)
 app.route("/api/api-keys", apiKeysRoutes)
+app.route("/api/encryption-keys", encryptionKeysRoutes)
 app.route("/api/mcp-servers", mcpServersRoutes)
 app.route("/api/namespaces", namespacesRoutes)
 app.route("/api/gateway", gatewayRoutes)
@@ -96,6 +99,7 @@ app.route(
 )
 app.route("/api/admin/marketplaces", adminMarketplacesRoutes)
 app.route("/api/admin/stats", adminStatsRoutes)
+app.route("/api/analytics", analyticsRoutes)
 
 app.notFound(notFoundHandler)
 app.onError(errorHandler)
