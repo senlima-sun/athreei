@@ -205,18 +205,17 @@ encryptionKeys.post("/:id/rotate", async (c) => {
   const newId = generateId()
   const now = new Date()
 
-  await db()
-    .update(encryptionKey)
-    .set({
-      status: "rotated",
-      rotatedAt: now,
-      updatedAt: now,
-    })
-    .where(eq(encryptionKey.id, id))
+  const newKey = await db().transaction(async (tx) => {
+    await tx
+      .update(encryptionKey)
+      .set({
+        status: "rotated",
+        rotatedAt: now,
+        updatedAt: now,
+      })
+      .where(eq(encryptionKey.id, id))
 
-  await db()
-    .insert(encryptionKey)
-    .values({
+    await tx.insert(encryptionKey).values({
       id: newId,
       organizationId: oldKey.organizationId,
       createdById: auth.userId,
@@ -229,8 +228,9 @@ encryptionKeys.post("/:id/rotate", async (c) => {
       updatedAt: now,
     })
 
-  const newKey = await db().query.encryptionKey.findFirst({
-    where: eq(encryptionKey.id, newId),
+    return tx.query.encryptionKey.findFirst({
+      where: eq(encryptionKey.id, newId),
+    })
   })
 
   return c.json(
