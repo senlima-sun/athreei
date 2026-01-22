@@ -11,7 +11,12 @@ import {
   generatePluginVersionId,
   generatePluginComponentId,
 } from "./id-generator"
-import { pluginManifestSchema, createLogger } from "@athreei/shared"
+import {
+  pluginManifestSchema,
+  createLogger,
+  validateClaudeCodePlugin,
+  type ClaudeCodePluginValidationResult,
+} from "@athreei/shared"
 import { z } from "zod"
 
 const logger = createLogger({
@@ -326,6 +331,9 @@ async function syncPluginFromGitHub(
 
     const versionId = generatePluginVersionId()
 
+    const validationResult = validateClaudeCodePlugin(rawManifest)
+    const validationStatus = getValidationStatus(validationResult)
+
     await db()
       .insert(pluginVersion)
       .values({
@@ -334,6 +342,15 @@ async function syncPluginFromGitHub(
         version: manifest.version,
         manifest: JSON.stringify(manifest),
         isLatest: true,
+        validationStatus,
+        validationErrors:
+          validationResult.errors.length > 0
+            ? JSON.stringify(validationResult.errors)
+            : null,
+        validationWarnings:
+          validationResult.warnings.length > 0
+            ? JSON.stringify(validationResult.warnings)
+            : null,
         publishedAt: now,
         createdAt: now,
       })
@@ -346,9 +363,29 @@ async function syncPluginFromGitHub(
       pluginBasePath,
       repoInfo
     )
+
+    logger.info("Plugin version validated", {
+      pluginSlug,
+      version: manifest.version,
+      validationStatus,
+      errorsCount: validationResult.errors.length,
+      warningsCount: validationResult.warnings.length,
+    })
   }
 
   return { isNew }
+}
+
+function getValidationStatus(
+  result: ClaudeCodePluginValidationResult
+): "valid" | "invalid" | "warning" {
+  if (!result.valid) {
+    return "invalid"
+  }
+  if (result.warnings.length > 0) {
+    return "warning"
+  }
+  return "valid"
 }
 
 interface RepoInfo {

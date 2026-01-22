@@ -107,6 +107,9 @@ export const pluginVersion = pgTable(
     manifest: text("manifest").notNull(),
     sourceHash: text("source_hash"),
     isLatest: boolean("is_latest").notNull().default(false),
+    validationStatus: text("validation_status").notNull().default("pending"),
+    validationErrors: text("validation_errors"),
+    validationWarnings: text("validation_warnings"),
     publishedAt: timestamp("published_at").notNull(),
     createdAt: timestamp("created_at").notNull(),
   },
@@ -114,6 +117,7 @@ export const pluginVersion = pgTable(
     uniqueIndex("idx_plugin_version_unique").on(table.pluginId, table.version),
     index("idx_plugin_version_plugin").on(table.pluginId),
     index("idx_plugin_version_latest").on(table.pluginId, table.isLatest),
+    index("idx_plugin_version_validation").on(table.validationStatus),
   ]
 )
 

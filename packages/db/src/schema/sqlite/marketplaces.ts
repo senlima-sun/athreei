@@ -118,6 +118,9 @@ export const pluginVersion = sqliteTable(
     isLatest: integer("is_latest", { mode: "boolean" })
       .notNull()
       .default(false),
+    validationStatus: text("validation_status").notNull().default("pending"),
+    validationErrors: text("validation_errors"),
+    validationWarnings: text("validation_warnings"),
     publishedAt: integer("published_at", { mode: "timestamp" }).notNull(),
     createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
   },
@@ -125,6 +128,7 @@ export const pluginVersion = sqliteTable(
     uniqueIndex("idx_plugin_version_unique").on(table.pluginId, table.version),
     index("idx_plugin_version_plugin").on(table.pluginId),
     index("idx_plugin_version_latest").on(table.pluginId, table.isLatest),
+    index("idx_plugin_version_validation").on(table.validationStatus),
   ]
 )
 

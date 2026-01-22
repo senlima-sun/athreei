@@ -20,6 +20,12 @@ import type {
   ListInstallationsQuery,
 } from "../schemas/marketplaces"
 
+export interface ValidationInfo {
+  status: "pending" | "valid" | "warning" | "invalid"
+  errors?: Array<{ path: string; message: string; code: string }>
+  warnings?: Array<{ path: string; message: string; code: string }>
+}
+
 export interface InstallationResult {
   id: string
   organizationId: string
@@ -44,6 +50,7 @@ export interface InstallationResult {
   version: {
     id: string
     version: string
+    validation?: ValidationInfo
   }
 }
 
@@ -217,6 +224,8 @@ export async function installPlugin(
     })
     .where(eq(plugin.id, plg.id))
 
+  const validation = parseValidationInfo(version)
+
   return {
     id,
     organizationId,
@@ -241,8 +250,51 @@ export async function installPlugin(
     version: {
       id: version.id,
       version: version.version,
+      validation,
     },
   }
+}
+
+function parseValidationInfoFromRow(
+  validationStatus: string | null,
+  validationErrors: string | null,
+  validationWarnings: string | null
+): ValidationInfo | undefined {
+  if (!validationStatus) {
+    return undefined
+  }
+
+  const result: ValidationInfo = {
+    status: validationStatus as ValidationInfo["status"],
+  }
+
+  if (validationErrors) {
+    try {
+      result.errors = JSON.parse(validationErrors)
+    } catch {
+      // Ignore parse errors
+    }
+  }
+
+  if (validationWarnings) {
+    try {
+      result.warnings = JSON.parse(validationWarnings)
+    } catch {
+      // Ignore parse errors
+    }
+  }
+
+  return result
+}
+
+function parseValidationInfo(
+  version: typeof pluginVersion.$inferSelect
+): ValidationInfo | undefined {
+  return parseValidationInfoFromRow(
+    version.validationStatus,
+    version.validationErrors,
+    version.validationWarnings
+  )
 }
 
 export async function uninstallPlugin(
@@ -355,6 +407,8 @@ export async function updateInstallation(
     where: eq(pluginVersion.id, updated!.pluginVersionId),
   })
 
+  const validation = ver ? parseValidationInfo(ver) : undefined
+
   return {
     id: updated!.id,
     organizationId: updated!.organizationId,
@@ -379,6 +433,7 @@ export async function updateInstallation(
     version: {
       id: ver!.id,
       version: ver!.version,
+      validation,
     },
   }
 }
@@ -530,6 +585,9 @@ export async function listInstallations(
         marketplaceName: marketplace.name,
         versionId: pluginVersion.id,
         versionNumber: pluginVersion.version,
+        validationStatus: pluginVersion.validationStatus,
+        validationErrors: pluginVersion.validationErrors,
+        validationWarnings: pluginVersion.validationWarnings,
       })
       .from(pluginInstallation)
       .innerJoin(plugin, eq(pluginInstallation.pluginId, plugin.id))
@@ -550,32 +608,40 @@ export async function listInstallations(
 
   const total = Number(countResult[0]?.count ?? 0)
 
-  const data: InstallationResult[] = installations.map((i) => ({
-    id: i.id,
-    organizationId: i.organizationId,
-    pluginId: i.pluginId,
-    pluginVersionId: i.pluginVersionId,
-    installedBy: i.installedBy,
-    scope: i.scope,
-    status: i.status,
-    config: i.config ? JSON.parse(i.config) : null,
-    installedAt: i.installedAt,
-    updatedAt: i.updatedAt,
-    plugin: {
-      id: i.pluginId,
-      slug: i.pluginSlug,
-      name: i.pluginName,
-      marketplace: {
-        id: i.marketplaceId,
-        slug: i.marketplaceSlug,
-        name: i.marketplaceName,
+  const data: InstallationResult[] = installations.map((i) => {
+    const validation = parseValidationInfoFromRow(
+      i.validationStatus,
+      i.validationErrors,
+      i.validationWarnings
+    )
+    return {
+      id: i.id,
+      organizationId: i.organizationId,
+      pluginId: i.pluginId,
+      pluginVersionId: i.pluginVersionId,
+      installedBy: i.installedBy,
+      scope: i.scope,
+      status: i.status,
+      config: i.config ? JSON.parse(i.config) : null,
+      installedAt: i.installedAt,
+      updatedAt: i.updatedAt,
+      plugin: {
+        id: i.pluginId,
+        slug: i.pluginSlug,
+        name: i.pluginName,
+        marketplace: {
+          id: i.marketplaceId,
+          slug: i.marketplaceSlug,
+          name: i.marketplaceName,
+        },
       },
-    },
-    version: {
-      id: i.versionId,
-      version: i.versionNumber,
-    },
-  }))
+      version: {
+        id: i.versionId,
+        version: i.versionNumber,
+        validation,
+      },
+    }
+  })
 
   return {
     data,
@@ -621,6 +687,9 @@ export async function getInstallation(
       marketplaceName: marketplace.name,
       versionId: pluginVersion.id,
       versionNumber: pluginVersion.version,
+      validationStatus: pluginVersion.validationStatus,
+      validationErrors: pluginVersion.validationErrors,
+      validationWarnings: pluginVersion.validationWarnings,
     })
     .from(pluginInstallation)
     .innerJoin(plugin, eq(pluginInstallation.pluginId, plugin.id))
@@ -646,6 +715,12 @@ export async function getInstallation(
     where: eq(pluginComponent.pluginVersionId, installation.pluginVersionId),
   })
 
+  const validation = parseValidationInfoFromRow(
+    installation.validationStatus,
+    installation.validationErrors,
+    installation.validationWarnings
+  )
+
   return {
     id: installation.id,
     organizationId: installation.organizationId,
@@ -670,6 +745,7 @@ export async function getInstallation(
     version: {
       id: installation.versionId,
       version: installation.versionNumber,
+      validation,
     },
     components: components.map((c) => ({
       id: c.id,
