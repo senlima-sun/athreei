@@ -47,6 +47,8 @@ export const trace = pgTable(
       table.startTime
     ),
     index("trace_mcp_server_idx").on(table.mcpServerId),
+    index("trace_org_duration_idx").on(table.organizationId, table.durationMs),
+    index("trace_org_name_idx").on(table.organizationId, table.name),
   ]
 )
 
