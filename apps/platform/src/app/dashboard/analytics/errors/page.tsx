@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { PageHeader, LoadingState, EmptyState } from "@/components/dashboard"
-import { useActiveOrganization } from "@/lib/auth-client"
+import { useActiveOrganizationSafe } from "@/lib/auth-client"
 import {
   useErrorOverview,
   useErrorsByTool,
@@ -185,7 +185,7 @@ function BarChart({
 }
 
 export default function ErrorAnalyticsPage() {
-  const { data: activeOrg, isPending: isOrgPending } = useActiveOrganization()
+  const { data: activeOrg, isPending: isOrgPending } = useActiveOrganizationSafe()
   const [dateRange, setDateRange] = useState<string>("7days")
 
   const params = getDateRange(dateRange)
