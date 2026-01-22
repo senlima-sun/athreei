@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 ## Project Overview
 
 athreei is an AI toolset gateway. It connects AI apps (Claude Desktop, ChatGPT, Cursor) to multiple tool servers (Figma, Sentry, Linear, etc.) via a single connection. The athreei Gateway handles tool aggregation, namespacing, and trace collection.
@@ -59,17 +61,20 @@ Bun monorepo with workspaces.
 **Apps:**
 
 - `apps/api` — Platform API (Hono, :3001)
-- `apps/platform` — Frontend (Next.js 15)
-- `apps/cli` — Unified CLI (React Ink)
-- `apps/desktop` — Tauri 2.0 app
+- `apps/platform` — Frontend (Next.js 15, React 19)
+- `apps/cli` — Unified CLI (Commander + Ink)
+- `apps/desktop` — Tauri 2.0 native app (Vite + React)
+- `apps/docs` — Documentation site (Next.js + Fumadocs)
 
 ## Key Patterns
 
 **Database auto-detection:**
 
 ```typescript
-import { getDb, getSchema } from "@athreei/db"
-const db = getDb() // postgres:// → PG, else → SQLite
+import { getDb, getSchema, getPgDb, getSqliteDb } from "@athreei/db"
+const db = getDb()        // Auto-detect: postgres:// → PG, else → SQLite
+const pg = getPgDb()      // Explicit PG (throws if wrong type)
+const sqlite = getSqliteDb() // Explicit SQLite (throws if wrong type)
 ```
 
 **Auth with Hono:**
@@ -88,6 +93,10 @@ export default { port: PORT, fetch: app.fetch }
 **Tool namespacing:** `create_issue` → `github__create_issue`
 
 **Site SDK events:** `aiii:ready`, `aiii:request`, `aiii:response`, `aiii:register`
+
+**Gateway transports:** stdio (default), SSE, HTTP API — selected via `--transport` flag
+
+**CLI commands:** `athreei auth|org|mcp|config|gateway|sync|endpoint|apikey|completion`
 
 ## Tech Stack
 
