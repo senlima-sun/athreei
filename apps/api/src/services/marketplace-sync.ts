@@ -803,7 +803,12 @@ function isUrlAllowed(url: string): { allowed: boolean; reason?: string } {
 
     const ipRegex = /^(?:\d{1,3}\.){3}\d{1,3}$/
     if (ipRegex.test(parsed.hostname)) {
-      const parts = parsed.hostname.split(".").map(Number)
+      const parts = parsed.hostname.split(".").map(Number) as [
+        number,
+        number,
+        number,
+        number,
+      ]
       if (parts[0] === 10 || parts[0] === 127) {
         return {
           allowed: false,
