@@ -20,6 +20,7 @@ import "./instrument"
 import { Hono } from "hono"
 import { cors } from "hono/cors"
 import { logger as honoLogger } from "hono/logger"
+import { z } from "zod"
 import { createLogger, type LogLevel } from "@athreei/shared"
 import healthRoutes from "./routes/health"
 import sseRoutes, { configureSseRoutes } from "./routes/sse"
@@ -35,9 +36,11 @@ import type { Logger } from "@athreei/gateway-core"
 
 const app = new Hono()
 
+const LogLevelSchema = z.enum(["debug", "info", "warn", "error"]).catch("info")
+
 const structuredLogger = createLogger({
   service: "gateway-cloud",
-  level: (process.env.LOG_LEVEL as LogLevel) ?? "info",
+  level: LogLevelSchema.parse(process.env.LOG_LEVEL) as LogLevel,
   pretty: process.env.NODE_ENV !== "production",
 })
 
