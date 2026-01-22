@@ -11,8 +11,13 @@ import {
   generatePluginVersionId,
   generatePluginComponentId,
 } from "./id-generator"
-import { pluginManifestSchema } from "@athreei/shared"
+import { pluginManifestSchema, createLogger } from "@athreei/shared"
 import { z } from "zod"
+
+const logger = createLogger({
+  service: "marketplace-sync",
+  pretty: process.env.NODE_ENV !== "production",
+})
 
 const pluginDefinitionSchema = z.object({
   slug: z.string().optional(),
@@ -404,9 +409,11 @@ async function discoverDirectoryComponents(
       const response = await fetchWithTimeout(treeUrl, 15000)
 
       if (!response.ok) {
-        console.error(
-          `[marketplace-sync] Tree API failed for ${repoInfo.owner}/${repoInfo.repo}: ${response.status}`
-        )
+        logger.error("Tree API failed", {
+          owner: repoInfo.owner,
+          repo: repoInfo.repo,
+          status: response.status,
+        })
         return result
       }
 
@@ -430,19 +437,19 @@ async function discoverDirectoryComponents(
 
       return result
     } catch (err) {
-      console.error(
-        `[marketplace-sync] Failed to discover directories via Tree API:`,
-        err instanceof Error ? err.message : err
-      )
+      logger.error("Failed to discover directories via Tree API", {
+        error: err instanceof Error ? err.message : String(err),
+      })
     }
   }
 
   try {
     const response = await fetchWithTimeout(basePath, 10000)
     if (!response.ok) {
-      console.error(
-        `[marketplace-sync] Contents API failed for ${basePath}: ${response.status}`
-      )
+      logger.error("Contents API failed", {
+        basePath,
+        status: response.status,
+      })
       return result
     }
 
@@ -459,10 +466,9 @@ async function discoverDirectoryComponents(
       }
     }
   } catch (err) {
-    console.error(
-      `[marketplace-sync] Failed to discover directories:`,
-      err instanceof Error ? err.message : err
-    )
+    logger.error("Failed to discover directories", {
+      error: err instanceof Error ? err.message : String(err),
+    })
   }
 
   return result
