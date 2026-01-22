@@ -347,7 +347,13 @@ function EnvVarInput({
           </code>
           {envVar.required && <span className="text-xs text-red-500">*</span>}
         </Label>
-        <Button type="button" variant="ghost" size="sm" onClick={onToggleShow}>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={onToggleShow}
+          aria-label={showValue ? "Hide value" : "Show value"}
+        >
           {showValue ? (
             <EyeOff className="h-4 w-4" />
           ) : (

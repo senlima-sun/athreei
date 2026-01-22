@@ -2,8 +2,10 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { toast } from "sonner"
 import { Loader2, Scale, Globe, Boxes, Server } from "lucide-react"
 import type { Rule, RuleFormData, RuleScope } from "@/types"
+import { MarkdownEditorWithPreview } from "@/components/ui/markdown-editor-with-preview"
 
 const SCOPE_OPTIONS: {
   value: RuleScope
@@ -45,7 +47,6 @@ export function RuleForm({
   submitLabel = "Create Rule",
 }: RuleFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
   const [name, setName] = useState(rule?.name || "")
   const [description, setDescription] = useState(rule?.description || "")
@@ -58,7 +59,6 @@ export function RuleForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError(null)
     setIsSubmitting(true)
 
     try {
@@ -72,8 +72,11 @@ export function RuleForm({
       }
 
       await onSubmit(formData)
+      toast.success(
+        rule ? "Rule updated successfully" : "Rule created successfully"
+      )
     } catch (err) {
-      setError(
+      toast.error(
         err instanceof Error ? err.message : "An unexpected error occurred"
       )
     } finally {
@@ -135,18 +138,16 @@ export function RuleForm({
         <div>
           <label
             htmlFor="content"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-gray-700 mb-1"
           >
             Content (Markdown)
           </label>
-          <textarea
+          <MarkdownEditorWithPreview
             id="content"
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={setContent}
             placeholder="# Rule Guidelines&#10;&#10;Define behavior constraints and guidelines..."
-            rows={12}
-            required
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 font-mono text-sm placeholder-gray-400 focus:border-gray-500 focus:outline-none focus:ring-1 focus:ring-gray-500"
+            minHeight="300px"
           />
           <p className="mt-1 text-xs text-gray-500">
             Define behavior guidelines and constraints using markdown
@@ -246,12 +247,6 @@ export function RuleForm({
           ))}
         </div>
       </div>
-
-      {error && (
-        <div className="rounded-md bg-red-50 p-3 text-sm text-red-600">
-          {error}
-        </div>
-      )}
 
       <div className="flex items-center justify-end gap-3 border-t border-gray-200 pt-6">
         <Link

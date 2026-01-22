@@ -2,10 +2,15 @@
 
 import { use, useState, useEffect } from "react"
 import Link from "next/link"
-import { PageHeader } from "@/components/dashboard/page-header"
+import {
+  PageHeader,
+  LoadingState,
+  ErrorState,
+  EmptyState,
+} from "@/components/dashboard"
 import { TraceDetail } from "@/components/traces/trace-detail"
 import { TraceEvaluation } from "@/components/traces/trace-evaluation"
-import { Loader2, ArrowLeft, AlertCircle } from "lucide-react"
+import { ArrowLeft, FileQuestion } from "lucide-react"
 import { useActiveOrganization } from "@/lib/auth-client"
 import { API_URL } from "@/constants"
 import type { Trace } from "@/types"
@@ -66,9 +71,7 @@ export default function TraceDetailPage({ params }: PageProps) {
           title="Trace Details"
           description="Loading trace information..."
         />
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-        </div>
+        <LoadingState message="Loading trace details..." />
       </div>
     )
   }
@@ -77,22 +80,16 @@ export default function TraceDetailPage({ params }: PageProps) {
     return (
       <div>
         <PageHeader title="Trace not found" />
-        <div className="rounded-lg border border-gray-200 bg-white p-8 text-center">
-          <AlertCircle className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-4 text-lg font-medium text-gray-900">
-            Trace not found
-          </h3>
-          <p className="mt-2 text-sm text-gray-500">
-            This trace doesn&apos;t exist or you don&apos;t have access to it.
-          </p>
-          <Link
-            href="/dashboard/traces"
-            className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-gray-900 hover:underline"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to traces
-          </Link>
-        </div>
+        <EmptyState
+          icon={FileQuestion}
+          title="Trace not found"
+          description="This trace doesn't exist or you don't have access to it."
+          action={{
+            label: "Back to traces",
+            href: "/dashboard/traces",
+            icon: ArrowLeft,
+          }}
+        />
       </div>
     )
   }
@@ -101,15 +98,15 @@ export default function TraceDetailPage({ params }: PageProps) {
     return (
       <div>
         <PageHeader title="Error" />
-        <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
-          <AlertCircle className="mx-auto h-12 w-12 text-red-400" />
-          <h3 className="mt-4 text-lg font-medium text-red-900">
-            Failed to load trace
-          </h3>
-          <p className="mt-2 text-sm text-red-600">{error}</p>
+        <ErrorState
+          variant="section"
+          title="Failed to load trace"
+          message={error}
+        />
+        <div className="mt-4 text-center">
           <Link
             href="/dashboard/traces"
-            className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-gray-900 hover:underline"
+            className="inline-flex items-center gap-2 text-sm font-medium text-gray-900 hover:underline"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to traces

@@ -15,6 +15,7 @@ import {
   registryRoutes,
   cliAuthRoutes,
   profileRoutes,
+  preferencesRoutes,
   sessionsRoutes,
   dashboardRoutes,
   auditRoutes,
@@ -83,6 +84,7 @@ app.route("/api/gateway", gatewayRoutes)
 app.route("/api/traces", tracesRoutes)
 app.route("/api/tools", toolsRoutes)
 app.route("/api/profile", profileRoutes)
+app.route("/api/preferences", preferencesRoutes)
 app.route("/api/sessions", sessionsRoutes)
 app.route("/api/dashboard", dashboardRoutes)
 app.route("/api/audit", auditRoutes)
