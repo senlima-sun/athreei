@@ -263,7 +263,7 @@ async function syncPluginFromGitHub(
     manifestUrl = `https://raw.githubusercontent.com/${mkt.sourceRepo}/${ref}/plugins/${pluginSlug}/.claude-plugin/plugin.json`
   }
 
-  const response = await fetchWithTimeout(manifestUrl)
+  const response = await fetchWithSecurityCheck(manifestUrl)
   if (!response.ok) {
     throw new Error(`Failed to fetch plugin manifest: ${response.status}`)
   }
