@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { toast } from "sonner"
 import { PageHeader, LoadingState } from "@/components/dashboard"
 import { useSession } from "@/lib/auth-client"
@@ -622,10 +622,14 @@ function CreateApiKeyDialog({
 
   const handleCopy = async () => {
     if (createdKey) {
-      await navigator.clipboard.writeText(createdKey)
-      setCopied(true)
-      toast.success("API key copied to clipboard")
-      setTimeout(() => setCopied(false), 2000)
+      try {
+        await navigator.clipboard.writeText(createdKey)
+        setCopied(true)
+        toast.success("API key copied to clipboard")
+        setTimeout(() => setCopied(false), 2000)
+      } catch {
+        toast.error("Failed to copy to clipboard")
+      }
     }
   }
 
@@ -906,7 +910,7 @@ function ApiKeySettings() {
   const [revokeDialogOpen, setRevokeDialogOpen] = useState(false)
   const [keyToRevoke, setKeyToRevoke] = useState<ApiKeyData | null>(null)
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!activeOrg?.id) return
 
     setIsLoading(true)
@@ -934,13 +938,13 @@ function ApiKeySettings() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [activeOrg?.id])
 
   useEffect(() => {
     if (activeOrg?.id) {
       fetchData()
     }
-  }, [activeOrg?.id])
+  }, [activeOrg?.id, fetchData])
 
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return "Never"
