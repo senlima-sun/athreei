@@ -1,4 +1,17 @@
+import { z } from "zod"
 import type { EndpointConfig } from "../types"
+
+const endpointConfigSchema = z.object({
+  endpointId: z.string(),
+  endpointName: z.string(),
+  namespaceId: z.string(),
+  namespaceName: z.string(),
+  namespaceSlug: z.string(),
+  organizationId: z.string(),
+  userId: z.string(),
+  servers: z.array(z.unknown()),
+  configVersion: z.string(),
+})
 
 export interface EndpointResolverOptions {
   platformUrl: string
@@ -58,7 +71,18 @@ export async function resolveEndpoint(
       }
     }
 
-    const config = (await response.json()) as EndpointConfig
+    const payload = await response.json()
+    const parseResult = endpointConfigSchema.safeParse(payload)
+
+    if (!parseResult.success) {
+      return {
+        success: false,
+        error: "Invalid endpoint config",
+        statusCode: 502,
+      }
+    }
+
+    const config = parseResult.data as EndpointConfig
 
     return {
       success: true,
