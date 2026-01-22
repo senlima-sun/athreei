@@ -70,7 +70,7 @@ function generateBreadcrumbs(
 
     currentPath += `/${segment}`
     const isLast = i === segments.length - 1
-    const isId = segment.length === 36 || /^[a-f0-9-]{36}$/i.test(segment)
+    const isId = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(segment)
 
     if (isId) {
       continue
@@ -121,8 +121,9 @@ export function Breadcrumbs({
 
       {breadcrumbItems.map((item, index) => {
         const isLast = index === breadcrumbItems.length - 1
+        const key = `${item.href ?? item.label}-${index}`
         return (
-          <span key={item.href || item.label} className="flex items-center gap-1">
+          <span key={key} className="flex items-center gap-1">
             {item.href && !isLast ? (
               <Link
                 href={item.href}
@@ -131,7 +132,12 @@ export function Breadcrumbs({
                 {item.label}
               </Link>
             ) : (
-              <span className="font-medium text-gray-900">{item.label}</span>
+              <span
+                className="font-medium text-gray-900"
+                aria-current={isLast ? "page" : undefined}
+              >
+                {item.label}
+              </span>
             )}
             {!isLast && <ChevronRight className="h-4 w-4 text-gray-400" />}
           </span>
