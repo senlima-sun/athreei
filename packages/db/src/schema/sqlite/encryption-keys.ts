@@ -17,7 +17,7 @@ export const encryptionKey = sqliteTable("encryption_key", {
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
-  keyHash: text("keyHash").notNull(),
+  keyHash: text("keyHash").notNull().unique(),
   keyPrefix: text("keyPrefix").notNull(),
   version: integer("version").notNull().default(1),
   status: text("status").notNull().default("active"),
