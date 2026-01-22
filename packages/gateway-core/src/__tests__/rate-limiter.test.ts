@@ -345,38 +345,20 @@ describe("RateLimiter", () => {
     })
   })
 
-  describe("LRU eviction", () => {
-    it("should evict old server states when cache is full", () => {
-      const smallCacheSize = 3
-      const LRUCache = vi.fn().mockImplementation(() => {
-        const cache = new Map()
-        return {
-          get: (key: string) => cache.get(key),
-          set: (key: string, value: unknown) => {
-            if (cache.size >= smallCacheSize && !cache.has(key)) {
-              const firstKey = cache.keys().next().value
-              cache.delete(firstKey)
-            }
-            cache.set(key, value)
-          },
-          delete: (key: string) => cache.delete(key),
-          clear: () => cache.clear(),
-        }
-      })
-
-      vi.doMock("lru-cache", () => ({ LRUCache }))
-
-      rateLimiter.tryAcquire("server1")
-      rateLimiter.tryAcquire("server2")
-      rateLimiter.tryAcquire("server3")
-
-      expect(rateLimiter.getState("server1")).toBeDefined()
-      expect(rateLimiter.getState("server2")).toBeDefined()
-      expect(rateLimiter.getState("server3")).toBeDefined()
-    })
-
+  describe("LRU cache configuration", () => {
     it("should use CACHE_MAX_SERVERS constant for cache size", () => {
       expect(RATE_LIMIT.CACHE_MAX_SERVERS).toBe(1000)
+    })
+
+    it("should track multiple servers independently", () => {
+      for (let i = 0; i < 100; i++) {
+        rateLimiter.tryAcquire(`server${i}`)
+      }
+
+      for (let i = 0; i < 100; i++) {
+        expect(rateLimiter.getState(`server${i}`)).toBeDefined()
+        expect(rateLimiter.getState(`server${i}`)?.count).toBe(1)
+      }
     })
   })
 
