@@ -18,8 +18,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "seed": "bun run src/seeds/run.ts",
-    "migrate-registry": "bun run src/seeds/migrate-registry.ts"
+    "seed": "bun run src/seeds/run.ts"
   },
   "dependencies": {
     "better-sqlite3": "^11.7.0",
