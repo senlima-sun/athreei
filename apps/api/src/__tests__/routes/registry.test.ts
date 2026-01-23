@@ -156,7 +156,8 @@ beforeEach(() => {
   vi.clearAllMocks()
 
   mockSearchPlugins.mockResolvedValue({
-    data: MOCK_PLUGIN_SEARCH_RESULTS,
+    plugins: MOCK_PLUGIN_SEARCH_RESULTS,
+    total: MOCK_PLUGIN_SEARCH_RESULTS.length,
     pagination: {
       limit: 100,
       offset: 0,
@@ -237,7 +238,8 @@ describe("Registry Routes", () => {
 
     it("should return empty array when no plugins found", async () => {
       mockSearchPlugins.mockResolvedValue({
-        data: [],
+        plugins: [],
+        total: 0,
         pagination: { limit: 100, offset: 0, total: 0, hasMore: false },
       })
 

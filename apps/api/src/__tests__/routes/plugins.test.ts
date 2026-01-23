@@ -212,7 +212,8 @@ interface PluginResponse {
 }
 
 interface ListPluginsResponse {
-  data: PluginResponse[]
+  plugins: PluginResponse[]
+  total: number
   pagination: {
     limit: number
     offset: number
@@ -239,7 +240,8 @@ describe("Plugin Routes", () => {
   describe("GET /api/plugins", () => {
     it("should list plugins without filters", async () => {
       mockSearchPlugins.mockResolvedValue({
-        data: [mockPlugin],
+        plugins: [mockPlugin],
+        total: 1,
         pagination: { limit: 20, offset: 0, total: 1, hasMore: false },
       })
 
@@ -252,14 +254,15 @@ describe("Plugin Routes", () => {
       const data = (await response.json()) as ListPluginsResponse
 
       expect(response.status).toBe(200)
-      expect(data).toHaveProperty("data")
+      expect(data).toHaveProperty("plugins")
       expect(data).toHaveProperty("pagination")
       expect(mockSearchPlugins).toHaveBeenCalled()
     })
 
     it("should filter by marketplace slug", async () => {
       mockSearchPlugins.mockResolvedValue({
-        data: [mockPlugin],
+        plugins: [mockPlugin],
+        total: 1,
         pagination: { limit: 20, offset: 0, total: 1, hasMore: false },
       })
 
@@ -281,7 +284,8 @@ describe("Plugin Routes", () => {
 
     it("should filter by search term", async () => {
       mockSearchPlugins.mockResolvedValue({
-        data: [mockPlugin],
+        plugins: [mockPlugin],
+        total: 1,
         pagination: { limit: 20, offset: 0, total: 1, hasMore: false },
       })
 
@@ -301,7 +305,8 @@ describe("Plugin Routes", () => {
 
     it("should filter by tags", async () => {
       mockSearchPlugins.mockResolvedValue({
-        data: [],
+        plugins: [],
+        total: 0,
         pagination: { limit: 20, offset: 0, total: 0, hasMore: false },
       })
 
@@ -321,7 +326,8 @@ describe("Plugin Routes", () => {
 
     it("should filter by isVerified", async () => {
       mockSearchPlugins.mockResolvedValue({
-        data: [],
+        plugins: [],
+        total: 0,
         pagination: { limit: 20, offset: 0, total: 0, hasMore: false },
       })
 
@@ -341,7 +347,8 @@ describe("Plugin Routes", () => {
 
     it("should filter by isFeatured", async () => {
       mockSearchPlugins.mockResolvedValue({
-        data: [],
+        plugins: [],
+        total: 0,
         pagination: { limit: 20, offset: 0, total: 0, hasMore: false },
       })
 
@@ -361,7 +368,8 @@ describe("Plugin Routes", () => {
 
     it("should sort by popularity", async () => {
       mockSearchPlugins.mockResolvedValue({
-        data: [],
+        plugins: [],
+        total: 0,
         pagination: { limit: 20, offset: 0, total: 0, hasMore: false },
       })
 
@@ -381,7 +389,8 @@ describe("Plugin Routes", () => {
 
     it("should sort by recent", async () => {
       mockSearchPlugins.mockResolvedValue({
-        data: [],
+        plugins: [],
+        total: 0,
         pagination: { limit: 20, offset: 0, total: 0, hasMore: false },
       })
 
@@ -401,7 +410,8 @@ describe("Plugin Routes", () => {
 
     it("should respect pagination parameters", async () => {
       mockSearchPlugins.mockResolvedValue({
-        data: [],
+        plugins: [],
+        total: 100,
         pagination: { limit: 10, offset: 20, total: 100, hasMore: true },
       })
 
