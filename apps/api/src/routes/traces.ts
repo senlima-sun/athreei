@@ -125,7 +125,10 @@ traces.get("/servers", async (c) => {
     throw ApiError.badRequest("organizationId is required")
   }
 
-  const isMember = await verifyOrganizationMembership(auth.userId, organizationId)
+  const isMember = await verifyOrganizationMembership(
+    auth.userId,
+    organizationId
+  )
   if (!isMember) {
     throw ApiError.forbidden("Access denied")
   }

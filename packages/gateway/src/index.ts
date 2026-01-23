@@ -331,7 +331,7 @@ function setupShutdownHandlers(
       log.info("Gateway shut down successfully")
       process.exit(0)
     } catch (error) {
-      log.error("Error during shutdown:", error)
+      log.error("Error during shutdown", { error })
       process.exit(1)
     }
   }
@@ -340,12 +340,12 @@ function setupShutdownHandlers(
   process.on("SIGTERM", () => shutdown("SIGTERM"))
 
   process.on("uncaughtException", (error) => {
-    log.error("Uncaught exception:", error)
+    log.error("Uncaught exception", { error })
     process.exit(1)
   })
 
   process.on("unhandledRejection", (reason, promise) => {
-    log.error("Unhandled rejection at:", promise, "reason:", reason)
+    log.error("Unhandled rejection", { promise: String(promise), reason })
     process.exit(1)
   })
 }
@@ -507,7 +507,7 @@ async function main(): Promise<void> {
         log.info(`Loaded ${localConfig.rules.length} rules`)
       }
     } catch (error) {
-      log.error("Failed to load local config:", error)
+      log.error("Failed to load local config", { error })
       process.exit(1)
     }
   } else {
@@ -515,7 +515,7 @@ async function main(): Promise<void> {
     try {
       gatewayConfig = loadConfig(cliArgs.configPath)
     } catch (error) {
-      log.error("Failed to load config:", error)
+      log.error("Failed to load config", { error })
       log.error("Use --local flag to run without Platform sync")
       log.error("Use --mock flag to run without any config file")
       process.exit(1)
@@ -548,7 +548,7 @@ async function main(): Promise<void> {
       setSseNamespaceConfig(namespaceConfig)
       setHttpApiNamespaceConfig(namespaceConfig)
     } catch (error) {
-      log.error("Failed to fetch namespace config:", error)
+      log.error("Failed to fetch namespace config", { error })
       process.exit(1)
     }
   }

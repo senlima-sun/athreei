@@ -77,7 +77,7 @@ async function validateAndGetConfig(
 
     return config
   } catch (error) {
-    logger.error("Error validating API key:", error)
+    logger.error("Error validating API key", { error })
     return null
   }
 }
@@ -396,7 +396,7 @@ sse.get("/:endpointName/sse", async (c) => {
     try {
       await handleSseConnection(stream, session.id, abortController)
     } catch (error) {
-      logger.error("SSE stream error:", error)
+      logger.error("SSE stream error", { error })
     } finally {
       await destroySession(session.id)
     }
@@ -511,7 +511,7 @@ sse.get("/session/:sessionId/sse", async (c) => {
     try {
       await handleSseConnection(stream, session.id, abortController)
     } catch (error) {
-      logger.error("SSE stream error:", error)
+      logger.error("SSE stream error", { error })
     }
   })
 })

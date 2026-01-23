@@ -91,7 +91,11 @@ function StatCard({
   )
 }
 
-function TrendChart({ data }: { data: Array<{ date: string; errors: number; total: number }> }) {
+function TrendChart({
+  data,
+}: {
+  data: Array<{ date: string; errors: number; total: number }>
+}) {
   if (data.length === 0) {
     return (
       <div className="flex h-32 items-center justify-center text-sm text-gray-500">
@@ -164,7 +168,10 @@ function BarChart({
         return (
           <div key={i} className="group">
             <div className="mb-1 flex items-center justify-between text-sm">
-              <span className="truncate text-gray-700" title={label ?? undefined}>
+              <span
+                className="truncate text-gray-700"
+                title={label ?? undefined}
+              >
                 {label || "Unknown"}
               </span>
               <span className="ml-2 text-gray-500">
@@ -185,15 +192,15 @@ function BarChart({
 }
 
 export default function ErrorAnalyticsPage() {
-  const { data: activeOrg, isPending: isOrgPending } = useActiveOrganizationSafe()
+  const { data: activeOrg, isPending: isOrgPending } =
+    useActiveOrganizationSafe()
   const [dateRange, setDateRange] = useState<string>("7days")
 
   const params = getDateRange(dateRange)
 
   const { data: overviewData, isPending: isOverviewPending } =
     useErrorOverview(params)
-  const { data: byToolData, isPending: isToolPending } =
-    useErrorsByTool(params)
+  const { data: byToolData, isPending: isToolPending } = useErrorsByTool(params)
   const { data: byServerData, isPending: isServerPending } =
     useErrorsByServer(params)
   const { data: messagesData, isPending: isMessagesPending } =
@@ -296,7 +303,13 @@ export default function ErrorAnalyticsPage() {
                 ? Minus
                 : TrendingDown
           }
-          color={(overview?.errorRate ?? 0) > 5 ? "red" : (overview?.errorRate ?? 0) > 1 ? "yellow" : "green"}
+          color={
+            (overview?.errorRate ?? 0) > 5
+              ? "red"
+              : (overview?.errorRate ?? 0) > 1
+                ? "yellow"
+                : "green"
+          }
         />
       </div>
 

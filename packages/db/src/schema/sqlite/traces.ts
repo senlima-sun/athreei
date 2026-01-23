@@ -4,7 +4,13 @@
  * Stores request traces and logs for debugging and monitoring.
  */
 
-import { sqliteTable, text, integer, real, index } from "drizzle-orm/sqlite-core"
+import {
+  sqliteTable,
+  text,
+  integer,
+  real,
+  index,
+} from "drizzle-orm/sqlite-core"
 import { relations } from "drizzle-orm"
 import { organization, user } from "./auth"
 import { mcpServer } from "./mcp-servers"
@@ -15,34 +21,34 @@ import { mcpServer } from "./mcp-servers"
 export const trace = sqliteTable(
   "trace",
   {
-  id: text("id").primaryKey(),
-  organizationId: text("organizationId")
-    .notNull()
-    .references(() => organization.id, { onDelete: "cascade" }),
-  // Optional associations
-  userId: text("userId").references(() => user.id, { onDelete: "set null" }),
-  mcpServerId: text("mcpServerId").references(() => mcpServer.id, {
-    onDelete: "set null",
-  }),
-  // Trace metadata
-  traceId: text("traceId").notNull(), // For distributed tracing correlation
-  parentSpanId: text("parentSpanId"), // Parent span for nested traces
-  spanId: text("spanId").notNull(),
-  // Request info
-  name: text("name").notNull(), // Operation name
-  kind: text("kind").notNull().default("internal"), // client, server, internal
-  // Status
-  status: text("status").notNull(), // ok, error
-  statusMessage: text("statusMessage"),
-  // Timing
-  startTime: integer("startTime", { mode: "timestamp" }).notNull(),
-  endTime: integer("endTime", { mode: "timestamp" }),
-  durationMs: real("durationMs"),
-  // Data
-  attributes: text("attributes"), // JSON object of key-value pairs
-  events: text("events"), // JSON array of trace events
-  // Timestamps
-  createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
+    id: text("id").primaryKey(),
+    organizationId: text("organizationId")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    // Optional associations
+    userId: text("userId").references(() => user.id, { onDelete: "set null" }),
+    mcpServerId: text("mcpServerId").references(() => mcpServer.id, {
+      onDelete: "set null",
+    }),
+    // Trace metadata
+    traceId: text("traceId").notNull(), // For distributed tracing correlation
+    parentSpanId: text("parentSpanId"), // Parent span for nested traces
+    spanId: text("spanId").notNull(),
+    // Request info
+    name: text("name").notNull(), // Operation name
+    kind: text("kind").notNull().default("internal"), // client, server, internal
+    // Status
+    status: text("status").notNull(), // ok, error
+    statusMessage: text("statusMessage"),
+    // Timing
+    startTime: integer("startTime", { mode: "timestamp" }).notNull(),
+    endTime: integer("endTime", { mode: "timestamp" }),
+    durationMs: real("durationMs"),
+    // Data
+    attributes: text("attributes"), // JSON object of key-value pairs
+    events: text("events"), // JSON array of trace events
+    // Timestamps
+    createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
   },
   (table) => [
     index("trace_org_time_idx").on(table.organizationId, table.startTime),

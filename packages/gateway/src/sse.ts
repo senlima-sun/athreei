@@ -242,7 +242,7 @@ export function createSseApp(): Hono {
       try {
         await handleSseConnection(stream, session.id, abortController)
       } catch (error) {
-        log.error("SSE stream error:", error)
+        log.error("SSE stream error", { error })
       } finally {
         await destroySession(session.id)
       }

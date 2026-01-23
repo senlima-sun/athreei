@@ -429,7 +429,7 @@ export class TraceCollector {
       try {
         await this.flush()
       } catch (error) {
-        log.error("Trace flush failed:", error)
+        log.error("Trace flush failed", { error })
       }
     }, this.config.flushInterval)
   }

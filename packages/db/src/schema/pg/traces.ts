@@ -16,27 +16,27 @@ import { mcpServer } from "./mcp-servers"
 export const trace = pgTable(
   "trace",
   {
-  id: text("id").primaryKey(),
-  organizationId: text("organizationId")
-    .notNull()
-    .references(() => organization.id, { onDelete: "cascade" }),
-  userId: text("userId").references(() => user.id, { onDelete: "set null" }),
-  mcpServerId: text("mcpServerId").references(() => mcpServer.id, {
-    onDelete: "set null",
-  }),
-  traceId: text("traceId").notNull(),
-  parentSpanId: text("parentSpanId"),
-  spanId: text("spanId").notNull(),
-  name: text("name").notNull(),
-  kind: text("kind").notNull().default("internal"),
-  status: text("status").notNull(),
-  statusMessage: text("statusMessage"),
-  startTime: timestamp("startTime").notNull(),
-  endTime: timestamp("endTime"),
-  durationMs: doublePrecision("durationMs"),
-  attributes: text("attributes"),
-  events: text("events"),
-  createdAt: timestamp("createdAt").notNull(),
+    id: text("id").primaryKey(),
+    organizationId: text("organizationId")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    userId: text("userId").references(() => user.id, { onDelete: "set null" }),
+    mcpServerId: text("mcpServerId").references(() => mcpServer.id, {
+      onDelete: "set null",
+    }),
+    traceId: text("traceId").notNull(),
+    parentSpanId: text("parentSpanId"),
+    spanId: text("spanId").notNull(),
+    name: text("name").notNull(),
+    kind: text("kind").notNull().default("internal"),
+    status: text("status").notNull(),
+    statusMessage: text("statusMessage"),
+    startTime: timestamp("startTime").notNull(),
+    endTime: timestamp("endTime"),
+    durationMs: doublePrecision("durationMs"),
+    attributes: text("attributes"),
+    events: text("events"),
+    createdAt: timestamp("createdAt").notNull(),
   },
   (table) => [
     index("trace_org_time_idx").on(table.organizationId, table.startTime),

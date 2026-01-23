@@ -28,11 +28,13 @@ git clone https://github.com/athreei/athreei-connector ~/.claude/plugins/athreei
 ## Prerequisites
 
 1. Install the athreei CLI:
+
    ```bash
    bun install -g @athreei/cli
    ```
 
 2. Authenticate with athreei:
+
    ```bash
    athreei auth login
    ```

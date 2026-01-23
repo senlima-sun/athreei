@@ -718,7 +718,10 @@ pluginCmd
 pluginCmd
   .command("install")
   .description("Install a plugin")
-  .argument("<plugin>", "Plugin ID (marketplace/plugin or just plugin for official)")
+  .argument(
+    "<plugin>",
+    "Plugin ID (marketplace/plugin or just plugin for official)"
+  )
   .option("-v, --version <version>", "Specific version to install")
   .option(
     "--scope <scope>",

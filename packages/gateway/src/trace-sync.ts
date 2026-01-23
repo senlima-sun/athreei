@@ -163,7 +163,7 @@ export class TraceSyncClient {
       try {
         await this.flush()
       } catch (error) {
-        log.error("Periodic trace flush failed:", error)
+        log.error("Periodic trace flush failed", { error })
       }
     }, this.config.flushInterval)
   }
@@ -285,7 +285,7 @@ export class TraceSyncClient {
         this.pendingTraces.unshift(...tracesToSend)
         const errorText = await response.text()
         const message = `Trace upload failed: ${response.status} - ${errorText}`
-        log.error("Trace upload failed:", message)
+        log.error("Trace upload failed", { message })
         return {
           success: false,
           uploaded: 0,
@@ -313,7 +313,7 @@ export class TraceSyncClient {
       }
       this.pendingTraces.unshift(...tracesToSend)
       const message = error instanceof Error ? error.message : String(error)
-      log.error("Trace upload failed:", message)
+      log.error("Trace upload failed", { message })
       return {
         success: false,
         uploaded: 0,

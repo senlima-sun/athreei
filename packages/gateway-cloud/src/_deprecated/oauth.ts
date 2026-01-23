@@ -82,10 +82,9 @@ export async function getOAuthToken(
     return data
   } catch (error) {
     // Network errors, JSON parsing errors, etc.
-    logger?.error?.(
-      `Error fetching OAuth token for ${serverUrl}:`,
-      error instanceof Error ? error.message : String(error)
-    )
+    logger?.error?.(`Error fetching OAuth token for ${serverUrl}`, {
+      message: error instanceof Error ? error.message : String(error),
+    })
     return null
   }
 }

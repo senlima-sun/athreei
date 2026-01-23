@@ -18,11 +18,13 @@ Sync your installed plugins and MCP server configurations from the athreei platf
 ## Sync Workflow
 
 1. **Check authentication status**
+
    ```bash
    athreei auth status
    ```
 
 2. **Pull latest plugin list from cloud**
+
    ```bash
    athreei plugin sync
    ```
@@ -35,6 +37,7 @@ Sync your installed plugins and MCP server configurations from the athreei platf
 ## Output
 
 Provide a summary of:
+
 - Number of plugins added
 - Number of plugins updated
 - Number of plugins removed
@@ -43,9 +46,11 @@ Provide a summary of:
 ## Error Handling
 
 If authentication fails:
+
 - Prompt user to run `athreei auth login`
 - Provide link to athreei platform for account setup
 
 If no organization is selected:
+
 - List available organizations
 - Prompt user to run `athreei org switch`

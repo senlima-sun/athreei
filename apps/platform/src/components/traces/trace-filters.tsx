@@ -51,7 +51,10 @@ const DURATION_PRESETS = [
   { label: "> 30s", min: "30000", max: "" },
 ] as const
 
-function getDatePresetValue(preset: string): { startDate: string; endDate: string } {
+function getDatePresetValue(preset: string): {
+  startDate: string
+  endDate: string
+} {
   const now = new Date()
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   const endOfToday = new Date(today.getTime() + 24 * 60 * 60 * 1000 - 1)
@@ -299,7 +302,9 @@ export function TraceFilters({
                 <div className="mt-2 flex gap-2">
                   <input
                     type="datetime-local"
-                    value={filters.startDate ? filters.startDate.slice(0, 16) : ""}
+                    value={
+                      filters.startDate ? filters.startDate.slice(0, 16) : ""
+                    }
                     onChange={(e) =>
                       onFiltersChange({
                         ...filters,
@@ -399,7 +404,10 @@ export function TraceFilters({
                           const newServerIds = isSelected
                             ? filters.serverIds.filter((id) => id !== server.id)
                             : [...filters.serverIds, server.id]
-                          onFiltersChange({ ...filters, serverIds: newServerIds })
+                          onFiltersChange({
+                            ...filters,
+                            serverIds: newServerIds,
+                          })
                         }}
                         className={`rounded-md px-2 py-1 text-xs font-medium transition-colors ${
                           isSelected

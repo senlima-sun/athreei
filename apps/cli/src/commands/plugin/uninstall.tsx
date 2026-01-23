@@ -50,7 +50,9 @@ export function PluginUninstall(props: PluginUninstallProps) {
   if (error) return <ErrorDisplay error={error} context="uninstalling plugin" />
 
   if (props.json) {
-    console.log(JSON.stringify({ success, installationId: props.installationId }, null, 2))
+    console.log(
+      JSON.stringify({ success, installationId: props.installationId }, null, 2)
+    )
     return null
   }
 

@@ -103,7 +103,7 @@ app.notFound((c) => {
 })
 
 app.onError((err, c) => {
-  log.error("Server error:", err)
+  log.error("Server error", { error: err })
   return c.json(
     {
       error: "Internal server error",

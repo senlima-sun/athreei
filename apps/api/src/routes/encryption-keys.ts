@@ -16,7 +16,11 @@ const encryptionKeys = new Hono()
 
 encryptionKeys.use("*", authMiddleware)
 
-function generateEncryptionKey(): { key: string; hash: string; prefix: string } {
+function generateEncryptionKey(): {
+  key: string
+  hash: string
+  prefix: string
+} {
   const keyBytes = crypto.randomBytes(32)
   const key = keyBytes.toString("base64")
   const hash = crypto.createHash("sha256").update(key).digest("hex")
@@ -76,20 +80,18 @@ encryptionKeys.post(
     const id = generateId()
     const now = new Date()
 
-    await db()
-      .insert(encryptionKey)
-      .values({
-        id,
-        organizationId: body.organizationId,
-        createdById: auth.userId,
-        name: body.name,
-        keyHash: hash,
-        keyPrefix: prefix,
-        version: 1,
-        status: "active",
-        createdAt: now,
-        updatedAt: now,
-      })
+    await db().insert(encryptionKey).values({
+      id,
+      organizationId: body.organizationId,
+      createdById: auth.userId,
+      name: body.name,
+      keyHash: hash,
+      keyPrefix: prefix,
+      version: 1,
+      status: "active",
+      createdAt: now,
+      updatedAt: now,
+    })
 
     const created = await db().query.encryptionKey.findFirst({
       where: eq(encryptionKey.id, id),

@@ -155,7 +155,7 @@ export async function disconnectMcpServer(mcp: ConnectedMcp): Promise<void> {
     await mcp.client.close()
     log.info(`Disconnected from MCP server: ${mcp.config.name}`)
   } catch (error) {
-    log.error(`Error disconnecting from ${mcp.config.name}:`, error)
+    log.error(`Error disconnecting from ${mcp.config.name}`, { error })
     throw error
   }
 }

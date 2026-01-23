@@ -110,13 +110,7 @@ export function useCommonErrorMessages(params?: AnalyticsParams) {
     useActiveOrganizationSafe()
 
   return useQuery<{ commonMessages: CommonMessage[] }>({
-    queryKey: [
-      "analytics",
-      "errors",
-      "common-messages",
-      activeOrg?.id,
-      params,
-    ],
+    queryKey: ["analytics", "errors", "common-messages", activeOrg?.id, params],
     queryFn: async () => {
       const queryParams = new URLSearchParams({
         organizationId: activeOrg!.id,

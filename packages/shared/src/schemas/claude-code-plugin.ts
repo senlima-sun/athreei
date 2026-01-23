@@ -117,7 +117,9 @@ export const claudeCodePluginSchema = z.object({
   keywords: z.array(z.string().max(50)).max(20).optional(),
   engines: enginesSchema.optional(),
 
-  commands: z.union([relativePathSchema, z.array(relativePathSchema)]).optional(),
+  commands: z
+    .union([relativePathSchema, z.array(relativePathSchema)])
+    .optional(),
   agents: z.union([relativePathSchema, z.array(relativePathSchema)]).optional(),
   skills: z.union([relativePathSchema, z.array(relativePathSchema)]).optional(),
   outputStyles: z
@@ -257,7 +259,9 @@ export function safeValidateClaudeCodePlugin(
 }
 
 export type ClaudeCodePlugin = z.infer<typeof claudeCodePluginSchema>
-export type ClaudeCodePluginStrict = z.infer<typeof claudeCodePluginStrictSchema>
+export type ClaudeCodePluginStrict = z.infer<
+  typeof claudeCodePluginStrictSchema
+>
 export type HookEvent = z.infer<typeof hookEventSchema>
 export type HookType = z.infer<typeof hookTypeSchema>
 export type HookDefinition = z.infer<typeof hookDefinitionSchema>

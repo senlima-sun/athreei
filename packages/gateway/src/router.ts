@@ -77,7 +77,7 @@ export async function routeToolCall(
   try {
     hookDecision = await state.hookExecutor.evaluatePreToolUse(preHookContext)
   } catch (hookError) {
-    log.error(`PreToolUse hook error for ${prefixedName}:`, hookError)
+    log.error(`PreToolUse hook error for ${prefixedName}`, { error: hookError })
 
     const requestId = crypto.randomUUID()
     const trace: ToolCallTrace = {
@@ -99,7 +99,9 @@ export async function routeToolCall(
   }
 
   if (hookDecision.action === "block") {
-    log.warn(`Tool call blocked by hook: ${prefixedName}`, hookDecision.reason)
+    log.warn(`Tool call blocked by hook: ${prefixedName}`, {
+      reason: hookDecision.reason,
+    })
 
     const requestId = crypto.randomUUID()
     const trace: ToolCallTrace = {

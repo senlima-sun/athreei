@@ -130,12 +130,13 @@ export interface RoutingInfo {
 /**
  * Logger interface for gateway-core functions.
  * Allows consumers to provide their own logging implementation.
+ * Compatible with @athreei/shared Logger pattern.
  */
 export interface Logger {
-  debug: (message: string, ...args: unknown[]) => void
-  info: (message: string, ...args: unknown[]) => void
-  warn: (message: string, ...args: unknown[]) => void
-  error: (message: string, ...args: unknown[]) => void
+  debug: (message: string, data?: Record<string, unknown>) => void
+  info: (message: string, data?: Record<string, unknown>) => void
+  warn: (message: string, data?: Record<string, unknown>) => void
+  error: (message: string, data?: Record<string, unknown>) => void
 }
 
 /**

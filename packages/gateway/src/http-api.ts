@@ -10,7 +10,6 @@ import { cors } from "hono/cors"
 import type { GatewayState } from "./server"
 import type { TraceCollector } from "./trace-collector"
 import type { NamespaceConfig } from "./types"
-import { RATE_LIMIT } from "@athreei/gateway-core"
 import { log } from "./logger"
 
 const VERSION = "0.1.0"
@@ -163,7 +162,7 @@ export function createHttpApi(
       })
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      log.error(`Server test failed for "${serverName}":`, error)
+      log.error(`Server test failed for "${serverName}"`, { error })
 
       return c.json(
         {

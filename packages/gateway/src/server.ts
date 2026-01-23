@@ -84,7 +84,7 @@ export function createServer(state: GatewayState): Server {
       return result
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
-      log.error(`Tool call failed: ${name}`, error)
+      log.error(`Tool call failed: ${name}`, { error })
 
       for (const handler of state.eventHandlers) {
         handler({

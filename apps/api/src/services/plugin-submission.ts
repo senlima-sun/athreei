@@ -63,8 +63,16 @@ export interface SubmissionResult {
   version: string
   status: string
   validationStatus: string | null
-  validationErrors: Array<{ path: string; message: string; code: string }> | null
-  validationWarnings: Array<{ path: string; message: string; code: string }> | null
+  validationErrors: Array<{
+    path: string
+    message: string
+    code: string
+  }> | null
+  validationWarnings: Array<{
+    path: string
+    message: string
+    code: string
+  }> | null
   createdAt: Date
 }
 
@@ -86,7 +94,6 @@ export async function submitPlugin(
   const manifestUrl = `https://raw.githubusercontent.com/${input.sourceRepo}/${sourceRef}/${sourcePath}`
 
   let rawManifest: unknown
-  let manifest: ReturnType<typeof pluginManifestSchema.parse>
 
   try {
     const response = await fetchWithTimeout(manifestUrl)
@@ -104,7 +111,7 @@ export async function submitPlugin(
   if (!parseResult.success) {
     throw new Error(`Invalid plugin.json: ${parseResult.error.message}`)
   }
-  manifest = parseResult.data
+  const manifest = parseResult.data
 
   const validationResult = validateClaudeCodePlugin(rawManifest)
 
@@ -153,30 +160,33 @@ export async function submitPlugin(
   const now = new Date()
   const submissionId = generateSubmissionId()
 
-  await db().insert(pluginSubmission).values({
-    id: submissionId,
-    marketplaceId: mkt.id,
-    submitterId: userId,
-    pluginSlug: input.pluginSlug,
-    pluginName: input.pluginName,
-    description: input.description || manifest.description || null,
-    category: input.category || null,
-    sourceType: "github",
-    sourceRepo: input.sourceRepo,
-    sourceRef,
-    sourcePath: input.sourcePath || null,
-    version: manifest.version,
-    manifestJson: JSON.stringify(manifest),
-    status: "pending",
-    validationStatus: validationResult.warnings.length > 0 ? "warning" : "valid",
-    validationErrors: null,
-    validationWarnings:
-      validationResult.warnings.length > 0
-        ? JSON.stringify(validationResult.warnings)
-        : null,
-    createdAt: now,
-    updatedAt: now,
-  })
+  await db()
+    .insert(pluginSubmission)
+    .values({
+      id: submissionId,
+      marketplaceId: mkt.id,
+      submitterId: userId,
+      pluginSlug: input.pluginSlug,
+      pluginName: input.pluginName,
+      description: input.description || manifest.description || null,
+      category: input.category || null,
+      sourceType: "github",
+      sourceRepo: input.sourceRepo,
+      sourceRef,
+      sourcePath: input.sourcePath || null,
+      version: manifest.version,
+      manifestJson: JSON.stringify(manifest),
+      status: "pending",
+      validationStatus:
+        validationResult.warnings.length > 0 ? "warning" : "valid",
+      validationErrors: null,
+      validationWarnings:
+        validationResult.warnings.length > 0
+          ? JSON.stringify(validationResult.warnings)
+          : null,
+      createdAt: now,
+      updatedAt: now,
+    })
 
   logger.info("Plugin submitted", {
     submissionId,
@@ -193,9 +203,11 @@ export async function submitPlugin(
     pluginName: input.pluginName,
     version: manifest.version,
     status: "pending",
-    validationStatus: validationResult.warnings.length > 0 ? "warning" : "valid",
+    validationStatus:
+      validationResult.warnings.length > 0 ? "warning" : "valid",
     validationErrors: null,
-    validationWarnings: validationResult.warnings.length > 0 ? validationResult.warnings : null,
+    validationWarnings:
+      validationResult.warnings.length > 0 ? validationResult.warnings : null,
     createdAt: now,
   }
 }
@@ -215,8 +227,16 @@ export interface SubmissionDetails {
   version: string
   status: string
   validationStatus: string | null
-  validationErrors: Array<{ path: string; message: string; code: string }> | null
-  validationWarnings: Array<{ path: string; message: string; code: string }> | null
+  validationErrors: Array<{
+    path: string
+    message: string
+    code: string
+  }> | null
+  validationWarnings: Array<{
+    path: string
+    message: string
+    code: string
+  }> | null
   submitterId: string
   submitterEmail?: string
   reviewerId: string | null
@@ -229,8 +249,8 @@ export interface SubmissionDetails {
 
 export async function getSubmission(
   submissionId: string,
-  userId: string,
-  organizationId: string
+  _userId: string,
+  _organizationId: string
 ): Promise<SubmissionDetails | null> {
   const result = await db()
     .select({
@@ -334,7 +354,10 @@ export async function listSubmissions(
         updatedAt: pluginSubmission.updatedAt,
       })
       .from(pluginSubmission)
-      .innerJoin(marketplace, eq(pluginSubmission.marketplaceId, marketplace.id))
+      .innerJoin(
+        marketplace,
+        eq(pluginSubmission.marketplaceId, marketplace.id)
+      )
       .where(whereClause)
       .orderBy(desc(pluginSubmission.createdAt))
       .limit(limit)
@@ -446,7 +469,11 @@ export async function reviewSubmission(
 
     logger.info("Submission rejected", { submissionId, reviewerId })
 
-    const updated = await getSubmission(submissionId, submission.submitterId, "")
+    const updated = await getSubmission(
+      submissionId,
+      submission.submitterId,
+      ""
+    )
     return { submission: updated! }
   }
 
@@ -476,20 +503,22 @@ export async function reviewSubmission(
   } else {
     pluginId = generatePluginId()
 
-    await db().insert(plugin).values({
-      id: pluginId,
-      marketplaceId: submission.marketplaceId,
-      slug: submission.pluginSlug,
-      name: submission.pluginName,
-      description: submission.description,
-      category: submission.category,
-      author: manifest.author?.name || null,
-      repository: `https://github.com/${submission.sourceRepo}`,
-      tags: "[]",
-      downloadCount: "0",
-      createdAt: now,
-      updatedAt: now,
-    })
+    await db()
+      .insert(plugin)
+      .values({
+        id: pluginId,
+        marketplaceId: submission.marketplaceId,
+        slug: submission.pluginSlug,
+        name: submission.pluginName,
+        description: submission.description,
+        category: submission.category,
+        author: manifest.author?.name || null,
+        repository: `https://github.com/${submission.sourceRepo}`,
+        tags: "[]",
+        downloadCount: "0",
+        createdAt: now,
+        updatedAt: now,
+      })
   }
 
   await db()
@@ -499,18 +528,20 @@ export async function reviewSubmission(
 
   const versionId = generatePluginVersionId()
 
-  await db().insert(pluginVersion).values({
-    id: versionId,
-    pluginId,
-    version: submission.version,
-    manifest: submission.manifestJson,
-    isLatest: true,
-    validationStatus: submission.validationStatus || "valid",
-    validationErrors: submission.validationErrors,
-    validationWarnings: submission.validationWarnings,
-    publishedAt: now,
-    createdAt: now,
-  })
+  await db()
+    .insert(pluginVersion)
+    .values({
+      id: versionId,
+      pluginId,
+      version: submission.version,
+      manifest: submission.manifestJson,
+      isLatest: true,
+      validationStatus: submission.validationStatus || "valid",
+      validationErrors: submission.validationErrors,
+      validationWarnings: submission.validationWarnings,
+      publishedAt: now,
+      createdAt: now,
+    })
 
   const components: Array<typeof pluginComponent.$inferInsert> = []
 

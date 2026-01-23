@@ -105,15 +105,17 @@ export function PluginSync(props: PluginSyncProps) {
           activePluginSlugs.add(pluginSlug)
 
           const pluginDir = path.join(pluginsDir, pluginSlug)
-          const manifestPath = path.join(pluginDir, ".claude-plugin", "plugin.json")
+          const manifestPath = path.join(
+            pluginDir,
+            ".claude-plugin",
+            "plugin.json"
+          )
 
           let manifest: Record<string, unknown> = {}
           try {
             manifest = JSON.parse(installation.version.manifest || "{}")
           } catch {
-            syncResult.errors.push(
-              `Failed to parse manifest for ${pluginSlug}`
-            )
+            syncResult.errors.push(`Failed to parse manifest for ${pluginSlug}`)
             continue
           }
 

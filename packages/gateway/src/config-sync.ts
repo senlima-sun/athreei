@@ -440,7 +440,7 @@ export class ConfigSyncManager {
       try {
         await this.checkForChanges()
       } catch (error) {
-        log.error("Config sync failed:", error)
+        log.error("Config sync failed", { error })
       }
     }, interval)
   }

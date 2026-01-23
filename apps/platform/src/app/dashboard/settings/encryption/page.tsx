@@ -130,7 +130,9 @@ export default function EncryptionSettingsPage() {
               <Shield className="h-5 w-5 text-gray-600" />
             </div>
             <div>
-              <h3 className="font-medium text-gray-900">Create Encryption Key</h3>
+              <h3 className="font-medium text-gray-900">
+                Create Encryption Key
+              </h3>
               <p className="text-sm text-gray-500">
                 Generate a new 256-bit encryption key for your Gateway
               </p>

@@ -12,13 +12,7 @@
   "homepage": "https://docs.athreei.io/claude-code-plugin",
   "repository": "https://github.com/athreei/athreei",
   "license": "MIT",
-  "keywords": [
-    "athreei",
-    "mcp",
-    "gateway",
-    "plugin-manager",
-    "sync"
-  ],
+  "keywords": ["athreei", "mcp", "gateway", "plugin-manager", "sync"],
   "engines": {
     "claude-code": ">=1.0.0"
   },

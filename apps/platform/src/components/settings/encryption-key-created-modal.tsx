@@ -42,7 +42,9 @@ export function EncryptionKeyCreatedModal({
             </div>
             <div>
               <h2 className="text-lg font-semibold text-gray-900">
-                {isRotation ? "Encryption Key Rotated" : "Encryption Key Created"}
+                {isRotation
+                  ? "Encryption Key Rotated"
+                  : "Encryption Key Created"}
               </h2>
               <p className="text-sm text-gray-500">{keyName}</p>
             </div>

@@ -18,6 +18,7 @@ Tools are namespaced as `athreei__<server>__<tool>`.
 ## Usage
 
 When the user wants to:
+
 - Access browser automation tools
 - Call external service APIs through athreei
 - Use any MCP server configured in their athreei organization
@@ -47,6 +48,7 @@ athreei mcp tools <server-id>
 ## Error Handling
 
 If tools are unavailable:
+
 1. Check gateway status
 2. Verify MCP server configuration
 3. Check authentication status

@@ -72,8 +72,8 @@ Bun monorepo with workspaces.
 
 ```typescript
 import { getDb, getSchema, getPgDb, getSqliteDb } from "@athreei/db"
-const db = getDb()        // Auto-detect: postgres:// → PG, else → SQLite
-const pg = getPgDb()      // Explicit PG (throws if wrong type)
+const db = getDb() // Auto-detect: postgres:// → PG, else → SQLite
+const pg = getPgDb() // Explicit PG (throws if wrong type)
 const sqlite = getSqliteDb() // Explicit SQLite (throws if wrong type)
 ```
 

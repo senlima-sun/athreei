@@ -85,10 +85,9 @@ async function getServerEnv(
     log.debug(`Fetched environment variables for server ${serverId}`)
     return data.env || {}
   } catch (error) {
-    log.error(
-      `Error fetching env for server ${serverId}:`,
-      error instanceof Error ? error.message : String(error)
-    )
+    log.error(`Error fetching env for server ${serverId}`, {
+      message: error instanceof Error ? error.message : String(error),
+    })
     return {}
   }
 }
@@ -247,7 +246,7 @@ async function disconnectMcpServer(
     await mcp.client.close()
     log.info(`Disconnected from MCP server: ${mcp.config.name}`)
   } catch (error) {
-    log.error(`Error disconnecting from ${mcp.config.name}:`, error)
+    log.error(`Error disconnecting from ${mcp.config.name}`, { error })
   }
 }
 
