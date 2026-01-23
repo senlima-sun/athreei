@@ -61,11 +61,11 @@ registry.get("/", zValidator("query", registryQuerySchema), async (c) => {
     undefined
   )
 
-  const servers: RegistryServer[] = result.data.map((plugin) =>
+  const servers: RegistryServer[] = result.plugins.map((plugin) =>
     pluginToRegistryServer(plugin)
   )
 
-  const categories = extractCategoriesFromPlugins(result.data)
+  const categories = extractCategoriesFromPlugins(result.plugins)
 
   c.header("Cache-Control", "public, max-age=300")
 
