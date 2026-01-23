@@ -9,7 +9,7 @@ const testErrorHandler: ErrorHandler = (err: Error, c: Context) => {
 }
 
 const { mockSelectResult, mockDb } = vi.hoisted(() => {
-  const mockSelectResult = vi.fn(() => [])
+  const mockSelectResult = vi.fn(() => [] as unknown[])
   const mockDb: Record<string, unknown> = {}
   mockDb.select = vi.fn(() => mockDb)
   mockDb.from = vi.fn(() => mockDb)
@@ -267,8 +267,8 @@ describe("Analytics Routes", () => {
 
       expect(response.status).toBe(200)
       expect(data.byTool).toHaveLength(2)
-      expect(data.byTool[0].toolName).toBe("github__create_issue")
-      expect(data.byTool[0].errorRate).toBe(10)
+      expect(data.byTool[0]!.toolName).toBe("github__create_issue")
+      expect(data.byTool[0]!.errorRate).toBe(10)
     })
 
     it("should return empty array when no traces exist", async () => {
@@ -338,8 +338,8 @@ describe("Analytics Routes", () => {
 
       expect(response.status).toBe(200)
       expect(data.byServer).toHaveLength(2)
-      expect(data.byServer[0].serverId).toBe("server_1")
-      expect(data.byServer[0].errorRate).toBe(10)
+      expect(data.byServer[0]!.serverId).toBe("server_1")
+      expect(data.byServer[0]!.errorRate).toBe(10)
     })
 
     it("should handle null server ids", async () => {
@@ -363,7 +363,7 @@ describe("Analytics Routes", () => {
       const data = (await response.json()) as ByServerResponse
 
       expect(response.status).toBe(200)
-      expect(data.byServer[0].serverId).toBeNull()
+      expect(data.byServer[0]!.serverId).toBeNull()
     })
   })
 
@@ -411,8 +411,8 @@ describe("Analytics Routes", () => {
 
       expect(response.status).toBe(200)
       expect(data.commonMessages).toHaveLength(2)
-      expect(data.commonMessages[0].message).toBe("Connection timeout")
-      expect(data.commonMessages[0].count).toBe(15)
+      expect(data.commonMessages[0]!.message).toBe("Connection timeout")
+      expect(data.commonMessages[0]!.count).toBe(15)
     })
 
     it("should handle null messages as Unknown error", async () => {
@@ -434,7 +434,7 @@ describe("Analytics Routes", () => {
       const data = (await response.json()) as CommonMessagesResponse
 
       expect(response.status).toBe(200)
-      expect(data.commonMessages[0].message).toBe("Unknown error")
+      expect(data.commonMessages[0]!.message).toBe("Unknown error")
     })
   })
 
@@ -483,9 +483,9 @@ describe("Analytics Routes", () => {
 
       expect(response.status).toBe(200)
       expect(data.trend).toHaveLength(3)
-      expect(data.trend[0].date).toBe("2025-01-01")
-      expect(data.trend[0].errorRate).toBe(10)
-      expect(data.trend[2].errorRate).toBeCloseTo(16.67, 1)
+      expect(data.trend[0]!.date).toBe("2025-01-01")
+      expect(data.trend[0]!.errorRate).toBe(10)
+      expect(data.trend[2]!.errorRate).toBeCloseTo(16.67, 1)
     })
 
     it("should return empty trend when no data exists", async () => {
@@ -531,7 +531,7 @@ describe("Analytics Routes", () => {
       const data = (await response.json()) as TrendResponse
 
       expect(response.status).toBe(200)
-      expect(data.trend[0].errorRate).toBe(0)
+      expect(data.trend[0]!.errorRate).toBe(0)
     })
   })
 })

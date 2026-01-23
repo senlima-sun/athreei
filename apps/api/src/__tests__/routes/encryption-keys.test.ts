@@ -154,14 +154,13 @@ describe("Encryption Keys Routes", () => {
   describe("Organization Membership Verification", () => {
     describe("GET /encryption-keys", () => {
       it("should return 403 when user is NOT a member of the organization", async () => {
-        const { verifyOrganizationMembership } = await import(
-          "../../services"
-        )
-        ;(verifyOrganizationMembership as ReturnType<typeof vi.fn>).mockResolvedValue(false)
+        const { verifyOrganizationMembership } = await import("../../services")
+        ;(
+          verifyOrganizationMembership as ReturnType<typeof vi.fn>
+        ).mockResolvedValue(false)
 
-        const { default: encryptionKeys } = await import(
-          "../../routes/encryption-keys"
-        )
+        const { default: encryptionKeys } =
+          await import("../../routes/encryption-keys")
         const app = new Hono()
         app.onError(testErrorHandler)
         app.route("/api/encryption-keys", encryptionKeys)
@@ -176,15 +175,16 @@ describe("Encryption Keys Routes", () => {
       })
 
       it("should allow access when user IS a member of the organization", async () => {
-        const { verifyOrganizationMembership } = await import(
-          "../../services"
-        )
-        ;(verifyOrganizationMembership as ReturnType<typeof vi.fn>).mockResolvedValue(true)
-        mockDb.query.encryptionKey.findMany.mockResolvedValue([mockEncryptionKey])
+        const { verifyOrganizationMembership } = await import("../../services")
+        ;(
+          verifyOrganizationMembership as ReturnType<typeof vi.fn>
+        ).mockResolvedValue(true)
+        mockDb.query.encryptionKey.findMany.mockResolvedValue([
+          mockEncryptionKey,
+        ])
 
-        const { default: encryptionKeys } = await import(
-          "../../routes/encryption-keys"
-        )
+        const { default: encryptionKeys } =
+          await import("../../routes/encryption-keys")
         const app = new Hono()
         app.onError(testErrorHandler)
         app.route("/api/encryption-keys", encryptionKeys)
@@ -201,14 +201,13 @@ describe("Encryption Keys Routes", () => {
 
     describe("POST /encryption-keys", () => {
       it("should return 403 when user is NOT a member", async () => {
-        const { verifyOrganizationMembership } = await import(
-          "../../services"
-        )
-        ;(verifyOrganizationMembership as ReturnType<typeof vi.fn>).mockResolvedValue(false)
+        const { verifyOrganizationMembership } = await import("../../services")
+        ;(
+          verifyOrganizationMembership as ReturnType<typeof vi.fn>
+        ).mockResolvedValue(false)
 
-        const { default: encryptionKeys } = await import(
-          "../../routes/encryption-keys"
-        )
+        const { default: encryptionKeys } =
+          await import("../../routes/encryption-keys")
         const app = new Hono()
         app.onError(testErrorHandler)
         app.route("/api/encryption-keys", encryptionKeys)
@@ -228,15 +227,16 @@ describe("Encryption Keys Routes", () => {
       })
 
       it("should allow creating key when user IS a member", async () => {
-        const { verifyOrganizationMembership } = await import(
-          "../../services"
+        const { verifyOrganizationMembership } = await import("../../services")
+        ;(
+          verifyOrganizationMembership as ReturnType<typeof vi.fn>
+        ).mockResolvedValue(true)
+        mockDb.query.encryptionKey.findFirst.mockResolvedValue(
+          mockEncryptionKey
         )
-        ;(verifyOrganizationMembership as ReturnType<typeof vi.fn>).mockResolvedValue(true)
-        mockDb.query.encryptionKey.findFirst.mockResolvedValue(mockEncryptionKey)
 
-        const { default: encryptionKeys } = await import(
-          "../../routes/encryption-keys"
-        )
+        const { default: encryptionKeys } =
+          await import("../../routes/encryption-keys")
         const app = new Hono()
         app.onError(testErrorHandler)
         app.route("/api/encryption-keys", encryptionKeys)
@@ -261,9 +261,8 @@ describe("Encryption Keys Routes", () => {
 
   describe("GET /encryption-keys", () => {
     it("should return 400 when organizationId is missing", async () => {
-      const { default: encryptionKeys } = await import(
-        "../../routes/encryption-keys"
-      )
+      const { default: encryptionKeys } =
+        await import("../../routes/encryption-keys")
       const app = new Hono()
       app.route("/api/encryption-keys", encryptionKeys)
 
@@ -273,15 +272,14 @@ describe("Encryption Keys Routes", () => {
     })
 
     it("should return empty list when no keys exist", async () => {
-      const { verifyOrganizationMembership } = await import(
-        "../../services"
-      )
-      ;(verifyOrganizationMembership as ReturnType<typeof vi.fn>).mockResolvedValue(true)
+      const { verifyOrganizationMembership } = await import("../../services")
+      ;(
+        verifyOrganizationMembership as ReturnType<typeof vi.fn>
+      ).mockResolvedValue(true)
       mockDb.query.encryptionKey.findMany.mockResolvedValue([])
 
-      const { default: encryptionKeys } = await import(
-        "../../routes/encryption-keys"
-      )
+      const { default: encryptionKeys } =
+        await import("../../routes/encryption-keys")
       const app = new Hono()
       app.route("/api/encryption-keys", encryptionKeys)
 
@@ -295,15 +293,14 @@ describe("Encryption Keys Routes", () => {
     })
 
     it("should return encryption keys with masked values", async () => {
-      const { verifyOrganizationMembership } = await import(
-        "../../services"
-      )
-      ;(verifyOrganizationMembership as ReturnType<typeof vi.fn>).mockResolvedValue(true)
+      const { verifyOrganizationMembership } = await import("../../services")
+      ;(
+        verifyOrganizationMembership as ReturnType<typeof vi.fn>
+      ).mockResolvedValue(true)
       mockDb.query.encryptionKey.findMany.mockResolvedValue([mockEncryptionKey])
 
-      const { default: encryptionKeys } = await import(
-        "../../routes/encryption-keys"
-      )
+      const { default: encryptionKeys } =
+        await import("../../routes/encryption-keys")
       const app = new Hono()
       app.route("/api/encryption-keys", encryptionKeys)
 
@@ -316,19 +313,20 @@ describe("Encryption Keys Routes", () => {
       expect(data.encryptionKeys).toHaveLength(1)
       expect(data.encryptionKeys[0]!.id).toBe(mockEncryptionKey.id)
       expect(data.encryptionKeys[0]!.name).toBe(mockEncryptionKey.name)
-      expect(data.encryptionKeys[0]!.keyPrefix).toBe(mockEncryptionKey.keyPrefix)
+      expect(data.encryptionKeys[0]!.keyPrefix).toBe(
+        mockEncryptionKey.keyPrefix
+      )
     })
 
     it("should filter by status when provided", async () => {
-      const { verifyOrganizationMembership } = await import(
-        "../../services"
-      )
-      ;(verifyOrganizationMembership as ReturnType<typeof vi.fn>).mockResolvedValue(true)
+      const { verifyOrganizationMembership } = await import("../../services")
+      ;(
+        verifyOrganizationMembership as ReturnType<typeof vi.fn>
+      ).mockResolvedValue(true)
       mockDb.query.encryptionKey.findMany.mockResolvedValue([mockEncryptionKey])
 
-      const { default: encryptionKeys } = await import(
-        "../../routes/encryption-keys"
-      )
+      const { default: encryptionKeys } =
+        await import("../../routes/encryption-keys")
       const app = new Hono()
       app.route("/api/encryption-keys", encryptionKeys)
 
@@ -342,9 +340,8 @@ describe("Encryption Keys Routes", () => {
 
   describe("POST /encryption-keys", () => {
     it("should validate request body requires name", async () => {
-      const { default: encryptionKeys } = await import(
-        "../../routes/encryption-keys"
-      )
+      const { default: encryptionKeys } =
+        await import("../../routes/encryption-keys")
       const app = new Hono()
       app.route("/api/encryption-keys", encryptionKeys)
 
@@ -358,9 +355,8 @@ describe("Encryption Keys Routes", () => {
     })
 
     it("should validate request body requires organizationId", async () => {
-      const { default: encryptionKeys } = await import(
-        "../../routes/encryption-keys"
-      )
+      const { default: encryptionKeys } =
+        await import("../../routes/encryption-keys")
       const app = new Hono()
       app.route("/api/encryption-keys", encryptionKeys)
 
@@ -374,9 +370,8 @@ describe("Encryption Keys Routes", () => {
     })
 
     it("should validate name max length", async () => {
-      const { default: encryptionKeys } = await import(
-        "../../routes/encryption-keys"
-      )
+      const { default: encryptionKeys } =
+        await import("../../routes/encryption-keys")
       const app = new Hono()
       app.route("/api/encryption-keys", encryptionKeys)
 
@@ -393,15 +388,14 @@ describe("Encryption Keys Routes", () => {
     })
 
     it("should create encryption key and return raw key only once", async () => {
-      const { verifyOrganizationMembership } = await import(
-        "../../services"
-      )
-      ;(verifyOrganizationMembership as ReturnType<typeof vi.fn>).mockResolvedValue(true)
+      const { verifyOrganizationMembership } = await import("../../services")
+      ;(
+        verifyOrganizationMembership as ReturnType<typeof vi.fn>
+      ).mockResolvedValue(true)
       mockDb.query.encryptionKey.findFirst.mockResolvedValue(mockEncryptionKey)
 
-      const { default: encryptionKeys } = await import(
-        "../../routes/encryption-keys"
-      )
+      const { default: encryptionKeys } =
+        await import("../../routes/encryption-keys")
       const app = new Hono()
       app.route("/api/encryption-keys", encryptionKeys)
 
@@ -424,18 +418,17 @@ describe("Encryption Keys Routes", () => {
     })
 
     it("should call database insert with correct values", async () => {
-      const { verifyOrganizationMembership } = await import(
-        "../../services"
-      )
-      ;(verifyOrganizationMembership as ReturnType<typeof vi.fn>).mockResolvedValue(true)
+      const { verifyOrganizationMembership } = await import("../../services")
+      ;(
+        verifyOrganizationMembership as ReturnType<typeof vi.fn>
+      ).mockResolvedValue(true)
       mockDb.query.encryptionKey.findFirst.mockResolvedValue(mockEncryptionKey)
 
       const mockInsertValues = vi.fn(() => Promise.resolve())
       mockDb.insert.mockReturnValue({ values: mockInsertValues })
 
-      const { default: encryptionKeys } = await import(
-        "../../routes/encryption-keys"
-      )
+      const { default: encryptionKeys } =
+        await import("../../routes/encryption-keys")
       const app = new Hono()
       app.route("/api/encryption-keys", encryptionKeys)
 
@@ -463,15 +456,14 @@ describe("Encryption Keys Routes", () => {
 
   describe("GET /encryption-keys/:id", () => {
     it("should return 404 when key does not exist", async () => {
-      const { verifyOrganizationMembership } = await import(
-        "../../services"
-      )
-      ;(verifyOrganizationMembership as ReturnType<typeof vi.fn>).mockResolvedValue(true)
+      const { verifyOrganizationMembership } = await import("../../services")
+      ;(
+        verifyOrganizationMembership as ReturnType<typeof vi.fn>
+      ).mockResolvedValue(true)
       mockDb.query.encryptionKey.findFirst.mockResolvedValue(null)
 
-      const { default: encryptionKeys } = await import(
-        "../../routes/encryption-keys"
-      )
+      const { default: encryptionKeys } =
+        await import("../../routes/encryption-keys")
       const app = new Hono()
       app.onError(testErrorHandler)
       app.route("/api/encryption-keys", encryptionKeys)
@@ -484,15 +476,14 @@ describe("Encryption Keys Routes", () => {
     })
 
     it("should return key details when found", async () => {
-      const { verifyOrganizationMembership } = await import(
-        "../../services"
-      )
-      ;(verifyOrganizationMembership as ReturnType<typeof vi.fn>).mockResolvedValue(true)
+      const { verifyOrganizationMembership } = await import("../../services")
+      ;(
+        verifyOrganizationMembership as ReturnType<typeof vi.fn>
+      ).mockResolvedValue(true)
       mockDb.query.encryptionKey.findFirst.mockResolvedValue(mockEncryptionKey)
 
-      const { default: encryptionKeys } = await import(
-        "../../routes/encryption-keys"
-      )
+      const { default: encryptionKeys } =
+        await import("../../routes/encryption-keys")
       const app = new Hono()
       app.route("/api/encryption-keys", encryptionKeys)
 
@@ -508,9 +499,8 @@ describe("Encryption Keys Routes", () => {
     it("should return 404 when key does not exist", async () => {
       mockDb.query.encryptionKey.findFirst.mockResolvedValue(null)
 
-      const { default: encryptionKeys } = await import(
-        "../../routes/encryption-keys"
-      )
+      const { default: encryptionKeys } =
+        await import("../../routes/encryption-keys")
       const app = new Hono()
       app.onError(testErrorHandler)
       app.route("/api/encryption-keys", encryptionKeys)
@@ -529,14 +519,13 @@ describe("Encryption Keys Routes", () => {
       const revokedKey = { ...mockEncryptionKey, status: "revoked" }
       mockDb.query.encryptionKey.findFirst.mockResolvedValue(revokedKey)
 
-      const { verifyOrganizationMembership } = await import(
-        "../../services"
-      )
-      ;(verifyOrganizationMembership as ReturnType<typeof vi.fn>).mockResolvedValue(true)
+      const { verifyOrganizationMembership } = await import("../../services")
+      ;(
+        verifyOrganizationMembership as ReturnType<typeof vi.fn>
+      ).mockResolvedValue(true)
 
-      const { default: encryptionKeys } = await import(
-        "../../routes/encryption-keys"
-      )
+      const { default: encryptionKeys } =
+        await import("../../routes/encryption-keys")
       const app = new Hono()
       app.onError(testErrorHandler)
       app.route("/api/encryption-keys", encryptionKeys)
@@ -552,18 +541,21 @@ describe("Encryption Keys Routes", () => {
     })
 
     it("should rotate key successfully and return new key", async () => {
-      const { verifyOrganizationMembership } = await import(
-        "../../services"
-      )
-      ;(verifyOrganizationMembership as ReturnType<typeof vi.fn>).mockResolvedValue(true)
+      const { verifyOrganizationMembership } = await import("../../services")
+      ;(
+        verifyOrganizationMembership as ReturnType<typeof vi.fn>
+      ).mockResolvedValue(true)
 
       mockDb.query.encryptionKey.findFirst
         .mockResolvedValueOnce(mockEncryptionKey)
-        .mockResolvedValueOnce({ ...mockEncryptionKey, id: "ek_new123", version: 2 })
+        .mockResolvedValueOnce({
+          ...mockEncryptionKey,
+          id: "ek_new123",
+          version: 2,
+        })
 
-      const { default: encryptionKeys } = await import(
-        "../../routes/encryption-keys"
-      )
+      const { default: encryptionKeys } =
+        await import("../../routes/encryption-keys")
       const app = new Hono()
       app.route("/api/encryption-keys", encryptionKeys)
 
@@ -581,14 +573,18 @@ describe("Encryption Keys Routes", () => {
     })
 
     it("should mark old key as rotated and create new key with incremented version", async () => {
-      const { verifyOrganizationMembership } = await import(
-        "../../services"
-      )
-      ;(verifyOrganizationMembership as ReturnType<typeof vi.fn>).mockResolvedValue(true)
+      const { verifyOrganizationMembership } = await import("../../services")
+      ;(
+        verifyOrganizationMembership as ReturnType<typeof vi.fn>
+      ).mockResolvedValue(true)
 
       mockDb.query.encryptionKey.findFirst
         .mockResolvedValueOnce(mockEncryptionKey)
-        .mockResolvedValueOnce({ ...mockEncryptionKey, id: "ek_new123", version: 2 })
+        .mockResolvedValueOnce({
+          ...mockEncryptionKey,
+          id: "ek_new123",
+          version: 2,
+        })
 
       const mockSet = vi.fn(() => ({ where: vi.fn(() => Promise.resolve()) }))
       mockDb.update.mockReturnValue({ set: mockSet })
@@ -596,16 +592,14 @@ describe("Encryption Keys Routes", () => {
       const mockInsertValues = vi.fn(() => Promise.resolve())
       mockDb.insert.mockReturnValue({ values: mockInsertValues })
 
-      const { default: encryptionKeys } = await import(
-        "../../routes/encryption-keys"
-      )
+      const { default: encryptionKeys } =
+        await import("../../routes/encryption-keys")
       const app = new Hono()
       app.route("/api/encryption-keys", encryptionKeys)
 
-      await app.request(
-        `/api/encryption-keys/${mockEncryptionKey.id}/rotate`,
-        { method: "POST" }
-      )
+      await app.request(`/api/encryption-keys/${mockEncryptionKey.id}/rotate`, {
+        method: "POST",
+      })
 
       expect(mockDb.update).toHaveBeenCalled()
       expect(mockSet).toHaveBeenCalledWith(
@@ -628,9 +622,8 @@ describe("Encryption Keys Routes", () => {
     it("should return 404 when key does not exist", async () => {
       mockDb.query.encryptionKey.findFirst.mockResolvedValue(null)
 
-      const { default: encryptionKeys } = await import(
-        "../../routes/encryption-keys"
-      )
+      const { default: encryptionKeys } =
+        await import("../../routes/encryption-keys")
       const app = new Hono()
       app.onError(testErrorHandler)
       app.route("/api/encryption-keys", encryptionKeys)
@@ -649,14 +642,13 @@ describe("Encryption Keys Routes", () => {
       const revokedKey = { ...mockEncryptionKey, status: "revoked" }
       mockDb.query.encryptionKey.findFirst.mockResolvedValue(revokedKey)
 
-      const { verifyOrganizationMembership } = await import(
-        "../../services"
-      )
-      ;(verifyOrganizationMembership as ReturnType<typeof vi.fn>).mockResolvedValue(true)
+      const { verifyOrganizationMembership } = await import("../../services")
+      ;(
+        verifyOrganizationMembership as ReturnType<typeof vi.fn>
+      ).mockResolvedValue(true)
 
-      const { default: encryptionKeys } = await import(
-        "../../routes/encryption-keys"
-      )
+      const { default: encryptionKeys } =
+        await import("../../routes/encryption-keys")
       const app = new Hono()
       app.onError(testErrorHandler)
       app.route("/api/encryption-keys", encryptionKeys)
@@ -672,15 +664,14 @@ describe("Encryption Keys Routes", () => {
     })
 
     it("should revoke key successfully", async () => {
-      const { verifyOrganizationMembership } = await import(
-        "../../services"
-      )
-      ;(verifyOrganizationMembership as ReturnType<typeof vi.fn>).mockResolvedValue(true)
+      const { verifyOrganizationMembership } = await import("../../services")
+      ;(
+        verifyOrganizationMembership as ReturnType<typeof vi.fn>
+      ).mockResolvedValue(true)
       mockDb.query.encryptionKey.findFirst.mockResolvedValue(mockEncryptionKey)
 
-      const { default: encryptionKeys } = await import(
-        "../../routes/encryption-keys"
-      )
+      const { default: encryptionKeys } =
+        await import("../../routes/encryption-keys")
       const app = new Hono()
       app.route("/api/encryption-keys", encryptionKeys)
 
@@ -696,19 +687,18 @@ describe("Encryption Keys Routes", () => {
     })
 
     it("should call database update with revocation data", async () => {
-      const { verifyOrganizationMembership } = await import(
-        "../../services"
-      )
-      ;(verifyOrganizationMembership as ReturnType<typeof vi.fn>).mockResolvedValue(true)
+      const { verifyOrganizationMembership } = await import("../../services")
+      ;(
+        verifyOrganizationMembership as ReturnType<typeof vi.fn>
+      ).mockResolvedValue(true)
       mockDb.query.encryptionKey.findFirst.mockResolvedValue(mockEncryptionKey)
 
       const mockWhere = vi.fn(() => Promise.resolve())
       const mockSet = vi.fn(() => ({ where: mockWhere }))
       mockDb.update.mockReturnValue({ set: mockSet })
 
-      const { default: encryptionKeys } = await import(
-        "../../routes/encryption-keys"
-      )
+      const { default: encryptionKeys } =
+        await import("../../routes/encryption-keys")
       const app = new Hono()
       app.route("/api/encryption-keys", encryptionKeys)
 
@@ -730,9 +720,8 @@ describe("Encryption Keys Routes", () => {
     it("should return 404 when key does not exist", async () => {
       mockDb.query.encryptionKey.findFirst.mockResolvedValue(null)
 
-      const { default: encryptionKeys } = await import(
-        "../../routes/encryption-keys"
-      )
+      const { default: encryptionKeys } =
+        await import("../../routes/encryption-keys")
       const app = new Hono()
       app.onError(testErrorHandler)
       app.route("/api/encryption-keys", encryptionKeys)
@@ -755,14 +744,13 @@ describe("Encryption Keys Routes", () => {
       const revokedKey = { ...mockEncryptionKey, status: "revoked" }
       mockDb.query.encryptionKey.findFirst.mockResolvedValue(revokedKey)
 
-      const { verifyOrganizationMembership } = await import(
-        "../../services"
-      )
-      ;(verifyOrganizationMembership as ReturnType<typeof vi.fn>).mockResolvedValue(true)
+      const { verifyOrganizationMembership } = await import("../../services")
+      ;(
+        verifyOrganizationMembership as ReturnType<typeof vi.fn>
+      ).mockResolvedValue(true)
 
-      const { default: encryptionKeys } = await import(
-        "../../routes/encryption-keys"
-      )
+      const { default: encryptionKeys } =
+        await import("../../routes/encryption-keys")
       const app = new Hono()
       app.onError(testErrorHandler)
       app.route("/api/encryption-keys", encryptionKeys)
@@ -782,19 +770,18 @@ describe("Encryption Keys Routes", () => {
     })
 
     it("should update key name successfully", async () => {
-      const { verifyOrganizationMembership } = await import(
-        "../../services"
-      )
-      ;(verifyOrganizationMembership as ReturnType<typeof vi.fn>).mockResolvedValue(true)
+      const { verifyOrganizationMembership } = await import("../../services")
+      ;(
+        verifyOrganizationMembership as ReturnType<typeof vi.fn>
+      ).mockResolvedValue(true)
 
       const updatedKey = { ...mockEncryptionKey, name: "Updated Name" }
       mockDb.query.encryptionKey.findFirst
         .mockResolvedValueOnce(mockEncryptionKey)
         .mockResolvedValueOnce(updatedKey)
 
-      const { default: encryptionKeys } = await import(
-        "../../routes/encryption-keys"
-      )
+      const { default: encryptionKeys } =
+        await import("../../routes/encryption-keys")
       const app = new Hono()
       app.route("/api/encryption-keys", encryptionKeys)
 
@@ -813,15 +800,14 @@ describe("Encryption Keys Routes", () => {
 
   describe("Key Generation", () => {
     it("should generate base64-encoded 256-bit key", async () => {
-      const { verifyOrganizationMembership } = await import(
-        "../../services"
-      )
-      ;(verifyOrganizationMembership as ReturnType<typeof vi.fn>).mockResolvedValue(true)
+      const { verifyOrganizationMembership } = await import("../../services")
+      ;(
+        verifyOrganizationMembership as ReturnType<typeof vi.fn>
+      ).mockResolvedValue(true)
       mockDb.query.encryptionKey.findFirst.mockResolvedValue(mockEncryptionKey)
 
-      const { default: encryptionKeys } = await import(
-        "../../routes/encryption-keys"
-      )
+      const { default: encryptionKeys } =
+        await import("../../routes/encryption-keys")
       const app = new Hono()
       app.route("/api/encryption-keys", encryptionKeys)
 
@@ -842,15 +828,14 @@ describe("Encryption Keys Routes", () => {
     })
 
     it("should generate unique keys for each request", async () => {
-      const { verifyOrganizationMembership } = await import(
-        "../../services"
-      )
-      ;(verifyOrganizationMembership as ReturnType<typeof vi.fn>).mockResolvedValue(true)
+      const { verifyOrganizationMembership } = await import("../../services")
+      ;(
+        verifyOrganizationMembership as ReturnType<typeof vi.fn>
+      ).mockResolvedValue(true)
       mockDb.query.encryptionKey.findFirst.mockResolvedValue(mockEncryptionKey)
 
-      const { default: encryptionKeys } = await import(
-        "../../routes/encryption-keys"
-      )
+      const { default: encryptionKeys } =
+        await import("../../routes/encryption-keys")
       const app = new Hono()
       app.route("/api/encryption-keys", encryptionKeys)
 

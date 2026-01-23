@@ -49,7 +49,8 @@ const {
     updatedAt: now,
   }
 
-  const mockDb = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mockDb: Record<string, any> = {
     query: {
       marketplace: {
         findFirst: vi.fn(),

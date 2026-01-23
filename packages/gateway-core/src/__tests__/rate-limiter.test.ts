@@ -167,7 +167,9 @@ describe("RateLimiter", () => {
 
       rateLimiter.tryAcquire("server1")
       const newState = rateLimiter.getState("server1")
-      expect(newState?.windowStart).toBeGreaterThan(initialWindowStart as number)
+      expect(newState?.windowStart).toBeGreaterThan(
+        initialWindowStart as number
+      )
       expect(newState?.count).toBe(1)
       expect(newState?.burstUsed).toBe(0)
     })

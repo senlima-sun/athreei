@@ -309,13 +309,7 @@ describe("semver validation", () => {
     "1.0.0-rc.1",
   ]
 
-  const invalidVersions = [
-    "1",
-    "1.0",
-    "v1.0.0",
-    "1.0.0.0",
-    "version-1.0.0",
-  ]
+  const invalidVersions = ["1", "1.0", "v1.0.0", "1.0.0.0", "version-1.0.0"]
 
   validVersions.forEach((version) => {
     it(`should accept valid version: ${version}`, () => {

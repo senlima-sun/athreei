@@ -46,7 +46,7 @@ const mockNamespace = {
   updatedAt: now,
 }
 
-const mockMember = {
+const _mockMember = {
   id: "member_123",
   userId: "user_123",
   organizationId: "org_123",
@@ -202,12 +202,12 @@ interface ListHooksResponse {
   hooks: HookResponse[]
 }
 
-interface ToggleHookResponse {
+interface _ToggleHookResponse {
   hook: { id: string; isEnabled: boolean }
   message: string
 }
 
-interface DeleteHookResponse {
+interface _DeleteHookResponse {
   message: string
 }
 
@@ -253,8 +253,8 @@ describe.skip("Namespace Hooks Routes", () => {
       expect(data).toHaveProperty("hooks")
       expect(Array.isArray(data.hooks)).toBe(true)
       expect(data.hooks).toHaveLength(1)
-      expect(data.hooks[0].id).toBe("nshook_123")
-      expect(data.hooks[0].event).toBe("PreToolUse")
+      expect(data.hooks[0]!.id).toBe("nshook_123")
+      expect(data.hooks[0]!.event).toBe("PreToolUse")
     })
 
     it("should return empty array when no hooks exist", async () => {
@@ -284,7 +284,7 @@ describe.skip("Namespace Hooks Routes", () => {
       const data = (await response.json()) as ListHooksResponse
 
       expect(response.status).toBe(200)
-      expect(data.hooks[0].handler).toEqual({
+      expect(data.hooks[0]!.handler).toEqual({
         type: "rule",
         action: "ask",
         message: "Allow?",

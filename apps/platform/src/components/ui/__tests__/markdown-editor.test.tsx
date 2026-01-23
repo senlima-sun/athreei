@@ -8,11 +8,7 @@ vi.mock("@lexical/react/LexicalComposer", () => ({
 }))
 
 vi.mock("@lexical/react/LexicalRichTextPlugin", () => ({
-  RichTextPlugin: ({
-    contentEditable,
-  }: {
-    contentEditable: React.ReactNode
-  }) =>
+  RichTextPlugin: ({ contentEditable }: { contentEditable: React.ReactNode }) =>
     React.createElement(
       "div",
       { "data-testid": "rich-text-plugin" },
@@ -192,8 +188,9 @@ describe("MarkdownEditor", () => {
         <MarkdownEditor value="" onChange={onChange} minHeight="400px" />
       )
 
-      const wrapper = container.querySelector('[data-testid="lexical-composer"]')
-        ?.firstElementChild as HTMLElement
+      const wrapper = container.querySelector(
+        '[data-testid="lexical-composer"]'
+      )?.firstElementChild as HTMLElement
       expect(wrapper).toHaveStyle({ minHeight: "400px" })
     })
 
@@ -204,8 +201,9 @@ describe("MarkdownEditor", () => {
         <MarkdownEditor value="" onChange={onChange} disabled />
       )
 
-      const wrapper = container.querySelector('[data-testid="lexical-composer"]')
-        ?.firstElementChild as HTMLElement
+      const wrapper = container.querySelector(
+        '[data-testid="lexical-composer"]'
+      )?.firstElementChild as HTMLElement
       expect(wrapper).toHaveClass("cursor-not-allowed")
       expect(wrapper).toHaveClass("opacity-50")
     })
@@ -217,8 +215,9 @@ describe("MarkdownEditor", () => {
         <MarkdownEditor value="" onChange={onChange} disabled={false} />
       )
 
-      const wrapper = container.querySelector('[data-testid="lexical-composer"]')
-        ?.firstElementChild as HTMLElement
+      const wrapper = container.querySelector(
+        '[data-testid="lexical-composer"]'
+      )?.firstElementChild as HTMLElement
       expect(wrapper).not.toHaveClass("cursor-not-allowed")
       expect(wrapper).not.toHaveClass("opacity-50")
     })
@@ -232,8 +231,9 @@ describe("MarkdownEditor", () => {
         <MarkdownEditor value="" onChange={onChange} />
       )
 
-      const wrapper = container.querySelector('[data-testid="lexical-composer"]')
-        ?.firstElementChild as HTMLElement
+      const wrapper = container.querySelector(
+        '[data-testid="lexical-composer"]'
+      )?.firstElementChild as HTMLElement
       expect(wrapper).toHaveClass("border")
       expect(wrapper).toHaveClass("border-gray-300")
       expect(wrapper).toHaveClass("rounded-md")
@@ -246,8 +246,9 @@ describe("MarkdownEditor", () => {
         <MarkdownEditor value="" onChange={onChange} />
       )
 
-      const wrapper = container.querySelector('[data-testid="lexical-composer"]')
-        ?.firstElementChild as HTMLElement
+      const wrapper = container.querySelector(
+        '[data-testid="lexical-composer"]'
+      )?.firstElementChild as HTMLElement
       expect(wrapper).toHaveClass("bg-white")
     })
   })
