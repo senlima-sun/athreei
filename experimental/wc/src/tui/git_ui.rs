@@ -962,20 +962,36 @@ impl App {
         let merge_success = merge_output.status.success();
         let merge_stderr = String::from_utf8_lossy(&merge_output.stderr).to_string();
 
+        let final_message = if merge_success {
+            let push_output = std::process::Command::new("git")
+                .args(["push"])
+                .output()?;
+
+            if push_output.status.success() {
+                format!("Merged '{}' into '{}' and pushed", current_branch, target_branch)
+            } else {
+                let push_stderr = String::from_utf8_lossy(&push_output.stderr);
+                format!(
+                    "Merged '{}' into '{}' but push failed: {}",
+                    current_branch,
+                    target_branch,
+                    push_stderr.lines().next().unwrap_or("unknown error")
+                )
+            }
+        } else {
+            let first_line = merge_stderr.lines().next().unwrap_or("unknown error");
+            if merge_stderr.contains("CONFLICT") || merge_stderr.contains("conflict") {
+                format!("Merge has conflicts. Resolve on '{}'", target_branch)
+            } else {
+                format!("Merge failed: {}", first_line)
+            }
+        };
+
         let _ = std::process::Command::new("git")
             .args(["checkout", &current_branch])
             .output();
 
-        if merge_success {
-            self.message = Some(format!("Merged '{}' into '{}'", current_branch, target_branch));
-        } else {
-            let first_line = merge_stderr.lines().next().unwrap_or("unknown error");
-            if merge_stderr.contains("CONFLICT") || merge_stderr.contains("conflict") {
-                self.message = Some(format!("Merge has conflicts. Resolve on '{}'", target_branch));
-            } else {
-                self.message = Some(format!("Merge failed: {}", first_line));
-            }
-        }
+        self.message = Some(final_message);
 
         self.merge_branch_input.clear();
         self.input_mode = InputMode::Normal;
@@ -1501,51 +1517,47 @@ fn ui(f: &mut Frame, app: &mut App) {
         match app.focused_pane {
             FocusedPane::DiffView => {
                 Line::from(vec![
-                    Span::styled(" [j/k/↑↓]", Style::default().fg(Color::Yellow)),
+                    Span::styled(" [j/k]", Style::default().fg(Color::Yellow)),
                     Span::raw("scroll "),
                     Span::styled("[Ctrl+d/u]", Style::default().fg(Color::Yellow)),
                     Span::raw("½page "),
                     Span::styled("[g/G]", Style::default().fg(Color::Yellow)),
                     Span::raw("top/end "),
-                    Span::styled("[Esc/h/←]", Style::default().fg(Color::Yellow)),
+                    Span::styled("[q/Esc/h]", Style::default().fg(Color::Yellow)),
                     Span::raw("back"),
                 ])
             }
             FocusedPane::CommitsList => {
                 Line::from(vec![
                     Span::styled(" [j/k]", Style::default().fg(Color::Cyan)),
-                    Span::raw("navigate "),
-                    Span::styled("[Enter/l]", Style::default().fg(Color::Cyan)),
+                    Span::raw("nav "),
+                    Span::styled("[Enter]", Style::default().fg(Color::Cyan)),
                     Span::raw("view "),
                     Span::styled("[R]", Style::default().fg(Color::Cyan)),
                     Span::raw("eload "),
-                    Span::styled("[Esc/h]", Style::default().fg(Color::Cyan)),
-                    Span::raw("back "),
-                    Span::styled("[q]", Style::default().fg(Color::Cyan)),
-                    Span::raw("uit"),
+                    Span::styled("[q/Esc/h]", Style::default().fg(Color::Cyan)),
+                    Span::raw("back"),
                 ])
             }
             FocusedPane::CommitDetail => {
                 Line::from(vec![
                     Span::styled(" [j/k]", Style::default().fg(Color::Cyan)),
-                    Span::raw("navigate "),
-                    Span::styled("[Enter/l]", Style::default().fg(Color::Cyan)),
+                    Span::raw("nav "),
+                    Span::styled("[Enter]", Style::default().fg(Color::Cyan)),
                     Span::raw("diff "),
-                    Span::styled("[Esc/h]", Style::default().fg(Color::Cyan)),
-                    Span::raw("back "),
-                    Span::styled("[q]", Style::default().fg(Color::Cyan)),
-                    Span::raw("uit"),
+                    Span::styled("[q/Esc/h]", Style::default().fg(Color::Cyan)),
+                    Span::raw("back"),
                 ])
             }
             FocusedPane::CommitDiffView => {
                 Line::from(vec![
-                    Span::styled(" [j/k/↑↓]", Style::default().fg(Color::Yellow)),
+                    Span::styled(" [j/k]", Style::default().fg(Color::Yellow)),
                     Span::raw("scroll "),
                     Span::styled("[Ctrl+d/u]", Style::default().fg(Color::Yellow)),
                     Span::raw("½page "),
                     Span::styled("[g/G]", Style::default().fg(Color::Yellow)),
                     Span::raw("top/end "),
-                    Span::styled("[Esc/h]", Style::default().fg(Color::Yellow)),
+                    Span::styled("[q/Esc/h]", Style::default().fg(Color::Yellow)),
                     Span::raw("back"),
                 ])
             }
@@ -1558,33 +1570,33 @@ fn ui(f: &mut Frame, app: &mut App) {
                         Span::raw("bort "),
                         Span::styled("[S]", Style::default().fg(Color::Yellow)),
                         Span::raw("kip "),
+                        Span::styled("[j/k]", Style::default().fg(Color::Cyan)),
+                        Span::raw("nav "),
+                        Span::styled("[Enter]", Style::default().fg(Color::Cyan)),
+                        Span::raw("diff "),
                         Span::styled("[space]", Style::default().fg(Color::Cyan)),
                         Span::raw("stage "),
-                        Span::styled("[d]", Style::default().fg(Color::Cyan)),
-                        Span::raw("iscard "),
-                        Span::styled("[R]", Style::default().fg(Color::Cyan)),
-                        Span::raw("efresh "),
                         Span::styled("[q]", Style::default().fg(Color::Cyan)),
                         Span::raw("uit"),
                     ])
                 } else {
                     Line::from(vec![
-                        Span::styled(" [Enter/l]", Style::default().fg(Color::Cyan)),
+                        Span::styled(" [j/k]", Style::default().fg(Color::Cyan)),
+                        Span::raw("nav "),
+                        Span::styled("[Enter]", Style::default().fg(Color::Cyan)),
                         Span::raw("diff "),
                         Span::styled("[space]", Style::default().fg(Color::Cyan)),
                         Span::raw("stage "),
                         Span::styled("[a]", Style::default().fg(Color::Cyan)),
                         Span::raw("ll "),
-                        Span::styled("[d]", Style::default().fg(Color::Cyan)),
-                        Span::raw("iscard "),
                         Span::styled("[c]", Style::default().fg(Color::Cyan)),
                         Span::raw("ommit "),
                         Span::styled("[m]", Style::default().fg(Color::Magenta)),
                         Span::raw("ai "),
-                        Span::styled("[r]", Style::default().fg(Color::Yellow)),
-                        Span::raw("ebase "),
-                        Span::styled("[M]", Style::default().fg(Color::Magenta)),
-                        Span::raw("erge "),
+                        Span::styled("[p/P]", Style::default().fg(Color::Green)),
+                        Span::raw("ush/ull "),
+                        Span::styled("[o]", Style::default().fg(Color::Cyan)),
+                        Span::raw("log "),
                         Span::styled("[q]", Style::default().fg(Color::Cyan)),
                         Span::raw("uit"),
                     ])
