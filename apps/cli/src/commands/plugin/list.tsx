@@ -41,7 +41,7 @@ export function PluginList(props: PluginListProps) {
       try {
         const client = getApiClient()
         const credStore = createCredentialStore()
-        const orgId = credStore.getActiveOrg()
+        const orgId = await credStore.getActiveOrg()
 
         const params = new URLSearchParams()
         if (props.search) params.set("search", props.search)
@@ -137,12 +137,8 @@ export function PluginList(props: PluginListProps) {
             <Box>
               <Text>
                 {plugin.name}
-                {plugin.isVerified && (
-                  <Text color="blue"> ✓</Text>
-                )}
-                {plugin.isFeatured && (
-                  <Text color="yellow"> ★</Text>
-                )}
+                {plugin.isVerified && <Text color="blue"> ✓</Text>}
+                {plugin.isFeatured && <Text color="yellow"> ★</Text>}
               </Text>
             </Box>
           </Box>
