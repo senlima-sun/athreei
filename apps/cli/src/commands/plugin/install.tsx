@@ -37,7 +37,7 @@ export function PluginInstall(props: PluginInstallProps) {
       try {
         const client = getApiClient()
         const credStore = createCredentialStore()
-        const orgId = credStore.getActiveOrg()
+        const orgId = await credStore.getActiveOrg()
 
         if (!orgId) {
           throw new Error(
